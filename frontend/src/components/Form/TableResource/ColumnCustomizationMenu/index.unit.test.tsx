@@ -16,7 +16,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import ColumnCustomizationMenu from './index';
 
-import type { TableHeaderType } from '../types';
+import type { TableHeaderType } from '@/types/tableResource.types';
 
 type TestObjectType = {
   id: number;

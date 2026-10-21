@@ -2,14 +2,14 @@ import { useNavigate } from '@tanstack/react-router';
 import { renderHook } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest';
 
-import { useFormulaConfigurationListRowActions } from './actions.tsx';
-
-import type { PageableResponse } from '@/components/Form/TableResource/types.ts';
-import type { FormulaSetResponse } from '@/services/formulaConfiguration.types.ts';
-
-import { resolveTableRowActionValue } from '@/components/Form/TableResource/types.ts';
+import { resolveTableRowActionValue } from '@/components/Form/TableResource/utils.ts';
 import { navigateInTree } from '@/routes/inTreePaths.ts';
 import { isFutureDated } from '@/utils/businessDate.ts';
+
+import { useFormulaConfigurationListRowActions } from './actions.tsx';
+
+import type { FormulaSetListItem } from '@/types/formulaConfiguration.types.ts';
+import type { PageableResponse } from '@/types/tableResource.types.ts';
 
 vi.mock('@tanstack/react-router', () => ({
   useNavigate: vi.fn(),
@@ -25,7 +25,7 @@ vi.mock('@/utils/businessDate', () => ({
 
 const mockIsFutureDated = vi.mocked(isFutureDated);
 
-type FormulaSetRow = PageableResponse<FormulaSetResponse>['content'][number];
+type FormulaSetRow = PageableResponse<FormulaSetListItem>['content'][number];
 
 const makeRow = (overrides: Partial<FormulaSetRow> = {}): FormulaSetRow => ({
   id: 42,
@@ -33,7 +33,7 @@ const makeRow = (overrides: Partial<FormulaSetRow> = {}): FormulaSetRow => ({
   startDate: '2025-01-01',
   endDate: null,
   deleted: false,
-  formulas: [],
+  formulaCount: 0,
   createdAt: '2025-01-15T10:30:00',
   updatedAt: '2025-01-15T10:30:00',
   ...overrides,

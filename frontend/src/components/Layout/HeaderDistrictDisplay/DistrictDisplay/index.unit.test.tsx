@@ -2,36 +2,27 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi, type Mock } from 'vitest';
 
-import DistrictDisplay from '.';
-
 import { makeTestQueryClient } from '@/config/tests/renderWithApp';
 import { PreferenceProvider } from '@/context/preference/PreferenceProvider';
-import APIs from '@/services/APIs';
+import API from '@/services/APIs';
+
+import DistrictDisplay from '.';
 
 let mockBreakpoint = 'md';
-let mockedClientValues = [
-  {
-    code: 'ABC',
-    description: 'District A',
-  },
-  {
-    code: 'DEF',
-    description: 'District B',
-  },
-  {
-    code: 'GHI',
-    description: 'District C',
-  },
-  {
-    code: 'JKL',
-    description: 'District D',
-  },
+let mockedDistrictValues = [
+  { code: 'ABC', description: 'District A' },
+  { code: 'DEF', description: 'District B' },
+  { code: 'GHI', description: 'District C' },
+  { code: 'JKL', description: 'District D' },
 ];
 let mockedPreference = { selectedDistrict: '' };
 const mockUpdatePreferences = vi.fn();
 
 vi.mock('@/services/APIs', () => ({
   default: {
+    codes: {
+      getDistricts: vi.fn(),
+    },
     forestclient: {
       searchByClientNumbers: vi.fn(),
     },
@@ -44,7 +35,7 @@ vi.mock('@/hooks/useBreakpoint', () => ({
 
 vi.mock('@/context/auth/useAuth', () => ({
   useAuth: () => ({
-    getClients: () => mockedClientValues.map((c) => c.code),
+    getClients: () => [],
   }),
 }));
 
@@ -69,29 +60,17 @@ const renderWithProviders = async (active: boolean) => {
 describe('DistrictDisplay', () => {
   beforeEach(() => {
     mockedPreference = { selectedDistrict: '' };
-    mockedClientValues = [
-      {
-        code: 'ABC',
-        description: 'District A',
-      },
-      {
-        code: 'DEF',
-        description: 'District B',
-      },
-      {
-        code: 'GHI',
-        description: 'District C',
-      },
-      {
-        code: 'JKL',
-        description: 'District D',
-      },
+    mockedDistrictValues = [
+      { code: 'ABC', description: 'District A' },
+      { code: 'DEF', description: 'District B' },
+      { code: 'GHI', description: 'District C' },
+      { code: 'JKL', description: 'District D' },
     ];
-    (APIs.forestclient.searchByClientNumbers as Mock).mockResolvedValue(mockedClientValues);
+    (API.codes.getDistricts as Mock).mockResolvedValue(mockedDistrictValues);
   });
 
-  it('small size or no client should not display anything', async () => {
-    mockedClientValues = [];
+  it('small size or no district should not display anything', async () => {
+    mockedDistrictValues = [];
     mockBreakpoint = 'sm';
 
     await renderWithProviders(false);
@@ -101,7 +80,7 @@ describe('DistrictDisplay', () => {
     });
   });
 
-  it('small size with client should not display anything', async () => {
+  it('small size with district should not display anything', async () => {
     mockBreakpoint = 'sm';
     mockedPreference = { selectedDistrict: 'DEF' };
 
@@ -112,7 +91,7 @@ describe('DistrictDisplay', () => {
     });
   });
 
-  it('no client selected should display that', async () => {
+  it('no district selected should display that', async () => {
     mockBreakpoint = 'max';
 
     await renderWithProviders(false);
@@ -121,13 +100,37 @@ describe('DistrictDisplay', () => {
     expect(name.textContent).toBe('No district selected');
   });
 
-  it('no client selected and is active', async () => {
+  it('no district selected and is active', async () => {
     mockBreakpoint = 'max';
 
     await renderWithProviders(true);
     const name = await screen.findByTestId('client-name');
     expect(name).toBeDefined();
     expect(name.textContent).toBe('No district selected');
+
+    const isActive = await screen.findByTestId('active');
+    expect(isActive).toBeDefined();
+  });
+
+  it('district selected should display district name', async () => {
+    mockBreakpoint = 'max';
+    mockedPreference = { selectedDistrict: 'DEF' };
+
+    await renderWithProviders(false);
+    const name = await screen.findByTestId('client-name');
+    expect(name.textContent).toBe('District B');
+
+    const isInactive = await screen.findByTestId('inactive');
+    expect(isInactive).toBeDefined();
+  });
+
+  it('district selected and is active', async () => {
+    mockBreakpoint = 'max';
+    mockedPreference = { selectedDistrict: 'ABC' };
+
+    await renderWithProviders(true);
+    const name = await screen.findByTestId('client-name');
+    expect(name.textContent).toBe('District A');
 
     const isActive = await screen.findByTestId('active');
     expect(isActive).toBeDefined();

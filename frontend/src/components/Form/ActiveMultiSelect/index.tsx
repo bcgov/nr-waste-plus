@@ -13,7 +13,7 @@ const CARBON_CLASS_PREFIX = 'cds';
  * Base constraint for items used in ActiveMultiSelect.
  * Items must have either a `code` or `value` string property (or both).
  */
-type HasCodeOrValue = { code: string } | { value: string };
+type HasCodeOrValue = { code: string | null } | { value: string };
 
 /**
  * Extracts the displayable identifier from an item.

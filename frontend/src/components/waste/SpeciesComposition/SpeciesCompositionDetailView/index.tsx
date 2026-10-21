@@ -1,14 +1,12 @@
 import { Column } from '@carbon/react';
 import { type FC } from 'react';
 
+import PageNotification from '@/components/core/PageNotification';
+
 import SpeciesCompositionDetailHeader from './SpeciesCompositionDetailHeader.tsx';
 import SpeciesCompositionDetailMatrix from './SpeciesCompositionDetailMatrix.tsx';
 
-import PageNotification from '@/components/core/PageNotification';
-import {
-  speciesCompositionDataSchema,
-  type SpeciesCompositionDetail,
-} from '@/services/speciesComposition.types.ts';
+import type { SpeciesCompositionDetail } from '@/types/speciesComposition.types.ts';
 
 /**
  * Props for the {@link SpeciesCompositionDetailView} component.
@@ -28,8 +26,6 @@ interface SpeciesCompositionDetailViewProps {
  */
 
 const SpeciesCompositionDetailView: FC<SpeciesCompositionDetailViewProps> = ({ data }) => {
-  const tableData = speciesCompositionDataSchema.safeParse(data?.tableData);
-
   return (
     <>
       {/* Metadata header */}
@@ -48,7 +44,7 @@ const SpeciesCompositionDetailView: FC<SpeciesCompositionDetailViewProps> = ({ d
       </div>
 
       {/* Matrix table */}
-      <SpeciesCompositionDetailMatrix rows={tableData.success ? tableData.data.rows : []} />
+      <SpeciesCompositionDetailMatrix rows={data.tableData.rows ?? []} />
     </>
   );
 };

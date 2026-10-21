@@ -3,7 +3,7 @@ import type {
   ReportingUnitSearchParametersDto,
   ReportingUnitSearchParametersViewDto,
   ReportingUnitSearchParametersViewSpecific,
-} from './search.types';
+} from '@/types/search.types';
 
 type ReportingUnitSearchParametersConverter<
   K extends keyof ReportingUnitSearchParametersViewSpecific,
@@ -20,7 +20,8 @@ type ReportingUnitSearchParametersConverterMap = {
  */
 export const reportingUnitSearchParametersConverterMap: ReportingUnitSearchParametersConverterMap =
   {
-    clientNumbers: (value) => value?.map((item) => item.code),
+    clientNumbers: (value) =>
+      value?.map((item) => item.code).filter((code): code is string => code != null),
   };
 
 /**
@@ -50,7 +51,7 @@ type CodeDescriptionArrayConverterMap = {
  */
 const defaultCodeDescriptionArrayConverter: CodeDescriptionArrayConverter<
   keyof ReportingUnitSearchParametersViewDto
-> = (value) => value?.map((item) => item.code);
+> = (value) => value?.map((item) => item.code).filter((code): code is string => code != null);
 
 /**
  * Key-mapped custom converters from CodeDescriptionDto[] to the corresponding property type.

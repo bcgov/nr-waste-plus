@@ -2,15 +2,15 @@ import { act, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { useCreateBlock, useReportingUnitBlocksQuery } from '@/config/react-query/hooks';
 import PageNotification from '@/components/core/PageNotification';
+import { useCreateBlock, useReportingUnitBlocksQuery } from '@/config/react-query/hooks';
 import { renderWithApp } from '@/config/tests/renderWithApp';
-import { Role } from '@/context/auth/types';
 import { useAuth } from '@/context/auth/useAuth';
+import { Role } from '@/types/auth.types';
 
 import BlockCreateAction from './index';
 
-import type { BlockCreateRequestDto, BlockCreateResponseDto } from '@/services/types';
+import type { BlockCreateRequestDto, BlockCreateResponseDto } from '@/types/reportingUnit.types';
 import type { UseMutationResult } from '@tanstack/react-query';
 
 // ── Mutable state shared with the module mocks ─────────────────────────────────

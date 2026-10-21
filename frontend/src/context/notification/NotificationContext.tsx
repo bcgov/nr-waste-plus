@@ -1,6 +1,6 @@
 import { createContext, type ReactNode } from 'react';
 
-import type { EventListener, EventType, GlobalEvent } from '@/hooks/useNotificationEvents/types';
+import type { EventListener, EventType, GlobalEvent } from '@/types/notification.types';
 
 /**
  * Describes the toast payload rendered by the notification provider.

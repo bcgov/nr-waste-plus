@@ -4,19 +4,19 @@ import { useNavigate } from '@tanstack/react-router';
 import { DateTime } from 'luxon';
 import { useCallback, useState, type FC } from 'react';
 
-import SpeciesCompositionReviewTable from './SpeciesCompositionReviewTable.tsx';
-
-import type {
-  SpeciesCompositionCreate,
-  SpeciesCompositionData,
-} from '@/services/speciesComposition.types.ts';
-
 import FileUploadInput from '@/components/Form/FileUploadInput';
 import UploadFormActions from '@/components/waste/UploadFormActions';
 import { useSpeciesCompositionCreateMutation } from '@/config/react-query/hooks.ts';
 import { navigateInTree } from '@/routes/inTreePaths.ts';
 import { SpeciesCompositionProcessor } from '@/services/speciescomposition/processors/speciesCompositionProcessor.ts';
 import { speciesCompositionValidator } from '@/services/speciescomposition/validators/speciesCompositionValidator.ts';
+
+import SpeciesCompositionReviewTable from './SpeciesCompositionReviewTable.tsx';
+
+import type {
+  SpeciesCompositionCreate,
+  SpeciesCompositionData,
+} from '@/types/speciesComposition.types.ts';
 
 import './index.scss';
 
@@ -128,7 +128,8 @@ const SpeciesCompositionUpload: FC = () => {
   }, []);
 
   const tableData = form.state.values.tableData;
-  const hasRows = tableData.rows.length > 0;
+  const rows = tableData.rows ?? [];
+  const hasRows = rows.length > 0;
 
   return (
     <>
@@ -148,7 +149,7 @@ const SpeciesCompositionUpload: FC = () => {
             {isReviewing ? (
               <Column max={16} xlg={16} lg={16} md={8} sm={4}>
                 <SpeciesCompositionReviewTable
-                  rows={tableData.rows}
+                  rows={rows}
                   data-testid="species-composition-review-table"
                 />
               </Column>

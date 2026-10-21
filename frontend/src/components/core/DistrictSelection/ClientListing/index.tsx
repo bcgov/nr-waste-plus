@@ -5,8 +5,8 @@ import { useForestClientsByNumbersQuery } from '@/config/react-query/hooks';
 import { useAuth } from '@/context/auth/useAuth';
 import { forestClientAutocompleteResult2CodeDescription } from '@/services/utils';
 
-import type { DistrictType } from '@/components/core/DistrictSelection/types';
-import type { CodeDescriptionDto } from '@/services/search.types';
+import type { DistrictType } from '@/types/districtSelection.types';
+import type { CodeDescriptionDto } from '@/types/search.types';
 
 /**
  * Loads the current user's clients and renders the default client preference selector.
@@ -35,9 +35,9 @@ const ClientListing: FC = () => {
     select: (data) =>
       data.map((client) => ({
         id: client.clientNumber,
-        name: client.name ?? client.clientName,
-        acronym: client.acronym,
-        kind: client.clientTypeCode?.code,
+        name: client.name,
+        acronym: client.acronym ?? undefined,
+        kind: client.clientTypeCode?.code ?? '',
       })),
   });
 

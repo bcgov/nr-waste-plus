@@ -20,7 +20,6 @@ const reportingUnitPayload = {
   grade: { code: 'IN', description: 'Interior' },
   sampling: { code: 'DA', description: 'District Average' },
   district: { code: 'DKM', description: 'Coast Mountains District' },
-  createdAt: '2025-05-25',
 };
 
 /**

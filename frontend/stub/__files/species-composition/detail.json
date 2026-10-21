@@ -5,6 +5,7 @@
   "uploadedBy": "jsmith@gov.bc.ca",
   "dateOfUpload": "2026-05-15T14:23:00Z",
   "tableData": {
+    "type": "SPECIES_COMPOSITION",
     "rows": [
       {
         "district": {
@@ -34,7 +35,10 @@
         }
       },
       {
-        "district": { "code": "DCS", "description": "Coast" },
+        "district": {
+          "code": "DCS",
+          "description": "Coast"
+        },
         "species": {
           "AL": 0,
           "AR": 0,
@@ -58,5 +62,7 @@
         }
       }
     ]
-  }
+  },
+  "area": "INTERIOR",
+  "tableLevelFactor": 1.0
 }

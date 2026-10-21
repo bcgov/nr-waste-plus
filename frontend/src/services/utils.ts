@@ -1,10 +1,5 @@
-import type {
-  CodeDescriptionDto,
-  ForestClientAutocompleteResultDto,
-  NestedKeyOf,
-  SortDirectionType,
-  ValueByPath,
-} from './types';
+import type { NestedKeyOf, SortDirectionType, ValueByPath } from '@/types/pagination.types';
+import type { CodeDescriptionDto } from '@/types/search.types';
 
 /**
  * Removes non-meaningful values from an object recursively.
@@ -104,12 +99,14 @@ export const generateSortArray = <T>(
  * @param data The forest client autocomplete result.
  * @returns A code-description object suitable for shared UI inputs.
  */
-export const forestClientAutocompleteResult2CodeDescription = (
-  data: ForestClientAutocompleteResultDto,
+export const forestClientAutocompleteResult2CodeDescription = <
+  T extends { id?: string | null; name?: string | null; acronym?: string | null },
+>(
+  data: T,
 ): CodeDescriptionDto => {
   const { id, name, acronym } = data;
   const acronymSection = acronym ? ` (${acronym})` : '';
-  const description = `${id} ${name}${acronymSection}`;
+  const description = `${id ?? ''} ${name ?? ''}${acronymSection}`.trim();
   return {
     code: id ?? '',
     description,

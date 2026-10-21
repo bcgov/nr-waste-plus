@@ -1,13 +1,5 @@
 import { useState } from 'react';
 
-import { useListTableState } from '@/hooks/useTableRow';
-
-import { useSpeciesCompositionListRowActions } from './actions.tsx';
-import { headers } from './constants.tsx';
-
-import type { SpeciesCompositionListItem } from '@/services/speciesComposition.types.ts';
-import type { FC } from 'react';
-
 import TableResource from '@/components/Form/TableResource';
 import ConfigurationDeleteConfirmModal from '@/components/waste/ConfigurationDeleteConfirmModal';
 import {
@@ -15,6 +7,13 @@ import {
   useSpeciesCompositionListQuery,
 } from '@/config/react-query/hooks.ts';
 import { sendToastEvent } from '@/hooks/useNotificationEvents/eventHandler.ts';
+import { useListTableState } from '@/hooks/useTableRow';
+
+import { useSpeciesCompositionListRowActions } from './actions.tsx';
+import { headers } from './constants.tsx';
+
+import type { SpeciesCompositionListItem } from '@/types/speciesComposition.types.ts';
+import type { FC } from 'react';
 
 import './index.scss';
 

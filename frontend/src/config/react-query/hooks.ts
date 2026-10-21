@@ -6,6 +6,7 @@ import {
   type UseMutationOptions,
 } from '@tanstack/react-query';
 import { useEffect, useRef } from 'react';
+import { z } from 'zod';
 
 import { sendEvent } from '@/hooks/useNotificationEvents/eventHandler';
 import API from '@/services/APIs';
@@ -13,6 +14,24 @@ import {
   forestClientAutocompleteResult2CodeDescription,
   generateSortArray,
 } from '@/services/utils';
+import {
+  districtVolumeDetailSchema,
+  districtVolumeListItemSchema,
+} from '@/types/districtvolumes.types';
+import {
+  forestClientAutocompleteResultSchema,
+  forestClientSchema,
+  myForestClientSchema,
+} from '@/types/forestclient.types';
+import { pageableResponseSchema } from '@/types/pagination.types';
+import {
+  reportingUnitSearchExpandedSchema,
+  reportingUnitSearchResultSchema,
+} from '@/types/search.types';
+import {
+  speciesCompositionDetailSchema,
+  speciesCompositionListItemSchema,
+} from '@/types/speciesComposition.types';
 
 import { queryClient } from './config';
 import {
@@ -22,30 +41,29 @@ import {
   type SpeciesCompositionQueryParams,
 } from './queryKeys';
 
-import type { PageableResponse } from '@/components/Form/TableResource/types';
 import type { ProblemDetails } from '@/config/api/types';
-import type { ReportingUnitBlocksRow } from '@/components/waste/ReportingUnits/ReportingUnitBlocksList/constants';
 import type {
   DistrictVolumeCreate,
   DistrictVolumeDetail,
   DistrictVolumeListItem,
-} from '@/services/districtvolumes.types';
-import type { CodeDescriptionDto, ReportingUnitSearchExpandedDto } from '@/services/search.types';
-import type {
-  SpeciesCompositionCreate,
-  SpeciesCompositionDetail,
-  SpeciesCompositionListItem,
-} from '@/services/speciesComposition.types';
+} from '@/types/districtvolumes.types';
+import type { ForestClientDto, MyForestClientDto } from '@/types/forestclient.types';
+import type { ReportingUnitBlocksRow } from '@/types/reportingUnit.types';
 import type {
   BlockCreateRequestDto,
   BlockCreateResponseDto,
   BlockDetailsDto,
-  ForestClientDto,
-  MyForestClientDto,
   ReportingUnitCreateDto,
   ReportingUnitDto,
-  ReportingUnitSearchResultDto,
-} from '@/services/types';
+} from '@/types/reportingUnit.types';
+import type { ReportingUnitSearchResultDto } from '@/types/search.types';
+import type { CodeDescriptionDto, ReportingUnitSearchExpandedDto } from '@/types/search.types';
+import type {
+  SpeciesCompositionCreate,
+  SpeciesCompositionDetail,
+  SpeciesCompositionListItem,
+} from '@/types/speciesComposition.types';
+import type { PageableResponse } from '@/types/tableResource.types';
 
 /**
  * Shared TanStack Query options for reference-data requests.
@@ -304,8 +322,12 @@ export const useForestClientsByNumbersQuery = <TData = ForestClientDto[]>(
 ) => {
   return useQuery({
     queryKey: queryKeys.forestClient.byClientNumbers(clientNumbers),
-    queryFn: () =>
-      API.forestclient.searchByClientNumbers([...clientNumbers], 0, clientNumbers.length),
+    queryFn: async () =>
+      z
+        .array(forestClientSchema)
+        .parse(
+          await API.forestclient.searchByClientNumbers([...clientNumbers], 0, clientNumbers.length),
+        ),
     enabled: clientNumbers.length > 0,
     ...options,
   });
@@ -339,10 +361,20 @@ export const useMyForestClientsQuery = <TData = PageableResponse<MyForestClientD
 
   const query = useQuery({
     queryKey: queryKeys.forestClient.myForestClients(filter, page, size, notificationTarget),
-    queryFn: () =>
-      API.forestclient.searchMyForestClients(filter, page, size, {
-        notificationTarget,
-      }),
+    queryFn: async () =>
+      pageableResponseSchema(myForestClientSchema)
+        // Wire rows carry no `id`; derive the stable row identity from the
+        // client code so the app-facing `PageableResponse` (whose rows are
+        // `IdentifiableContent`) holds true without a cast.
+        .transform((page) => ({
+          ...page,
+          content: page.content.map((row) => ({ ...row, id: row.client.code ?? '' })),
+        }))
+        .parse(
+          await API.forestclient.searchMyForestClients(filter, page, size, {
+            notificationTarget,
+          }),
+        ),
     ...queryOptions,
   });
 
@@ -386,17 +418,19 @@ export const useSearchReportingUnitsQuery = <
 
   const query = useQuery({
     queryKey: queryKeys.search.reportingUnits(input, notificationTarget),
-    queryFn: () =>
-      API.search.searchReportingUnit(
-        input.filters,
-        {
-          page: input.page,
-          size: input.size,
-          sort: generateSortArray<ReportingUnitSearchResultDto>(input.sort),
-        },
-        {
-          notificationTarget,
-        },
+    queryFn: async () =>
+      pageableResponseSchema(reportingUnitSearchResultSchema).parse(
+        await API.search.searchReportingUnit(
+          input.filters,
+          {
+            page: input.page,
+            size: input.size,
+            sort: generateSortArray<ReportingUnitSearchResultDto>(input.sort),
+          },
+          {
+            notificationTarget,
+          },
+        ),
       ),
     ...queryOptions,
   });
@@ -697,7 +731,12 @@ export const useBlockDetailsQuery = <TData = BlockDetailsDto>(
 export const useDistrictVolumeTableDetailQuery = <TData = DistrictVolumeDetail>(
   id: number,
   options?: Omit<
-    UseQueryOptions<TData, Error, TData, ReturnType<typeof queryKeys.districtVolume.detail>>,
+    UseQueryOptions<
+      DistrictVolumeDetail,
+      Error,
+      TData,
+      ReturnType<typeof queryKeys.districtVolume.detail>
+    >,
     'queryKey' | 'queryFn'
   > &
     QueryNotificationOptions,
@@ -706,7 +745,8 @@ export const useDistrictVolumeTableDetailQuery = <TData = DistrictVolumeDetail>(
 
   const query = useQuery({
     queryKey: queryKeys.districtVolume.detail(id),
-    queryFn: () => API.districtVolume.getDistrictVolumeTableDetail(id) as unknown as Promise<TData>,
+    queryFn: async () =>
+      districtVolumeDetailSchema.parse(await API.districtVolume.getDistrictVolumeTableDetail(id)),
     ...queryOptions,
   });
 
@@ -757,11 +797,13 @@ export const useReportingUnitExpandQuery = <TData = ReportingUnitSearchExpandedD
 ) => {
   return useQuery({
     queryKey: queryKeys.search.reportingUnitExpand(rowId, ruId, wasteAssessmentAreaId),
-    queryFn: () => {
+    queryFn: async () => {
       if (ruId === null || wasteAssessmentAreaId === null) {
         throw new Error('Reporting unit expand query requires both IDs.');
       }
-      return API.search.getReportingUnitSearchExpand(ruId, wasteAssessmentAreaId);
+      return reportingUnitSearchExpandedSchema.parse(
+        await API.search.getReportingUnitSearchExpand(ruId, wasteAssessmentAreaId),
+      );
     },
     enabled: ruId !== null && wasteAssessmentAreaId !== null,
     staleTime: Infinity,
@@ -808,9 +850,10 @@ export const useClientLookupQuery = <TData = CodeDescriptionDto[]>(
         return [];
       }
 
-      return (await API.forestclient.searchForestClients(clientCode, 0, 1)).map(
-        forestClientAutocompleteResult2CodeDescription,
-      );
+      return z
+        .array(forestClientAutocompleteResultSchema)
+        .parse(await API.forestclient.searchForestClients(clientCode, 0, 1))
+        .map(forestClientAutocompleteResult2CodeDescription);
     },
     enabled: enabled && Boolean(clientCode),
     staleTime: Infinity,
@@ -851,12 +894,14 @@ export const useDistrictVolumeListQuery = <TData = PageableResponse<DistrictVolu
 
   const query = useQuery({
     queryKey: queryKeys.districtVolume.list(input, notificationTarget),
-    queryFn: () =>
-      API.districtVolume.getDistrictVolumes(undefined, {
-        page: input.page,
-        size: input.size,
-        sort: generateSortArray<DistrictVolumeListItem>(input.sort),
-      }),
+    queryFn: async () =>
+      pageableResponseSchema(districtVolumeListItemSchema).parse(
+        await API.districtVolume.getDistrictVolumes(undefined, {
+          page: input.page,
+          size: input.size,
+          sort: generateSortArray<DistrictVolumeListItem>(input.sort),
+        }),
+      ),
     ...queryOptions,
   });
 
@@ -998,7 +1043,12 @@ export const useDistrictVolumeTableDeleteMutation = (
 export const useSpeciesCompositionDetailQuery = <TData = SpeciesCompositionDetail>(
   id: number,
   options?: Omit<
-    UseQueryOptions<TData, Error, TData, ReturnType<typeof queryKeys.speciesComposition.detail>>,
+    UseQueryOptions<
+      SpeciesCompositionDetail,
+      Error,
+      TData,
+      ReturnType<typeof queryKeys.speciesComposition.detail>
+    >,
     'queryKey' | 'queryFn'
   > &
     QueryNotificationOptions,
@@ -1007,8 +1057,10 @@ export const useSpeciesCompositionDetailQuery = <TData = SpeciesCompositionDetai
 
   const query = useQuery({
     queryKey: queryKeys.speciesComposition.detail(id),
-    queryFn: () =>
-      API.speciesComposition.getSpeciesCompositionById(id) as unknown as Promise<TData>,
+    queryFn: async () =>
+      speciesCompositionDetailSchema.parse(
+        await API.speciesComposition.getSpeciesCompositionById(id),
+      ),
     ...queryOptions,
   });
 
@@ -1058,12 +1110,14 @@ export const useSpeciesCompositionListQuery = <
 
   const query = useQuery({
     queryKey: queryKeys.speciesComposition.list(input, notificationTarget),
-    queryFn: () =>
-      API.speciesComposition.listSpeciesCompositions({
-        page: input.page,
-        size: input.size,
-        sort: generateSortArray<SpeciesCompositionListItem>(input.sort),
-      }),
+    queryFn: async () =>
+      pageableResponseSchema(speciesCompositionListItemSchema).parse(
+        await API.speciesComposition.listSpeciesCompositions({
+          page: input.page,
+          size: input.size,
+          sort: generateSortArray<SpeciesCompositionListItem>(input.sort),
+        }),
+      ),
     ...queryOptions,
   });
 

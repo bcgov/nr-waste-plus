@@ -1,16 +1,16 @@
 import { Column } from '@carbon/react';
 import { type FC } from 'react';
 
-import FormulaConfigurationDetailHeader from './FormulaConfigurationDetailHeader.tsx';
-
-import type { FormulaSetResponse } from '@/services/formulaConfiguration.types.ts';
-
 import FormulaSection from '@/components/waste/Formula/FormulaSection/index.tsx';
 import {
   FORMULA_KEYS,
   getFormulaLabel,
   type FormulaKeyDefinition,
 } from '@/services/formulaConfiguration.constants.ts';
+
+import FormulaConfigurationDetailHeader from './FormulaConfigurationDetailHeader.tsx';
+
+import type { FormulaSetResponse } from '@/types/formulaConfiguration.types.ts';
 
 interface FormulaConfigurationDetailProps {
   data: FormulaSetResponse;

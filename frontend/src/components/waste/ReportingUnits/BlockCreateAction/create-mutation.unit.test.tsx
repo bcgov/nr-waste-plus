@@ -2,14 +2,14 @@ import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import BlockCreateAction from './index';
-
 import PageNotification from '@/components/core/PageNotification';
 import { renderWithApp } from '@/config/tests/renderWithApp';
-import { Role } from '@/context/auth/types';
 import { useAuth } from '@/context/auth/useAuth';
+import { Role } from '@/types/auth.types';
 
-import type { BlockCreateResponseDto } from '@/services/types';
+import BlockCreateAction from './index';
+
+import type { BlockCreateResponseDto } from '@/types/reportingUnit.types';
 
 /**
  * End-to-end mutation-path tests for {@link BlockCreateAction} (TC-C05/C06/C07).

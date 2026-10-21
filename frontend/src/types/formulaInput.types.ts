@@ -1,8 +1,8 @@
 import type { BigNumber } from 'mathjs';
 
-// ─── Formula Errors ───────────────────────────────────────────────────────────
-
-/** A user-facing error produced during formula parsing or evaluation. */
+/**
+ * A user-facing error produced during formula parsing or evaluation.
+ */
 export interface FormulaError {
   /** Plain-English explanation of what went wrong. */
   message: string;
@@ -14,9 +14,9 @@ export interface FormulaError {
   endColumn?: number;
 }
 
-// ─── Tokenization ─────────────────────────────────────────────────────────────
-
-/** Semantic classification of a formula token. */
+/**
+ * Semantic classification of a formula token.
+ */
 export type TokenType =
   | 'variable' // User-defined variable (fixed or dynamic param)
   | 'number' // Numeric literal (integer, decimal, scientific notation)
@@ -25,7 +25,9 @@ export type TokenType =
   | 'punctuation' // Brackets and commas: ( ) ,
   | 'unknown'; // Unrecognised character — will receive squiggles
 
-/** A token with its source position. */
+/**
+ * A token with its source position.
+ */
 export interface PositionedToken {
   type: TokenType;
   value: string;
@@ -35,21 +37,17 @@ export interface PositionedToken {
   endIndex: number;
 }
 
-// ─── Evaluation ───────────────────────────────────────────────────────────────
-
-/** The result of evaluating a formula. Exactly one of `value` or `error` is non-null. */
+/**
+ * The result of evaluating a formula. Exactly one of `value` or `error` is non-null.
+ */
 export interface EvaluationResult {
   /** Formatted string representation of the evaluated value, or null on error. */
   value: string | null;
   /** Structured error object, or null on success. */
   error: FormulaError | null;
-  /**
-   * The raw BigNumber result before formatting.
-   */
+  /** The raw BigNumber result before formatting. */
   raw: BigNumber | null;
 }
-
-// ─── Dependency Graph ─────────────────────────────────────────────────────────
 
 /**
  * Maps a formula label to the variable names it references.

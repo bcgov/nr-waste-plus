@@ -2,8 +2,8 @@ import { Theme } from '@carbon/react';
 import { useState, useEffect, useRef, type ReactNode, useMemo } from 'react';
 
 import { useAnnouncer } from '@/context/announcer/useAnnouncer';
-import { type CarbonTheme } from '@/context/preference/types';
 import { usePreference } from '@/context/preference/usePreference';
+import { type CarbonTheme } from '@/types/preference.types';
 
 import { ThemeContext } from './ThemeContext';
 

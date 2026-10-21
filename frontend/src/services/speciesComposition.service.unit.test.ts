@@ -3,11 +3,11 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 
 import { SpeciesCompositionService } from './speciesComposition.service';
 
+import type { PageableRequest } from '@/types/pagination.types';
 import type {
   SpeciesCompositionDetail,
   SpeciesCompositionListItem,
-} from './speciesComposition.types';
-import type { PageableRequest } from '@/services/types';
+} from '@/types/speciesComposition.types';
 
 const mockConfig = { baseURL: 'http://localhost' };
 let service: SpeciesCompositionService;
@@ -19,6 +19,7 @@ beforeEach(() => {
 
 const mockListItem: SpeciesCompositionListItem = {
   id: 1,
+  area: 'INTERIOR',
   startDate: '2026-05-15',
   endDate: null,
   uploadedBy: 'IDIR/ABCDEF',
@@ -37,11 +38,14 @@ const mockPageResponse = {
 
 const mockDetail: SpeciesCompositionDetail = {
   id: 1,
+  area: 'INTERIOR',
   startDate: '2026-05-15',
+  tableLevelFactor: 1.0,
   endDate: null,
   uploadedBy: 'IDIR/ABCDEF',
   dateOfUpload: '2026-03-27T00:00:00Z',
   tableData: {
+    type: 'SPECIES_COMPOSITION',
     rows: [
       {
         district: { code: 'DCC', description: 'Cariboo' },
@@ -156,6 +160,7 @@ describe('SpeciesCompositionService', () => {
     it('should handle multiple items in content', async () => {
       const item2: SpeciesCompositionListItem = {
         id: 2,
+        area: 'INTERIOR',
         startDate: '2026-04-01',
         endDate: null,
         uploadedBy: 'IDIR/WXYZ',
@@ -187,7 +192,7 @@ describe('SpeciesCompositionService', () => {
 
   describe('createSpeciesComposition', () => {
     const validCreateRequest = {
-      area: 'INTERIOR',
+      area: 'INTERIOR' as const,
       startDate: '2026-05-15',
       tableLevelFactor: 1.0,
       heliMultiplier: null,

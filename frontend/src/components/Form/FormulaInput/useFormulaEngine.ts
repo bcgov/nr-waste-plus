@@ -14,7 +14,7 @@ import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { evaluateFormula, extractVariables, parseFormula, isFormulaError } from './utils';
 
-import type { EvaluationResult } from './types';
+import type { EvaluationResult } from '@/types/formulaInput.types';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 

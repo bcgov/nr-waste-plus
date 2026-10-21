@@ -3,12 +3,12 @@ import { useForm } from '@tanstack/react-form';
 import { useState, type FC } from 'react';
 
 import { useCreateBlock, useReportingUnitBlocksQuery } from '@/config/react-query/hooks';
-import { Role } from '@/context/auth/types';
 import { useAuth } from '@/context/auth/useAuth';
 import { featureFlags } from '@/env';
 import useNotificationEvents from '@/hooks/useNotificationEvents';
+import { Role } from '@/types/auth.types';
 
-import type { BlockCreateRequestDto } from '@/services/reportingUnit.types';
+import type { BlockCreateRequestDto } from '@/types/reportingUnit.types';
 
 import './index.scss';
 

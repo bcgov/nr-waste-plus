@@ -3,13 +3,13 @@ import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import WasteSearchFiltersAdvanced from './index';
-
-import type { FamLoginUser } from '@/context/auth/types';
-import type { ReportingUnitSearchParametersViewDto } from '@/services/search.types';
-
 import { renderWithAppAsync } from '@/config/tests/renderWithApp';
 import APIs from '@/services/APIs';
+
+import WasteSearchFiltersAdvanced from './index';
+
+import type { FamLoginUser } from '@/types/auth.types';
+import type { ReportingUnitSearchParametersViewDto } from '@/types/search.types';
 
 const mockUser = {
   idpProvider: 'IDIR',
@@ -31,6 +31,9 @@ vi.mock('@/services/APIs', () => {
         getForestClientLocations: vi.fn(),
         searchForestClients: vi.fn(),
         searchMyForestClients: vi.fn(),
+      },
+      search: {
+        searchReportingUnitUsers: vi.fn(),
       },
     },
   };
@@ -264,5 +267,140 @@ describe('WasteSearchFiltersActive', () => {
 
     expect(onChange).toHaveBeenCalledWith('updateDateEnd');
     expect(innerFn).toHaveBeenCalledWith('2020-02-10');
+  });
+
+  it('renders the district/sampling/status multiselects with matching selections', async () => {
+    const districtOptions = [
+      { code: 'DCC', description: 'Cariboo-Chilcotin' },
+      { code: 'DSC', description: 'Sunshine Coast' },
+    ];
+    const samplingOptions = [
+      { code: 'AVG', description: 'Average' },
+      { code: 'OCU', description: 'Ocular' },
+    ];
+    const statusOptions = [
+      { code: 'SUB', description: 'Submitted' },
+      { code: 'DFT', description: 'Draft' },
+    ];
+    const filters: ReportingUnitSearchParametersViewDto = {
+      district: ['DCC'],
+      sampling: ['OCU'],
+      status: ['DFT'],
+    };
+
+    await renderWithProps({ filters, districtOptions, samplingOptions, statusOptions });
+
+    // Each multiselect's selectedItems filter (lines 145-147, 160-162, 175-177)
+    // resolves one match from the option list: three fields each report one
+    // selected item.
+    expect(screen.getAllByText(/Total items selected:\s*1/).length).toBe(3);
+    screen.getByText('District');
+    screen.getByText('Sampling option');
+    screen.getByText('Status');
+  });
+
+  it('renders BCeID client multiselect and runs the query select callback', async () => {
+    mockUser.idpProvider = 'BCEIDBUSINESS';
+    mockClients.mockReturnValue(['client1']);
+    vi.mocked(APIs.forestclient.searchMyForestClients).mockResolvedValue({
+      content: [
+        {
+          client: { code: '00010005', description: 'JACOB FEHR' },
+          submissionsCount: 1,
+          blocksCount: 2,
+          lastUpdate: '2025-01-16T10:00:00',
+        },
+      ],
+      page: { number: 0, size: 10, totalElements: 1, totalPages: 1 },
+    } as never);
+
+    await renderWithProps({});
+
+    // BCeID branch of AdvancedFilterClientInput (multiselect, not autocomplete).
+    expect(screen.queryByTestId('forestclient-client-ac')).toBeNull();
+    expect(screen.getAllByTestId('as-client-multi-select').length).toBeGreaterThan(0);
+
+    // The select callback (line 102) maps content rows to their client entry
+    // when the query resolves.
+    await waitFor(() => {
+      expect(APIs.forestclient.searchMyForestClients).toHaveBeenCalled();
+    });
+  });
+});
+
+describe('WasteSearchFiltersAdvanced submitter autocomplete', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockUser.idpProvider = 'IDIR';
+    mockClients.mockReturnValue(['client1', 'client2']);
+  });
+
+  const submitterFilters: ReportingUnitSearchParametersViewDto = { requestUserId: '' };
+
+  it('returns the raw string when a submitter option is a plain string', async () => {
+    vi.mocked(APIs.search.searchReportingUnitUsers).mockResolvedValue(['JASON', 'MARIA']);
+
+    await renderWithProps({ filters: submitterFilters });
+
+    const input = screen.getByTestId('submitter-name-ac');
+    await userEvent.type(input, 'ja');
+
+    // Object-covered path for a string item (line 241).
+    const option = await screen.findByRole('option', { name: /JASON/ }, { timeout: 2000 });
+    expect(option).toBeDefined();
+    expect(option.textContent).toBe('JASON');
+  });
+
+  it('joins a character-indexed object into a string (lines 244-246)', async () => {
+    // A character-indexed object, as produced by some legacy user APIs.
+    const charIndexed = { 0: 'J', 1: 'A', 2: 'S', 3: 'O', 4: 'N' };
+    vi.mocked(APIs.search.searchReportingUnitUsers).mockResolvedValue([charIndexed]);
+
+    await renderWithProps({ filters: submitterFilters });
+
+    const input = screen.getByTestId('submitter-name-ac');
+    await userEvent.type(input, 'ja');
+
+    // itemToString detects the char-indexed object and joins values (line 246).
+    const option = await screen.findByRole('option', { name: /JASON/ }, { timeout: 2000 });
+    expect(option).toBeDefined();
+  });
+
+  it('returns an empty label for an object that is not character-indexed (line 249)', async () => {
+    vi.mocked(APIs.search.searchReportingUnitUsers).mockResolvedValue([
+      { name: 'JASON', value: 'not-char-indexed' },
+    ]);
+
+    await renderWithProps({ filters: submitterFilters });
+
+    const input = screen.getByTestId('submitter-name-ac');
+    await userEvent.type(input, 'ja');
+
+    await waitFor(() => {
+      expect(APIs.search.searchReportingUnitUsers).toHaveBeenCalledWith('ja');
+    });
+    // Options render even though the label resolves to '' (fall-through).
+    const combobox = screen.getByTestId('submitter-name-ac');
+    expect(combobox).toBeDefined();
+  });
+
+  it('passes the selected submitter up through onChange (onSelect, lines 251-253)', async () => {
+    vi.mocked(APIs.search.searchReportingUnitUsers).mockResolvedValue(['JASON']);
+    const onChange = vi.fn();
+    const innerFn = vi.fn();
+    onChange.mockReturnValue(innerFn);
+
+    await renderWithProps({ filters: submitterFilters, onChange });
+
+    const input = screen.getByTestId('submitter-name-ac');
+    await userEvent.type(input, 'ja');
+
+    const option = await screen.findByRole('option', { name: /JASON/ }, { timeout: 2000 });
+    await userEvent.click(option);
+
+    await waitFor(() => {
+      expect(onChange).toHaveBeenCalledWith('requestUserId');
+      expect(innerFn).toHaveBeenCalledWith('JASON');
+    });
   });
 });

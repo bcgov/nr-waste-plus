@@ -2,8 +2,6 @@ import { Search as SearchIcon, FilterEdit as FilterIcon } from '@carbon/icons-re
 import { Button, Column, Grid } from '@carbon/react';
 import { type FC } from 'react';
 
-import type { ReportingUnitSearchParametersViewDto } from '@/services/types';
-
 import ActiveMultiSelect from '@/components/Form/ActiveMultiSelect';
 import SearchInput from '@/components/Form/SearchInput';
 import { useWasteSearchFilterOptions } from '@/components/waste/WasteSearch/WasteSearchFilters/useWasteSearchFilterOptions';
@@ -11,6 +9,8 @@ import { useWasteSearchFilters } from '@/components/waste/WasteSearch/WasteSearc
 import WasteSearchFiltersActive from '@/components/waste/WasteSearch/WasteSearchFiltersActive';
 import { activeMSItemToString } from '@/components/waste/WasteSearch/WasteSearchFiltersActive/utils';
 import WasteSearchFiltersAdvanced from '@/components/waste/WasteSearch/WasteSearchFiltersAdvanced';
+
+import type { ReportingUnitSearchParametersViewDto } from '@/types/search.types';
 
 import './index.scss';
 
@@ -77,7 +77,7 @@ const WasteSearchFilters: FC<WasteSearchFiltersProps> = ({ value, onChange, onSe
             itemToString={activeMSItemToString}
             onChange={handleActiveMultiSelectChange('district')}
             selectedItems={districtOptions.filter((option) =>
-              (filters.district || []).includes(option.code),
+              (filters.district || []).includes(option.code ?? ''),
             )}
           />
         </Column>
@@ -92,7 +92,7 @@ const WasteSearchFilters: FC<WasteSearchFiltersProps> = ({ value, onChange, onSe
             itemToString={activeMSItemToString}
             onChange={handleActiveMultiSelectChange('sampling')}
             selectedItems={samplingOptions.filter((option) =>
-              (filters.sampling || []).includes(option.code),
+              (filters.sampling || []).includes(option.code ?? ''),
             )}
           />
         </Column>
@@ -106,7 +106,7 @@ const WasteSearchFilters: FC<WasteSearchFiltersProps> = ({ value, onChange, onSe
             itemToString={activeMSItemToString}
             onChange={handleActiveMultiSelectChange('status')}
             selectedItems={statusOptions.filter((option) =>
-              (filters.status || []).includes(option.code),
+              (filters.status || []).includes(option.code ?? ''),
             )}
           />
         </Column>

@@ -12,16 +12,6 @@ import { useNavigate } from '@tanstack/react-router';
 import { DateTime } from 'luxon';
 import { type FC, useEffect, useMemo, useRef, useState } from 'react';
 
-import FormulaVariableCatalog from '../FormulaVariableCatalog';
-
-import { carryForwardFormulaValues, type FormulaDraftValue } from './carryForward.ts';
-
-import type {
-  FormulaItemDto,
-  FormulaSetRequest,
-  FormulaValidationError,
-} from '@/services/formulaConfiguration.types.ts';
-
 import FormulaSection from '@/components/waste/Formula/FormulaSection';
 import { ApiError } from '@/config/api/types.ts';
 import {
@@ -34,6 +24,16 @@ import {
   FORMULA_VARIABLES_DISTRICT_CODE,
   getFormulaKeysForArea,
 } from '@/services/formulaConfiguration.constants.ts';
+
+import FormulaVariableCatalog from '../FormulaVariableCatalog';
+
+import { carryForwardFormulaValues, type FormulaDraftValue } from './carryForward.ts';
+
+import type {
+  FormulaItemDto,
+  FormulaSetRequest,
+  FormulaValidationError,
+} from '@/types/formulaConfiguration.types.ts';
 
 import './index.scss';
 
@@ -130,7 +130,6 @@ const FormulaConfigurationCreateForm: FC = () => {
       const dto: FormulaSetRequest = {
         area: value.area,
         startDate: value.startDate,
-        endDate: null,
         formulas: Object.keys(value.formulas).map((formulaKey, idx) => ({
           formulaKey,
           expression: value.formulas[formulaKey]?.expression ?? '',
@@ -339,7 +338,6 @@ const FormulaConfigurationCreateForm: FC = () => {
   };
 
   const handleDateInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    // eslint-disable-next-line no-console
     const value = event.currentTarget.value.trim().replaceAll('/', '-');
     const parsed = DateTime.fromFormat(value, DATE_FORMAT);
     if (!value || !parsed.isValid || parsed < DateTime.now().plus({ days: 1 }).startOf('day')) {

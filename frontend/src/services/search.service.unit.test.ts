@@ -3,12 +3,12 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 
 import { SearchService } from './search.service';
 
+import type { PageableRequest } from '@/types/pagination.types';
 import type {
+  ReportingUnitSearchExpandedDto,
   ReportingUnitSearchParametersDto,
   ReportingUnitSearchResultDto,
-  ReportingUnitSearchExpandedDto,
-  PageableRequest,
-} from './types';
+} from '@/types/search.types';
 
 const mockConfig = { baseURL: 'http://localhost' };
 let service: SearchService;

@@ -9,7 +9,7 @@ import {
 } from './useMonacoFormula';
 
 import type { UseMonacoFormulaOptions } from './useMonacoFormula';
-import type { CarbonTheme } from '@/context/preference/types';
+import type { CarbonTheme } from '@/types/preference.types';
 import type { Monaco } from '@monaco-editor/react';
 import type { editor as MonacoEditorNS } from 'monaco-editor';
 

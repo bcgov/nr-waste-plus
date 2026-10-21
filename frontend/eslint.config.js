@@ -13,6 +13,52 @@ import { globalIgnores, defineConfig } from 'eslint/config';
 
 const compat = new FlatCompat();
 
+// Local rule: barrel re-exports (`export ... from './x'`) stay sorted
+// case-insensitively by source module — keeps the @/types barrel stable
+// without an external sort plugin.
+const barrelPlugin = {
+  rules: {
+    'sorted-re-exports': {
+      meta: {
+        type: 'suggestion',
+        docs: {
+          description:
+            'Enforce case-insensitive alphabetical order of barrel re-exports by source module.',
+        },
+        schema: [],
+        messages: {
+          unsorted: "Re-export of '{{source}}' should come before '{{previous}}'.",
+        },
+      },
+      create(context) {
+        const reExports = [];
+        return {
+          ExportAllDeclaration(node) {
+            if (node.source) reExports.push(node);
+          },
+          ExportNamedDeclaration(node) {
+            if (node.source) reExports.push(node);
+          },
+          'Program:exit'() {
+            let previous = null;
+            for (const node of reExports) {
+              const source = String(node.source.value);
+              if (previous && source.toLowerCase() < previous.toLowerCase()) {
+                context.report({
+                  node,
+                  messageId: 'unsorted',
+                  data: { source, previous },
+                });
+              }
+              previous = source;
+            }
+          },
+        };
+      },
+    },
+  },
+};
+
 export default defineConfig([
   globalIgnores(['dist', 'coverage', 'node_modules', 'dev-dist', '.devcontainer', 'scripts']),
   ...compat.config({
@@ -86,6 +132,14 @@ export default defineConfig([
           project: './tsconfig.json',
         },
       },
+    },
+  },
+  // Barrel hygiene — the @/types re-export barrel stays alphabetically sorted.
+  {
+    files: ['src/types/index.ts'],
+    plugins: { barrel: barrelPlugin },
+    rules: {
+      'barrel/sorted-re-exports': 'warn',
     },
   },
   // Test file configuration — enforce testing best practices with warnings

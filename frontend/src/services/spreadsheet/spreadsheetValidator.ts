@@ -1,4 +1,4 @@
-import type { MatrixConfig, ValidationResult } from './types';
+import type { MatrixConfig, ValidationResult } from '@/types/spreadsheet.types';
 import type ExcelJS from 'exceljs';
 
 function getCellText(worksheet: ExcelJS.Worksheet, row: number, col: number): string {

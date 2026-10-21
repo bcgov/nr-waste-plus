@@ -4,12 +4,12 @@ import { renderHook, waitFor } from '@testing-library/react';
 import React from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { useClientLookup } from './useClientLookup';
-
-import type { FamLoginUser } from '@/context/auth/types';
-
 import { makeTestQueryClient } from '@/config/tests/renderWithApp';
 import APIs from '@/services/APIs';
+
+import { useClientLookup } from './useClientLookup';
+
+import type { FamLoginUser } from '@/types/auth.types';
 
 const mockUser = {
   idpProvider: 'IDIR',

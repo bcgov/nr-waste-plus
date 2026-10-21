@@ -4,12 +4,6 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import ReportingUnitCreate from './index';
-
-import type { FamLoginUser } from '@/context/auth/types';
-import type { CodeDescriptionDto, ReportingUnitCreateDto } from '@/services/types';
-import type { ChangeEvent, ReactElement, ReactNode } from 'react';
-
 import { useWasteSearchFilterOptions } from '@/components/waste/WasteSearch/WasteSearchFilters/useWasteSearchFilterOptions';
 import {
   useMyForestClientsQuery,
@@ -17,6 +11,13 @@ import {
 } from '@/config/react-query/hooks';
 import { createTestRouter } from '@/config/tests/routerTestHelper';
 import { useAuth } from '@/context/auth/useAuth';
+
+import ReportingUnitCreate from './index';
+
+import type { FamLoginUser } from '@/types/auth.types';
+import type { ReportingUnitCreateDto } from '@/types/reportingUnit.types';
+import type { CodeDescriptionDto } from '@/types/search.types';
+import type { ChangeEvent, ReactElement, ReactNode } from 'react';
 
 vi.mock('@/context/auth/useAuth', async () => ({
   useAuth: vi.fn(),
@@ -144,7 +145,7 @@ vi.mock('@carbon/react', async () => {
         >
           <option value="">Select</option>
           {items.map((item) => (
-            <option key={item.code} value={item.code}>
+            <option key={item.code} value={item.code ?? ''}>
               {item.description}
             </option>
           ))}

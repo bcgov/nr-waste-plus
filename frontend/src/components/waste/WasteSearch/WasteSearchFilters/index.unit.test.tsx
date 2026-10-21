@@ -160,4 +160,52 @@ describe('WasteSearchFilters', () => {
     await userEvent.click(screen.getByText('A - Sampling option: A'));
     await waitFor(() => expect(onChange).toHaveBeenCalled());
   });
+
+  it('shouldOpenAdvancedSearchFromSmallScreenButton_whenClicked', async () => {
+    await renderWithProps({});
+    const smAdvanced = screen.getByTestId('advanced-search-button-sm');
+    await userEvent.click(smAdvanced);
+
+    const modal = await screen.findByRole('dialog');
+    expect(modal).toBeDefined();
+  });
+
+  it('shouldCallOnSearchFromSmallScreenSearchButton_whenClicked', async () => {
+    const onSearch = vi.fn();
+    await renderWithProps({ onSearch });
+    const smSearch = screen.getByTestId('search-button-sm');
+    await userEvent.click(smSearch);
+    expect(onSearch).toHaveBeenCalled();
+  });
+
+  it('shouldCallOnSearchFromAdvancedModalSearchButton_whenClicked', async () => {
+    const onSearch = vi.fn();
+    await renderWithProps({ onSearch });
+
+    await userEvent.click(screen.getByTestId('advanced-search-button-most'));
+    const modal = await screen.findByRole('dialog');
+
+    const modalSearch = within(modal).getByRole('button', { name: /Search/i });
+    await userEvent.click(modalSearch);
+
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog')).toBeNull();
+      expect(onSearch).toHaveBeenCalled();
+    });
+  });
+
+  it('shouldRenderWithPreselectedFilterValues_coveringSelectedItemsBranches', async () => {
+    const value = {
+      mainSearchTerm: '',
+      sampling: ['A'],
+      district: ['B'],
+      status: ['A'],
+    };
+    await renderWithProps({ value });
+
+    // Cover selectedItems filter branches for all three dropdowns.
+    await waitFor(() => {
+      expect(screen.getAllByRole('button', { name: /Clear selected item/i }).length).toBe(3);
+    });
+  });
 });

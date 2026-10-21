@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useSyncExternalStore } from 'react';
 
-import type { Condition, UseConditionalFieldOptions } from './types';
+import type { Condition, UseConditionalFieldOptions } from '@/types/conditionalField.types';
 
 /**
  * Reads a value from a plain object by a dot-separated path string.

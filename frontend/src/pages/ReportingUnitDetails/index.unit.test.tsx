@@ -3,13 +3,13 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 import { useReportingUnitBlocksQuery } from '@/config/react-query/hooks';
 import { renderWithApp } from '@/config/tests/renderWithApp';
-import { Role } from '@/context/auth/types';
 import * as useAuthModule from '@/context/auth/useAuth';
 import * as envModule from '@/env';
+import { Role } from '@/types/auth.types';
 
 import ReportingUnitDetailsPage from './index';
 
-import type { ReportingUnitDto } from '@/services/types';
+import type { ReportingUnitDto } from '@/types/reportingUnit.types';
 
 // ── Mutable state ─────────────────────────────────────────────────────────────
 

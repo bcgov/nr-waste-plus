@@ -1,6 +1,6 @@
 import { createContext, type ReactNode } from 'react';
 
-import type { UserPreference } from './types';
+import type { UserPreference } from '@/types/preference.types';
 
 /**
  * The context value for user preferences.

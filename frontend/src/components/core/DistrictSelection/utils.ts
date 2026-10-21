@@ -1,4 +1,4 @@
-import type { ForestClientDto } from '@/services/types';
+import type { ForestClientDto } from '@/types/forestclient.types';
 
 /**
  * Matches a forest client against a free-text keyword across multiple display fields.

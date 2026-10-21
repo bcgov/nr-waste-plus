@@ -1,8 +1,8 @@
-import type { TableHeaderType } from '@/components/Form/TableResource/types';
-import type { MyForestClientDto } from '@/services/types';
-
 import DateTag from '@/components/core/Tags/DateTag';
 import RedirectLinkTag from '@/components/core/Tags/RedirectLinkTag';
+
+import type { MyForestClientDto } from '@/types/forestclient.types';
+import type { TableHeaderType } from '@/types/tableResource.types';
 
 /**
  * Column definitions for the My Client List results table.

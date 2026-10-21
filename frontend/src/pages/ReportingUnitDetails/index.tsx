@@ -13,7 +13,7 @@ import ReportingUnitDetailsTombstone from '@/components/waste/ReportingUnits/Rep
 import { useReportingUnitBlocksQuery } from '@/config/react-query/hooks';
 import { featureFlags } from '@/env';
 
-import type { ReportingUnitDto } from '@/services/types';
+import type { ReportingUnitDto } from '@/types/reportingUnit.types';
 
 import './index.scss';
 

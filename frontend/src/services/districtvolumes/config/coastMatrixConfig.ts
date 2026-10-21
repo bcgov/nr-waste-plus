@@ -1,4 +1,4 @@
-import type { MatrixConfig } from '@/services/spreadsheet/types';
+import type { MatrixConfig } from '@/types/spreadsheet.types';
 
 /**
  * Coast district-averages spreadsheet layout (positional):

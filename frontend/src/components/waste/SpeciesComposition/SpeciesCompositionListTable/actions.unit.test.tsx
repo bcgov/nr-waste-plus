@@ -2,14 +2,14 @@ import { useNavigate } from '@tanstack/react-router';
 import { renderHook } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest';
 
-import { useSpeciesCompositionListRowActions } from './actions.tsx';
-
-import type { PageableResponse } from '@/components/Form/TableResource/types.ts';
-import type { SpeciesCompositionListItem } from '@/services/speciesComposition.types.ts';
-
-import { resolveTableRowActionValue } from '@/components/Form/TableResource/types.ts';
+import { resolveTableRowActionValue } from '@/components/Form/TableResource/utils.ts';
 import { navigateInTree } from '@/routes/inTreePaths.ts';
 import { isFutureDated } from '@/utils/businessDate.ts';
+
+import { useSpeciesCompositionListRowActions } from './actions.tsx';
+
+import type { SpeciesCompositionListItem } from '@/types/speciesComposition.types.ts';
+import type { PageableResponse } from '@/types/tableResource.types.ts';
 
 vi.mock('@tanstack/react-router', () => ({
   useNavigate: vi.fn(),
@@ -29,10 +29,11 @@ type SpeciesCompositionRow = PageableResponse<SpeciesCompositionListItem>['conte
 
 const makeRow = (overrides: Partial<SpeciesCompositionRow> = {}): SpeciesCompositionRow => ({
   id: 42,
+  area: 'INTERIOR',
   startDate: '2025-01-01',
   endDate: null,
   uploadedBy: 'admin@gov.bc.ca',
-  dateOfUpload: '2025-01-15T10:30:00',
+  dateOfUpload: '2025-01-15T10:30:00Z',
   ...overrides,
 });
 

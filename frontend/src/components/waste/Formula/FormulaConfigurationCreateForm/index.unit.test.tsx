@@ -331,7 +331,6 @@ describe('FormulaConfigurationCreateForm', () => {
     expect(mocks.mutateAsync).toHaveBeenCalledWith(
       expect.objectContaining({
         area: 'INTERIOR',
-        endDate: null,
         formulas: expect.any(Array),
       }),
     );

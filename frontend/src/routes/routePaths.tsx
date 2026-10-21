@@ -4,7 +4,6 @@ import { lazyRouteComponent, type RouteLoaderFn } from '@tanstack/react-router';
 import { type ComponentType, Suspense } from 'react';
 
 import Layout from '@/components/Layout';
-import { Role, type FamRole } from '@/context/auth/types';
 import { featureFlags, type FeatureFlags } from '@/env';
 
 // ─── Eager imports (entry point + error states — must load instantly) ──────────
@@ -53,6 +52,7 @@ const FormulaConfigurationCreatePage = lazyRouteComponent(
 // ─── Shared loader (eager — used by route config at module load time) ──────────
 import { withPersistentRedirect } from '@/routes/guards/withPersistentRedirect';
 import { withPublicOnly } from '@/routes/guards/withPublicOnly';
+import { Role, type FamRole } from '@/types/auth.types';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
