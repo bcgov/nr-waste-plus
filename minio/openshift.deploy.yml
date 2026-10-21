@@ -40,8 +40,6 @@ parameters:
     value: 250m
   - name: MEMORY_LIMIT
     value: 512Mi
-  - name: DOMAIN
-    value: apps.silver.devops.gov.bc.ca
   - name: RANDOM_EXPRESSION
     description: Random expression to ensure deployments update
     from: "[a-zA-Z0-9]{32}"
@@ -198,6 +196,9 @@ objects:
           terminationGracePeriodSeconds: 30
           dnsPolicy: ClusterFirst
           schedulerName: default-scheduler
+  # The only way in. ClusterIP - no Route is created for this workload, so the
+  # S3 API and the admin console are reachable only from inside the cluster.
+  # See the note below on who is allowed in, and how to port-forward.
   - kind: Service
     apiVersion: v1
     metadata:
@@ -217,57 +218,36 @@ objects:
       selector:
         deployment: ${NAME}-${ZONE}-${COMPONENT}
       type: ClusterIP
-  - kind: Route
-    apiVersion: route.openshift.io/v1
-    metadata:
-      name: ${NAME}-${ZONE}-${COMPONENT}
-      labels:
-        app: ${NAME}-${ZONE}
-    spec:
-      host: ${NAME}-${ZONE}-${COMPONENT}.${DOMAIN}
-      port:
-        targetPort: console
-      to:
-        kind: Service
-        name: ${NAME}-${ZONE}-${COMPONENT}
-        weight: 100
-      tls:
-        termination: edge
-        insecureEdgeTerminationPolicy: Redirect
-  - kind: Route
-    apiVersion: route.openshift.io/v1
-    metadata:
-      name: ${NAME}-${ZONE}-${COMPONENT}-api
-      labels:
-        app: ${NAME}-${ZONE}
-    spec:
-      host: ${NAME}-${ZONE}-${COMPONENT}-api.${DOMAIN}
-      port:
-        targetPort: s3-api
-      to:
-        kind: Service
-        name: ${NAME}-${ZONE}-${COMPONENT}
-        weight: 100
-      tls:
-        termination: edge
-        insecureEdgeTerminationPolicy: Redirect
-  - kind: NetworkPolicy
-    apiVersion: networking.k8s.io/v1
-    metadata:
-      name: allow-from-openshift-ingress-minio
-      labels:
-        app: ${NAME}-${ZONE}
-    spec:
-      podSelector:
-        matchLabels:
-          deployment: ${NAME}-${ZONE}-${COMPONENT}
-      policyTypes:
-        - Ingress
-      ingress:
-        - from:
-            - namespaceSelector:
-                matchLabels:
-                  network.openshift.io/policy-group: ingress
+  # No Route is created for MinIO: the S3 API and the admin console are
+  # reachable only inside the cluster, over the ClusterIP Service above.
+  #
+  # This matches the other data-tier components in this repo (legacydb, legacy,
+  # database), which expose no Route either and are reached at
+  # nr-waste-plus-tools-legacydb.cffaf3-tools.svc.cluster.local:1521.
+  #
+  # It also means the OpenShift router has no path to the MinIO pods. A Route
+  # would be edge-terminated on the shared router, and a NetworkPolicy cannot
+  # make an edge-terminated Route internal-only - the router terminates TLS and
+  # proxies to the pod, so the pod only ever sees a connection from the router,
+  # and any policy admitting network.openshift.io/policy-group: ingress also
+  # admits whatever the router forwarded from the internet. Restricting MinIO
+  # to the dev namespace therefore means having no Route at all, not tightening
+  # a policy.
+  #
+  # Reachability:
+  #   - cffaf3-dev (the apps) -> cffaf3-tools (this workload), via the
+  #     allow-cffaf3-dev-minio-access policy below.
+  #   - the cffaf3-tools namespace itself, via allow-same-namespace-minio.
+  #   - an operator at a terminal -> `oc port-forward
+  #     svc/${NAME}-${ZONE}-${COMPONENT} 9000:9000` (S3 API) or `9001:9001`
+  #     (admin console) from the cffaf3-tools namespace.
+  #
+  # The console port stays on the Service so the port-forward above works.
+  #
+  # Note for a future browser-upload feature: with no public endpoint, a
+  # browser outside the cluster cannot PUT to MinIO directly. Presigned URLs
+  # are signed against the in-cluster endpoint, so uploads would have to be
+  # proxied through the backend rather than handed to the browser.
   - kind: NetworkPolicy
     apiVersion: networking.k8s.io/v1
     metadata:
@@ -286,6 +266,9 @@ objects:
                 matchLabels:
                   environment: dev
                   name: cffaf3
+  # Same-namespace access, mirroring legacydb's allow-same-namespace - this
+  # covers the deployment's own sidecar container and any other pod in
+  # cffaf3-tools.
   - kind: NetworkPolicy
     apiVersion: networking.k8s.io/v1
     metadata:

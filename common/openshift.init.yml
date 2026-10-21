@@ -78,7 +78,7 @@ parameters:
     description: S3 or MinIO endpoint URL
     value: ""
   - name: OBJECT_STORAGE_PRESIGNER_ENDPOINT
-    description: S3 or MinIO presigner endpoint URL for client access
+    description: S3 or MinIO presigner endpoint URL; leave unset to sign against OBJECT_STORAGE_ENDPOINT
     value: ""
   - name: OBJECT_STORAGE_ACCESS_KEY
     description: S3 or MinIO access key
