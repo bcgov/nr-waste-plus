@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
@@ -39,7 +40,7 @@ public class ObjectStorageProperties {
    * @return the presigner endpoint if configured, otherwise the primary endpoint
    */
   public String getPresignerEndpoint() {
-    return org.apache.commons.lang3.StringUtils.isNotBlank(presignerEndpoint)
+    return StringUtils.isNotBlank(presignerEndpoint)
         ? presignerEndpoint
         : endpoint;
   }

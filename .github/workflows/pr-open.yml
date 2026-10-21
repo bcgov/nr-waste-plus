@@ -56,8 +56,8 @@ jobs:
       object-storage-endpoint: http://nr-waste-plus-tools-minio.cffaf3-tools.svc.cluster.local:9000
       # No separate presigner endpoint: MinIO has no public Route, so presigned
       # URLs are signed against the in-cluster endpoint above.
-      object-storage-access-key: ${{ secrets.OBJECT_STORAGE_ACCESS_KEY || secrets.MINIO_ROOT_USER || 'minioadmin' }}
-      object-storage-secret-key: ${{ secrets.OBJECT_STORAGE_SECRET_KEY || secrets.MINIO_ROOT_PASSWORD || secrets.DB_PASSWORD }}
+      object-storage-access-key: ${{ secrets.MINIO_ROOT_USER }}
+      object-storage-secret-key: ${{ secrets.MINIO_ROOT_PASSWORD }}
       object-storage-force-path-style: 'true'
       configmap-backend: |-
         info:

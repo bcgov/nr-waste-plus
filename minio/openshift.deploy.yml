@@ -15,11 +15,10 @@ parameters:
     required: true
   - name: MINIO_ROOT_USER
     description: MinIO root user / S3 access key
-    value: minioadmin
+    required: true
   - name: MINIO_ROOT_PASSWORD
     description: MinIO root password / S3 secret key
-    from: "[a-zA-Z0-9]{32}"
-    generate: expression
+    required: true
   - name: OBJECT_STORAGE_BUCKET
     description: Default bucket name to seed
     value: nr-waste
@@ -57,6 +56,8 @@ objects:
       resources:
         requests:
           storage: ${MINIO_PVC_SIZE}
+      # netapp-file-standard is the standard file storage class provisioned in this namespace,
+      # matching database and legacy.
       storageClassName: netapp-file-standard
   - kind: Secret
     apiVersion: v1
@@ -95,7 +96,7 @@ objects:
           containers:
             - name: minio
               image: ${MINIO_IMAGE}
-              imagePullPolicy: IfNotPresent
+              imagePullPolicy: Always
               command:
                 - minio
                 - server
@@ -150,7 +151,7 @@ objects:
                 failureThreshold: 3
             - name: minio-init
               image: ${MINIO_CLIENT_IMAGE}
-              imagePullPolicy: IfNotPresent
+              imagePullPolicy: Always
               command:
                 - /bin/sh
                 - -c
