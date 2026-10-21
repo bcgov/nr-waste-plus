@@ -31,7 +31,7 @@ parameters:
     value: cgr.dev/chainguard/minio-client:latest-dev
   - name: MINIO_PVC_SIZE
     description: Persistent volume capacity for MinIO data
-    value: 2Gi
+    value: 500Mi
   - name: CPU_REQUEST
     value: 50m
   - name: MEMORY_REQUEST
