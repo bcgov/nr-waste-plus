@@ -156,8 +156,14 @@ export const useWasteSearchFilters = (): UseWasteSearchFiltersReturn => {
       selectedDistrict: 'district',
     },
     (key, value): string | boolean | string[] | CodeDescriptionDto[] | undefined => {
-      if (key === 'selectedClient' || key === 'selectedDistrict') {
-        return (value ? [value] : []) as string[] | CodeDescriptionDto[];
+      // clientNumbers is view-shaped (CodeDescriptionDto[]) — a bare client-number
+      // string must be wrapped, otherwise viewDtoToSearch reads `.code` off the
+      // primitive and drops the preference entirely.
+      if (key === 'selectedClient') {
+        return value ? [{ code: String(value), description: String(value) }] : [];
+      }
+      if (key === 'selectedDistrict') {
+        return value ? [String(value)] : [];
       }
       return value as string | boolean | string[] | undefined;
     },

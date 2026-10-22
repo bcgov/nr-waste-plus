@@ -267,12 +267,14 @@ describe('useWasteSearchFilters', () => {
   });
 
   describe('useSyncPreferencesToFilters callback', () => {
-    it('shouldReturnValueAsArray_whenKeyIsSelectedClient', async () => {
+    it('shouldReturnViewShapedItems_whenKeyIsSelectedClient', async () => {
       await mountHook('/search');
       const calls = vi.mocked(useSyncPreferencesToFilters).mock.calls;
       expect(calls.length).toBeGreaterThan(0);
       const transformFn = calls[0][2]!;
-      expect(transformFn('selectedClient', '100')).toEqual(['100']);
+      // clientNumbers is view-shaped: viewDtoToSearch reads `.code`, so a bare
+      // string would be dropped from the URL and request entirely.
+      expect(transformFn('selectedClient', '100')).toEqual([{ code: '100', description: '100' }]);
     });
 
     it('shouldReturnEmptyArray_whenKeyIsSelectedClientAndValueIsFalsy', async () => {
