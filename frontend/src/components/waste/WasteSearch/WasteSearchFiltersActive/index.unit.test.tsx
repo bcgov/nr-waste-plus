@@ -28,6 +28,15 @@ describe('WasteSearchFiltersActive', () => {
     expect(container).toBeDefined(); //This is defined in
   });
 
+  it('shows a persistent source tag for legacy and PostgreSQL result sets', () => {
+    renderWithProps({ filters: { ...defaultFilters, legacy: true } });
+    expect(screen.getByTestId('search-source-tag').textContent).toBe('Source: Legacy');
+
+    renderWithProps({ filters: { ...defaultFilters, legacy: false } });
+    const sourceTags = screen.getAllByTestId('search-source-tag');
+    expect(sourceTags.at(-1)?.textContent).toBe('Source: PostgreSQL');
+  });
+
   it('renders search filters active with some filters', async () => {
     const filters = {
       district: ['A'],

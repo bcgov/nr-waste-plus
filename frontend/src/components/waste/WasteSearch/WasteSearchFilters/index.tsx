@@ -10,16 +10,10 @@ import WasteSearchFiltersActive from '@/components/waste/WasteSearch/WasteSearch
 import { activeMSItemToString } from '@/components/waste/WasteSearch/WasteSearchFiltersActive/utils';
 import WasteSearchFiltersAdvanced from '@/components/waste/WasteSearch/WasteSearchFiltersAdvanced';
 
-import type { ReportingUnitSearchParametersViewDto } from '@/types/search.types';
-
 import './index.scss';
 
 /** Props for the {@link WasteSearchFilters} component. */
 type WasteSearchFiltersProps = {
-  /** Current filter state that drives all filter controls. */
-  value: ReportingUnitSearchParametersViewDto;
-  /** Called whenever any filter field changes; receives the full updated filter object. */
-  onChange: (filters: ReportingUnitSearchParametersViewDto) => void;
   /** Called when the user explicitly triggers a search (search button or Enter key). */
   onSearch: () => void;
 };
@@ -31,17 +25,15 @@ type WasteSearchFiltersProps = {
  * and active-filter tags. Also exposes an "Advanced Search" button that opens a
  * modal ({@link WasteSearchFiltersAdvanced}) for additional criteria.
  *
- * Filter state is managed internally by {@link useWasteSearchFilters} and kept in
- * sync with the URL search params via {@link useSyncFiltersToSearchParams}.
+ * Filter state lives in the `/search` URL search params (TanStack Router
+ * `validateSearch`) and is managed internally by {@link useWasteSearchFilters}.
  * Dropdown option lists are fetched via {@link useWasteSearchFilterOptions}.
  *
  * @param props - Component props.
- * @param props.value - Current filter state that drives all filter controls.
- * @param props.onChange - Called whenever any filter field changes.
  * @param props.onSearch - Called when the user triggers a search.
  * @returns The filter bar column and advanced-search modal.
  */
-const WasteSearchFilters: FC<WasteSearchFiltersProps> = ({ value, onChange, onSearch }) => {
+const WasteSearchFilters: FC<WasteSearchFiltersProps> = ({ onSearch }) => {
   const { samplingOptions, districtOptions, statusOptions } = useWasteSearchFilterOptions();
   const {
     filters,
@@ -51,7 +43,7 @@ const WasteSearchFilters: FC<WasteSearchFiltersProps> = ({ value, onChange, onSe
     handleActiveMultiSelectChange,
     handleChange,
     onRemoveFilter,
-  } = useWasteSearchFilters(value, onChange);
+  } = useWasteSearchFilters();
 
   return (
     <>
