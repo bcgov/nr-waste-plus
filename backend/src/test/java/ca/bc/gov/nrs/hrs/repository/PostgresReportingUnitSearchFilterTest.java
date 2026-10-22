@@ -118,4 +118,32 @@ class PostgresReportingUnitSearchFilterTest {
 
     assertThat(filter.getMainSearchTerm()).isEqualTo("000000001");
   }
+
+  @Test
+  @DisplayName("from: whitespace-padded numeric terms are trimmed before overflow validation")
+  void from_whitespacePaddedOverflow_shouldReject400() {
+    var filters = ReportingUnitSearchParametersDto.builder()
+        .mainSearchTerm("  99999999999999999999  ")
+        .build();
+
+    assertThatThrownBy(() -> PostgresReportingUnitSearchFilter.from(filters, List.of()))
+        .isInstanceOfSatisfying(
+            ResponseStatusException.class,
+            ex -> {
+              assertThat(ex.getStatusCode().value()).isEqualTo(400);
+              assertThat(ex.getReason()).isEqualTo("numeric search term out of range");
+            });
+  }
+
+  @Test
+  @DisplayName("from: whitespace-padded valid numeric term binds without whitespace")
+  void from_whitespacePaddedValidTerm_shouldBindTrimmedValue() {
+    var filters = ReportingUnitSearchParametersDto.builder()
+        .mainSearchTerm("  12345  ")
+        .build();
+
+    var filter = PostgresReportingUnitSearchFilter.from(filters, List.of());
+
+    assertThat(filter.getMainSearchTerm()).isEqualTo("12345");
+  }
 }

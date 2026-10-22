@@ -70,7 +70,7 @@ public final class PostgresReportingUnitSearchFilter {
    */
   public static PostgresReportingUnitSearchFilter from(
       ReportingUnitSearchParametersDto filters, List<String> scopedClientNumbers) {
-    String mainSearchTerm = filters.getMainSearchTerm();
+    String mainSearchTerm = StringUtils.trimToNull(filters.getMainSearchTerm());
     if (StringUtils.isNotBlank(mainSearchTerm) && mainSearchTerm.matches("\\d+")) {
       try {
         Long.parseLong(mainSearchTerm);
@@ -80,7 +80,7 @@ public final class PostgresReportingUnitSearchFilter {
       }
     }
     return new PostgresReportingUnitSearchFilter(
-        StringUtils.trimToNull(mainSearchTerm),
+        mainSearchTerm,
         filters.getDistrict(),
         scopedClientNumbers,
         filters.getReportingUnitIds(),
