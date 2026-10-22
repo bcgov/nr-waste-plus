@@ -221,6 +221,22 @@ describe('WasteSearchTableExpandContent', () => {
   });
 
   describe('null and empty field handling', () => {
+    it('renders a nullable markArea without throwing (PostgreSQL honest projection)', async () => {
+      const dataWithNullMarkArea: ReportingUnitSearchExpandedDto = {
+        ...mockExpandedData,
+        markArea: null,
+      };
+      (APIs.search.getReportingUnitSearchExpand as Mock).mockResolvedValue(dataWithNullMarkArea);
+
+      renderWithProps('RU-4069-Block-411B-224813681');
+
+      await waitFor(() => {
+        expect(screen.getAllByText('Mark area').length).toBeGreaterThanOrEqual(2);
+      });
+      // An absent mark area renders no value rather than failing the Zod parse.
+      expect(screen.queryByText(/2000 ha/)).toBeNull();
+    });
+
     it('displays empty string when licenseNo is null', async () => {
       const dataWithNulls: ReportingUnitSearchExpandedDto = {
         ...mockExpandedData,

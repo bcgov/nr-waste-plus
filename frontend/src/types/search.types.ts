@@ -68,7 +68,8 @@ export const reportingUnitSearchExpandedSchema = z.object({
   status: codeDescriptionSchema,
   secondaryMarks: z.array(searchExpandedSecondarySchema),
   netArea: z.number(),
-  markArea: z.number(),
+  // PostgreSQL rows have no mark-area source — the backend projects an honest null.
+  markArea: z.number().nullable(),
   submitter: z.string().nullable(),
   attachment: codeDescriptionSchema,
   comments: z.string().nullable(),
