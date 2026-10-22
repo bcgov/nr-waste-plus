@@ -156,11 +156,14 @@ export const useWasteSearchFilters = (): UseWasteSearchFiltersReturn => {
       selectedDistrict: 'district',
     },
     (key, value): string | boolean | string[] | CodeDescriptionDto[] | undefined => {
-      // clientNumbers is view-shaped (CodeDescriptionDto[]) — a bare client-number
-      // string must be wrapped, otherwise viewDtoToSearch reads `.code` off the
-      // primitive and drops the preference entirely.
+      // clientNumbers is view-shaped (CodeDescriptionDto[]). Preference payloads for
+      // selectedClient already arrive as {code, description} objects — pass them
+      // through untouched; bare client-number strings are wrapped so
+      // viewDtoToSearch can read `.code` either way.
       if (key === 'selectedClient') {
-        return value ? [{ code: String(value), description: String(value) }] : [];
+        if (!value) return [];
+        const item = typeof value === 'string' ? { code: value, description: value } : value;
+        return [item as CodeDescriptionDto];
       }
       if (key === 'selectedDistrict') {
         return value ? [String(value)] : [];

@@ -272,9 +272,22 @@ describe('useWasteSearchFilters', () => {
       const calls = vi.mocked(useSyncPreferencesToFilters).mock.calls;
       expect(calls.length).toBeGreaterThan(0);
       const transformFn = calls[0][2]!;
-      // clientNumbers is view-shaped: viewDtoToSearch reads `.code`, so a bare
-      // string would be dropped from the URL and request entirely.
+      // Bare client-number strings are wrapped so viewDtoToSearch can read `.code`.
       expect(transformFn('selectedClient', '100')).toEqual([{ code: '100', description: '100' }]);
+    });
+
+    it('shouldPassViewShapedPreferenceThrough_whenSelectedClientIsAnObject', async () => {
+      await mountHook('/search');
+      const calls = vi.mocked(useSyncPreferencesToFilters).mock.calls;
+      const transformFn = calls[0][2]!;
+      // Real preference payloads arrive already view-shaped — String() coercion
+      // would corrupt them into "[object Object]".
+      expect(
+        transformFn('selectedClient', {
+          code: '90000003',
+          description: '90000003 OAK HERITAGE LTD. (OAK)',
+        }),
+      ).toEqual([{ code: '90000003', description: '90000003 OAK HERITAGE LTD. (OAK)' }]);
     });
 
     it('shouldReturnEmptyArray_whenKeyIsSelectedClientAndValueIsFalsy', async () => {
