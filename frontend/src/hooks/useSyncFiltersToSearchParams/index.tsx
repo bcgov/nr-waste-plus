@@ -344,6 +344,10 @@ const useSyncFiltersToSearchParams = <T extends Record<string, unknown>>(
     void navigate({
       search: search,
       replace: true,
+      // `as never`: the hook writes an open filter bag without knowing the
+      // active route's `validateSearch` schema (search typing is coordinated
+      // with the search work — OQ-007). Behaviour is unchanged from the
+      // legacy registry implementation.
     } as never);
   }, [filters, excludeSet, includeEmpty, navigate, transforms]); // searchParams intentionally omitted — read via ref
 };

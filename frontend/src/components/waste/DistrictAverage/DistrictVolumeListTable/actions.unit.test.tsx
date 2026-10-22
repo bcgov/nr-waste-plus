@@ -3,7 +3,6 @@ import { renderHook } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest';
 
 import { resolveTableRowActionValue } from '@/components/Form/TableResource/utils.ts';
-import { navigateInTree } from '@/routing/legacy/inTreePaths.ts';
 import { isFutureDated } from '@/utils/businessDate.ts';
 
 import { useDistrictVolumeListRowActions } from './actions.tsx';
@@ -13,10 +12,6 @@ import type { PageableResponse } from '@/types/tableResource.types.ts';
 
 vi.mock('@tanstack/react-router', () => ({
   useNavigate: vi.fn(),
-}));
-
-vi.mock('@/routing/legacy/inTreePaths', () => ({
-  navigateInTree: vi.fn(),
 }));
 
 vi.mock('@/utils/businessDate', () => ({
@@ -139,10 +134,9 @@ describe('useDistrictVolumeListRowActions', () => {
 
       await result.current(row)[0].onClick(row);
 
-      expect(navigateInTree).toHaveBeenCalledWith(
-        mockNavigate,
-        '/configuration/district-volume-tables/99',
-      );
+      expect(mockNavigate).toHaveBeenCalledWith({
+        href: '/configuration/district-volume-tables/99',
+      });
     });
 
     it('navigates with different row ids', async () => {
@@ -151,10 +145,9 @@ describe('useDistrictVolumeListRowActions', () => {
 
       await result.current(row)[0].onClick(row);
 
-      expect(navigateInTree).toHaveBeenCalledWith(
-        mockNavigate,
-        '/configuration/district-volume-tables/7',
-      );
+      expect(mockNavigate).toHaveBeenCalledWith({
+        href: '/configuration/district-volume-tables/7',
+      });
     });
   });
 });

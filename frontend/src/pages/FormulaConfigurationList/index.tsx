@@ -5,7 +5,6 @@ import { type FC } from 'react';
 
 import PageTitle from '@/components/core/PageTitle';
 import FormulaConfigurationListTable from '@/components/waste/Formula/FormulaConfigurationListTable';
-import { navigateInTree } from '@/routing/legacy/inTreePaths';
 
 import './index.scss';
 
@@ -23,7 +22,7 @@ const FormulaConfigurationListPage: FC = () => {
         >
           <Button
             kind="primary"
-            onClick={() => navigateInTree(navigate, '/configuration/formulas/new')}
+            onClick={() => void navigate({ to: '/configuration/formulas/new' })}
             renderIcon={Add}
           >
             Create formula set

@@ -140,7 +140,10 @@ const FormulaConfigurationCreateForm: FC = () => {
       };
       try {
         const created = await createMutation.mutateAsync(dto);
-        navigate({ to: `/configuration/formulas/${created.id}` });
+        navigate({
+          to: '/configuration/formulas/$id',
+          params: { id: String(created.id) },
+        });
       } catch (error) {
         setSubmitError(toSubmitErrorMessage(error));
       }

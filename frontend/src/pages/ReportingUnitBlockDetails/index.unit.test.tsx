@@ -130,10 +130,11 @@ describe('ReportingUnitBlockDetailsPage', () => {
       await renderPage();
 
       await user.click(screen.getByText('Reporting unit 468'));
-      expect(mockNavigate).toHaveBeenCalledWith({ to: '/reporting-units/468' });
+      // Breadcrumb crumbs navigate via PageTitle's runtime `href` boundary.
+      expect(mockNavigate).toHaveBeenCalledWith({ href: '/reporting-units/468' });
 
       await user.click(screen.getByText('Block 12'));
-      expect(mockNavigate).toHaveBeenCalledWith({ to: '/reporting-units/468/12' });
+      expect(mockNavigate).toHaveBeenCalledWith({ href: '/reporting-units/468/12' });
     });
 
     it('shouldMoveFocusToHeading_onLoad', async () => {
@@ -276,7 +277,10 @@ describe('ReportingUnitBlockDetailsPage', () => {
       await renderPage();
       await user.click(screen.getByRole('button', { name: 'Back' }));
 
-      expect(mockNavigate).toHaveBeenCalledWith({ to: '/reporting-units/468' });
+      expect(mockNavigate).toHaveBeenCalledWith({
+        to: '/reporting-units/$ruId',
+        params: { ruId: '468' },
+      });
     });
   });
 
@@ -352,7 +356,10 @@ describe('ReportingUnitBlockDetailsPage', () => {
       await renderPage();
       await user.click(screen.getByRole('button', { name: 'Save' }));
 
-      expect(mockNavigate).toHaveBeenCalledWith({ to: '/reporting-units/468' });
+      expect(mockNavigate).toHaveBeenCalledWith({
+        to: '/reporting-units/$ruId',
+        params: { ruId: '468' },
+      });
     });
 
     it('shouldNavigateToReportingUnit_whenSubmitIsClicked', async () => {
@@ -361,7 +368,10 @@ describe('ReportingUnitBlockDetailsPage', () => {
       await renderPage();
       await user.click(screen.getByRole('button', { name: 'Submit' }));
 
-      expect(mockNavigate).toHaveBeenCalledWith({ to: '/reporting-units/468' });
+      expect(mockNavigate).toHaveBeenCalledWith({
+        to: '/reporting-units/$ruId',
+        params: { ruId: '468' },
+      });
     });
   });
 

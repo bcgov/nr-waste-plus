@@ -5,7 +5,6 @@ import { type FC } from 'react';
 
 import PageTitle from '@/components/core/PageTitle';
 import DistrictVolumeListTable from '@/components/waste/DistrictAverage/DistrictVolumeListTable';
-import { navigateInTree } from '@/routing/legacy/inTreePaths';
 
 import './index.scss';
 
@@ -30,7 +29,7 @@ const ConfigurationDistrictVolumeListPage: FC = () => {
         >
           <Button
             kind="primary"
-            onClick={() => navigateInTree(navigate, '/configuration/district-volume-tables/upload')}
+            onClick={() => void navigate({ to: '/configuration/district-volume-tables/upload' })}
             renderIcon={Add}
           >
             Upload new volumes table

@@ -14,10 +14,6 @@ vi.mock('@tanstack/react-router', async () => {
   };
 });
 
-vi.mock('@/routing/legacy/inTreePaths', () => ({
-  navigateInTree: vi.fn(),
-}));
-
 vi.mock('@/context/pageTitle/usePageTitle', () => ({
   usePageTitle: () => ({
     setPageTitle: vi.fn(),
@@ -28,12 +24,9 @@ vi.mock('@/components/waste/SpeciesComposition/SpeciesCompositionListTable', () 
   default: () => <div data-testid="species-composition-list-table" />,
 }));
 
-import { navigateInTree } from '@/routing/legacy/inTreePaths';
-
 describe('SpeciesCompositionListPage', () => {
   beforeEach(() => {
     mockNavigate.mockClear();
-    vi.mocked(navigateInTree).mockClear();
   });
 
   it('renders the page heading', () => {
@@ -63,16 +56,15 @@ describe('SpeciesCompositionListPage', () => {
     screen.getByTestId('species-composition-list-table');
   });
 
-  it('calls navigateInTree with correct path when upload button is clicked', async () => {
+  it('navigates to the upload page when the upload button is clicked', async () => {
     const user = userEvent.setup();
     render(<SpeciesCompositionListPage />);
 
     await user.click(screen.getByRole('button', { name: /Upload Spreadsheet/i }));
 
-    expect(navigateInTree).toHaveBeenCalledOnce();
-    expect(navigateInTree).toHaveBeenCalledWith(
-      mockNavigate,
-      '/configuration/species-composition/upload',
-    );
+    expect(mockNavigate).toHaveBeenCalledOnce();
+    expect(mockNavigate).toHaveBeenCalledWith({
+      to: '/configuration/species-composition/upload',
+    });
   });
 });

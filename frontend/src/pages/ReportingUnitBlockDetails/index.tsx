@@ -24,7 +24,6 @@ import BlockDetailsSkeleton from '@/components/waste/ReportingUnits/BlockDetails
 import BlockDetailsSummary from '@/components/waste/ReportingUnits/BlockDetailsSummary';
 import { useBlockDetailsQuery, useReportingUnitDetailsQuery } from '@/config/react-query/hooks';
 import useDelayedFlag from '@/hooks/useDelayedFlag';
-import { navigateInTree } from '@/routing/legacy/inTreePaths';
 
 import './index.scss';
 
@@ -141,7 +140,9 @@ const ReportingUnitBlockDetailsPage: FC = () => {
           </Button>
           <Button
             kind="secondary"
-            onClick={() => navigateInTree(navigate, `/reporting-units/${ruId}`)}
+            onClick={() =>
+              void navigate({ to: '/reporting-units/$ruId', params: { ruId: String(ruId) } })
+            }
             renderIcon={ArrowLeft}
           >
             Back
@@ -250,11 +251,18 @@ const ReportingUnitBlockDetailsPage: FC = () => {
       >
         <Button
           kind="tertiary"
-          onClick={() => navigateInTree(navigate, `/reporting-units/${ruId}`)}
+          onClick={() =>
+            void navigate({ to: '/reporting-units/$ruId', params: { ruId: String(ruId) } })
+          }
         >
           Save
         </Button>
-        <Button kind="primary" onClick={() => navigateInTree(navigate, `/reporting-units/${ruId}`)}>
+        <Button
+          kind="primary"
+          onClick={() =>
+            void navigate({ to: '/reporting-units/$ruId', params: { ruId: String(ruId) } })
+          }
+        >
           Submit
         </Button>
       </Column>

@@ -3,17 +3,23 @@ import { act, screen, waitFor, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-import SpeciesCompositionUpload from './index.tsx';
-
 import * as hooks from '@/config/react-query/hooks.ts';
 import { renderWithApp, renderWithAppAsync } from '@/config/tests/renderWithApp.tsx';
-import * as inTreePaths from '@/routing/legacy/inTreePaths.ts';
+
+import SpeciesCompositionUpload from './index.tsx';
 
 // ============================================================================
 // Mocks
 // ============================================================================
 
 vi.mock('@/config/react-query/hooks');
+
+const mockNavigate = vi.fn();
+
+vi.mock('@tanstack/react-router', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@tanstack/react-router')>()),
+  useNavigate: () => mockNavigate,
+}));
 
 vi.mock('@carbon/react', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@carbon/react')>();
@@ -60,10 +66,6 @@ const mockMutateAsync = vi.fn();
 const mockUseSpeciesCompositionCreateMutation = vi.mocked(
   hooks.useSpeciesCompositionCreateMutation,
 );
-
-vi.mock('@/routing/legacy/inTreePaths', () => ({
-  navigateInTree: vi.fn(),
-}));
 
 /**
  * Hoisted mock data reference for FileUploadInput.
@@ -231,16 +233,15 @@ describe('SpeciesCompositionUpload', () => {
   });
 
   describe('navigation', () => {
-    it('should call navigateInTree with list path when Cancel is clicked', async () => {
+    it('should navigate to the list path when Cancel is clicked', async () => {
       await renderWithAppAsync(<SpeciesCompositionUpload />);
 
       const cancelButton = await screen.findByRole('button', { name: 'Cancel' });
       await userEvent.click(cancelButton);
 
-      expect(inTreePaths.navigateInTree).toHaveBeenCalledWith(
-        expect.anything(),
-        '/configuration/species-composition',
-      );
+      expect(mockNavigate).toHaveBeenCalledWith({
+        to: '/configuration/species-composition',
+      });
     });
 
     it('should navigate to details page on successful upload', async () => {
@@ -256,10 +257,10 @@ describe('SpeciesCompositionUpload', () => {
       // Simulate successful upload
       capturedOnSuccess?.(42);
 
-      expect(inTreePaths.navigateInTree).toHaveBeenCalledWith(
-        expect.anything(),
-        '/configuration/species-composition/42',
-      );
+      expect(mockNavigate).toHaveBeenCalledWith({
+        to: '/configuration/species-composition/$id',
+        params: { id: '42' },
+      });
     });
   });
 

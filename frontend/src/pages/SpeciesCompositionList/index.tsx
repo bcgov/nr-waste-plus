@@ -5,7 +5,6 @@ import { type FC } from 'react';
 
 import PageTitle from '@/components/core/PageTitle';
 import SpeciesCompositionListTable from '@/components/waste/SpeciesComposition/SpeciesCompositionListTable';
-import { navigateInTree } from '@/routing/legacy/inTreePaths';
 
 import './index.scss';
 
@@ -30,7 +29,7 @@ const SpeciesCompositionListPage: FC = () => {
         >
           <Button
             kind="primary"
-            onClick={() => navigateInTree(navigate, '/configuration/species-composition/upload')}
+            onClick={() => void navigate({ to: '/configuration/species-composition/upload' })}
             renderIcon={Add}
           >
             Upload Spreadsheet

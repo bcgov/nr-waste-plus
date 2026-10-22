@@ -14,10 +14,6 @@ vi.mock('@tanstack/react-router', async () => {
   };
 });
 
-vi.mock('@/routing/legacy/inTreePaths', () => ({
-  navigateInTree: vi.fn(),
-}));
-
 vi.mock('@/context/pageTitle/usePageTitle', () => ({
   usePageTitle: () => ({
     setPageTitle: vi.fn(),
@@ -28,12 +24,9 @@ vi.mock('@/components/waste/Formula/FormulaConfigurationListTable', () => ({
   default: () => <div data-testid="formula-configuration-list-table" />,
 }));
 
-import { navigateInTree } from '@/routing/legacy/inTreePaths';
-
 describe('FormulaConfigurationListPage', () => {
   beforeEach(() => {
     mockNavigate.mockClear();
-    vi.mocked(navigateInTree).mockClear();
   });
 
   it('renders the page heading', () => {
@@ -63,14 +56,16 @@ describe('FormulaConfigurationListPage', () => {
     screen.getByTestId('formula-configuration-list-table');
   });
 
-  it('calls navigateInTree with the create path when the button is clicked', async () => {
+  it('navigates to the create page when the button is clicked', async () => {
     const user = userEvent.setup();
     render(<FormulaConfigurationListPage />);
 
     await user.click(screen.getByRole('button', { name: /Create formula set/i }));
 
-    expect(navigateInTree).toHaveBeenCalledOnce();
-    expect(navigateInTree).toHaveBeenCalledWith(mockNavigate, '/configuration/formulas/new');
+    expect(mockNavigate).toHaveBeenCalledOnce();
+    expect(mockNavigate).toHaveBeenCalledWith({
+      to: '/configuration/formulas/new',
+    });
   });
 
   it('wraps the page content in the formula-set-list-column header class', () => {

@@ -2,7 +2,6 @@ import { TableShortcut, TrashCan } from '@carbon/icons-react';
 import { useNavigate } from '@tanstack/react-router';
 import { useCallback } from 'react';
 
-import { navigateInTree, type InTreePath } from '@/routing/legacy/inTreePaths';
 import { isFutureDated } from '@/utils/businessDate';
 
 import type { PageableResponse, TableRowAction } from '@/types/tableResource.types';
@@ -41,8 +40,10 @@ export const useListTableRowActions = <
           label: 'See details',
           icon: <TableShortcut />,
           onClick: (selectedRow) => {
+            // Runtime-composed target string (config.routePath template) — `href`
+            // keeps this a documented boundary instead of a `to` cast.
             const path = config.routePath.replace('{id}', String(selectedRow.id));
-            navigateInTree(navigate, path as InTreePath);
+            void navigate({ href: path });
           },
         },
       ];

@@ -7,7 +7,6 @@ import { useCallback, useState, type FC } from 'react';
 import FileUploadInput from '@/components/Form/FileUploadInput';
 import UploadFormActions from '@/components/waste/UploadFormActions';
 import { useSpeciesCompositionCreateMutation } from '@/config/react-query/hooks.ts';
-import { navigateInTree } from '@/routing/legacy/inTreePaths.ts';
 import { SpeciesCompositionProcessor } from '@/services/speciescomposition/processors/speciesCompositionProcessor.ts';
 import { speciesCompositionValidator } from '@/services/speciescomposition/validators/speciesCompositionValidator.ts';
 
@@ -47,7 +46,10 @@ const SpeciesCompositionUpload: FC = () => {
   const createMutation = useSpeciesCompositionCreateMutation({
     notificationTarget: 'species-composition-upload',
     onSuccess: (tableId) => {
-      navigateInTree(navigate, `/configuration/species-composition/${tableId}`);
+      void navigate({
+        to: '/configuration/species-composition/$id',
+        params: { id: String(tableId) },
+      });
     },
   });
 
@@ -119,7 +121,7 @@ const SpeciesCompositionUpload: FC = () => {
    * Navigates the user back to the species composition list page.
    */
   const handleCancel = useCallback(() => {
-    navigateInTree(navigate, '/configuration/species-composition');
+    void navigate({ to: '/configuration/species-composition' });
   }, [navigate]);
 
   const handleBackToUpload = useCallback(() => {
