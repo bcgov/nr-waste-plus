@@ -399,9 +399,9 @@ public final class ReportingUnitSearchQueryConstants {
    *
    * <p>{@code wasteAssessmentAreaId} now projects the same column as {@code blockId} (legacy WAA
    * → {@code block_id}) but stays ABSENT here so PG sort behaviour is unchanged (still rejected,
-   * HTTP 428). The degenerate {@code sampling} / {@code sampling.code} / {@code
-   * sampling.description} keys (constant {@code 'AVG'}) are likewise rejected; unknown keys are
-   * rejected the same way (legacy reject parity).
+   * HTTP 428). The constant-valued {@code sampling} / {@code sampling.code} / {@code
+   * sampling.description} keys map to their stable selected constants; RU/block tie-breakers keep
+   * the ordering deterministic. Unknown keys are rejected the same way (legacy reject parity).
    */
   public static final Map<String, String> SORT_EXPRESSIONS =
       Map.ofEntries(
@@ -417,5 +417,8 @@ public final class ReportingUnitSearchQueryConstants {
           Map.entry("lastUpdated", "ru.updated_at"),
           Map.entry("licenseNumber", "pm.forest_file_id"),
           Map.entry("cuttingPermit", "nullif(btrim(pm.cutting_permit_id), '')"),
-          Map.entry("timberMark", "pm.timber_mark"));
+          Map.entry("timberMark", "pm.timber_mark"),
+          Map.entry("sampling", "upper('AVG')"),
+          Map.entry("sampling.code", "upper('AVG')"),
+          Map.entry("sampling.description", "upper('Average')"));
 }

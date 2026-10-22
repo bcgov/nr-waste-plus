@@ -535,6 +535,24 @@ class PostgresReportingUnitSearchIntegrationTest extends AbstractTestContainerIn
         .andExpect(jsonPath("$.content[1].ruNumber").value(seed.ruB().intValue()))
         .andExpect(jsonPath("$.content[2].ruNumber").value(ruTie.intValue()));
 
+    // Sampling is currently a stable AVG/Average value; the requested sort is accepted and the
+    // deterministic RU/block tie-breakers define row order.
+    mockMvc
+        .perform(get("/api/search/reporting-units")
+            .queryParam("legacy", "false")
+            .queryParam("district", seed.district())
+            .queryParam("sort", "sampling,asc")
+            .queryParam("page", "0")
+            .queryParam("size", "10")
+            .accept(MediaType.APPLICATION_JSON))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.page.totalElements").value(3))
+        .andExpect(jsonPath("$.content[0].sampling.code").value("AVG"))
+        .andExpect(jsonPath("$.content[0].ruNumber").value(seed.ruA().intValue()))
+        .andExpect(jsonPath("$.content[1].sampling.description").value("Average"))
+        .andExpect(jsonPath("$.content[1].ruNumber").value(seed.ruB().intValue()))
+        .andExpect(jsonPath("$.content[2].ruNumber").value(ruTie.intValue()));
+
     // Explicit ruNumber DESC reverses; the tie-breaker keys stay appended (total order stable).
     mockMvc
         .perform(get("/api/search/reporting-units")

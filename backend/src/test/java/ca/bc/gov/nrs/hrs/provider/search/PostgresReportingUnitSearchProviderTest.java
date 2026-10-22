@@ -297,12 +297,21 @@ class PostgresReportingUnitSearchProviderTest {
   }
 
   @Test
-  @DisplayName("resolveSort: degenerate PG keys (WAA id, sampling) are rejected")
-  void resolveSort_degenerateKeys_shouldReject() {
-    for (String key : List.of("wasteAssessmentAreaId", "sampling", "sampling.code")) {
+  @DisplayName("resolveSort: unsupported WAA id is rejected; sampling uses safe constants")
+  void resolveSort_degenerateKeys_shouldRejectAndSamplingShouldResolve() {
+    for (String key : List.of("wasteAssessmentAreaId")) {
       assertThatThrownBy(() -> provider.resolveSort(Sort.by(key)))
           .as(key)
           .isInstanceOf(InvalidSortingFieldException.class);
+    }
+
+    for (String key : List.of("sampling", "sampling.code", "sampling.description")) {
+      assertThat(provider.resolveSort(Sort.by(Sort.Direction.ASC, key)))
+          .extracting(order -> order.getProperty() + " " + order.getDirection())
+          .containsExactly(
+              key.equals("sampling.description") ? "(upper('Average')) ASC" : "(upper('AVG')) ASC",
+              "(ru.reporting_unit_id) ASC",
+              "(b.block_id) ASC");
     }
   }
 
