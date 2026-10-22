@@ -30,6 +30,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.JpaSort;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
@@ -218,6 +219,8 @@ public class PostgresReportingUnitSearchProvider implements ReportingUnitSearchP
    *
    * @param requested the raw {@code clientNumbers} filter
    * @return the effective client-number list; never null or empty
+   * @throws ResponseStatusException with HTTP 403 when a non-IDIR principal has no role-derived
+   *     client scope
    */
   private List<String> resolveClientScope(List<String> requested) {
     if (!isUnscoped(requested)) {
@@ -245,20 +248,26 @@ public class PostgresReportingUnitSearchProvider implements ReportingUnitSearchP
   }
 
   /**
-   * Principal-derived client scope (DEC-008): IDIR derives an empty list (re-normalized to the
-   * sentinel ⇒ unrestricted, the DEC-008 baseline; roles never grant scope); non-IDIR derives
-   * the role client numbers; a zero-role non-IDIR principal re-normalizes to the sentinel
-   * exactly like the legacy endpoint.
+   * Principal-derived client scope (DEC-008): IDIR is unrestricted regardless of roles; non-IDIR
+   * callers must have at least one role-derived client number or the request is denied. The SQL
+   * sentinel is reserved for the IDIR unrestricted case and is never used to represent missing
+   * non-IDIR authorization scope.
    *
    * @param idir whether the principal authenticates via IDIR
    * @param roleClients the client numbers mapped from the principal's roles
    * @return the derived client list to bind; never null or empty
+   * @throws ResponseStatusException with HTTP 403 when a non-IDIR principal has no role-derived
+   *     client scope
    */
   static List<String> deriveClientScope(boolean idir, List<String> roleClients) {
-    List<String> derived = idir ? List.of() : roleClients;
-    return derived.isEmpty()
-        ? List.of(ReportingUnitSearchQueryConstants.SENTINEL_NOVALUE)
-        : List.copyOf(derived);
+    if (idir) {
+      return List.of(ReportingUnitSearchQueryConstants.SENTINEL_NOVALUE);
+    }
+    if (CollectionUtils.isEmpty(roleClients)) {
+      throw new ResponseStatusException(
+          HttpStatus.FORBIDDEN, "No client scope is assigned to this principal");
+    }
+    return List.copyOf(roleClients);
   }
 
   /**

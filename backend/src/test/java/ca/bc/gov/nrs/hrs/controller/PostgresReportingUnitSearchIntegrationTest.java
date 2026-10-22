@@ -12,12 +12,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import ca.bc.gov.nrs.hrs.extensions.AbstractTestContainerIntegrationTest;
-import ca.bc.gov.nrs.hrs.extensions.WiremockLogNotifier;
-import ca.bc.gov.nrs.hrs.extensions.WithMockJwt;
 import ca.bc.gov.nrs.hrs.entity.block.BlockEntity;
 import ca.bc.gov.nrs.hrs.entity.block.BlockMarkEntity;
 import ca.bc.gov.nrs.hrs.entity.block.ReportingUnitEntity;
+import ca.bc.gov.nrs.hrs.extensions.AbstractTestContainerIntegrationTest;
+import ca.bc.gov.nrs.hrs.extensions.WiremockLogNotifier;
+import ca.bc.gov.nrs.hrs.extensions.WithMockJwt;
 import ca.bc.gov.nrs.hrs.repository.UserBookmarkRepository;
 import ca.bc.gov.nrs.hrs.repository.block.BlockMarkRepository;
 import ca.bc.gov.nrs.hrs.repository.block.BlockRepository;
@@ -649,6 +649,22 @@ class PostgresReportingUnitSearchIntegrationTest extends AbstractTestContainerIn
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.page.totalElements").value(1))
         .andExpect(jsonPath("$.content[0].ruNumber").value(seed.ruA().intValue()));
+  }
+
+  @Test
+  @DisplayName("DEC-008 | BCeID without client roles is denied, not given unrestricted rows")
+  @WithMockJwt(idp = "bceidbusiness")
+  void searchReportingUnit_postgresDec008_bceidWithoutRoles_shouldBeDenied() throws Exception {
+    Seed seed = seedScenario(FIXED_CLIENT_A, FIXED_CLIENT_B);
+
+    mockMvc
+        .perform(get("/api/search/reporting-units")
+            .queryParam("legacy", "false")
+            .queryParam("district", seed.district())
+            .queryParam("page", "0")
+            .queryParam("size", "10")
+            .accept(MediaType.APPLICATION_JSON))
+        .andExpect(status().isForbidden());
   }
 
   @Test

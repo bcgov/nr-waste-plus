@@ -3,18 +3,24 @@ package ca.bc.gov.nrs.hrs.provider.search;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchExpandedDto;
 import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchParametersDto;
 import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchResultDto;
 import ca.bc.gov.nrs.hrs.exception.InvalidSortingFieldException;
 import ca.bc.gov.nrs.hrs.repository.PostgresReportingUnitSearchFilter;
+import ca.bc.gov.nrs.hrs.repository.ReportingUnitSearchExpandedRow;
 import ca.bc.gov.nrs.hrs.repository.ReportingUnitSearchQueryConstants;
 import ca.bc.gov.nrs.hrs.repository.ReportingUnitSearchRepository;
 import ca.bc.gov.nrs.hrs.repository.ReportingUnitSearchRow;
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -30,6 +36,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.JpaSort;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
@@ -46,6 +53,9 @@ class PostgresReportingUnitSearchProviderTest {
 
   @Mock
   private ReportingUnitSearchRepository searchRepository;
+
+  @Mock
+  private ReportingUnitSearchExpandedRow expandedRow;
 
   @InjectMocks
   private PostgresReportingUnitSearchProvider provider;
@@ -85,21 +95,153 @@ class PostgresReportingUnitSearchProviderTest {
   }
 
   @Test
-  @DisplayName("deriveClientScope: IDIR is always unrestricted; non-IDIR derives roles (DEC-008)")
-  void deriveClientScope_shouldMirrorLegacyEnrichFilters() {
-    // IDIR: derived list is always empty -> sentinel -> unrestricted, roles never grant scope
-    // (legacy: userClientNumbers = IDIR ? List.of() : roles).
+  @DisplayName("deriveClientScope: IDIR unrestricted; non-IDIR requires role scope (DEC-008)")
+  void deriveClientScope_shouldReserveUnrestrictedScopeForIdir() {
+    // IDIR: roles never grant scope; the sentinel explicitly represents the DEC-008 unrestricted
+    // policy.
     assertThat(PostgresReportingUnitSearchProvider.deriveClientScope(true, List.of()))
         .containsExactly(ReportingUnitSearchQueryConstants.SENTINEL_NOVALUE);
     assertThat(PostgresReportingUnitSearchProvider.deriveClientScope(true, List.of("00010002")))
         .containsExactly(ReportingUnitSearchQueryConstants.SENTINEL_NOVALUE);
-    // Non-IDIR with roles: role clients apply.
+    // A non-IDIR principal with role clients is scoped to exactly those clients.
     assertThat(
             PostgresReportingUnitSearchProvider.deriveClientScope(false, List.of("A", "B")))
         .containsExactly("A", "B");
-    // Non-IDIR with zero roles: re-normalizes to the sentinel (legacy inferred edge).
-    assertThat(PostgresReportingUnitSearchProvider.deriveClientScope(false, List.of()))
-        .containsExactly(ReportingUnitSearchQueryConstants.SENTINEL_NOVALUE);
+    // Missing non-IDIR scope must not become the unrestricted SQL sentinel.
+    assertThatThrownBy(
+            () -> PostgresReportingUnitSearchProvider.deriveClientScope(false, List.of()))
+        .isInstanceOf(ResponseStatusException.class)
+        .hasMessageContaining("No client scope");
+    assertThatThrownBy(
+            () -> PostgresReportingUnitSearchProvider.deriveClientScope(false, null))
+        .isInstanceOf(ResponseStatusException.class)
+        .hasMessageContaining("No client scope");
+  }
+
+  @Test
+  @DisplayName("searchReportingUnit: BCeID role scope is passed to the repository")
+  void searchReportingUnit_bceidWithRoles_shouldBindRoleClients() {
+    setAuthentication("bceidbusiness", List.of("Viewer_00010002", "Submitter_00010003"));
+    var filters = ReportingUnitSearchParametersDto.builder()
+        .district(List.of("DQC"))
+        .build();
+    filters.setLegacy("false");
+    when(searchRepository.searchReportingUnits(any(PostgresReportingUnitSearchFilter.class),
+        any(Pageable.class)))
+        .thenReturn(Page.empty());
+
+    provider.searchReportingUnit(filters, PageRequest.of(0, 10));
+
+    ArgumentCaptor<PostgresReportingUnitSearchFilter> filterCaptor =
+        ArgumentCaptor.forClass(PostgresReportingUnitSearchFilter.class);
+    verify(searchRepository).searchReportingUnits(filterCaptor.capture(), any(Pageable.class));
+    assertThat(filterCaptor.getValue().getClientNumbers())
+        .containsExactlyInAnyOrder("00010002", "00010003");
+  }
+
+  @Test
+  @DisplayName("searchReportingUnit: BCeID without roles is forbidden before repository access")
+  void searchReportingUnit_bceidWithoutRoles_shouldDenyBeforeRepositoryCall() {
+    setAuthentication("bceidbusiness", List.of());
+    var filters = ReportingUnitSearchParametersDto.builder()
+        .district(List.of("DQC"))
+        .build();
+    filters.setLegacy("false");
+
+    assertThatThrownBy(() -> provider.searchReportingUnit(filters, PageRequest.of(0, 10)))
+        .isInstanceOf(ResponseStatusException.class)
+        .extracting(exception -> ((ResponseStatusException) exception).getStatusCode())
+        .isEqualTo(HttpStatus.FORBIDDEN);
+    verify(searchRepository, never())
+        .searchReportingUnits(any(PostgresReportingUnitSearchFilter.class), any(Pageable.class));
+  }
+
+  @Test
+  @DisplayName("getSearchExpanded maps expanded fields and parses secondary marks")
+  void getSearchExpanded_shouldMapProjection() {
+    when(searchRepository.findExpanded(17L, 23L)).thenReturn(Optional.of(expandedRow));
+    when(expandedRow.getId()).thenReturn(23L);
+    when(expandedRow.getLicenseNo()).thenReturn("TFL01");
+    when(expandedRow.getCuttingPermit()).thenReturn("CP01");
+    when(expandedRow.getTimberMark()).thenReturn("TM01");
+    when(expandedRow.getExempted()).thenReturn(false);
+    when(expandedRow.getMultiMark()).thenReturn(true);
+    when(expandedRow.getStatusCode()).thenReturn("DFT");
+    when(expandedRow.getSecondary()).thenReturn(
+        "[{\"mark\":\"TM02\",\"status\":{\"code\":null,\"description\":null},"
+            + "\"area\":null}]");
+    when(expandedRow.getNetArea()).thenReturn(new BigDecimal("12.500"));
+    when(expandedRow.getMarkArea()).thenReturn(null);
+    when(expandedRow.getSubmitter()).thenReturn("Submitter");
+    when(expandedRow.getAttachmentId()).thenReturn(42L);
+    when(expandedRow.getAttachmentName()).thenReturn("map.pdf");
+    when(expandedRow.getComments()).thenReturn("Comment");
+    when(expandedRow.getTotalBlockCount()).thenReturn(2L);
+    when(expandedRow.getTotalChildCount()).thenReturn(1L);
+
+    Optional<ReportingUnitSearchExpandedDto> result = provider.getSearchExpanded(17L, 23L);
+
+    assertThat(result).isPresent();
+    ReportingUnitSearchExpandedDto expanded = result.orElseThrow();
+    assertThat(expanded.id()).isEqualTo(23L);
+    assertThat(expanded.licenseNo()).isEqualTo("TFL01");
+    assertThat(expanded.cuttingPermit()).isEqualTo("CP01");
+    assertThat(expanded.timberMark()).isEqualTo("TM01");
+    assertThat(expanded.exempted()).isFalse();
+    assertThat(expanded.multiMark()).isTrue();
+    assertThat(expanded.status().code()).isEqualTo("DFT");
+    assertThat(expanded.secondaryMarks()).hasSize(1);
+    assertThat(expanded.secondaryMarks().getFirst().mark()).isEqualTo("TM02");
+    assertThat(expanded.netArea()).isEqualTo(12.5);
+    assertThat(expanded.markArea()).isNull();
+    assertThat(expanded.submitter()).isEqualTo("Submitter");
+    assertThat(expanded.attachment().code()).isEqualTo("42");
+    assertThat(expanded.attachment().description()).isEqualTo("map.pdf");
+    assertThat(expanded.comments()).isEqualTo("Comment");
+    assertThat(expanded.totalBlocks()).isEqualTo(2L);
+    assertThat(expanded.totalChildren()).isEqualTo(1L);
+    verify(searchRepository).findExpanded(eq(17L), eq(23L));
+  }
+
+  @Test
+  @DisplayName("getSearchExpanded: absent and malformed secondary JSON produce an empty list")
+  void getSearchExpanded_invalidSecondary_shouldReturnEmptyList() {
+    when(searchRepository.findExpanded(17L, 23L)).thenReturn(Optional.of(expandedRow));
+    when(expandedRow.getSecondary()).thenReturn("not-json");
+    when(expandedRow.getNetArea()).thenReturn(null);
+    when(expandedRow.getMarkArea()).thenReturn(null);
+
+    assertThat(provider.getSearchExpanded(17L, 23L))
+        .get()
+        .extracting(ReportingUnitSearchExpandedDto::secondaryMarks)
+        .asList()
+        .isEmpty();
+
+    when(expandedRow.getSecondary()).thenReturn("  ");
+    assertThat(provider.getSearchExpanded(17L, 23L))
+        .get()
+        .extracting(ReportingUnitSearchExpandedDto::secondaryMarks)
+        .asList()
+        .isEmpty();
+  }
+
+  @Test
+  @DisplayName("getSearchExpanded: no matching projection stays empty")
+  void getSearchExpanded_missingRow_shouldRemainEmpty() {
+    when(searchRepository.findExpanded(17L, 23L)).thenReturn(Optional.empty());
+
+    assertThat(provider.getSearchExpanded(17L, 23L)).isEmpty();
+  }
+
+  private void setAuthentication(String idp, List<String> groups) {
+    Jwt jwt = Jwt.withTokenValue("token")
+        .header("alg", "none")
+        .subject("test")
+        .claim("custom:idp_name", idp)
+        .claim("cognito:groups", groups)
+        .build();
+    SecurityContextHolder.getContext()
+        .setAuthentication(new JwtAuthenticationToken(jwt));
   }
 
   @Test
@@ -137,7 +279,7 @@ class PostgresReportingUnitSearchProviderTest {
   }
 
   @Test
-  @DisplayName("resolveSort: degenerate PG sort keys (wasteAssessmentAreaId, sampling) are rejected")
+  @DisplayName("resolveSort: degenerate PG keys (WAA id, sampling) are rejected")
   void resolveSort_degenerateKeys_shouldReject() {
     for (String key : List.of("wasteAssessmentAreaId", "sampling", "sampling.code")) {
       assertThatThrownBy(() -> provider.resolveSort(Sort.by(key)))
