@@ -129,8 +129,8 @@ export const LayoutSideNav: FC = () => {
         )}
         <SideNavLink
           data-testid="side-nav-link-help"
-          as={Link}
-          to={user?.idpProvider === 'IDIR' ? env.VITE_IDIR_HELP : env.VITE_BCEID_HELP}
+          as="a"
+          href={user?.idpProvider === 'IDIR' ? env.VITE_IDIR_HELP : env.VITE_BCEID_HELP}
           target="_blank"
           rel="noopener noreferrer"
           renderIcon={Help}

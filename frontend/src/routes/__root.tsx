@@ -3,6 +3,7 @@ import {
   createRootRouteWithContext,
   Outlet,
   useNavigate,
+  useRouter,
   useRouterState,
 } from '@tanstack/react-router';
 import { useEffect } from 'react';
@@ -13,6 +14,7 @@ import { usePageTitle } from '@/context/pageTitle/usePageTitle';
 import GlobalErrorPage from '@/pages/GlobalError';
 import NotFoundPage from '@/pages/NotFound';
 import { type AppRouterContext } from '@/routerContext';
+import { resolveRouteTitle, type RouteLike } from '@/routing/nav/routeMetadata';
 import DevTools from '@/utils/devtools/DevTools';
 
 /**
@@ -47,22 +49,30 @@ function AuthAwareNotFound() {
 
 /**
  * Root layout: renders the route outlet, keeps the document title in sync with
- * the active route's `staticData.title`, and hosts DEV-only devtools.
+ * the active route's static metadata, and hosts DEV-only devtools.
  *
- * Title sync reads the **last match's** `staticData` (per-match, not merged).
- * Until S4, leaf routes without a `title` simply do not update the base title —
- * parity with the legacy registry lookup for unmatched ids.
+ * Title sync resolves the **last match's** metadata via the ancestor walk in
+ * {@link resolveRouteTitle}: leaf `staticData.title` first, then
+ * `nav.label`, then ancestors (nearest wins). When nothing declares a title,
+ * the document title is left untouched — parity with the legacy registry
+ * lookup for unmatched route ids.
  */
 function RootLayout() {
   const { setPageTitle } = usePageTitle();
+  const router = useRouter();
   const matches = useRouterState({ select: (s) => s.matches });
 
   useEffect(() => {
-    const title = matches.at(-1)?.staticData?.title;
+    const lastMatch = matches.at(-1);
+    if (!lastMatch) return;
+    const route = (router as unknown as { routesById: Record<string, RouteLike> }).routesById[
+      lastMatch.routeId
+    ];
+    const title = resolveRouteTitle(route);
     if (title) {
       setPageTitle(title, 1);
     }
-  }, [matches, setPageTitle]);
+  }, [matches, router, setPageTitle]);
 
   return (
     <>
