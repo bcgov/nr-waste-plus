@@ -60,10 +60,13 @@ public interface ReportingUnitSearchRow {
   /** Always NULL from SQL; D5/legacy-lookup enrichment. */
   String getDistrictName();
 
-  /** Latest RU {@code status_event} code; NULL when the RU has no events. */
+  /**
+   * The block's status code: block-scoped latest {@code status_event} (long-form aliases
+   * normalised) with the {@code DFT} fallback; NULL on RU-only rows (rendered "Not applicable").
+   */
   String getStatusCode();
 
-  /** Always NULL from SQL until D5 (DEC-016). */
+  /** The block's status description from {@code hrs.waa_status_code}; NULL on RU-only rows. */
   String getStatusName();
 
   /** RU {@code updated_at} (timestamptz); the provider pins the LocalDateTime conversion. */

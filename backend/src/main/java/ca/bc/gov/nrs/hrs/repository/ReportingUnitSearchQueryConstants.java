@@ -52,19 +52,22 @@ public final class ReportingUnitSearchQueryConstants {
    * #1238): the PRIMARY-mark and latest-status selections use NOT-EXISTS row-comparison joins
    * instead of {@code LEFT JOIN LATERAL (... ORDER BY ... LIMIT 1)}. Spring Data's native-query
    * sort application counts {@code order by} occurrences and appends the Pageable sort with a
-   * bare comma (instead of the keyword) whenever the parenthesized-subselect count does not
-   * exceed the plain count — a greedy pattern that can never exceed 1, so ANY query with two or
-   * more parenthesized order-bys (both laterals) is broken. Row comparison is semantically
-   * identical: the PRIMARY mark is the live {@code PRIMARY} mark with the lowest {@code
-   * (sequence_no, block_mark_id)}; the status is the event with the latest {@code (created_at,
-   * status_event_id)}. Both ride the same partial indexes the laterals used.
-   *
-   * <p>Status-source caveat (A-14, product decision 2026-10-19): the {@code se.status} selection
-   * reads {@code hrs.status_event}, which is presently an unpopulated append-only audit/history
-   * table (no writer in {@code src/main}; explicitly not the lifecycle status source), so the
-   * selected status is NULL in practice. A-14 is a deliberate no-op until a status column is
-   * added to block/RU (tracked via the #1400 issue track).
-   */
+    * bare comma (instead of the keyword) whenever the parenthesized-subselect count does not
+    * exceed the plain count — a greedy pattern that can never exceed 1, so ANY query with two or
+    * more parenthesized order-bys (both laterals) is broken. Row comparison is semantically
+    * identical: the PRIMARY mark is the live {@code PRIMARY} mark with the lowest {@code
+    * (sequence_no, block_mark_id)}; the status is the event with the latest {@code (created_at,
+    * status_event_id)}. Both ride the same partial indexes the laterals used.
+    *
+    * <p>Status source (supersedes the A-14 no-op note of 2026-10-19): the row status is the
+    * BLOCK's status — the block-scoped latest {@code status_event.status} normalised through the
+    * same long-form aliases as {@code ReportingUnitBlockService.resolveStatus}, falling back to
+    * {@code DFT/Draft} when the block has no events (the established convention: a block without
+    * status history is a draft), and falling back to {@code block.status_code} once the lifecycle
+    * starts writing it. The description comes from the local {@code hrs.waa_status_code} table
+    * ({@code 'Draft'} fallback for unmapped codes, again mirroring {@code resolveStatus}).
+    * RU-only rows carry no block and therefore no status (rendered "Not applicable").
+    */
   private static final String SEARCH_ROWS_FRAGMENT =
       """
           from hrs.reporting_unit ru
@@ -84,15 +87,28 @@ public final class ReportingUnitSearchQueryConstants {
                           and (bmx.sequence_no, bmx.block_mark_id)
                                 < (pm.sequence_no, pm.block_mark_id)
                     )
-          left join hrs.status_event se
-                 on se.reporting_unit_id = ru.reporting_unit_id
-                and not exists (
-                        select 1
-                        from hrs.status_event sex
-                        where sex.reporting_unit_id = se.reporting_unit_id
-                          and (sex.created_at, sex.status_event_id)
-                                > (se.created_at, se.status_event_id)
-                    )
+          left join lateral (
+                  select se3.status
+                  from hrs.status_event se3
+                  where se3.block_id = b.block_id
+                  order by se3.created_at desc, se3.status_event_id desc
+                  limit 1
+              ) evs on true
+          left join lateral (
+                  select case
+                             when b.block_id is null then null
+                             else coalesce(
+                                      case upper(nullif(btrim(coalesce(evs.status, '')), ''))
+                                          when 'DRAFT' then 'DFT'
+                                          when 'SUBMITTED' then 'SUB'
+                                          when 'APPROVED' then 'APP'
+                                          else upper(nullif(btrim(coalesce(evs.status, '')), ''))
+                                      end,
+                                      'DFT')
+                         end as code
+              ) st on true
+          left join hrs.waa_status_code wcs
+                 on wcs.code = st.code
           where ru.is_deleted = false
             and ('NOVALUE' in (:#{#filter.district})
                  or ru.geographic_code in (:#{#filter.district}))
@@ -125,7 +141,9 @@ public final class ReportingUnitSearchQueryConstants {
    * and no parent/child block hierarchy, so the product decision redefined HRS {@code
    * secondaryEntry} as a {@code SECONDARY} mark; both flags therefore carry the same value on
    * PostgreSQL rows, and the former DEC-016 no-source {@code false} placeholder no longer
-   * applies); descriptions are NULL until D5 lookup enrichment.
+   * applies); the row status is the BLOCK's ({@code st.code}/{@code wcs.description} — see the
+   * fragment Javadoc; {@code DFT/Draft} fallback mirrors {@code ReportingUnitBlockService
+   * .resolveStatus}); district descriptions are NULL until D5 lookup enrichment.
    * No ORDER BY here — the provider supplies the mapped sort plus tie-breakers.
    */
   public static final String SEARCH_REPORTING_UNIT_QUERY =
@@ -158,8 +176,8 @@ public final class ReportingUnitSearchQueryConstants {
               'Average'                                     as "samplingName",
               ru.geographic_code                            as "districtCode",
               cast(null as text)                            as "districtName",
-              se.status                                     as "statusCode",
-              cast(null as text)                            as "statusName",
+              st.code                                       as "statusCode",
+              wcs.description                               as "statusName",
               ru.updated_at                                 as "lastUpdated"
           """
           + SEARCH_ROWS_FRAGMENT;
@@ -190,14 +208,15 @@ public final class ReportingUnitSearchQueryConstants {
    * legacy-equivalent mapper can consume the row unchanged. {@code licenseNo/cuttingPermit/
    * timberMark} come from the PRIMARY mark (the lowest live {@code (sequence_no, block_mark_id)},
    * the same convention as {@link #SEARCH_REPORTING_UNIT_QUERY}); {@code submitter} is the first
-   * live {@code block_submitter.submitter_name}; {@code statusCode} is the REPORTING UNIT's latest
-   * {@code status_event.status} (RU-scoped, {@code status_event.reporting_unit_id = ru.
-   * reporting_unit_id}) — deliberately the same source as the list-row badge so the row and its
-   * expanded panel can never disagree (block-scoped {@code status_event.block_id} events are
-   * ignored, matching the list-row badge — DEC-018). Note (A-14): {@code hrs.status_event} is
-   * presently an unpopulated append-only audit/history table (no writer), so this status is NULL
-   * in practice; a block/RU status column is the real source (the #1400 issue track);
-   * {@code attachmentId/attachmentName} are the latest live {@code
+   * live {@code block_submitter.submitter_name}; {@code statusCode} is the BLOCK's status — the
+   * block-scoped latest {@code status_event.status} ({@code status_event.block_id = b.block_id})
+   * normalised through the same long-form aliases with the {@code DFT/Draft} fallback as the
+   * list-row badge (see the {@link #SEARCH_ROWS_FRAGMENT} Javadoc), so the row and its expanded
+   * panel can never disagree (supersedes the DEC-018 RU-scoped selection and the A-14 no-op note:
+   * {@code hrs.status_event} is still an append-only table with no production writer, so rows fall
+   * back to {@code DFT/Draft} until the lifecycle starts writing events); {@code statusName} comes
+   * from the local {@code hrs.waa_status_code} table ({@code null} when the resolved code has no
+   * description row); {@code attachmentId/attachmentName} are the latest live {@code
    * block_attachment} narrowed to the finalized survey map ({@code document_type = 'FINAL_MAP' AND
    * status = 'FINALIZED'}, the HRS analog of the legacy {@code WASTE_ASSESSMENT_SURVEY_MAP}
    * attachment); {@code comments} is the latest live {@code block_comment.comment}; {@code
@@ -210,9 +229,8 @@ public final class ReportingUnitSearchQueryConstants {
    * <p>STRUCTURAL GAPS versus the legacy model are returned as NULL/0 rather than fabricated (see
    * the {@code v1-gap-register}): {@code markArea} — no HRS mark-area column ({@code null});
    * {@code exempted} — no child-block/parent-WAA flag ({@code false}); the per-mark {@code status}
-   * and {@code area} elements inside {@code secondary} — no HRS source (nulls); {@code statusName}
-   * — no status code→description table in HRS ({@code null}); and {@code multiMark} is DERIVED
-   * (existence of a live {@code SECONDARY} mark) rather than a stored flag.
+   * and {@code area} elements inside {@code secondary} — no HRS source (nulls); and {@code
+   * multiMark} is DERIVED (existence of a live {@code SECONDARY} mark) rather than a stored flag.
    *
    * <p>MUST NOT be given a Pageable/Spring Data sort: unlike the list query this statement keeps
    * {@code ORDER BY ... LIMIT} sub-selects (the {@code BlockRepository} precedent) and is safe only
@@ -251,8 +269,8 @@ public final class ReportingUnitSearchQueryConstants {
                 where bm.block_id = b.block_id
                   and bm.mark_type = 'SECONDARY'
                   and bm.is_deleted = false)               as "totalChildCount",
-              se.status                                    as "statusCode",
-              cast(null as text)                           as "statusName",
+              st.code                                      as "statusCode",
+              wcs.description                              as "statusName",
               (select coalesce(
                           jsonb_agg(
                               jsonb_build_object(
@@ -276,13 +294,24 @@ public final class ReportingUnitSearchQueryConstants {
               limit 1
           ) pm on true
           left join lateral (
-              select se2.status
-              from hrs.status_event se2
-              where se2.reporting_unit_id = b.reporting_unit_id
-                and se2.block_id is null
-              order by se2.created_at desc, se2.status_event_id desc
+              select se3.status
+              from hrs.status_event se3
+              where se3.block_id = b.block_id
+              order by se3.created_at desc, se3.status_event_id desc
               limit 1
-          ) se on true
+          ) evs on true
+          left join lateral (
+              select coalesce(
+                         case upper(nullif(btrim(coalesce(evs.status, '')), ''))
+                             when 'DRAFT' then 'DFT'
+                             when 'SUBMITTED' then 'SUB'
+                             when 'APPROVED' then 'APP'
+                             else upper(nullif(btrim(coalesce(evs.status, '')), ''))
+                         end,
+                         'DFT') as code
+          ) st on true
+          left join hrs.waa_status_code wcs
+                 on wcs.code = st.code
           left join lateral (
               select bs.submitter_name
               from hrs.block_submitter bs
@@ -382,9 +411,9 @@ public final class ReportingUnitSearchQueryConstants {
           Map.entry("district", "ru.geographic_code"),
           Map.entry("district.code", "ru.geographic_code"),
           Map.entry("district.description", "ru.geographic_code"),
-          Map.entry("status", "se.status"),
-          Map.entry("status.code", "se.status"),
-          Map.entry("status.description", "se.status"),
+          Map.entry("status", "st.code"),
+          Map.entry("status.code", "st.code"),
+          Map.entry("status.description", "wcs.description"),
           Map.entry("lastUpdated", "ru.updated_at"),
           Map.entry("licenseNumber", "pm.forest_file_id"),
           Map.entry("cuttingPermit", "nullif(btrim(pm.cutting_permit_id), '')"),

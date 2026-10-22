@@ -18,12 +18,10 @@ import ca.bc.gov.nrs.hrs.extensions.WithMockJwt;
 import ca.bc.gov.nrs.hrs.entity.block.BlockEntity;
 import ca.bc.gov.nrs.hrs.entity.block.BlockMarkEntity;
 import ca.bc.gov.nrs.hrs.entity.block.ReportingUnitEntity;
-import ca.bc.gov.nrs.hrs.entity.block.StatusEventEntity;
 import ca.bc.gov.nrs.hrs.repository.UserBookmarkRepository;
 import ca.bc.gov.nrs.hrs.repository.block.BlockMarkRepository;
 import ca.bc.gov.nrs.hrs.repository.block.BlockRepository;
 import ca.bc.gov.nrs.hrs.repository.block.ReportingUnitRepository;
-import ca.bc.gov.nrs.hrs.repository.block.StatusEventRepository;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
@@ -108,16 +106,13 @@ class PostgresReportingUnitSearchIntegrationTest extends AbstractTestContainerIn
   @Autowired
   private BlockMarkRepository blockMarkRepository;
   @Autowired
-  private StatusEventRepository statusEventRepository;
-  @Autowired
   private JdbcTemplate jdbcTemplate;
 
   private final List<ReportingUnitEntity> seededUnits = new ArrayList<>();
   private final List<BlockEntity> seededBlocks = new ArrayList<>();
   private final List<BlockMarkEntity> seededMarks = new ArrayList<>();
-  private final List<StatusEventEntity> seededEvents = new ArrayList<>();
 
-  /** Seeded scenario: RU A (client A) with one live block + PRIMARY mark + DRAFT event, and RU B (client B) blockless and event-less. */
+  /** Seeded scenario: RU A (client A) with one live block + PRIMARY mark, and RU B (client B) blockless. */
   private record Seed(
       Long ruA, Long ruB, Long blockA, String clientA, String clientB, String district,
       Instant ruATime, Instant ruBTime) {}
@@ -136,16 +131,10 @@ class PostgresReportingUnitSearchIntegrationTest extends AbstractTestContainerIn
 
   @AfterEach
   public void cleanUp() {
-    // status_event is append-only by design (no delete API on the repository) — clean up the
-    // seeded test rows through JDBC, then the FK children before their parents.
-    for (StatusEventEntity event : seededEvents) {
-      jdbcTemplate.update("DELETE FROM hrs.status_event WHERE status_event_id = ?",
-          event.getId());
-    }
+    // Clean up FK children before their parents: block_mark -> block -> reporting_unit.
     blockMarkRepository.deleteAll(seededMarks);
     blockRepository.deleteAll(seededBlocks);
     reportingUnitRepository.deleteAll(seededUnits);
-    seededEvents.clear();
     seededMarks.clear();
     seededBlocks.clear();
     seededUnits.clear();
@@ -184,12 +173,15 @@ class PostgresReportingUnitSearchIntegrationTest extends AbstractTestContainerIn
         .andExpect(jsonPath("$.content[0].district.code").value(seed.district()))
         .andExpect(jsonPath("$.content[0].district.description")
             .value(seed.district()))
-        .andExpect(jsonPath("$.content[0].status.code").value("DRAFT"))
-        .andExpect(jsonPath("$.content[0].status.description").value(nullValue()))
+        // Block-scoped latest status_event is unread (no writer) — the DFT/Draft fallback fires
+        // (same derivation as ReportingUnitBlockService.resolveStatus; waa_status_code join).
+        .andExpect(jsonPath("$.content[0].status.code").value("DFT"))
+        .andExpect(jsonPath("$.content[0].status.description").value("Draft"))
         .andExpect(jsonPath("$.content[0].bookmarked").value(false))
         .andExpect(jsonPath("$.content[0].id").value(
             org.hamcrest.Matchers.startsWith("RU-" + seed.ruA() + "-Block-" + seed.blockA() + "-")))
-        // RU-only row (RU B): block/mark fields NULL, status NULL (no events), still one row.
+        // RU-only row (RU B): block/mark fields NULL, status code+description NULL (no block,
+        // so no status derivation at all), still one row.
         .andExpect(jsonPath("$.content[1].ruNumber").value(seed.ruB().intValue()))
         .andExpect(jsonPath("$.content[1].wasteAssessmentAreaId").value(nullValue()))
         .andExpect(jsonPath("$.content[1].cutBlockId").value(nullValue()))
@@ -197,6 +189,7 @@ class PostgresReportingUnitSearchIntegrationTest extends AbstractTestContainerIn
         .andExpect(jsonPath("$.content[1].cuttingPermit").value(nullValue()))
         .andExpect(jsonPath("$.content[1].timberMark").value(nullValue()))
         .andExpect(jsonPath("$.content[1].status.code").value(nullValue()))
+        .andExpect(jsonPath("$.content[1].status.description").value(nullValue()))
         .andExpect(jsonPath("$.content[1].sampling.code").value("AVG"))
         .andExpect(jsonPath("$.content[1].district.code").value(seed.district()))
         .andExpect(jsonPath("$.content[1].district.description").value(seed.district()))
@@ -716,7 +709,6 @@ class PostgresReportingUnitSearchIntegrationTest extends AbstractTestContainerIn
     ReportingUnitEntity ruB = seedUnit(clientB, district, ruBTime);
     BlockEntity block = seedBlock(ruA.getId());
     seedPrimaryMark(block.getId());
-    seedStatusEvent(ruA.getId(), ruATime);
     stubForestClient(clientA);
     stubForestClient(clientB);
     stubForestDistricts(district);
@@ -813,18 +805,6 @@ class PostgresReportingUnitSearchIntegrationTest extends AbstractTestContainerIn
     mark.setCreatedAt(BASE_TIME);
     mark.setUpdatedAt(BASE_TIME);
     seededMarks.add(blockMarkRepository.saveAndFlush(mark));
-  }
-
-  private void seedStatusEvent(Long reportingUnitId, Instant createdAt) {
-    StatusEventEntity event = new StatusEventEntity();
-    event.setReportingUnitId(reportingUnitId);
-    event.setStatus("DRAFT");
-    event.setEventType("SUBMISSION_CREATED");
-    event.setCreatedBy(ACTOR);
-    event.setUpdatedBy(ACTOR);
-    event.setCreatedAt(createdAt);
-    event.setUpdatedAt(createdAt);
-    seededEvents.add(statusEventRepository.save(event));
   }
 
   private Long seedBlocklessUnit(String clientNumber, String district, Instant updatedAt) {
