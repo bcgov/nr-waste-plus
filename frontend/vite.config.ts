@@ -1,4 +1,5 @@
 import react from '@vitejs/plugin-react';
+import { tanstackRouter } from '@tanstack/router-plugin/vite';
 import { defineConfig, loadEnv } from 'vite';
 import { configDefaults } from 'vitest/config';
 
@@ -17,7 +18,17 @@ export default defineConfig(({ mode }) => {
       },
       tsconfigPaths: true,
     },
-    plugins: [react()],
+    plugins: [
+      // File-based route codegen. Must run BEFORE `react()` so the generated
+      // tree exists when route modules are transformed. Ignores colocated
+      // test files so they are never treated as routes (DEC-003).
+      tanstackRouter({
+        target: 'react',
+        autoCodeSplitting: true,
+        routeFileIgnorePattern: '.*\\.(unit|e2e)\\.test\\.[jt]sx?$',
+      }),
+      react(),
+    ],
     build: {
       chunkSizeWarningLimit: 1024,
       outDir: 'build',
@@ -81,8 +92,13 @@ export default defineConfig(({ mode }) => {
         clientFiles: [
           './src/main.tsx',
           './src/App.tsx',
-          './src/routes/routeTree.tsx',
-          './src/routes/routePaths.tsx',
+          './src/routerHost.tsx',
+          './src/router.tsx',
+          // Legacy tree — warmed while `legacy` is the default build (DEC-013);
+          // removed at the S7 cutover.
+          './src/routing/legacy/AppRouter.tsx',
+          './src/routing/legacy/routeTree.tsx',
+          './src/routing/legacy/routePaths.tsx',
         ],
       },
       watch: {
