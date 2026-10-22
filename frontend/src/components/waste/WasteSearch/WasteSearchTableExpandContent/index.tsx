@@ -11,6 +11,8 @@ import { env } from '@/env';
 
 type WasteSearchTableExpandContentProps = {
   rowId: string;
+  /** Whether the displayed result set came from the legacy source (default: true). */
+  readonly isLegacySource?: boolean;
 };
 
 /**
@@ -20,7 +22,10 @@ type WasteSearchTableExpandContentProps = {
  * @param props.rowId Composite row identifier used to resolve backend IDs.
  * @returns The expanded row content.
  */
-const WasteSearchTableExpandContent: FC<WasteSearchTableExpandContentProps> = ({ rowId }) => {
+const WasteSearchTableExpandContent: FC<WasteSearchTableExpandContentProps> = ({
+  rowId,
+  isLegacySource = true,
+}) => {
   /**
    * Extracts a numeric identifier from the composite row ID.
    *
@@ -222,7 +227,11 @@ const WasteSearchTableExpandContent: FC<WasteSearchTableExpandContentProps> = ({
           isNumber={false}
           showSkeleton={isLoading}
         >
-          {Number.isFinite(wasteAssessmentAreaId as number) ? (
+          {/* The Waste 303 legacy page is keyed by the Oracle WAA id. A PostgreSQL
+              result's wasteAssessmentAreaId is a locally generated block id, so the
+              legacy link is suppressed for PostgreSQL-sourced results (#1238 review:
+              never link a local block id into the legacy system). */}
+          {isLegacySource && Number.isFinite(wasteAssessmentAreaId as number) ? (
             <DefinitionTooltip definition={'Go to Waste 303 page'} align="bottom" openOnHover>
               <RedirectLinkTag
                 text="Link"

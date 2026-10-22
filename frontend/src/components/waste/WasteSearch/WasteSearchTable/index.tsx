@@ -81,7 +81,12 @@ const WasteSearchTable: FC = () => {
    * @returns The expand-content component for that row.
    */
   const onRowExpanded = (rowId: string | number): Promise<ReactNode> => {
-    return Promise.resolve(<WasteSearchTableExpandContent rowId={String(rowId)} />);
+    return Promise.resolve(
+      <WasteSearchTableExpandContent
+        rowId={String(rowId)}
+        isLegacySource={plainFilters.legacy !== false}
+      />,
+    );
   };
 
   const handlePageChange = ({ page, pageSize }: { page: number; pageSize: number }) => {
