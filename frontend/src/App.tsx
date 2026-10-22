@@ -1,6 +1,6 @@
 import { type FC } from 'react';
 
-import AppRouter from '@/routes/AppRouter';
+import AppRouter from '@/routing/legacy/AppRouter';
 
 /**
  * Root application component.

@@ -14,7 +14,7 @@ vi.mock('@tanstack/react-router', async () => {
   };
 });
 
-vi.mock('@/routes/inTreePaths', () => ({
+vi.mock('@/routing/legacy/inTreePaths', () => ({
   navigateInTree: vi.fn(),
 }));
 
@@ -24,7 +24,7 @@ vi.mock('@/context/pageTitle/usePageTitle', () => ({
   }),
 }));
 
-import { navigateInTree } from '@/routes/inTreePaths';
+import { navigateInTree } from '@/routing/legacy/inTreePaths';
 
 describe('ConfigurationPage', () => {
   beforeEach(() => {

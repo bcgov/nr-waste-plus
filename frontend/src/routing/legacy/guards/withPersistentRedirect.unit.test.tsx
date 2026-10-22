@@ -23,12 +23,12 @@ vi.mock('@tanstack/react-router', async () => {
   };
 });
 
-vi.mock('@/routes/redirectStorage', () => ({
+vi.mock('@/routing/redirectStorage', () => ({
   readPersistedRedirect: vi.fn(),
   clearPersistedRedirect: vi.fn(),
 }));
 
-vi.mock('@/routes/inTreePaths', () => ({
+vi.mock('@/routing/legacy/inTreePaths', () => ({
   navigateInTree: vi.fn(),
 }));
 
@@ -52,7 +52,7 @@ describe('withPersistentRedirect', () => {
   });
 
   it('shouldRenderComponent', async () => {
-    const { readPersistedRedirect } = await import('@/routes/redirectStorage');
+    const { readPersistedRedirect } = await import('@/routing/redirectStorage');
     vi.mocked(readPersistedRedirect).mockReturnValue(null);
     const Wrapped = withPersistentRedirect(DummyPage);
     render(<Wrapped />);
@@ -61,8 +61,8 @@ describe('withPersistentRedirect', () => {
 
   it('should navigate to persisted target when valid path exists', async () => {
     const { readPersistedRedirect, clearPersistedRedirect } =
-      await import('@/routes/redirectStorage');
-    const { navigateInTree } = await import('@/routes/inTreePaths');
+      await import('@/routing/redirectStorage');
+    const { navigateInTree } = await import('@/routing/legacy/inTreePaths');
     vi.mocked(readPersistedRedirect).mockReturnValue('/search?q=abc');
     const Wrapped = withPersistentRedirect(DummyPage);
     render(<Wrapped />);
@@ -76,8 +76,8 @@ describe('withPersistentRedirect', () => {
 
   it('should clear redirect and navigate to search when OAuth callback', async () => {
     const { readPersistedRedirect, clearPersistedRedirect } =
-      await import('@/routes/redirectStorage');
-    const { navigateInTree } = await import('@/routes/inTreePaths');
+      await import('@/routing/redirectStorage');
+    const { navigateInTree } = await import('@/routing/legacy/inTreePaths');
     vi.mocked(readPersistedRedirect).mockReturnValue(null);
     mockSearchStr = '?code=authcode123&state=statevalue';
     const Wrapped = withPersistentRedirect(DummyPage);
@@ -91,8 +91,8 @@ describe('withPersistentRedirect', () => {
   });
 
   it('should navigate to search with passthrough params when no persisted and no OAuth', async () => {
-    const { readPersistedRedirect } = await import('@/routes/redirectStorage');
-    const { navigateInTree } = await import('@/routes/inTreePaths');
+    const { readPersistedRedirect } = await import('@/routing/redirectStorage');
+    const { navigateInTree } = await import('@/routing/legacy/inTreePaths');
     vi.mocked(readPersistedRedirect).mockReturnValue(null);
     mockSearchStr = '?ref=email';
     const Wrapped = withPersistentRedirect(DummyPage);
@@ -105,8 +105,8 @@ describe('withPersistentRedirect', () => {
   });
 
   it('shouldIgnoreUnsafePersistTarget_startingWithDoubleSlash', async () => {
-    const { readPersistedRedirect } = await import('@/routes/redirectStorage');
-    const { navigateInTree } = await import('@/routes/inTreePaths');
+    const { readPersistedRedirect } = await import('@/routing/redirectStorage');
+    const { navigateInTree } = await import('@/routing/legacy/inTreePaths');
     vi.mocked(readPersistedRedirect).mockReturnValue('//evil.com/path');
     mockSearchStr = '';
     const Wrapped = withPersistentRedirect(DummyPage);
@@ -120,8 +120,8 @@ describe('withPersistentRedirect', () => {
   });
 
   it('shouldIgnoreDashboardTarget_toPreventRedirectLoop', async () => {
-    const { readPersistedRedirect } = await import('@/routes/redirectStorage');
-    const { navigateInTree } = await import('@/routes/inTreePaths');
+    const { readPersistedRedirect } = await import('@/routing/redirectStorage');
+    const { navigateInTree } = await import('@/routing/legacy/inTreePaths');
     vi.mocked(readPersistedRedirect).mockReturnValue('/dashboard');
     mockSearchStr = '';
     const Wrapped = withPersistentRedirect(DummyPage);
@@ -135,8 +135,8 @@ describe('withPersistentRedirect', () => {
   });
 
   it('should not navigate when auth is loading', async () => {
-    const { readPersistedRedirect } = await import('@/routes/redirectStorage');
-    const { navigateInTree } = await import('@/routes/inTreePaths');
+    const { readPersistedRedirect } = await import('@/routing/redirectStorage');
+    const { navigateInTree } = await import('@/routing/legacy/inTreePaths');
     vi.mocked(readPersistedRedirect).mockReturnValue('/search');
     mockIsLoading = true;
     const Wrapped = withPersistentRedirect(DummyPage);
@@ -145,8 +145,8 @@ describe('withPersistentRedirect', () => {
   });
 
   it('should navigate only once when rerendered multiple times', async () => {
-    const { readPersistedRedirect } = await import('@/routes/redirectStorage');
-    const { navigateInTree } = await import('@/routes/inTreePaths');
+    const { readPersistedRedirect } = await import('@/routing/redirectStorage');
+    const { navigateInTree } = await import('@/routing/legacy/inTreePaths');
     vi.mocked(readPersistedRedirect).mockReturnValue(null);
     const Wrapped = withPersistentRedirect(DummyPage);
     const { rerender } = render(<Wrapped />);

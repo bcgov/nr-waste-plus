@@ -14,7 +14,7 @@ vi.mock('@tanstack/react-router', async () => {
   };
 });
 
-vi.mock('@/routes/inTreePaths', () => ({
+vi.mock('@/routing/legacy/inTreePaths', () => ({
   navigateInTree: vi.fn(),
 }));
 
@@ -28,7 +28,7 @@ vi.mock('@/components/waste/DistrictAverage/DistrictVolumeListTable', () => ({
   default: () => <div data-testid="district-volume-list-table" />,
 }));
 
-import { navigateInTree } from '@/routes/inTreePaths';
+import { navigateInTree } from '@/routing/legacy/inTreePaths';
 
 describe('ConfigurationDistrictVolumeListPage', () => {
   beforeEach(() => {

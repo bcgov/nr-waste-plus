@@ -20,7 +20,7 @@ vi.mock('@tanstack/react-router', async () => {
   };
 });
 
-vi.mock('@/routes/inTreePaths', () => ({
+vi.mock('@/routing/legacy/inTreePaths', () => ({
   navigateInTree: vi.fn(),
 }));
 
@@ -58,7 +58,7 @@ describe('withOfflineSupport', () => {
     });
 
     it('should not navigate when online', async () => {
-      const { navigateInTree } = await import('@/routes/inTreePaths');
+      const { navigateInTree } = await import('@/routing/legacy/inTreePaths');
       mockIsOnline = true;
       const Wrapped = withOfflineSupport(TargetPage);
       render(<Wrapped />);
@@ -98,7 +98,7 @@ describe('withOfflineSupport', () => {
     });
 
     it('should navigate to search when online', async () => {
-      const { navigateInTree } = await import('@/routes/inTreePaths');
+      const { navigateInTree } = await import('@/routing/legacy/inTreePaths');
       mockIsOnline = true;
       const Wrapped = withOfflineSupport(TargetPage, { offlineOnly: true });
       render(<Wrapped />);
@@ -110,7 +110,7 @@ describe('withOfflineSupport', () => {
     });
 
     it('should not navigate when offline', async () => {
-      const { navigateInTree } = await import('@/routes/inTreePaths');
+      const { navigateInTree } = await import('@/routing/legacy/inTreePaths');
       mockIsOnline = false;
       const Wrapped = withOfflineSupport(TargetPage, { offlineOnly: true });
       render(<Wrapped />);

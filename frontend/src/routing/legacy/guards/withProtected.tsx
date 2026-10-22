@@ -4,8 +4,8 @@ import { useLayoutEffect, type ComponentType } from 'react';
 
 import { useAuth } from '@/context/auth/useAuth';
 import { getUserAccessStatus, UNAUTHORIZED_PATH } from '@/context/auth/userAccessValidation';
-import { navigateInTree, type InTreePath } from '@/routes/inTreePaths';
-import { persistRedirectUrl } from '@/routes/redirectStorage';
+import { navigateInTree, type InTreePath } from '@/routing/legacy/inTreePaths';
+import { persistRedirectUrl } from '@/routing/redirectStorage';
 
 import type { FamRole, FamLoginUser } from '@/types/auth.types';
 

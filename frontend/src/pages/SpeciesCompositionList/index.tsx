@@ -5,7 +5,7 @@ import { type FC } from 'react';
 
 import PageTitle from '@/components/core/PageTitle';
 import SpeciesCompositionListTable from '@/components/waste/SpeciesComposition/SpeciesCompositionListTable';
-import { navigateInTree } from '@/routes/inTreePaths';
+import { navigateInTree } from '@/routing/legacy/inTreePaths';
 
 import './index.scss';
 

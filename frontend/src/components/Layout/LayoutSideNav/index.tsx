@@ -7,7 +7,7 @@ import { useAuth } from '@/context/auth/useAuth';
 import { useLayout } from '@/context/layout/useLayout';
 import { env } from '@/env';
 import useOfflineMode from '@/hooks/useOfflineMode';
-import { getMenuEntries, isRouteAccessible, type MenuItem } from '@/routes/routePaths';
+import { getMenuEntries, isRouteAccessible, type MenuItem } from '@/routing/legacy/routePaths';
 import { Role } from '@/types/auth.types';
 
 import './index.scss';

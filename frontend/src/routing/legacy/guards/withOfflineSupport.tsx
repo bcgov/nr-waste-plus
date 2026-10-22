@@ -2,7 +2,7 @@ import { useNavigate } from '@tanstack/react-router';
 import { useLayoutEffect, type ComponentType } from 'react';
 
 import useOfflineMode from '@/hooks/useOfflineMode';
-import { navigateInTree } from '@/routes/inTreePaths';
+import { navigateInTree } from '@/routing/legacy/inTreePaths';
 
 /** Configuration options for the {@link withOfflineSupport} guard. */
 interface OfflineOptions {

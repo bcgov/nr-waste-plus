@@ -2,7 +2,7 @@ import { TableShortcut, TrashCan } from '@carbon/icons-react';
 import { useNavigate } from '@tanstack/react-router';
 import { useCallback } from 'react';
 
-import { navigateInTree, type InTreePath } from '@/routes/inTreePaths';
+import { navigateInTree, type InTreePath } from '@/routing/legacy/inTreePaths';
 import { isFutureDated } from '@/utils/businessDate';
 
 import type { PageableResponse, TableRowAction } from '@/types/tableResource.types';

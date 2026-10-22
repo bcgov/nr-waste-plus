@@ -50,8 +50,8 @@ const FormulaConfigurationCreatePage = lazyRouteComponent(
 );
 
 // ─── Shared loader (eager — used by route config at module load time) ──────────
-import { withPersistentRedirect } from '@/routes/guards/withPersistentRedirect';
-import { withPublicOnly } from '@/routes/guards/withPublicOnly';
+import { withPersistentRedirect } from '@/routing/legacy/guards/withPersistentRedirect';
+import { withPublicOnly } from '@/routing/legacy/guards/withPublicOnly';
 import { Role, type FamRole } from '@/types/auth.types';
 
 // ─── Types ────────────────────────────────────────────────────────────────────

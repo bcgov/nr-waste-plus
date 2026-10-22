@@ -7,7 +7,7 @@ import DistrictVolumeTableUploadPage from './index';
 
 import * as hooks from '@/config/react-query/hooks';
 import { renderWithAppAsync } from '@/config/tests/renderWithApp';
-import * as inTreePaths from '@/routes/inTreePaths';
+import * as inTreePaths from '@/routing/legacy/inTreePaths';
 
 // ============================================================================
 // Mocks
@@ -20,7 +20,7 @@ const mockUseDistrictVolumeTableCreateMutation = vi.mocked(
   hooks.useDistrictVolumeTableCreateMutation,
 );
 
-vi.mock('@/routes/inTreePaths', () => ({
+vi.mock('@/routing/legacy/inTreePaths', () => ({
   navigateInTree: vi.fn(),
 }));
 

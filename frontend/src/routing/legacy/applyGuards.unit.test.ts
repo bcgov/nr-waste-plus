@@ -1,26 +1,26 @@
 import { type ComponentType } from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-import type { RouteDescription } from '@/routes/routePaths';
+import type { RouteDescription } from '@/routing/legacy/routePaths';
 
-import { applyGuards } from '@/routes/applyGuards';
+import { applyGuards } from '@/routing/legacy/applyGuards';
 
 // ── Mocks ─────────────────────────────────────────────────────────────────────
 const mockOfflineWrapper = vi.fn();
 const mockProtectedWrapper = vi.fn();
 const mockFeatureFlagWrapper = vi.fn();
 
-vi.mock('@/routes/guards/withOfflineSupport', () => ({
+vi.mock('@/routing/legacy/guards/withOfflineSupport', () => ({
   withOfflineSupport: (Component: ComponentType, options: unknown) =>
     mockOfflineWrapper(Component, options),
 }));
 
-vi.mock('@/routes/guards/withProtected', () => ({
+vi.mock('@/routing/legacy/guards/withProtected', () => ({
   withProtected: (Component: ComponentType, roles: unknown) =>
     mockProtectedWrapper(Component, roles),
 }));
 
-vi.mock('@/routes/guards/withFeatureFlag', () => ({
+vi.mock('@/routing/legacy/guards/withFeatureFlag', () => ({
   withFeatureFlag: (Component: ComponentType, flagName: string | undefined) =>
     mockFeatureFlagWrapper(Component, flagName),
 }));

@@ -8,7 +8,7 @@ import PageTitle from '@/components/core/PageTitle';
 import SpeciesCompositionDetailView from '@/components/waste/SpeciesComposition/SpeciesCompositionDetailView';
 import SpeciesCompositionDetailSkeleton from '@/components/waste/SpeciesComposition/SpeciesCompositionDetailView/SpeciesCompositionDetailSkeleton';
 import { useSpeciesCompositionDetailQuery } from '@/config/react-query/hooks';
-import { navigateInTree } from '@/routes/inTreePaths';
+import { navigateInTree } from '@/routing/legacy/inTreePaths';
 
 import './index.scss';
 

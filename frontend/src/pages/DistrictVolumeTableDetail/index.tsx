@@ -8,7 +8,7 @@ import PageTitle from '@/components/core/PageTitle';
 import DistrictVolumeDetailView from '@/components/waste/DistrictAverage/DistrictVolumeDetail';
 import DistrictVolumeDetailSkeleton from '@/components/waste/DistrictAverage/DistrictVolumeDetail/DistrictVolumeDetailSkeleton';
 import { useDistrictVolumeTableDetailQuery } from '@/config/react-query/hooks';
-import { navigateInTree } from '@/routes/inTreePaths';
+import { navigateInTree } from '@/routing/legacy/inTreePaths';
 
 import './index.scss';
 

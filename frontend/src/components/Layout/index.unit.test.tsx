@@ -7,7 +7,7 @@ import { renderWithAppAsync } from '@/config/tests/renderWithApp';
 import { LayoutProvider } from '@/context/layout/LayoutProvider';
 import APIs from '@/services/APIs';
 
-vi.mock('@/routes/routePaths', () => ({
+vi.mock('@/routing/legacy/routePaths', () => ({
   getMenuEntries: () => [
     {
       id: 'Dashboard',

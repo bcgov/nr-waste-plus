@@ -5,7 +5,7 @@ import { type FC } from 'react';
 
 import ConfigurationCard from '@/components/core/ConfigurationCard';
 import PageTitle from '@/components/core/PageTitle';
-import { navigateInTree } from '@/routes/inTreePaths';
+import { navigateInTree } from '@/routing/legacy/inTreePaths';
 
 import './index.scss';
 

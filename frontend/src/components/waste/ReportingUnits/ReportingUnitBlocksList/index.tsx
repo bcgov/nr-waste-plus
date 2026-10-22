@@ -4,7 +4,7 @@ import { useState, type FC } from 'react';
 
 import EmptySection from '@/components/core/EmptySection';
 import TableResource from '@/components/Form/TableResource';
-import { navigateInTree } from '@/routes/inTreePaths';
+import { navigateInTree } from '@/routing/legacy/inTreePaths';
 
 import { BLOCKS_TABLE_HEADERS, EMPTY_BLOCKS_CONTENT } from './constants';
 

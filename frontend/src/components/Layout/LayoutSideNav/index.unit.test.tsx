@@ -4,7 +4,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderWithAppAsync } from '@/config/tests/renderWithApp';
 import * as useAuthModule from '@/context/auth/useAuth';
 import { LayoutProvider } from '@/context/layout/LayoutProvider';
-import * as routePathsModule from '@/routes/routePaths';
+import * as routePathsModule from '@/routing/legacy/routePaths';
 import { Role } from '@/types/auth.types';
 
 import { LayoutSideNav } from './index';
@@ -53,7 +53,7 @@ const defaultMenuEntries = [
   },
 ];
 
-vi.mock('@/routes/routePaths', () => ({
+vi.mock('@/routing/legacy/routePaths', () => ({
   getMenuEntries: vi.fn(),
   isRouteAccessible: vi.fn(),
 }));

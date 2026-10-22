@@ -7,7 +7,7 @@ import SpeciesCompositionUpload from './index.tsx';
 
 import * as hooks from '@/config/react-query/hooks.ts';
 import { renderWithApp, renderWithAppAsync } from '@/config/tests/renderWithApp.tsx';
-import * as inTreePaths from '@/routes/inTreePaths.ts';
+import * as inTreePaths from '@/routing/legacy/inTreePaths.ts';
 
 // ============================================================================
 // Mocks
@@ -61,7 +61,7 @@ const mockUseSpeciesCompositionCreateMutation = vi.mocked(
   hooks.useSpeciesCompositionCreateMutation,
 );
 
-vi.mock('@/routes/inTreePaths', () => ({
+vi.mock('@/routing/legacy/inTreePaths', () => ({
   navigateInTree: vi.fn(),
 }));
 

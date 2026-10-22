@@ -14,7 +14,7 @@ vi.mock('@tanstack/react-router', async () => {
   };
 });
 
-vi.mock('@/routes/inTreePaths', () => ({
+vi.mock('@/routing/legacy/inTreePaths', () => ({
   navigateInTree: vi.fn(),
 }));
 
@@ -28,7 +28,7 @@ vi.mock('@/components/waste/SpeciesComposition/SpeciesCompositionListTable', () 
   default: () => <div data-testid="species-composition-list-table" />,
 }));
 
-import { navigateInTree } from '@/routes/inTreePaths';
+import { navigateInTree } from '@/routing/legacy/inTreePaths';
 
 describe('SpeciesCompositionListPage', () => {
   beforeEach(() => {

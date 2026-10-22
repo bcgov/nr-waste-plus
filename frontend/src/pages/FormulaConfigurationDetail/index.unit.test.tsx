@@ -5,7 +5,7 @@ import { type ReactNode } from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 import { useFormulaSetDetail } from '@/hooks/useFormulaConfiguration';
-import { navigateInTree } from '@/routes/inTreePaths';
+import { navigateInTree } from '@/routing/legacy/inTreePaths';
 
 import FormulaConfigurationDetailPage from './index';
 
@@ -70,7 +70,7 @@ vi.mock('@/components/core/PageNotification', () => ({
   ),
 }));
 
-vi.mock('@/routes/inTreePaths', () => ({
+vi.mock('@/routing/legacy/inTreePaths', () => ({
   navigateInTree: vi.fn(),
 }));
 

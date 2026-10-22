@@ -8,7 +8,7 @@ import PageTitle from '@/components/core/PageTitle';
 import FormulaConfigurationDetail from '@/components/waste/Formula/FormulaConfigurationDetail';
 import FormulaConfigurationDetailSkeleton from '@/components/waste/Formula/FormulaConfigurationDetail/FormulaConfigurationDetailSkeleton';
 import { useFormulaSetDetail } from '@/hooks/useFormulaConfiguration';
-import { navigateInTree } from '@/routes/inTreePaths';
+import { navigateInTree } from '@/routing/legacy/inTreePaths';
 
 import './index.scss';
 

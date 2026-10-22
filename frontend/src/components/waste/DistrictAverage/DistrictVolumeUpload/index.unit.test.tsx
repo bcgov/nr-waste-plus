@@ -5,7 +5,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 import * as hooks from '@/config/react-query/hooks.ts';
 import { renderWithAppAsync } from '@/config/tests/renderWithApp.tsx';
-import * as inTreePaths from '@/routes/inTreePaths.ts';
+import * as inTreePaths from '@/routing/legacy/inTreePaths.ts';
 
 import DistrictVolumeTableUpload from './index.tsx';
 
@@ -118,7 +118,7 @@ const mockUseDistrictVolumeTableCreateMutation = vi.mocked(
   hooks.useDistrictVolumeTableCreateMutation,
 );
 
-vi.mock('@/routes/inTreePaths', () => ({
+vi.mock('@/routing/legacy/inTreePaths', () => ({
   navigateInTree: vi.fn(),
 }));
 

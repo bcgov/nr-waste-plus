@@ -21,7 +21,7 @@ vi.mock('@tanstack/react-router', async () => {
   };
 });
 
-vi.mock('@/routes/inTreePaths', () => ({
+vi.mock('@/routing/legacy/inTreePaths', () => ({
   navigateInTree: vi.fn(),
 }));
 
@@ -70,7 +70,7 @@ describe('withPublicOnly', () => {
   });
 
   it('should navigate to dashboard when user is logged in', async () => {
-    const { navigateInTree } = await import('@/routes/inTreePaths');
+    const { navigateInTree } = await import('@/routing/legacy/inTreePaths');
     mockIsLoggedIn = true;
     mockIsLoading = false;
     const Wrapped = withPublicOnly(PublicPage);
@@ -83,7 +83,7 @@ describe('withPublicOnly', () => {
   });
 
   it('should not navigate when auth is loading', async () => {
-    const { navigateInTree } = await import('@/routes/inTreePaths');
+    const { navigateInTree } = await import('@/routing/legacy/inTreePaths');
     mockIsLoggedIn = false;
     mockIsLoading = true;
     const Wrapped = withPublicOnly(PublicPage);
@@ -92,7 +92,7 @@ describe('withPublicOnly', () => {
   });
 
   it('should not navigate when user is not logged in', async () => {
-    const { navigateInTree } = await import('@/routes/inTreePaths');
+    const { navigateInTree } = await import('@/routing/legacy/inTreePaths');
     mockIsLoggedIn = false;
     mockIsLoading = false;
     const Wrapped = withPublicOnly(PublicPage);

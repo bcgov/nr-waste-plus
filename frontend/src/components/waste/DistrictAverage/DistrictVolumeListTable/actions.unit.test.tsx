@@ -3,7 +3,7 @@ import { renderHook } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest';
 
 import { resolveTableRowActionValue } from '@/components/Form/TableResource/utils.ts';
-import { navigateInTree } from '@/routes/inTreePaths.ts';
+import { navigateInTree } from '@/routing/legacy/inTreePaths.ts';
 import { isFutureDated } from '@/utils/businessDate.ts';
 
 import { useDistrictVolumeListRowActions } from './actions.tsx';
@@ -15,7 +15,7 @@ vi.mock('@tanstack/react-router', () => ({
   useNavigate: vi.fn(),
 }));
 
-vi.mock('@/routes/inTreePaths', () => ({
+vi.mock('@/routing/legacy/inTreePaths', () => ({
   navigateInTree: vi.fn(),
 }));
 

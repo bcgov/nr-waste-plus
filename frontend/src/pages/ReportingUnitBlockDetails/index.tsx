@@ -24,7 +24,7 @@ import BlockDetailsSkeleton from '@/components/waste/ReportingUnits/BlockDetails
 import BlockDetailsSummary from '@/components/waste/ReportingUnits/BlockDetailsSummary';
 import { useBlockDetailsQuery, useReportingUnitDetailsQuery } from '@/config/react-query/hooks';
 import useDelayedFlag from '@/hooks/useDelayedFlag';
-import { navigateInTree } from '@/routes/inTreePaths';
+import { navigateInTree } from '@/routing/legacy/inTreePaths';
 
 import './index.scss';
 

@@ -7,7 +7,7 @@ import { useCallback, useState, type FC } from 'react';
 import FileUploadInput from '@/components/Form/FileUploadInput';
 import UploadFormActions from '@/components/waste/UploadFormActions';
 import { useSpeciesCompositionCreateMutation } from '@/config/react-query/hooks.ts';
-import { navigateInTree } from '@/routes/inTreePaths.ts';
+import { navigateInTree } from '@/routing/legacy/inTreePaths.ts';
 import { SpeciesCompositionProcessor } from '@/services/speciescomposition/processors/speciesCompositionProcessor.ts';
 import { speciesCompositionValidator } from '@/services/speciescomposition/validators/speciesCompositionValidator.ts';
 

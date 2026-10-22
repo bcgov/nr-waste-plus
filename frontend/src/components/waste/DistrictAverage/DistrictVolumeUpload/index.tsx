@@ -19,7 +19,7 @@ import {
   useDistrictOptionsQuery,
   useDistrictVolumeTableCreateMutation,
 } from '@/config/react-query/hooks.ts';
-import { navigateInTree } from '@/routes/inTreePaths.ts';
+import { navigateInTree } from '@/routing/legacy/inTreePaths.ts';
 import { DistrictVolumeProcessor } from '@/services/districtvolumes/processors/districtVolumeProcessor.ts';
 import { coastValidator } from '@/services/districtvolumes/validators/coastValidator.ts';
 import { interiorValidator } from '@/services/districtvolumes/validators/interiorValidator.ts';

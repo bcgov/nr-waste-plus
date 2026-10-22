@@ -3,7 +3,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-import { router } from '@/routes/routeTree';
+import { router } from '@/routing/legacy/routeTree';
 
 // ── Mutable state ─────────────────────────────────────────────────────────────
 let mockUser: { userName: string } | undefined = undefined;

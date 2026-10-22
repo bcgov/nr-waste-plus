@@ -3,7 +3,7 @@ import { useNavigate } from '@tanstack/react-router';
 import { useLayoutEffect, type ComponentType } from 'react';
 
 import { useAuth } from '@/context/auth/useAuth';
-import { navigateInTree } from '@/routes/inTreePaths';
+import { navigateInTree } from '@/routing/legacy/inTreePaths';
 
 /**
  * HOC guard: redirects authenticated users away from public-only pages.

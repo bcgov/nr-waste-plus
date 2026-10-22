@@ -1,6 +1,6 @@
 import { RouterProvider } from '@tanstack/react-router';
 
-import { router } from '@/routes/routeTree';
+import { router } from '@/routing/legacy/routeTree';
 
 /**
  * Thin wrapper that mounts the application {@link RouterProvider} bound to the

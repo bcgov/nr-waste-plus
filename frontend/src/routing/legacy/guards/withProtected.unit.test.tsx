@@ -32,11 +32,11 @@ vi.mock('@tanstack/react-router', async () => {
   };
 });
 
-vi.mock('@/routes/redirectStorage', () => ({
+vi.mock('@/routing/redirectStorage', () => ({
   persistRedirectUrl: vi.fn(),
 }));
 
-vi.mock('@/routes/inTreePaths', () => ({
+vi.mock('@/routing/legacy/inTreePaths', () => ({
   navigateInTree: vi.fn(),
 }));
 
@@ -88,7 +88,7 @@ describe('withProtected', () => {
   });
 
   it('should persist redirect and navigate to login when user is undefined', async () => {
-    const { persistRedirectUrl } = await import('@/routes/redirectStorage');
+    const { persistRedirectUrl } = await import('@/routing/redirectStorage');
     mockIsLoading = false;
     mockUser = undefined;
     mockPathname = '/search';
@@ -102,7 +102,7 @@ describe('withProtected', () => {
   });
 
   it('should not persist redirect when pathname is login', async () => {
-    const { persistRedirectUrl } = await import('@/routes/redirectStorage');
+    const { persistRedirectUrl } = await import('@/routing/redirectStorage');
     mockIsLoading = false;
     mockUser = undefined;
     mockPathname = '/login';
@@ -122,7 +122,7 @@ describe('withProtected', () => {
   });
 
   it('should redirect to no-role when user has no roles', async () => {
-    const { navigateInTree } = await import('@/routes/inTreePaths');
+    const { navigateInTree } = await import('@/routing/legacy/inTreePaths');
     mockIsLoading = false;
     mockUser = makeUser({ roles: [] });
     const Protected = withProtected(DummyPage);
@@ -135,7 +135,7 @@ describe('withProtected', () => {
   });
 
   it('should redirect to unauthorized when user lacks required role', async () => {
-    const { navigateInTree } = await import('@/routes/inTreePaths');
+    const { navigateInTree } = await import('@/routing/legacy/inTreePaths');
     mockIsLoading = false;
     mockUser = makeUser({ roles: [{ role: Role.VIEWER, clients: ['100'] }] });
     const Protected = withProtected(DummyPage, [{ role: Role.ADMIN, clients: [] }]);
@@ -178,7 +178,7 @@ describe('withProtected', () => {
   });
 
   it('should redirect to role error when user has role error status', async () => {
-    const { navigateInTree } = await import('@/routes/inTreePaths');
+    const { navigateInTree } = await import('@/routing/legacy/inTreePaths');
     mockIsLoading = false;
     // IDIR user with multiple roles triggers role-error
     mockUser = makeUser({

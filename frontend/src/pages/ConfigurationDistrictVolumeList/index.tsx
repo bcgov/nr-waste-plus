@@ -5,7 +5,7 @@ import { type FC } from 'react';
 
 import PageTitle from '@/components/core/PageTitle';
 import DistrictVolumeListTable from '@/components/waste/DistrictAverage/DistrictVolumeListTable';
-import { navigateInTree } from '@/routes/inTreePaths';
+import { navigateInTree } from '@/routing/legacy/inTreePaths';
 
 import './index.scss';
 

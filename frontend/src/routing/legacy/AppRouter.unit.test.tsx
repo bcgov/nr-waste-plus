@@ -4,7 +4,7 @@ import { describe, it, expect, vi } from 'vitest';
 import AppRouter from './AppRouter';
 
 // The router singleton is already created; just verify RouterProvider mounts correctly.
-vi.mock('@/routes/routeTree', () => ({
+vi.mock('@/routing/legacy/routeTree', () => ({
   router: {
     history: { location: { href: '/', pathname: '/', search: '', hash: '' } },
     options: {},
