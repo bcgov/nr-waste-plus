@@ -60,3 +60,15 @@ export const createAppRouter = (context: AppRouterContext, options?: { history?:
  * Built once at module load with browser history and the shared query client.
  */
 export const router = createAppRouter({ queryClient }, { history: createBrowserHistory() });
+
+// Module augmentation: registers the file-based router with TanStack Router so
+// `useNavigate`, `Link to`, and other navigation APIs are fully type-safe
+// across the app. This is the single `Register` — the legacy router's
+// augmentation was removed because the generated tree's `FileRoutesByPath`
+// augmentation and a second `Register` cannot coexist (the navigation `to`
+// union collapses to `never` when both are present).
+declare module '@tanstack/react-router' {
+  interface Register {
+    router: typeof router;
+  }
+}

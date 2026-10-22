@@ -119,11 +119,16 @@ const routeTree = rootRoute.addChildren([...SYSTEM_ROUTES.map(toRoute), ...ROUTE
  * The application router singleton.
  *
  * Created once at module load time from the complete route tree (system routes + feature routes).
- * Bound to the React tree via `AppRouter` and registered in the module augmentation below
- * for fully type-safe navigation hooks (`useNavigate`, `Link`, etc.) throughout the app.
+ * Bound to the React tree via `AppRouter` and mounted by `RouterHost` while the
+ * `legacy` build mode is active (DEC-013).
  *
  * @see {@link AppRouter} for the `RouterProvider` wrapper.
- * @see the module augmentation block below for TypeScript integration.
+ *
+ * NOTE (temporary migration state): the `Register` module augmentation now
+ * lives in `@/router` and points at the file-based router — the generated
+ * tree's `FileRoutesByPath` augmentation and a legacy `Register` cannot
+ * coexist (navigation `to` resolves to `never`). Legacy dynamic-string
+ * navigation keeps compiling through `navigateInTree`'s cast boundary.
  */
 export const router = createRouter({
   routeTree,
@@ -135,11 +140,3 @@ export const router = createRouter({
   ),
   defaultPreload: 'intent',
 });
-
-// Module augmentation: registers the router type with TanStack Router so that
-// useNavigate, Link `to`, and other navigation APIs are fully type-safe across the app.
-declare module '@tanstack/react-router' {
-  interface Register {
-    router: typeof router;
-  }
-}

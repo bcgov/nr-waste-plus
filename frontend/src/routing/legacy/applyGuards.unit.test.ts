@@ -1,9 +1,9 @@
 import { type ComponentType } from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-import type { RouteDescription } from '@/routing/legacy/routePaths';
-
 import { applyGuards } from '@/routing/legacy/applyGuards';
+
+import type { RouteDescription } from '@/routing/legacy/routePaths';
 
 // ── Mocks ─────────────────────────────────────────────────────────────────────
 const mockOfflineWrapper = vi.fn();

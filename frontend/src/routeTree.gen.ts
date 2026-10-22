@@ -10,33 +10,366 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
+import { Route as DashboardRouteImport } from './routes/dashboard'
+import { Route as NoRoleRouteImport } from './routes/no-role'
+import { Route as UnauthorizedRouteImport } from './routes/unauthorized'
+import { Route as AuthenticatedSplatRouteImport } from './routes/_authenticated/$'
+import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/_admin'
+import { Route as AuthenticatedClientAccessRouteImport } from './routes/_authenticated/_client-access'
+import { Route as AuthenticatedSearchRouteImport } from './routes/_authenticated/search'
+import { Route as AuthenticatedAdminConfigurationRouteImport } from './routes/_authenticated/_admin/configuration'
+import { Route as AuthenticatedClientAccessClientsRouteImport } from './routes/_authenticated/_client-access/clients'
+import { Route as AuthenticatedReportingUnitsRuIdRouteImport } from './routes/_authenticated/reporting-units/$ruId'
+import { Route as AuthenticatedReportingUnitsCreateRouteImport } from './routes/_authenticated/reporting-units/create'
+import { Route as AuthenticatedAdminConfigurationIndexRouteImport } from './routes/_authenticated/_admin/configuration/index'
+import { Route as AuthenticatedAdminConfigurationDistrictVolumeTablesRouteImport } from './routes/_authenticated/_admin/configuration/district-volume-tables'
+import { Route as AuthenticatedAdminConfigurationFormulasRouteImport } from './routes/_authenticated/_admin/configuration/formulas'
+import { Route as AuthenticatedAdminConfigurationSpeciesCompositionRouteImport } from './routes/_authenticated/_admin/configuration/species-composition'
+import { Route as AuthenticatedReportingUnitsRuIdIndexRouteImport } from './routes/_authenticated/reporting-units/$ruId/index'
+import { Route as AuthenticatedReportingUnitsRuIdBlockIdRouteImport } from './routes/_authenticated/reporting-units/$ruId/$blockId'
+import { Route as AuthenticatedAdminConfigurationDistrictVolumeTablesIndexRouteImport } from './routes/_authenticated/_admin/configuration/district-volume-tables/index'
+import { Route as AuthenticatedAdminConfigurationDistrictVolumeTablesIdRouteImport } from './routes/_authenticated/_admin/configuration/district-volume-tables/$id'
+import { Route as AuthenticatedAdminConfigurationDistrictVolumeTablesUploadRouteImport } from './routes/_authenticated/_admin/configuration/district-volume-tables/upload'
+import { Route as AuthenticatedAdminConfigurationFormulasIndexRouteImport } from './routes/_authenticated/_admin/configuration/formulas/index'
+import { Route as AuthenticatedAdminConfigurationFormulasIdRouteImport } from './routes/_authenticated/_admin/configuration/formulas/$id'
+import { Route as AuthenticatedAdminConfigurationFormulasNewRouteImport } from './routes/_authenticated/_admin/configuration/formulas/new'
+import { Route as AuthenticatedAdminConfigurationSpeciesCompositionIndexRouteImport } from './routes/_authenticated/_admin/configuration/species-composition/index'
+import { Route as AuthenticatedAdminConfigurationSpeciesCompositionIdRouteImport } from './routes/_authenticated/_admin/configuration/species-composition/$id'
+import { Route as AuthenticatedAdminConfigurationSpeciesCompositionUploadRouteImport } from './routes/_authenticated/_admin/configuration/species-composition/upload'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedRoute = AuthenticatedRouteImport.update({
+  id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DashboardRoute = DashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NoRoleRoute = NoRoleRouteImport.update({
+  id: '/no-role',
+  path: '/no-role',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const UnauthorizedRoute = UnauthorizedRouteImport.update({
+  id: '/unauthorized',
+  path: '/unauthorized',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedSplatRoute = AuthenticatedSplatRouteImport.update({
+  id: '/$',
+  path: '/$',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
+  id: '/_admin',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedClientAccessRoute =
+  AuthenticatedClientAccessRouteImport.update({
+    id: '/_client-access',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedSearchRoute = AuthenticatedSearchRouteImport.update({
+  id: '/search',
+  path: '/search',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedAdminConfigurationRoute =
+  AuthenticatedAdminConfigurationRouteImport.update({
+    id: '/configuration',
+    path: '/configuration',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedClientAccessClientsRoute =
+  AuthenticatedClientAccessClientsRouteImport.update({
+    id: '/clients',
+    path: '/clients',
+    getParentRoute: () => AuthenticatedClientAccessRoute,
+  } as any)
+const AuthenticatedReportingUnitsRuIdRoute =
+  AuthenticatedReportingUnitsRuIdRouteImport.update({
+    id: '/reporting-units/$ruId',
+    path: '/reporting-units/$ruId',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedReportingUnitsCreateRoute =
+  AuthenticatedReportingUnitsCreateRouteImport.update({
+    id: '/reporting-units/create',
+    path: '/reporting-units/create',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedAdminConfigurationIndexRoute =
+  AuthenticatedAdminConfigurationIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedAdminConfigurationRoute,
+  } as any)
+const AuthenticatedAdminConfigurationDistrictVolumeTablesRoute =
+  AuthenticatedAdminConfigurationDistrictVolumeTablesRouteImport.update({
+    id: '/district-volume-tables',
+    path: '/district-volume-tables',
+    getParentRoute: () => AuthenticatedAdminConfigurationRoute,
+  } as any)
+const AuthenticatedAdminConfigurationFormulasRoute =
+  AuthenticatedAdminConfigurationFormulasRouteImport.update({
+    id: '/formulas',
+    path: '/formulas',
+    getParentRoute: () => AuthenticatedAdminConfigurationRoute,
+  } as any)
+const AuthenticatedAdminConfigurationSpeciesCompositionRoute =
+  AuthenticatedAdminConfigurationSpeciesCompositionRouteImport.update({
+    id: '/species-composition',
+    path: '/species-composition',
+    getParentRoute: () => AuthenticatedAdminConfigurationRoute,
+  } as any)
+const AuthenticatedReportingUnitsRuIdIndexRoute =
+  AuthenticatedReportingUnitsRuIdIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedReportingUnitsRuIdRoute,
+  } as any)
+const AuthenticatedReportingUnitsRuIdBlockIdRoute =
+  AuthenticatedReportingUnitsRuIdBlockIdRouteImport.update({
+    id: '/$blockId',
+    path: '/$blockId',
+    getParentRoute: () => AuthenticatedReportingUnitsRuIdRoute,
+  } as any)
+const AuthenticatedAdminConfigurationDistrictVolumeTablesIndexRoute =
+  AuthenticatedAdminConfigurationDistrictVolumeTablesIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () =>
+      AuthenticatedAdminConfigurationDistrictVolumeTablesRoute,
+  } as any)
+const AuthenticatedAdminConfigurationDistrictVolumeTablesIdRoute =
+  AuthenticatedAdminConfigurationDistrictVolumeTablesIdRouteImport.update({
+    id: '/$id',
+    path: '/$id',
+    getParentRoute: () =>
+      AuthenticatedAdminConfigurationDistrictVolumeTablesRoute,
+  } as any)
+const AuthenticatedAdminConfigurationDistrictVolumeTablesUploadRoute =
+  AuthenticatedAdminConfigurationDistrictVolumeTablesUploadRouteImport.update({
+    id: '/upload',
+    path: '/upload',
+    getParentRoute: () =>
+      AuthenticatedAdminConfigurationDistrictVolumeTablesRoute,
+  } as any)
+const AuthenticatedAdminConfigurationFormulasIndexRoute =
+  AuthenticatedAdminConfigurationFormulasIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedAdminConfigurationFormulasRoute,
+  } as any)
+const AuthenticatedAdminConfigurationFormulasIdRoute =
+  AuthenticatedAdminConfigurationFormulasIdRouteImport.update({
+    id: '/$id',
+    path: '/$id',
+    getParentRoute: () => AuthenticatedAdminConfigurationFormulasRoute,
+  } as any)
+const AuthenticatedAdminConfigurationFormulasNewRoute =
+  AuthenticatedAdminConfigurationFormulasNewRouteImport.update({
+    id: '/new',
+    path: '/new',
+    getParentRoute: () => AuthenticatedAdminConfigurationFormulasRoute,
+  } as any)
+const AuthenticatedAdminConfigurationSpeciesCompositionIndexRoute =
+  AuthenticatedAdminConfigurationSpeciesCompositionIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () =>
+      AuthenticatedAdminConfigurationSpeciesCompositionRoute,
+  } as any)
+const AuthenticatedAdminConfigurationSpeciesCompositionIdRoute =
+  AuthenticatedAdminConfigurationSpeciesCompositionIdRouteImport.update({
+    id: '/$id',
+    path: '/$id',
+    getParentRoute: () =>
+      AuthenticatedAdminConfigurationSpeciesCompositionRoute,
+  } as any)
+const AuthenticatedAdminConfigurationSpeciesCompositionUploadRoute =
+  AuthenticatedAdminConfigurationSpeciesCompositionUploadRouteImport.update({
+    id: '/upload',
+    path: '/upload',
+    getParentRoute: () =>
+      AuthenticatedAdminConfigurationSpeciesCompositionRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/dashboard': typeof DashboardRoute
+  '/no-role': typeof NoRoleRoute
+  '/unauthorized': typeof UnauthorizedRoute
+  '/$': typeof AuthenticatedSplatRoute
+  '/search': typeof AuthenticatedSearchRoute
+  '/configuration': typeof AuthenticatedAdminConfigurationRouteWithChildren
+  '/clients': typeof AuthenticatedClientAccessClientsRoute
+  '/reporting-units/$ruId': typeof AuthenticatedReportingUnitsRuIdRouteWithChildren
+  '/reporting-units/create': typeof AuthenticatedReportingUnitsCreateRoute
+  '/configuration/district-volume-tables': typeof AuthenticatedAdminConfigurationDistrictVolumeTablesRouteWithChildren
+  '/configuration/formulas': typeof AuthenticatedAdminConfigurationFormulasRouteWithChildren
+  '/configuration/species-composition': typeof AuthenticatedAdminConfigurationSpeciesCompositionRouteWithChildren
+  '/reporting-units/$ruId/$blockId': typeof AuthenticatedReportingUnitsRuIdBlockIdRoute
+  '/configuration/': typeof AuthenticatedAdminConfigurationIndexRoute
+  '/reporting-units/$ruId/': typeof AuthenticatedReportingUnitsRuIdIndexRoute
+  '/configuration/district-volume-tables/$id': typeof AuthenticatedAdminConfigurationDistrictVolumeTablesIdRoute
+  '/configuration/district-volume-tables/upload': typeof AuthenticatedAdminConfigurationDistrictVolumeTablesUploadRoute
+  '/configuration/formulas/$id': typeof AuthenticatedAdminConfigurationFormulasIdRoute
+  '/configuration/formulas/new': typeof AuthenticatedAdminConfigurationFormulasNewRoute
+  '/configuration/species-composition/$id': typeof AuthenticatedAdminConfigurationSpeciesCompositionIdRoute
+  '/configuration/species-composition/upload': typeof AuthenticatedAdminConfigurationSpeciesCompositionUploadRoute
+  '/configuration/district-volume-tables/': typeof AuthenticatedAdminConfigurationDistrictVolumeTablesIndexRoute
+  '/configuration/formulas/': typeof AuthenticatedAdminConfigurationFormulasIndexRoute
+  '/configuration/species-composition/': typeof AuthenticatedAdminConfigurationSpeciesCompositionIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/dashboard': typeof DashboardRoute
+  '/no-role': typeof NoRoleRoute
+  '/unauthorized': typeof UnauthorizedRoute
+  '/$': typeof AuthenticatedSplatRoute
+  '/search': typeof AuthenticatedSearchRoute
+  '/clients': typeof AuthenticatedClientAccessClientsRoute
+  '/reporting-units/create': typeof AuthenticatedReportingUnitsCreateRoute
+  '/reporting-units/$ruId/$blockId': typeof AuthenticatedReportingUnitsRuIdBlockIdRoute
+  '/configuration': typeof AuthenticatedAdminConfigurationIndexRoute
+  '/reporting-units/$ruId': typeof AuthenticatedReportingUnitsRuIdIndexRoute
+  '/configuration/district-volume-tables/$id': typeof AuthenticatedAdminConfigurationDistrictVolumeTablesIdRoute
+  '/configuration/district-volume-tables/upload': typeof AuthenticatedAdminConfigurationDistrictVolumeTablesUploadRoute
+  '/configuration/formulas/$id': typeof AuthenticatedAdminConfigurationFormulasIdRoute
+  '/configuration/formulas/new': typeof AuthenticatedAdminConfigurationFormulasNewRoute
+  '/configuration/species-composition/$id': typeof AuthenticatedAdminConfigurationSpeciesCompositionIdRoute
+  '/configuration/species-composition/upload': typeof AuthenticatedAdminConfigurationSpeciesCompositionUploadRoute
+  '/configuration/district-volume-tables': typeof AuthenticatedAdminConfigurationDistrictVolumeTablesIndexRoute
+  '/configuration/formulas': typeof AuthenticatedAdminConfigurationFormulasIndexRoute
+  '/configuration/species-composition': typeof AuthenticatedAdminConfigurationSpeciesCompositionIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_authenticated': typeof AuthenticatedRouteWithChildren
+  '/dashboard': typeof DashboardRoute
+  '/no-role': typeof NoRoleRoute
+  '/unauthorized': typeof UnauthorizedRoute
+  '/_authenticated/$': typeof AuthenticatedSplatRoute
+  '/_authenticated/_admin': typeof AuthenticatedAdminRouteWithChildren
+  '/_authenticated/_client-access': typeof AuthenticatedClientAccessRouteWithChildren
+  '/_authenticated/search': typeof AuthenticatedSearchRoute
+  '/_authenticated/_admin/configuration': typeof AuthenticatedAdminConfigurationRouteWithChildren
+  '/_authenticated/_client-access/clients': typeof AuthenticatedClientAccessClientsRoute
+  '/_authenticated/reporting-units/$ruId': typeof AuthenticatedReportingUnitsRuIdRouteWithChildren
+  '/_authenticated/reporting-units/create': typeof AuthenticatedReportingUnitsCreateRoute
+  '/_authenticated/_admin/configuration/district-volume-tables': typeof AuthenticatedAdminConfigurationDistrictVolumeTablesRouteWithChildren
+  '/_authenticated/_admin/configuration/formulas': typeof AuthenticatedAdminConfigurationFormulasRouteWithChildren
+  '/_authenticated/_admin/configuration/species-composition': typeof AuthenticatedAdminConfigurationSpeciesCompositionRouteWithChildren
+  '/_authenticated/reporting-units/$ruId/$blockId': typeof AuthenticatedReportingUnitsRuIdBlockIdRoute
+  '/_authenticated/_admin/configuration/': typeof AuthenticatedAdminConfigurationIndexRoute
+  '/_authenticated/reporting-units/$ruId/': typeof AuthenticatedReportingUnitsRuIdIndexRoute
+  '/_authenticated/_admin/configuration/district-volume-tables/$id': typeof AuthenticatedAdminConfigurationDistrictVolumeTablesIdRoute
+  '/_authenticated/_admin/configuration/district-volume-tables/upload': typeof AuthenticatedAdminConfigurationDistrictVolumeTablesUploadRoute
+  '/_authenticated/_admin/configuration/formulas/$id': typeof AuthenticatedAdminConfigurationFormulasIdRoute
+  '/_authenticated/_admin/configuration/formulas/new': typeof AuthenticatedAdminConfigurationFormulasNewRoute
+  '/_authenticated/_admin/configuration/species-composition/$id': typeof AuthenticatedAdminConfigurationSpeciesCompositionIdRoute
+  '/_authenticated/_admin/configuration/species-composition/upload': typeof AuthenticatedAdminConfigurationSpeciesCompositionUploadRoute
+  '/_authenticated/_admin/configuration/district-volume-tables/': typeof AuthenticatedAdminConfigurationDistrictVolumeTablesIndexRoute
+  '/_authenticated/_admin/configuration/formulas/': typeof AuthenticatedAdminConfigurationFormulasIndexRoute
+  '/_authenticated/_admin/configuration/species-composition/': typeof AuthenticatedAdminConfigurationSpeciesCompositionIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/dashboard'
+    | '/no-role'
+    | '/unauthorized'
+    | '/$'
+    | '/search'
+    | '/configuration'
+    | '/clients'
+    | '/reporting-units/$ruId'
+    | '/reporting-units/create'
+    | '/configuration/district-volume-tables'
+    | '/configuration/formulas'
+    | '/configuration/species-composition'
+    | '/reporting-units/$ruId/$blockId'
+    | '/configuration/'
+    | '/reporting-units/$ruId/'
+    | '/configuration/district-volume-tables/$id'
+    | '/configuration/district-volume-tables/upload'
+    | '/configuration/formulas/$id'
+    | '/configuration/formulas/new'
+    | '/configuration/species-composition/$id'
+    | '/configuration/species-composition/upload'
+    | '/configuration/district-volume-tables/'
+    | '/configuration/formulas/'
+    | '/configuration/species-composition/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/dashboard'
+    | '/no-role'
+    | '/unauthorized'
+    | '/$'
+    | '/search'
+    | '/clients'
+    | '/reporting-units/create'
+    | '/reporting-units/$ruId/$blockId'
+    | '/configuration'
+    | '/reporting-units/$ruId'
+    | '/configuration/district-volume-tables/$id'
+    | '/configuration/district-volume-tables/upload'
+    | '/configuration/formulas/$id'
+    | '/configuration/formulas/new'
+    | '/configuration/species-composition/$id'
+    | '/configuration/species-composition/upload'
+    | '/configuration/district-volume-tables'
+    | '/configuration/formulas'
+    | '/configuration/species-composition'
+  id:
+    | '__root__'
+    | '/'
+    | '/_authenticated'
+    | '/dashboard'
+    | '/no-role'
+    | '/unauthorized'
+    | '/_authenticated/$'
+    | '/_authenticated/_admin'
+    | '/_authenticated/_client-access'
+    | '/_authenticated/search'
+    | '/_authenticated/_admin/configuration'
+    | '/_authenticated/_client-access/clients'
+    | '/_authenticated/reporting-units/$ruId'
+    | '/_authenticated/reporting-units/create'
+    | '/_authenticated/_admin/configuration/district-volume-tables'
+    | '/_authenticated/_admin/configuration/formulas'
+    | '/_authenticated/_admin/configuration/species-composition'
+    | '/_authenticated/reporting-units/$ruId/$blockId'
+    | '/_authenticated/_admin/configuration/'
+    | '/_authenticated/reporting-units/$ruId/'
+    | '/_authenticated/_admin/configuration/district-volume-tables/$id'
+    | '/_authenticated/_admin/configuration/district-volume-tables/upload'
+    | '/_authenticated/_admin/configuration/formulas/$id'
+    | '/_authenticated/_admin/configuration/formulas/new'
+    | '/_authenticated/_admin/configuration/species-composition/$id'
+    | '/_authenticated/_admin/configuration/species-composition/upload'
+    | '/_authenticated/_admin/configuration/district-volume-tables/'
+    | '/_authenticated/_admin/configuration/formulas/'
+    | '/_authenticated/_admin/configuration/species-composition/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
+  DashboardRoute: typeof DashboardRoute
+  NoRoleRoute: typeof NoRoleRoute
+  UnauthorizedRoute: typeof UnauthorizedRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +381,360 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dashboard': {
+      id: '/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof DashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/no-role': {
+      id: '/no-role'
+      path: '/no-role'
+      fullPath: '/no-role'
+      preLoaderRoute: typeof NoRoleRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/unauthorized': {
+      id: '/unauthorized'
+      path: '/unauthorized'
+      fullPath: '/unauthorized'
+      preLoaderRoute: typeof UnauthorizedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/$': {
+      id: '/_authenticated/$'
+      path: '/$'
+      fullPath: '/$'
+      preLoaderRoute: typeof AuthenticatedSplatRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/_admin': {
+      id: '/_authenticated/_admin'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedAdminRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/_client-access': {
+      id: '/_authenticated/_client-access'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedClientAccessRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/search': {
+      id: '/_authenticated/search'
+      path: '/search'
+      fullPath: '/search'
+      preLoaderRoute: typeof AuthenticatedSearchRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/_admin/configuration': {
+      id: '/_authenticated/_admin/configuration'
+      path: '/configuration'
+      fullPath: '/configuration'
+      preLoaderRoute: typeof AuthenticatedAdminConfigurationRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/_client-access/clients': {
+      id: '/_authenticated/_client-access/clients'
+      path: '/clients'
+      fullPath: '/clients'
+      preLoaderRoute: typeof AuthenticatedClientAccessClientsRouteImport
+      parentRoute: typeof AuthenticatedClientAccessRoute
+    }
+    '/_authenticated/reporting-units/$ruId': {
+      id: '/_authenticated/reporting-units/$ruId'
+      path: '/reporting-units/$ruId'
+      fullPath: '/reporting-units/$ruId'
+      preLoaderRoute: typeof AuthenticatedReportingUnitsRuIdRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/reporting-units/create': {
+      id: '/_authenticated/reporting-units/create'
+      path: '/reporting-units/create'
+      fullPath: '/reporting-units/create'
+      preLoaderRoute: typeof AuthenticatedReportingUnitsCreateRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/_admin/configuration/': {
+      id: '/_authenticated/_admin/configuration/'
+      path: '/'
+      fullPath: '/configuration/'
+      preLoaderRoute: typeof AuthenticatedAdminConfigurationIndexRouteImport
+      parentRoute: typeof AuthenticatedAdminConfigurationRoute
+    }
+    '/_authenticated/_admin/configuration/district-volume-tables': {
+      id: '/_authenticated/_admin/configuration/district-volume-tables'
+      path: '/district-volume-tables'
+      fullPath: '/configuration/district-volume-tables'
+      preLoaderRoute: typeof AuthenticatedAdminConfigurationDistrictVolumeTablesRouteImport
+      parentRoute: typeof AuthenticatedAdminConfigurationRoute
+    }
+    '/_authenticated/_admin/configuration/formulas': {
+      id: '/_authenticated/_admin/configuration/formulas'
+      path: '/formulas'
+      fullPath: '/configuration/formulas'
+      preLoaderRoute: typeof AuthenticatedAdminConfigurationFormulasRouteImport
+      parentRoute: typeof AuthenticatedAdminConfigurationRoute
+    }
+    '/_authenticated/_admin/configuration/species-composition': {
+      id: '/_authenticated/_admin/configuration/species-composition'
+      path: '/species-composition'
+      fullPath: '/configuration/species-composition'
+      preLoaderRoute: typeof AuthenticatedAdminConfigurationSpeciesCompositionRouteImport
+      parentRoute: typeof AuthenticatedAdminConfigurationRoute
+    }
+    '/_authenticated/reporting-units/$ruId/': {
+      id: '/_authenticated/reporting-units/$ruId/'
+      path: '/'
+      fullPath: '/reporting-units/$ruId/'
+      preLoaderRoute: typeof AuthenticatedReportingUnitsRuIdIndexRouteImport
+      parentRoute: typeof AuthenticatedReportingUnitsRuIdRoute
+    }
+    '/_authenticated/reporting-units/$ruId/$blockId': {
+      id: '/_authenticated/reporting-units/$ruId/$blockId'
+      path: '/$blockId'
+      fullPath: '/reporting-units/$ruId/$blockId'
+      preLoaderRoute: typeof AuthenticatedReportingUnitsRuIdBlockIdRouteImport
+      parentRoute: typeof AuthenticatedReportingUnitsRuIdRoute
+    }
+    '/_authenticated/_admin/configuration/district-volume-tables/': {
+      id: '/_authenticated/_admin/configuration/district-volume-tables/'
+      path: '/'
+      fullPath: '/configuration/district-volume-tables/'
+      preLoaderRoute: typeof AuthenticatedAdminConfigurationDistrictVolumeTablesIndexRouteImport
+      parentRoute: typeof AuthenticatedAdminConfigurationDistrictVolumeTablesRoute
+    }
+    '/_authenticated/_admin/configuration/district-volume-tables/$id': {
+      id: '/_authenticated/_admin/configuration/district-volume-tables/$id'
+      path: '/$id'
+      fullPath: '/configuration/district-volume-tables/$id'
+      preLoaderRoute: typeof AuthenticatedAdminConfigurationDistrictVolumeTablesIdRouteImport
+      parentRoute: typeof AuthenticatedAdminConfigurationDistrictVolumeTablesRoute
+    }
+    '/_authenticated/_admin/configuration/district-volume-tables/upload': {
+      id: '/_authenticated/_admin/configuration/district-volume-tables/upload'
+      path: '/upload'
+      fullPath: '/configuration/district-volume-tables/upload'
+      preLoaderRoute: typeof AuthenticatedAdminConfigurationDistrictVolumeTablesUploadRouteImport
+      parentRoute: typeof AuthenticatedAdminConfigurationDistrictVolumeTablesRoute
+    }
+    '/_authenticated/_admin/configuration/formulas/': {
+      id: '/_authenticated/_admin/configuration/formulas/'
+      path: '/'
+      fullPath: '/configuration/formulas/'
+      preLoaderRoute: typeof AuthenticatedAdminConfigurationFormulasIndexRouteImport
+      parentRoute: typeof AuthenticatedAdminConfigurationFormulasRoute
+    }
+    '/_authenticated/_admin/configuration/formulas/$id': {
+      id: '/_authenticated/_admin/configuration/formulas/$id'
+      path: '/$id'
+      fullPath: '/configuration/formulas/$id'
+      preLoaderRoute: typeof AuthenticatedAdminConfigurationFormulasIdRouteImport
+      parentRoute: typeof AuthenticatedAdminConfigurationFormulasRoute
+    }
+    '/_authenticated/_admin/configuration/formulas/new': {
+      id: '/_authenticated/_admin/configuration/formulas/new'
+      path: '/new'
+      fullPath: '/configuration/formulas/new'
+      preLoaderRoute: typeof AuthenticatedAdminConfigurationFormulasNewRouteImport
+      parentRoute: typeof AuthenticatedAdminConfigurationFormulasRoute
+    }
+    '/_authenticated/_admin/configuration/species-composition/': {
+      id: '/_authenticated/_admin/configuration/species-composition/'
+      path: '/'
+      fullPath: '/configuration/species-composition/'
+      preLoaderRoute: typeof AuthenticatedAdminConfigurationSpeciesCompositionIndexRouteImport
+      parentRoute: typeof AuthenticatedAdminConfigurationSpeciesCompositionRoute
+    }
+    '/_authenticated/_admin/configuration/species-composition/$id': {
+      id: '/_authenticated/_admin/configuration/species-composition/$id'
+      path: '/$id'
+      fullPath: '/configuration/species-composition/$id'
+      preLoaderRoute: typeof AuthenticatedAdminConfigurationSpeciesCompositionIdRouteImport
+      parentRoute: typeof AuthenticatedAdminConfigurationSpeciesCompositionRoute
+    }
+    '/_authenticated/_admin/configuration/species-composition/upload': {
+      id: '/_authenticated/_admin/configuration/species-composition/upload'
+      path: '/upload'
+      fullPath: '/configuration/species-composition/upload'
+      preLoaderRoute: typeof AuthenticatedAdminConfigurationSpeciesCompositionUploadRouteImport
+      parentRoute: typeof AuthenticatedAdminConfigurationSpeciesCompositionRoute
+    }
   }
 }
 
+interface AuthenticatedAdminConfigurationDistrictVolumeTablesRouteChildren {
+  AuthenticatedAdminConfigurationDistrictVolumeTablesIdRoute: typeof AuthenticatedAdminConfigurationDistrictVolumeTablesIdRoute
+  AuthenticatedAdminConfigurationDistrictVolumeTablesUploadRoute: typeof AuthenticatedAdminConfigurationDistrictVolumeTablesUploadRoute
+  AuthenticatedAdminConfigurationDistrictVolumeTablesIndexRoute: typeof AuthenticatedAdminConfigurationDistrictVolumeTablesIndexRoute
+}
+
+const AuthenticatedAdminConfigurationDistrictVolumeTablesRouteChildren: AuthenticatedAdminConfigurationDistrictVolumeTablesRouteChildren =
+  {
+    AuthenticatedAdminConfigurationDistrictVolumeTablesIdRoute:
+      AuthenticatedAdminConfigurationDistrictVolumeTablesIdRoute,
+    AuthenticatedAdminConfigurationDistrictVolumeTablesUploadRoute:
+      AuthenticatedAdminConfigurationDistrictVolumeTablesUploadRoute,
+    AuthenticatedAdminConfigurationDistrictVolumeTablesIndexRoute:
+      AuthenticatedAdminConfigurationDistrictVolumeTablesIndexRoute,
+  }
+
+const AuthenticatedAdminConfigurationDistrictVolumeTablesRouteWithChildren =
+  AuthenticatedAdminConfigurationDistrictVolumeTablesRoute._addFileChildren(
+    AuthenticatedAdminConfigurationDistrictVolumeTablesRouteChildren,
+  )
+
+interface AuthenticatedAdminConfigurationFormulasRouteChildren {
+  AuthenticatedAdminConfigurationFormulasIdRoute: typeof AuthenticatedAdminConfigurationFormulasIdRoute
+  AuthenticatedAdminConfigurationFormulasNewRoute: typeof AuthenticatedAdminConfigurationFormulasNewRoute
+  AuthenticatedAdminConfigurationFormulasIndexRoute: typeof AuthenticatedAdminConfigurationFormulasIndexRoute
+}
+
+const AuthenticatedAdminConfigurationFormulasRouteChildren: AuthenticatedAdminConfigurationFormulasRouteChildren =
+  {
+    AuthenticatedAdminConfigurationFormulasIdRoute:
+      AuthenticatedAdminConfigurationFormulasIdRoute,
+    AuthenticatedAdminConfigurationFormulasNewRoute:
+      AuthenticatedAdminConfigurationFormulasNewRoute,
+    AuthenticatedAdminConfigurationFormulasIndexRoute:
+      AuthenticatedAdminConfigurationFormulasIndexRoute,
+  }
+
+const AuthenticatedAdminConfigurationFormulasRouteWithChildren =
+  AuthenticatedAdminConfigurationFormulasRoute._addFileChildren(
+    AuthenticatedAdminConfigurationFormulasRouteChildren,
+  )
+
+interface AuthenticatedAdminConfigurationSpeciesCompositionRouteChildren {
+  AuthenticatedAdminConfigurationSpeciesCompositionIdRoute: typeof AuthenticatedAdminConfigurationSpeciesCompositionIdRoute
+  AuthenticatedAdminConfigurationSpeciesCompositionUploadRoute: typeof AuthenticatedAdminConfigurationSpeciesCompositionUploadRoute
+  AuthenticatedAdminConfigurationSpeciesCompositionIndexRoute: typeof AuthenticatedAdminConfigurationSpeciesCompositionIndexRoute
+}
+
+const AuthenticatedAdminConfigurationSpeciesCompositionRouteChildren: AuthenticatedAdminConfigurationSpeciesCompositionRouteChildren =
+  {
+    AuthenticatedAdminConfigurationSpeciesCompositionIdRoute:
+      AuthenticatedAdminConfigurationSpeciesCompositionIdRoute,
+    AuthenticatedAdminConfigurationSpeciesCompositionUploadRoute:
+      AuthenticatedAdminConfigurationSpeciesCompositionUploadRoute,
+    AuthenticatedAdminConfigurationSpeciesCompositionIndexRoute:
+      AuthenticatedAdminConfigurationSpeciesCompositionIndexRoute,
+  }
+
+const AuthenticatedAdminConfigurationSpeciesCompositionRouteWithChildren =
+  AuthenticatedAdminConfigurationSpeciesCompositionRoute._addFileChildren(
+    AuthenticatedAdminConfigurationSpeciesCompositionRouteChildren,
+  )
+
+interface AuthenticatedAdminConfigurationRouteChildren {
+  AuthenticatedAdminConfigurationDistrictVolumeTablesRoute: typeof AuthenticatedAdminConfigurationDistrictVolumeTablesRouteWithChildren
+  AuthenticatedAdminConfigurationFormulasRoute: typeof AuthenticatedAdminConfigurationFormulasRouteWithChildren
+  AuthenticatedAdminConfigurationSpeciesCompositionRoute: typeof AuthenticatedAdminConfigurationSpeciesCompositionRouteWithChildren
+  AuthenticatedAdminConfigurationIndexRoute: typeof AuthenticatedAdminConfigurationIndexRoute
+}
+
+const AuthenticatedAdminConfigurationRouteChildren: AuthenticatedAdminConfigurationRouteChildren =
+  {
+    AuthenticatedAdminConfigurationDistrictVolumeTablesRoute:
+      AuthenticatedAdminConfigurationDistrictVolumeTablesRouteWithChildren,
+    AuthenticatedAdminConfigurationFormulasRoute:
+      AuthenticatedAdminConfigurationFormulasRouteWithChildren,
+    AuthenticatedAdminConfigurationSpeciesCompositionRoute:
+      AuthenticatedAdminConfigurationSpeciesCompositionRouteWithChildren,
+    AuthenticatedAdminConfigurationIndexRoute:
+      AuthenticatedAdminConfigurationIndexRoute,
+  }
+
+const AuthenticatedAdminConfigurationRouteWithChildren =
+  AuthenticatedAdminConfigurationRoute._addFileChildren(
+    AuthenticatedAdminConfigurationRouteChildren,
+  )
+
+interface AuthenticatedAdminRouteChildren {
+  AuthenticatedAdminConfigurationRoute: typeof AuthenticatedAdminConfigurationRouteWithChildren
+}
+
+const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
+  AuthenticatedAdminConfigurationRoute:
+    AuthenticatedAdminConfigurationRouteWithChildren,
+}
+
+const AuthenticatedAdminRouteWithChildren =
+  AuthenticatedAdminRoute._addFileChildren(AuthenticatedAdminRouteChildren)
+
+interface AuthenticatedClientAccessRouteChildren {
+  AuthenticatedClientAccessClientsRoute: typeof AuthenticatedClientAccessClientsRoute
+}
+
+const AuthenticatedClientAccessRouteChildren: AuthenticatedClientAccessRouteChildren =
+  {
+    AuthenticatedClientAccessClientsRoute:
+      AuthenticatedClientAccessClientsRoute,
+  }
+
+const AuthenticatedClientAccessRouteWithChildren =
+  AuthenticatedClientAccessRoute._addFileChildren(
+    AuthenticatedClientAccessRouteChildren,
+  )
+
+interface AuthenticatedReportingUnitsRuIdRouteChildren {
+  AuthenticatedReportingUnitsRuIdBlockIdRoute: typeof AuthenticatedReportingUnitsRuIdBlockIdRoute
+  AuthenticatedReportingUnitsRuIdIndexRoute: typeof AuthenticatedReportingUnitsRuIdIndexRoute
+}
+
+const AuthenticatedReportingUnitsRuIdRouteChildren: AuthenticatedReportingUnitsRuIdRouteChildren =
+  {
+    AuthenticatedReportingUnitsRuIdBlockIdRoute:
+      AuthenticatedReportingUnitsRuIdBlockIdRoute,
+    AuthenticatedReportingUnitsRuIdIndexRoute:
+      AuthenticatedReportingUnitsRuIdIndexRoute,
+  }
+
+const AuthenticatedReportingUnitsRuIdRouteWithChildren =
+  AuthenticatedReportingUnitsRuIdRoute._addFileChildren(
+    AuthenticatedReportingUnitsRuIdRouteChildren,
+  )
+
+interface AuthenticatedRouteChildren {
+  AuthenticatedSplatRoute: typeof AuthenticatedSplatRoute
+  AuthenticatedAdminRoute: typeof AuthenticatedAdminRouteWithChildren
+  AuthenticatedClientAccessRoute: typeof AuthenticatedClientAccessRouteWithChildren
+  AuthenticatedSearchRoute: typeof AuthenticatedSearchRoute
+  AuthenticatedReportingUnitsRuIdRoute: typeof AuthenticatedReportingUnitsRuIdRouteWithChildren
+  AuthenticatedReportingUnitsCreateRoute: typeof AuthenticatedReportingUnitsCreateRoute
+}
+
+const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
+  AuthenticatedSplatRoute: AuthenticatedSplatRoute,
+  AuthenticatedAdminRoute: AuthenticatedAdminRouteWithChildren,
+  AuthenticatedClientAccessRoute: AuthenticatedClientAccessRouteWithChildren,
+  AuthenticatedSearchRoute: AuthenticatedSearchRoute,
+  AuthenticatedReportingUnitsRuIdRoute:
+    AuthenticatedReportingUnitsRuIdRouteWithChildren,
+  AuthenticatedReportingUnitsCreateRoute:
+    AuthenticatedReportingUnitsCreateRoute,
+}
+
+const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
+  AuthenticatedRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthenticatedRoute: AuthenticatedRouteWithChildren,
+  DashboardRoute: DashboardRoute,
+  NoRoleRoute: NoRoleRoute,
+  UnauthorizedRoute: UnauthorizedRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

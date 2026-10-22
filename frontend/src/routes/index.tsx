@@ -1,25 +1,32 @@
-import { createFileRoute } from '@tanstack/react-router';
+import { Loading } from '@carbon/react';
+import { createFileRoute, useNavigate } from '@tanstack/react-router';
+import { useLayoutEffect } from 'react';
+
+import { useAuth } from '@/context/auth/useAuth';
+import LandingPage from '@/pages/Landing';
 
 /**
- * TEMPORARY minimal landing route (S1 foundation).
+ * Public-only landing page (port of the legacy `withPublicOnly` guard).
  *
- * Exists only so `VITE_ROUTER_IMPL=next` boots and renders after the switch is
- * in place. S2 replaces this with the public-only landing behavior; S3 wires
- * the real `LandingPage` and `staticData`.
+ * - `isLoading` → labelled Carbon `Loading` (accessible content, not blank).
+ * - Authenticated → `/dashboard` immediately (no landing flash).
+ * - Unauthenticated → `LandingPage`.
  */
-function PlaceholderLanding() {
-  return (
-    <div className="cds--grid">
-      <div className="cds--row">
-        <div className="cds--col">
-          <h1>Waste Plus</h1>
-          <p>File-based routing placeholder (next router).</p>
-        </div>
-      </div>
-    </div>
-  );
+function PublicOnlyLanding() {
+  const { isLoggedIn, isLoading } = useAuth();
+  const navigate = useNavigate();
+
+  useLayoutEffect(() => {
+    if (!isLoading && isLoggedIn) {
+      void navigate({ href: '/dashboard', replace: true });
+    }
+  }, [isLoading, isLoggedIn, navigate]);
+
+  if (isLoading) return <Loading data-testid="loading" withOverlay />;
+  if (isLoggedIn) return null; // redirect pending
+  return <LandingPage />;
 }
 
 export const Route = createFileRoute('/')({
-  component: PlaceholderLanding,
+  component: PublicOnlyLanding,
 });

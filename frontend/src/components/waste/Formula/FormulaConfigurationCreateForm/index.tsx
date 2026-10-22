@@ -245,7 +245,7 @@ const FormulaConfigurationCreateForm: FC = () => {
       setIsReviewing(false);
       return;
     }
-    // @ts-expect-error TanStack Router cannot infer this dynamically selected route.
+    // `/configuration/formulas` is a typed route target in the file-based tree.
     navigate({ to: '/configuration/formulas' });
   };
 
