@@ -1,6 +1,9 @@
 {
   "resources": [
     {
+      "glob": "db/testdata"
+    },
+    {
       "glob": "db/testdata/**"
     }
   ],
