@@ -119,6 +119,23 @@ class PostgresReportingUnitSearchProviderTest {
   }
 
   @Test
+  @DisplayName("searchReportingUnit: null filters are normalized, not dereferenced")
+  void searchReportingUnit_nullFilters_shouldTreatAsNoFilters() {
+    setAuthentication("idir", List.of());
+    when(searchRepository.searchReportingUnits(any(PostgresReportingUnitSearchFilter.class),
+        any(Pageable.class)))
+        .thenReturn(Page.empty());
+
+    assertThat(provider.searchReportingUnit(null, PageRequest.of(0, 10))).isEmpty();
+
+    ArgumentCaptor<PostgresReportingUnitSearchFilter> filterCaptor =
+        ArgumentCaptor.forClass(PostgresReportingUnitSearchFilter.class);
+    verify(searchRepository).searchReportingUnits(filterCaptor.capture(), any(Pageable.class));
+    assertThat(filterCaptor.getValue().getClientNumbers())
+        .containsExactly(ReportingUnitSearchQueryConstants.SENTINEL_NOVALUE);
+  }
+
+  @Test
   @DisplayName("searchReportingUnit: BCeID role scope is passed to the repository")
   void searchReportingUnit_bceidWithRoles_shouldBindRoleClients() {
     setAuthentication("bceidbusiness", List.of("Viewer_00010002", "Submitter_00010003"));

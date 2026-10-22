@@ -85,15 +85,19 @@ public class PostgresReportingUnitSearchProvider implements ReportingUnitSearchP
   public Page<ReportingUnitSearchResultDto> searchReportingUnit(
       ReportingUnitSearchParametersDto filters, Pageable pageable) {
 
-    if (filters != null
-        && filters.isBookmarked()
-        && CollectionUtils.isEmpty(filters.getReportingUnitIds())) {
+    // Null filters mean "no filters" (same contract as the legacy provider): normalize
+    // once so no downstream dereference can NPE.
+    ReportingUnitSearchParametersDto safeFilters =
+        filters == null ? new ReportingUnitSearchParametersDto() : filters;
+
+    if (safeFilters.isBookmarked()
+        && CollectionUtils.isEmpty(safeFilters.getReportingUnitIds())) {
       return Page.empty(pageable);
     }
 
-    List<String> clientNumbers = resolveClientScope(filters.getClientNumbers());
+    List<String> clientNumbers = resolveClientScope(safeFilters.getClientNumbers());
     PostgresReportingUnitSearchFilter filter =
-        PostgresReportingUnitSearchFilter.from(filters, clientNumbers);
+        PostgresReportingUnitSearchFilter.from(safeFilters, clientNumbers);
 
     Page<ReportingUnitSearchRow> rows =
         searchRepository.searchReportingUnits(filter, resolvePage(pageable));
