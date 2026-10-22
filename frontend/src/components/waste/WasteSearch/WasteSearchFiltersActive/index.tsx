@@ -1,4 +1,4 @@
-import { Button, DismissibleTag } from '@carbon/react';
+import { Button, DismissibleTag, Tag } from '@carbon/react';
 import { useCallback, type FC } from 'react';
 
 import { mapDisplayFilter } from '@/components/waste/WasteSearch/WasteSearchFiltersActive/utils';
@@ -128,6 +128,12 @@ const WasteSearchFiltersActive: FC<WasteSearchFiltersActiveProps> = ({
 
   return (
     <div data-testid="active-filters" className="display-contents">
+      {/* The search source is not a filter — it is a property of the displayed result
+          set (#1238), so it renders as a persistent, non-dismissible tag whether the
+          flag is true, false, or still on its absent/legacy default. */}
+      <Tag type="outline" size="md" data-testid="search-source-tag">
+        {filters.legacy === false ? 'Source: PostgreSQL' : 'Source: Legacy'}
+      </Tag>
       {renderFilters}
       {visibleFilters().length > 0 && (
         <Button id="clear-filters-button" kind="ghost" onClick={clearFilters}>
