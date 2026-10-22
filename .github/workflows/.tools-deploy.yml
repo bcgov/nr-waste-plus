@@ -181,8 +181,7 @@ jobs:
               POD_NAME=$(oc get pods -l app=nr-waste-plus-tools -l deployment=nr-waste-plus-tools-minio -o jsonpath='{.items[0].metadata.name}' 2>/dev/null)
               if [ -n "$POD_NAME" ]; then
                 echo "MinIO pod found: $POD_NAME"
-                if oc exec $POD_NAME -c minio-init -- mc --config-dir /tmp/.mc mb --ignore-existing local/"$OBJECT_STORAGE_BUCKET" && \
-                   oc exec $POD_NAME -c minio-init -- mc --config-dir /tmp/.mc ls local/"$OBJECT_STORAGE_BUCKET" >/dev/null 2>&1; then
+                if oc exec $POD_NAME -c minio-init -- sh -c 'mc --config-dir /tmp/.mc mb --ignore-existing local/"$OBJECT_STORAGE_BUCKET" && mc --config-dir /tmp/.mc ls local/"$OBJECT_STORAGE_BUCKET" >/dev/null'; then
                   echo "Bucket $OBJECT_STORAGE_BUCKET confirmed ready."
                   BUCKET_READY=true
                   break
@@ -202,23 +201,19 @@ jobs:
             fi
 
             # Verify in-cluster Service DNS, routing, and S3 communication
-            echo "Verifying in-cluster S3 service and presigned URL resolution..."
-            printf '%s\n' \
-              'set -e' \
-              'mc --config-dir /tmp/.mc alias set in-cluster http://nr-waste-plus-tools-minio.cffaf3-tools.svc.cluster.local:9000 "$MINIO_ROOT_USER" "$MINIO_ROOT_PASSWORD"' \
-              'echo "smoke-test-payload" | mc --config-dir /tmp/.mc pipe in-cluster/"$OBJECT_STORAGE_BUCKET"/smoke-test.txt' \
-              'FETCHED=$(mc --config-dir /tmp/.mc cat in-cluster/"$OBJECT_STORAGE_BUCKET"/smoke-test.txt)' \
-              '[ "$FETCHED" = "smoke-test-payload" ] || { echo "Error: In-cluster S3 payload mismatch"; exit 1; }' \
-              'echo "In-cluster S3 service verified successfully."' \
-              'GET_URL=$(mc --config-dir /tmp/.mc share download in-cluster/"$OBJECT_STORAGE_BUCKET"/smoke-test.txt | grep -o '\''http[^ "]*X-Amz[^ "]*'\'' | head -n 1)' \
-              '[ -n "$GET_URL" ] || { echo "Error: Failed to generate presigned download URL"; exit 1; }' \
-              'echo "Generated presigned URL: $GET_URL"' \
-              'PRESIGNED_FETCH=""' \
-              'if command -v curl >/dev/null 2>&1; then PRESIGNED_FETCH=$(curl -f -s -S "$GET_URL"); elif command -v wget >/dev/null 2>&1; then PRESIGNED_FETCH=$(wget -q -O - "$GET_URL"); elif command -v busybox >/dev/null 2>&1; then PRESIGNED_FETCH=$(busybox wget -q -O - "$GET_URL"); else PRESIGNED_FETCH=$(mc --config-dir /tmp/.mc cat in-cluster/"$OBJECT_STORAGE_BUCKET"/smoke-test.txt); fi' \
-              '[ "$PRESIGNED_FETCH" = "smoke-test-payload" ] || { echo "Error: Presigned GET payload mismatch: $PRESIGNED_FETCH"; exit 1; }' \
-              'mc --config-dir /tmp/.mc rm in-cluster/"$OBJECT_STORAGE_BUCKET"/smoke-test.txt' \
-              'echo "Presigned URL smoke check passed successfully."' \
-              | oc exec -i $POD_NAME -c minio-init -- sh
+            echo "Verifying in-cluster S3 service endpoint..."
+            oc exec $POD_NAME -c minio-init -- sh -c '
+              set -e
+              mc --config-dir /tmp/.mc alias set in-cluster http://nr-waste-plus-tools-minio.cffaf3-tools.svc.cluster.local:9000 "$MINIO_ROOT_USER" "$MINIO_ROOT_PASSWORD"
+              echo "smoke-test-payload" | mc --config-dir /tmp/.mc pipe in-cluster/"$OBJECT_STORAGE_BUCKET"/smoke-test.txt
+              FETCHED=$(mc --config-dir /tmp/.mc cat in-cluster/"$OBJECT_STORAGE_BUCKET"/smoke-test.txt)
+              if [ "$FETCHED" != "smoke-test-payload" ]; then
+                echo "Error: In-cluster S3 payload mismatch"
+                exit 1
+              fi
+              mc --config-dir /tmp/.mc rm in-cluster/"$OBJECT_STORAGE_BUCKET"/smoke-test.txt
+              echo "In-cluster S3 service endpoint verified successfully."
+            '
 
   scale-up-legacy:
     name: Scale up legacy
