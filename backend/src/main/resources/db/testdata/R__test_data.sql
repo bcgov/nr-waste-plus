@@ -39,7 +39,9 @@ WHERE created_by = 'test-seed:reporting-unit-dkm-v1'
 INSERT INTO hrs.district_volume
     (area, start_date, end_date, table_data, table_level_factor, heli_multiplier,
      created_at, created_by, updated_at, updated_by)
-VALUES
+SELECT v.area, v.start_date::DATE, v.end_date::DATE, v.table_data::JSONB, v.table_level_factor,
+       v.heli_multiplier, v.created_at, v.created_by, v.updated_at, v.updated_by
+FROM (VALUES
     (
         'INTERIOR',
         '2020-01-01',
@@ -96,7 +98,18 @@ VALUES
         'test-seed:reporting-unit-dkm-v1',
         NOW(),
         'test-seed:reporting-unit-dkm-v1'
-    );
+    )
+) AS v(area, start_date, end_date, table_data, table_level_factor, heli_multiplier,
+       created_at, created_by, updated_at, updated_by)
+-- Skip an area that already has an open-ended configuration, so seeding never
+-- overlaps a real one. Fixture rows were closed above, so reruns still reseed.
+WHERE NOT EXISTS (
+    SELECT 1
+    FROM hrs.district_volume dv
+    WHERE dv.area = v.area
+      AND dv.end_date IS NULL
+      AND dv.is_deleted = FALSE
+);
 
 -- Reporting-unit block-list test data. For this test path, PostgreSQL reporting
 -- units are treated as District Average; the fixture persists the corresponding
