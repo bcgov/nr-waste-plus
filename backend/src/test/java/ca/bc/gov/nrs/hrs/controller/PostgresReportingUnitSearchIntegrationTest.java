@@ -365,6 +365,24 @@ class PostgresReportingUnitSearchIntegrationTest extends AbstractTestContainerIn
   }
 
   @Test
+  @DisplayName("Postgres bookmarked search with no bookmarks returns an empty page")
+  void searchReportingUnit_postgresNoBookmarks_shouldReturnEmptyPage() throws Exception {
+    Seed seed = seedScenario(FIXED_CLIENT_A, FIXED_CLIENT_B);
+
+    mockMvc
+        .perform(get("/api/search/reporting-units")
+            .queryParam("legacy", "false")
+            .queryParam("district", seed.district())
+            .queryParam("bookmarked", "true")
+            .queryParam("page", "0")
+            .queryParam("size", "10")
+            .accept(MediaType.APPLICATION_JSON))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.content.length()").value(0))
+        .andExpect(jsonPath("$.page.totalElements").value(0));
+  }
+
+  @Test
   @DisplayName("Postgres mainSearchTerm: digits match the RU id, leading zeros included")
   void searchReportingUnit_postgresMainSearchTerm_digits() throws Exception {
     Seed seed = seedScenario(uniqueClient(), uniqueClient());

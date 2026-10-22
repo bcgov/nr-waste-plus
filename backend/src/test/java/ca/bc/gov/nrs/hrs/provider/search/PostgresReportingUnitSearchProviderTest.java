@@ -157,6 +157,24 @@ class PostgresReportingUnitSearchProviderTest {
   }
 
   @Test
+  @DisplayName("bookmarked search with no bookmark ids returns empty before client resolution")
+  void searchReportingUnit_bookmarkedWithoutIds_shouldReturnEmptyPage() {
+    var filters = ReportingUnitSearchParametersDto.builder()
+        .bookmarked(true)
+        .build();
+    filters.setLegacy("false");
+    Pageable pageable = PageRequest.of(2, 10);
+
+    Page<ReportingUnitSearchResultDto> result = provider.searchReportingUnit(filters, pageable);
+
+    assertThat(result).isEmpty();
+    assertThat(result.getTotalElements()).isZero();
+    assertThat(result.getPageable()).isEqualTo(pageable);
+    verify(searchRepository, never())
+        .searchReportingUnits(any(PostgresReportingUnitSearchFilter.class), any(Pageable.class));
+  }
+
+  @Test
   @DisplayName("getSearchExpanded maps expanded fields and parses secondary marks")
   void getSearchExpanded_shouldMapProjection() {
     when(searchRepository.findExpanded(17L, 23L)).thenReturn(Optional.of(expandedRow));

@@ -85,6 +85,12 @@ public class PostgresReportingUnitSearchProvider implements ReportingUnitSearchP
   public Page<ReportingUnitSearchResultDto> searchReportingUnit(
       ReportingUnitSearchParametersDto filters, Pageable pageable) {
 
+    if (filters != null
+        && filters.isBookmarked()
+        && CollectionUtils.isEmpty(filters.getReportingUnitIds())) {
+      return Page.empty(pageable);
+    }
+
     List<String> clientNumbers = resolveClientScope(filters.getClientNumbers());
     PostgresReportingUnitSearchFilter filter =
         PostgresReportingUnitSearchFilter.from(filters, clientNumbers);
