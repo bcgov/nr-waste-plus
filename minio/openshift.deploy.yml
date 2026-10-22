@@ -157,12 +157,13 @@ objects:
                 - -c
               args:
                 - |
+                  export HOME=/tmp
                   echo "Waiting for MinIO server on localhost:9000..."
-                  until mc alias set local http://localhost:9000 "$MINIO_ROOT_USER" "$MINIO_ROOT_PASSWORD"; do
+                  until mc --config-dir /tmp/.mc alias set local http://localhost:9000 "$MINIO_ROOT_USER" "$MINIO_ROOT_PASSWORD"; do
                     sleep 2
                   done
                   echo "Ensuring bucket '${OBJECT_STORAGE_BUCKET}' exists..."
-                  until mc mb --ignore-existing local/"$OBJECT_STORAGE_BUCKET"; do
+                  until mc --config-dir /tmp/.mc mb --ignore-existing local/"$OBJECT_STORAGE_BUCKET"; do
                     echo "Bucket creation failed; retrying in 2 seconds..."
                     sleep 2
                   done
@@ -171,6 +172,8 @@ objects:
                     sleep 86400
                   done
               env:
+                - name: HOME
+                  value: /tmp
                 - name: MINIO_ROOT_USER
                   valueFrom:
                     secretKeyRef:
