@@ -89,6 +89,10 @@ objects:
             app: ${NAME}-${ZONE}
             deployment: ${NAME}-${ZONE}-${COMPONENT}
         spec:
+          securityContext:
+            runAsNonRoot: true
+            seccompProfile:
+              type: RuntimeDefault
           volumes:
             - name: minio-data
               persistentVolumeClaim:
@@ -97,6 +101,11 @@ objects:
             - name: minio
               image: ${MINIO_IMAGE}
               imagePullPolicy: Always
+              securityContext:
+                allowPrivilegeEscalation: false
+                capabilities:
+                  drop:
+                    - ALL
               command:
                 - minio
                 - server
@@ -152,6 +161,11 @@ objects:
             - name: minio-init
               image: ${MINIO_CLIENT_IMAGE}
               imagePullPolicy: Always
+              securityContext:
+                allowPrivilegeEscalation: false
+                capabilities:
+                  drop:
+                    - ALL
               command:
                 - /bin/sh
                 - -c
