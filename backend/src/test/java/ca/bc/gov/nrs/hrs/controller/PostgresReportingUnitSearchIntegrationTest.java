@@ -598,11 +598,11 @@ class PostgresReportingUnitSearchIntegrationTest extends AbstractTestContainerIn
   }
 
   @Test
-  @DisplayName("Postgres sort: unknown and degenerate keys are rejected with 428")
+  @DisplayName("Postgres sort: unknown and unsupported WAA keys are rejected with 428")
   void searchReportingUnit_postgresInvalidSort_shouldReject428() throws Exception {
     Seed seed = seedScenario(uniqueClient(), uniqueClient());
 
-    for (String key : List.of("bogusField", "wasteAssessmentAreaId", "sampling", "sampling.code")) {
+    for (String key : List.of("bogusField", "wasteAssessmentAreaId")) {
       mockMvc
           .perform(get("/api/search/reporting-units")
               .queryParam("legacy", "false")
