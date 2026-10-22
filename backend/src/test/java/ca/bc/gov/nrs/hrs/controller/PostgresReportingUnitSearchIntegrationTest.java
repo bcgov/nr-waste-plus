@@ -443,6 +443,19 @@ class PostgresReportingUnitSearchIntegrationTest extends AbstractTestContainerIn
         .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
         .andExpect(jsonPath("$.status").value(400))
         .andExpect(jsonPath("$.detail").value("numeric search term out of range"));
+
+    mockMvc
+        .perform(get("/api/search/reporting-units")
+            .queryParam("legacy", "false")
+            .queryParam("district", seed.district())
+            .queryParam("mainSearchTerm", "  99999999999999999999  ")
+            .queryParam("page", "0")
+            .queryParam("size", "10")
+            .accept(MediaType.APPLICATION_JSON))
+        .andExpect(status().isBadRequest())
+        .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
+        .andExpect(jsonPath("$.status").value(400))
+        .andExpect(jsonPath("$.detail").value("numeric search term out of range"));
   }
 
   @Test

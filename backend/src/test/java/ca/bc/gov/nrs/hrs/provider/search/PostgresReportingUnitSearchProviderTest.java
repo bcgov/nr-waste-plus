@@ -395,6 +395,22 @@ class PostgresReportingUnitSearchProviderTest {
         .searchReportingUnits(any(PostgresReportingUnitSearchFilter.class), any(Pageable.class));
   }
 
+  @Test
+  @DisplayName("searchReportingUnit trims numeric term before range validation")
+  void searchReportingUnit_whitespacePaddedNumericOverflow_shouldReject400() {
+    var filters = ReportingUnitSearchParametersDto.builder()
+        .mainSearchTerm("  99999999999999999999  ")
+        .build();
+    filters.setLegacy("false");
+
+    assertThatThrownBy(() -> provider.searchReportingUnit(filters, PageRequest.of(0, 10)))
+        .isInstanceOf(ResponseStatusException.class)
+        .hasMessageContaining("numeric search term out of range");
+
+    verify(searchRepository, never())
+        .searchReportingUnits(any(PostgresReportingUnitSearchFilter.class), any(Pageable.class));
+  }
+
   private ReportingUnitSearchRow row() {
     return new ReportingUnitSearchRow() {
       @Override
