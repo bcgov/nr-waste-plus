@@ -201,6 +201,62 @@ jobs:
               exit 1
             fi
 
+            # Verify in-cluster Service DNS, routing, and S3 communication
+            echo "Verifying in-cluster S3 service..."
+            oc exec $POD_NAME -c minio-init -- sh -c '
+              mc --config-dir /tmp/.mc alias set in-cluster http://nr-waste-plus-tools-minio.cffaf3-tools.svc.cluster.local:9000 "$MINIO_ROOT_USER" "$MINIO_ROOT_PASSWORD"
+              echo "smoke-test-payload" | mc --config-dir /tmp/.mc pipe in-cluster/"$OBJECT_STORAGE_BUCKET"/smoke-test.txt
+              FETCHED=$(mc --config-dir /tmp/.mc cat in-cluster/"$OBJECT_STORAGE_BUCKET"/smoke-test.txt)
+              if [ "$FETCHED" != "smoke-test-payload" ]; then
+                echo "Error: In-cluster S3 payload mismatch"
+                exit 1
+              fi
+              mc --config-dir /tmp/.mc rm in-cluster/"$OBJECT_STORAGE_BUCKET"/smoke-test.txt
+              echo "In-cluster S3 service verified successfully."
+            '
+
+            # Smoke check: presigned PUT and GET against in-cluster service
+            echo "Starting port-forward for presigned URL smoke check..."
+            oc port-forward svc/nr-waste-plus-tools-minio 9000:9000 >/dev/null 2>&1 &
+            PF_PID=$!
+            sleep 3
+
+            cleanup() {
+              if [ -n "$PF_PID" ]; then
+                kill "$PF_PID" 2>/dev/null || true
+              fi
+            }
+            trap cleanup EXIT
+
+            echo "Generating presigned PUT URL..."
+            PUT_URL=$(oc exec $POD_NAME -c minio-init -- mc --config-dir /tmp/.mc --json share upload in-cluster/"$OBJECT_STORAGE_BUCKET"/smoke-test.txt | grep '^{.*}' | jq -r 'select(.url != null) | .url')
+            if [[ "$PUT_URL" != http* ]]; then
+              echo "Error: Failed to obtain presigned PUT URL: $PUT_URL"
+              exit 1
+            fi
+
+            echo "Executing presigned PUT upload..."
+            echo "smoke-test-payload" | curl -f -s -S --resolve "nr-waste-plus-tools-minio.cffaf3-tools.svc.cluster.local:9000:127.0.0.1" -X PUT --upload-file - "$PUT_URL"
+
+            echo "Generating presigned GET URL..."
+            GET_URL=$(oc exec $POD_NAME -c minio-init -- mc --config-dir /tmp/.mc --json share download in-cluster/"$OBJECT_STORAGE_BUCKET"/smoke-test.txt | grep '^{.*}' | jq -r 'select(.url != null) | .url')
+            if [[ "$GET_URL" != http* ]]; then
+              echo "Error: Failed to obtain presigned GET URL: $GET_URL"
+              exit 1
+            fi
+
+            echo "Executing presigned GET download..."
+            FETCHED=$(curl -f -s -S --resolve "nr-waste-plus-tools-minio.cffaf3-tools.svc.cluster.local:9000:127.0.0.1" "$GET_URL")
+            if [ "$FETCHED" != "smoke-test-payload" ]; then
+              echo "Error: Presigned GET payload mismatch: '$FETCHED'"
+              exit 1
+            fi
+
+            echo "Cleaning up smoke test object..."
+            oc exec $POD_NAME -c minio-init -- mc --config-dir /tmp/.mc rm in-cluster/"$OBJECT_STORAGE_BUCKET"/smoke-test.txt
+            cleanup
+            echo "Presigned PUT and GET smoke check against in-cluster service passed."
+
   scale-up-legacy:
     name: Scale up legacy
     needs: [deploy-tools]
