@@ -203,49 +203,22 @@ jobs:
 
             # Verify in-cluster Service DNS, routing, and S3 communication
             echo "Verifying in-cluster S3 service and presigned URL resolution..."
-            oc exec -i $POD_NAME -c minio-init -- sh <<'EOF'
-              set -e
-              # 1. Alias in-cluster service
-              mc --config-dir /tmp/.mc alias set in-cluster http://nr-waste-plus-tools-minio.cffaf3-tools.svc.cluster.local:9000 "$MINIO_ROOT_USER" "$MINIO_ROOT_PASSWORD"
-
-              # 2. Upload test object via in-cluster service
-              echo "smoke-test-payload" | mc --config-dir /tmp/.mc pipe in-cluster/"$OBJECT_STORAGE_BUCKET"/smoke-test.txt
-              FETCHED=$(mc --config-dir /tmp/.mc cat in-cluster/"$OBJECT_STORAGE_BUCKET"/smoke-test.txt)
-              if [ "$FETCHED" != "smoke-test-payload" ]; then
-                echo "Error: In-cluster S3 payload mismatch"
-                exit 1
-              fi
-              echo "In-cluster S3 service verified successfully."
-
-              # 3. Generate presigned download URL
-              GET_URL=$(mc --config-dir /tmp/.mc share download in-cluster/"$OBJECT_STORAGE_BUCKET"/smoke-test.txt | grep -o 'http[^ "]*X-Amz[^ "]*' | head -n 1)
-              if [ -z "$GET_URL" ]; then
-                echo "Error: Failed to generate presigned download URL"
-                exit 1
-              fi
-              echo "Generated presigned URL: $GET_URL"
-
-              # 4. Fetch via presigned URL
-              PRESIGNED_FETCH=""
-              if command -v curl >/dev/null 2>&1; then
-                PRESIGNED_FETCH=$(curl -f -s -S "$GET_URL")
-              elif command -v wget >/dev/null 2>&1; then
-                PRESIGNED_FETCH=$(wget -q -O - "$GET_URL")
-              elif command -v busybox >/dev/null 2>&1; then
-                PRESIGNED_FETCH=$(busybox wget -q -O - "$GET_URL")
-              else
-                PRESIGNED_FETCH=$(mc --config-dir /tmp/.mc cat in-cluster/"$OBJECT_STORAGE_BUCKET"/smoke-test.txt)
-              fi
-
-              if [ "$PRESIGNED_FETCH" != "smoke-test-payload" ]; then
-                echo "Error: Presigned GET payload mismatch: '$PRESIGNED_FETCH'"
-                exit 1
-              fi
-
-              # 5. Clean up
-              mc --config-dir /tmp/.mc rm in-cluster/"$OBJECT_STORAGE_BUCKET"/smoke-test.txt
-              echo "Presigned URL smoke check passed successfully."
-EOF
+            printf '%s\n' \
+              'set -e' \
+              'mc --config-dir /tmp/.mc alias set in-cluster http://nr-waste-plus-tools-minio.cffaf3-tools.svc.cluster.local:9000 "$MINIO_ROOT_USER" "$MINIO_ROOT_PASSWORD"' \
+              'echo "smoke-test-payload" | mc --config-dir /tmp/.mc pipe in-cluster/"$OBJECT_STORAGE_BUCKET"/smoke-test.txt' \
+              'FETCHED=$(mc --config-dir /tmp/.mc cat in-cluster/"$OBJECT_STORAGE_BUCKET"/smoke-test.txt)' \
+              '[ "$FETCHED" = "smoke-test-payload" ] || { echo "Error: In-cluster S3 payload mismatch"; exit 1; }' \
+              'echo "In-cluster S3 service verified successfully."' \
+              'GET_URL=$(mc --config-dir /tmp/.mc share download in-cluster/"$OBJECT_STORAGE_BUCKET"/smoke-test.txt | grep -o '\''http[^ "]*X-Amz[^ "]*'\'' | head -n 1)' \
+              '[ -n "$GET_URL" ] || { echo "Error: Failed to generate presigned download URL"; exit 1; }' \
+              'echo "Generated presigned URL: $GET_URL"' \
+              'PRESIGNED_FETCH=""' \
+              'if command -v curl >/dev/null 2>&1; then PRESIGNED_FETCH=$(curl -f -s -S "$GET_URL"); elif command -v wget >/dev/null 2>&1; then PRESIGNED_FETCH=$(wget -q -O - "$GET_URL"); elif command -v busybox >/dev/null 2>&1; then PRESIGNED_FETCH=$(busybox wget -q -O - "$GET_URL"); else PRESIGNED_FETCH=$(mc --config-dir /tmp/.mc cat in-cluster/"$OBJECT_STORAGE_BUCKET"/smoke-test.txt); fi' \
+              '[ "$PRESIGNED_FETCH" = "smoke-test-payload" ] || { echo "Error: Presigned GET payload mismatch: $PRESIGNED_FETCH"; exit 1; }' \
+              'mc --config-dir /tmp/.mc rm in-cluster/"$OBJECT_STORAGE_BUCKET"/smoke-test.txt' \
+              'echo "Presigned URL smoke check passed successfully."' \
+              | oc exec -i $POD_NAME -c minio-init -- sh
 
   scale-up-legacy:
     name: Scale up legacy
