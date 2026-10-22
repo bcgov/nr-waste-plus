@@ -68,7 +68,8 @@ export const reportingUnitSearchExpandedSchema = z.object({
   status: codeDescriptionSchema,
   secondaryMarks: z.array(searchExpandedSecondarySchema),
   netArea: z.number(),
-  markArea: z.number(),
+  // PostgreSQL rows have no mark-area source — the backend projects an honest null.
+  markArea: z.number().nullable(),
   submitter: z.string().nullable(),
   attachment: codeDescriptionSchema,
   comments: z.string().nullable(),
@@ -102,6 +103,10 @@ export type ReportingUnitSearchExpandedDto = z.infer<typeof reportingUnitSearchE
  * @property timberMark - filter by timber mark
  * @property clientLocationCode - filter by client location code
  * @property clientNumbers - array of client numbers to filter by
+ * @property legacy - source-selection flag for the search (#1238): `legacy=false` requests
+ *   PostgreSQL-sourced results; omitted (or any other value) returns legacy results. A real
+ *   boolean: the search service keeps `false` values for this key on the wire instead of
+ *   stripping them, and the router's search-param encoding preserves `legacy=false` in the URL.
  */
 export type ReportingUnitSearchParametersDto = {
   readonly mainSearchTerm?: string;
@@ -119,6 +124,7 @@ export type ReportingUnitSearchParametersDto = {
   readonly timberMark?: string;
   readonly clientLocationCode?: string;
   readonly clientNumbers?: string[];
+  readonly legacy?: boolean;
 };
 
 /**

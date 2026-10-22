@@ -1,19 +1,34 @@
-import { useEffect, useState, type ComponentProps } from 'react';
+import { useNavigate, useSearch } from '@tanstack/react-router';
+import { useCallback, useEffect, useMemo, useRef, useState, type ComponentProps } from 'react';
 
-import { clientNumbersTransform } from '@/components/waste/WasteSearch/WasteSearchFilters/utils';
 import WasteSearchFiltersActive from '@/components/waste/WasteSearch/WasteSearchFiltersActive';
-import useSyncFiltersToSearchParams from '@/hooks/useSyncFiltersToSearchParams';
 import useSyncPreferencesToFilters from '@/hooks/useSyncPreferencesToFilters';
-import { removeEmpty } from '@/services/utils';
+import { reportingUnitSearchParametersView2Plain } from '@/services/search.utils';
 
+import { searchToViewDto, viewDtoToSearch } from './utils';
+
+import type { WasteSearchFilters } from '@/routes/searchParams';
 import type {
   CodeDescriptionDto,
+  ReportingUnitSearchParametersDto,
   ReportingUnitSearchParametersViewDto,
 } from '@/types/search.types';
 
+/**
+ * Reads the validated `/search` filter state from the router.
+ *
+ * The route tree is built programmatically (`routeTree.tsx` maps `RouteDescription`
+ * entries through `createRoute`), which erases TanStack Router's per-route search
+ * generics — so the validated shape is restored with an explicit cast here. This is
+ * the single boundary: the `/search` route's `validateSearch` guarantees the shape,
+ * and this hook is only ever rendered under that route.
+ */
+const useWasteSearchState = (): WasteSearchFilters =>
+  (useSearch({ strict: false }) ?? {}) as WasteSearchFilters;
+
 /** Shape of the object returned by {@link useWasteSearchFilters}. */
 type UseWasteSearchFiltersReturn = {
-  /** Current filter state, kept in sync with the parent's `value` prop. */
+  /** Current filter state, derived from the `/search` URL search params. */
   filters: ReportingUnitSearchParametersViewDto;
   /** Whether the Advanced Search modal is currently open. */
   isAdvancedSearchOpen: boolean;
@@ -34,92 +49,124 @@ type UseWasteSearchFiltersReturn = {
 };
 
 /**
- * Manages waste-search filter state, URL sync, preference sync, and all update handlers.
+ * Waste-search filter state backed by the `/search` route's URL search params.
  *
- * URL search params are kept in sync via {@link useSyncFiltersToSearchParams};
- * user preferences are applied on mount via {@link useSyncPreferencesToFilters}.
- * Empty array values are stripped before calling `onChange` via {@link removeEmpty}.
+ * The URL is the single source of truth (TanStack Router `validateSearch` with the
+ * {@link WasteSearchFilters} schema): this hook derives the view-shaped filters from
+ * the validated search object and writes updates back through `navigate`. There is
+ * no local filter state and no hydration step — a URL like `/search?mainSearchTerm=…`
+ * renders pre-filtered, and every change is immediately shareable/reloadable.
  *
- * @param value - The initial filter state provided by the parent.
- * @param onChange - Called with the cleaned filter state whenever any filter changes.
- * @returns An object containing the current filter state, modal flag, and change handlers.
+ * User preferences (selected client/district) are applied on mount via
+ * {@link useSyncPreferencesToFilters} by bridging its state-setter contract onto
+ * route navigation.
+ *
+ * @returns Filter state, modal flag, and change handlers.
  */
-export const useWasteSearchFilters = (
-  value: ReportingUnitSearchParametersViewDto,
-  onChange: (filters: ReportingUnitSearchParametersViewDto) => void,
-): UseWasteSearchFiltersReturn => {
-  const [filters, setFilters] = useState<ReportingUnitSearchParametersViewDto>(value);
+export const useWasteSearchFilters = (): UseWasteSearchFiltersReturn => {
+  const search = useWasteSearchState();
+  const navigate = useNavigate();
   const [isAdvancedSearchOpen, setIsAdvancedSearchOpen] = useState<boolean>(false);
 
-  useSyncFiltersToSearchParams(filters, setFilters, { transforms: clientNumbersTransform });
+  const filters = useMemo(() => searchToViewDto(search), [search]);
 
-  // Synchronously propagate to parent so WasteSearchTable's plainFilters is fresh
-  // when the user immediately clicks Search. The existing useEffect still handles
-  // URL-hydration and preference-sync paths that mutate `filters` via setFilters
-  // directly (bypassing these handlers).
-  const syncSetFilters = (
-    updater: (prev: ReportingUnitSearchParametersViewDto) => ReportingUnitSearchParametersViewDto,
-  ) => {
-    setFilters((prev) => {
-      const next = updater(prev);
-      onChange(removeEmpty(next));
-      return next;
-    });
-  };
+  /**
+   * Applies a filter update by rewriting the route's search params. The functional
+   * updater receives the URL-derived state, so the URL remains authoritative even
+   * when the update is triggered while the URL was changed externally (back/forward).
+   */
+  const applyFilters = useCallback(
+    (
+      compute: (prev: ReportingUnitSearchParametersViewDto) => ReportingUnitSearchParametersViewDto,
+    ): void => {
+      void navigate({
+        search: (prev: WasteSearchFilters) => viewDtoToSearch(compute(searchToViewDto(prev))),
+        replace: true,
+      } as never);
+    },
+    [navigate],
+  );
+
+  // The source-selection flag is always explicit in the URL: the toggle defaults to
+  // ON (legacy), so a `/search` entry without the param writes `legacy=true`. Once
+  // present the URL carries the flag verbatim (`true`/`false`) — #1238.
+  const legacySeededRef = useRef(false);
+  useEffect(() => {
+    if (legacySeededRef.current || search.legacy !== undefined) return;
+    legacySeededRef.current = true;
+    applyFilters((prev) => ({ ...prev, legacy: true }));
+    // Mount-only: seed the default source flag once per page mount.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleStringChange =
     (key: keyof ReportingUnitSearchParametersViewDto) => (value: string) => {
-      syncSetFilters((prev) => ({ ...prev, [key]: value }));
+      applyFilters((prev) => ({ ...prev, [key]: value }));
     };
-
   const handleActiveMultiSelectChange =
     (key: keyof ReportingUnitSearchParametersViewDto) =>
     (changes: { selectedItems: CodeDescriptionDto[] }): void => {
-      syncSetFilters((prev) => ({
+      applyFilters((prev) => ({
         ...prev,
         [key]: changes.selectedItems.map((item) => item.code),
       }));
     };
 
-  const handleChange = <K extends keyof ReportingUnitSearchParametersViewDto>(
-    key: K,
-  ): ((value: ReportingUnitSearchParametersViewDto[K]) => void) => {
-    return (value: ReportingUnitSearchParametersViewDto[K]) => {
-      syncSetFilters((prev) => ({ ...prev, [key]: value }));
+  const handleChange =
+    <K extends keyof ReportingUnitSearchParametersViewDto>(key: K) =>
+    (value: ReportingUnitSearchParametersViewDto[K]) => {
+      applyFilters((prev) => ({ ...prev, [key]: value }));
     };
-  };
 
   const onRemoveFilter: ComponentProps<typeof WasteSearchFiltersActive>['onRemoveFilter'] = (
     key,
     value,
   ) => {
     if (!value) {
-      syncSetFilters((prev) => {
+      applyFilters((prev) => {
         const newFilters = { ...prev };
         delete newFilters[key];
         return newFilters;
       });
     } else {
-      syncSetFilters((prev) => ({
+      // View-shaped arrays may hold CodeDescriptionDto items (clientNumbers); the
+      // removed value is the plain code string, so compare items by their code.
+      applyFilters((prev) => ({
         ...prev,
-        [key]: (prev[key] as string[]).filter((item) => item !== value),
+        [key]: (prev[key] as Array<string | { code?: string }>).filter(
+          (item) => (typeof item === 'object' && item !== null ? item.code : item) !== value,
+        ),
       }));
     }
   };
 
-  useEffect(() => {
-    onChange(removeEmpty(filters));
-  }, [filters, onChange]);
-
   useSyncPreferencesToFilters(
-    setFilters,
+    useCallback(
+      (updater: Parameters<typeof applyFilters>[0] | ReportingUnitSearchParametersViewDto) => {
+        if (typeof updater === 'function') {
+          applyFilters(updater);
+        } else {
+          applyFilters(() => updater);
+        }
+      },
+      [applyFilters],
+    ),
     {
       selectedClient: 'clientNumbers',
       selectedDistrict: 'district',
     },
     (key, value): string | boolean | string[] | CodeDescriptionDto[] | undefined => {
-      if (key === 'selectedClient' || key === 'selectedDistrict') {
-        return (value ? [value] : []) as string[] | CodeDescriptionDto[];
+      // clientNumbers is view-shaped (CodeDescriptionDto[]). Preference payloads for
+      // selectedClient already arrive as {code, description} objects — pass them
+      // through untouched; bare client-number strings are wrapped so
+      // viewDtoToSearch can read `.code` either way.
+      if (key === 'selectedClient') {
+        if (!value) return [];
+        const item = typeof value === 'string' ? { code: value, description: value } : value;
+        return [item as CodeDescriptionDto];
+      }
+      if (key === 'selectedDistrict') {
+        return value ? [String(value)] : [];
       }
       return value as string | boolean | string[] | undefined;
     },
@@ -134,4 +181,16 @@ export const useWasteSearchFilters = (
     handleChange,
     onRemoveFilter,
   };
+};
+
+/**
+ * Derives the plain (backend-shaped) filter object for the waste search from the
+ * `/search` URL state. Used by {@link WasteSearchTable} to drive the query without
+ * owning filter state.
+ *
+ * @returns The plain search-parameters object (empty values stripped).
+ */
+export const useWasteSearchPlainFilters = (): ReportingUnitSearchParametersDto => {
+  const search = useWasteSearchState();
+  return useMemo(() => reportingUnitSearchParametersView2Plain(searchToViewDto(search)), [search]);
 };

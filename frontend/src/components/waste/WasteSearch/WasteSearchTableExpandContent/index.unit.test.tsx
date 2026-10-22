@@ -42,11 +42,11 @@ const mockExpandedData: ReportingUnitSearchExpandedDto = {
   ],
 };
 
-const renderWithProps = (rowId: string) => {
+const renderWithProps = (rowId: string, props?: { isLegacySource?: boolean }) => {
   const qc = makeTestQueryClient();
   render(
     <QueryClientProvider client={qc}>
-      <WasteSearchTableExpandContent rowId={rowId} />
+      <WasteSearchTableExpandContent rowId={rowId} {...props} />
     </QueryClientProvider>,
   );
 };
@@ -221,6 +221,22 @@ describe('WasteSearchTableExpandContent', () => {
   });
 
   describe('null and empty field handling', () => {
+    it('renders a nullable markArea without throwing (PostgreSQL honest projection)', async () => {
+      const dataWithNullMarkArea: ReportingUnitSearchExpandedDto = {
+        ...mockExpandedData,
+        markArea: null,
+      };
+      (APIs.search.getReportingUnitSearchExpand as Mock).mockResolvedValue(dataWithNullMarkArea);
+
+      renderWithProps('RU-4069-Block-411B-224813681');
+
+      await waitFor(() => {
+        expect(screen.getAllByText('Mark area').length).toBeGreaterThanOrEqual(2);
+      });
+      // An absent mark area renders no value rather than failing the Zod parse.
+      expect(screen.queryByText(/2000 ha/)).toBeNull();
+    });
+
     it('displays empty string when licenseNo is null', async () => {
       const dataWithNulls: ReportingUnitSearchExpandedDto = {
         ...mockExpandedData,
@@ -283,6 +299,27 @@ describe('WasteSearchTableExpandContent', () => {
   });
 
   describe('boolean field rendering', () => {
+    it('suppresses the Waste 303 legacy link for PostgreSQL-sourced results', async () => {
+      const rowId = 'RU-4069-Block-411-224813681';
+      renderWithProps(rowId, { isLegacySource: false });
+
+      await waitFor(() => {
+        expect(APIs.search.getReportingUnitSearchExpand).toHaveBeenCalled();
+      });
+      // A PostgreSQL block id must never be linked into the legacy Waste 303 page.
+      expect(screen.queryByTestId('Link')).toBeNull();
+    });
+
+    it('keeps the Waste 303 legacy link for legacy-sourced results', async () => {
+      const rowId = 'RU-4069-Block-411-224813681';
+      renderWithProps(rowId, { isLegacySource: true });
+
+      await waitFor(() => {
+        screen.getByText('Attachments and comments');
+      });
+      expect(screen.getByTestId('Link')).toBeDefined();
+    });
+
     it('renders exempted as Yes when true', async () => {
       const dataWithTrue: ReportingUnitSearchExpandedDto = {
         ...mockExpandedData,

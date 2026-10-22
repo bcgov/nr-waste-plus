@@ -172,6 +172,40 @@ WHERE ru.client_number = '00001271'
   AND ru.created_by = 'test-seed:reporting-unit-block-list-v1'
   AND NOT ru.is_deleted;
 
+-- PRIMARY mark for the seeded block: the search list and the reporting-unit details
+-- block table surface licence no / cutting permit / block id / timber mark from the
+-- PRIMARY block_mark, so the fixture carries real legacy values (THE.WASTE_ASSESSMENT_AREA
+-- waste_assessment_area_id 180575) instead of rendering blank columns.
+INSERT INTO hrs.block_mark
+    (block_id, mark_type, sequence_no, mark, forest_file_id, cutting_permit_id, cut_block_id, timber_mark, created_by, updated_by)
+SELECT
+    b.block_id,
+    'PRIMARY',
+    1,
+    'BJ6994',
+    'A74912',
+    '994',
+    'LV2399',
+    'BJ6994',
+    'test-seed:reporting-unit-block-list-v1',
+    'test-seed:reporting-unit-block-list-v1'
+FROM hrs.block b
+JOIN hrs.reporting_unit ru ON ru.reporting_unit_id = b.reporting_unit_id
+WHERE ru.client_number = '00001271'
+  AND ru.client_locn_code = 'TEST-1254-B'
+  AND ru.geographic_code = 'DKM'
+  AND ru.created_by = 'test-seed:reporting-unit-block-list-v1'
+  AND NOT ru.is_deleted
+  AND b.created_by = 'test-seed:reporting-unit-block-list-v1'
+  AND NOT b.is_deleted
+  AND NOT EXISTS (
+      SELECT 1
+      FROM hrs.block_mark bm
+      WHERE bm.block_id = b.block_id
+        AND bm.mark_type = 'PRIMARY'
+        AND bm.is_deleted = FALSE
+  );
+
 INSERT INTO hrs.district_average_block
     (district_average_block_id, has_dispersed_retention, is_heli_logging, created_by, updated_by)
 SELECT
