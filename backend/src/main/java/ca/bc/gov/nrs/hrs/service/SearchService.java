@@ -85,11 +85,13 @@ public class SearchService {
 
     // Exactly one source per request; never merge results and never fall back across sources
     // (DEC-004).
-    var source = ReportingUnitSearchSource.fromLegacyParam(filters.getLegacy());
+    var source =
+        ReportingUnitSearchSource.fromLegacyParam(filters == null ? null : filters.getLegacy());
+    var searchFilters = filters == null ? new ReportingUnitSearchParametersDto() : filters;
     var result =
         switch (source) {
-          case LEGACY -> legacyApiProvider.searchReportingUnit(filters, pageable);
-          case POSTGRES -> postgresSearchProvider.searchReportingUnit(filters, pageable);
+          case LEGACY -> legacyApiProvider.searchReportingUnit(searchFilters, pageable);
+          case POSTGRES -> postgresSearchProvider.searchReportingUnit(searchFilters, pageable);
         };
 
     // PostgreSQL rows ship NULL district descriptions (DEC-016); legacy rows arrive with them

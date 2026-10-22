@@ -427,4 +427,19 @@ class SearchServiceTest {
 
     verify(postgresSearchProvider, never()).searchReportingUnit(any(), any());
   }
+
+  @Test
+  @DisplayName("Search with null filters preserves the legacy source and avoids a null dereference")
+  void search_nullFilters_shouldUseLegacyProvider() {
+    Page<ReportingUnitSearchResultDto> page = Page.empty(PAGEABLE);
+    when(legacyApiProvider.searchReportingUnit(any(), eq(PAGEABLE))).thenReturn(page);
+    when(userService.getUserBookmarksInList(USER_ID, List.of())).thenReturn(List.of());
+
+    Page<ReportingUnitSearchResultDto> result = searchService.search(USER_ID, null, PAGEABLE);
+
+    assertThat(result).isEmpty();
+    verify(legacyApiProvider).searchReportingUnit(any(ReportingUnitSearchParametersDto.class),
+        eq(PAGEABLE));
+    verify(postgresSearchProvider, never()).searchReportingUnit(any(), any());
+  }
 }
