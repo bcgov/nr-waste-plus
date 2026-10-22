@@ -637,6 +637,20 @@ class PostgresReportingUnitSearchIntegrationTest extends AbstractTestContainerIn
   }
 
   @Test
+  @DisplayName("Expanded secondary mark falls back to required mark identifier")
+  void getSearchExpanded_secondaryMark_shouldUseMarkWhenTimberMarkIsBlank() throws Exception {
+    Seed seed = seedScenario(FIXED_CLIENT_A, FIXED_CLIENT_B);
+    seedSecondaryMark(seed.blockA(), false);
+
+    mockMvc
+        .perform(get("/api/search/reporting-units/ex/{reportingUnitId}/{blockId}",
+            seed.ruA(), seed.blockA()))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.secondaryMarks.length()").value(1))
+        .andExpect(jsonPath("$.secondaryMarks[0].mark").value("S1"));
+  }
+
+  @Test
   @DisplayName("DEC-008 | IDIR explicit client list scopes the rows; sentinel+list binds verbatim")
   void searchReportingUnit_postgresDec008_idirExplicitList() throws Exception {
     Seed seed = seedScenario(FIXED_CLIENT_A, FIXED_CLIENT_B);

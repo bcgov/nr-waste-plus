@@ -274,10 +274,10 @@ public final class ReportingUnitSearchQueryConstants {
               (select coalesce(
                           jsonb_agg(
                               jsonb_build_object(
-                                  'mark', nullif(btrim(bm.timber_mark), ''),
+                                  'mark', coalesce(nullif(btrim(bm.timber_mark), ''), bm.mark),
                                   'status', jsonb_build_object('code', null, 'description', null),
                                   'area', null)
-                              order by nullif(btrim(bm.timber_mark), '')),
+                              order by coalesce(nullif(btrim(bm.timber_mark), ''), bm.mark)),
                           '[]'::jsonb)::text
                  from hrs.block_mark bm
                 where bm.block_id = b.block_id
