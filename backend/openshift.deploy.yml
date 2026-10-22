@@ -56,6 +56,9 @@ parameters:
   - name: POSTGRES_PORT
     description: Postgres port
     value: "5432"
+  - name: FLYWAY_LOCATIONS
+    description: Flyway migration locations; non-PROD deploys add classpath:db/testdata
+    value: "classpath:db/migration"
 objects:
   - kind: Deployment
     apiVersion: apps/v1
@@ -115,6 +118,8 @@ objects:
                   value: ${POSTGRES_HOST}
                 - name: POSTGRES_PORT
                   value: ${POSTGRES_PORT}
+                - name: SPRING_FLYWAY_LOCATIONS
+                  value: ${FLYWAY_LOCATIONS}
                 - name: POSTGRES_DATABASE
                   valueFrom:
                     secretKeyRef:

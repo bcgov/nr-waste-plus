@@ -16,6 +16,10 @@ on:
         required: true
         type: string
         default: ''
+      db_testdata:
+        description: Load test data into the database
+        default: false
+        type: boolean
       environment:
         description: GitHub/OpenShift environment; usually PR number, test or prod
         default: ''
@@ -123,6 +127,7 @@ jobs:
               -p CONFIG_MAP="${{ inputs.configmap-backend }}"
               -p POSTGRES_HOST="nr-waste-plus-${{ inputs.zone }}-database"
               -p POSTGRES_PORT=5432
+              -p FLYWAY_LOCATIONS=${{ inputs.db_testdata && 'classpath:db/migration,classpath:db/testdata' || 'classpath:db/migration' }}
           - name: legacy
             overwrite: true
             parameters:

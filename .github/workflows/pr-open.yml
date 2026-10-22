@@ -48,6 +48,7 @@ jobs:
     secrets: inherit
     uses: ./.github/workflows/.deploy.yml
     with:
+      db_testdata: true
       zone: ${{ github.event.number }}
       target: test
       oracledb-port: 1521

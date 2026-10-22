@@ -1,4 +1,9 @@
 {
+  "resources": [
+    {
+      "glob": "db/testdata/**"
+    }
+  ],
   "reflection": [
     {
       "type": "org.springframework.security.config.annotation.web.builders.HttpSecurity",
