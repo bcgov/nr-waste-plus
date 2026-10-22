@@ -86,6 +86,19 @@ describe('searchParamCodec (router-level URL encoding)', () => {
     expect(decoded).toEqual(search);
   });
 
+  it('recovers boolean-literal search terms as strings (qss decodes true/false to booleans)', () => {
+    // A user can legitimately search for the literal "true" or "false" (timber-mark
+    // style tokens); the qss decode turns those into boolean primitives, which the
+    // schema must coerce back to strings instead of dropping the term.
+    const decoded = validateWasteSearch(
+      searchParamCodec.parseSearch('mainSearchTerm=true&district=DCC'),
+    );
+    expect(decoded.mainSearchTerm).toBe('true');
+
+    const fromUrl = searchParamCodec.parseSearch('mainSearchTerm=false');
+    expect(validateWasteSearch(fromUrl).mainSearchTerm).toBe('false');
+  });
+
   it('decodes legacy JSON-encoded strings and arrays from old URLs', () => {
     expect(searchParamCodec.parseSearch('mainSearchTerm=%2212345%22')).toEqual({
       mainSearchTerm: '12345',

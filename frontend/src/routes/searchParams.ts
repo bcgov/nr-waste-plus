@@ -18,15 +18,24 @@ import { z } from 'zod';
  *   rather than failing the route (lenient per the #1238 source-flag contract).
  */
 
-/** Parses `'true'`/`'false'` into booleans; anything else degrades to `undefined`. */
-const booleanParam = z
-  .preprocess(
-    (value) => (value === 'true' ? true : value === 'false' ? false : value),
-    z.boolean().optional(),
-  )
-  .catch(undefined);
+/**
+ * Normalizes a decoded search-param value to its boolean form: the Router's qss
+ * decode turns the literals `'true'`/`'false'` into primitives; anything else
+ * passes through untouched (S3358: explicit statements over a nested ternary).
+ */
+const parseBooleanValue = (value: unknown): unknown => {
+  if (value === 'true') return true;
+  if (value === 'false') return false;
+  return value;
+};
 
-/** Parses a comma-joined string (or legacy JSON array) into a string array; garbage degrades to `undefined`. */
+/** Parses `'true'`/`'false'` into booleans; anything else degrades to `undefined`. */
+const booleanParam = z.preprocess(parseBooleanValue, z.boolean().optional()).catch(undefined);
+
+/**
+ * Parses a comma-joined string (or legacy JSON array) into a string array; garbage
+ * degrades to `undefined`.
+ */
 const arrayParam = z
   .preprocess((value) => {
     // The Router's qss decode converts numeric-looking single values (e.g.
@@ -38,25 +47,30 @@ const arrayParam = z
       if (value.startsWith('[')) {
         try {
           const parsed: unknown = JSON.parse(value);
-          return Array.isArray(parsed) ? parsed.map((item) => String(item)) : value;
+          return Array.isArray(parsed) ? parsed.map(String) : value;
         } catch {
           return value;
         }
       }
       return value === '' ? [] : value.split(',');
     }
-    if (Array.isArray(value)) return value.map((item) => String(item));
+    if (Array.isArray(value)) return value.map(String);
     return value;
   }, z.array(z.string()).optional())
   .catch(undefined);
 
 /**
- * Passes strings through; coerces numbers back to strings (the Router's qss decode
- * converts numeric-looking values like `mainSearchTerm=12345` to numbers before the
- * schema runs); non-string garbage degrades to `undefined`.
+ * Passes strings through; coerces scalars back to strings (the Router's qss decode
+ * converts numeric-looking values like `mainSearchTerm=12345` AND the boolean
+ * literals `true`/`false` to primitives before the schema runs — a search for the
+ * literal "true" must survive as the string "true"); non-scalar garbage degrades
+ * to `undefined`.
  */
 const stringParam = z
-  .preprocess((value) => (typeof value === 'number' ? String(value) : value), z.string().optional())
+  .preprocess(
+    (value) => (typeof value === 'number' || typeof value === 'boolean' ? String(value) : value),
+    z.string().optional(),
+  )
   .catch(undefined);
 
 /**
