@@ -13,6 +13,9 @@ parameters:
   - name: ZONE
     description: Deployment zone, e.g. tools or dev
     required: true
+  - name: NAMESPACE
+    description: Namespace used in the in-cluster service DNS name
+    value: cffaf3-tools
   - name: MINIO_ROOT_USER
     description: MinIO root user / S3 access key
     required: true
@@ -22,6 +25,12 @@ parameters:
   - name: OBJECT_STORAGE_BUCKET
     description: Default bucket name to seed
     value: nr-waste
+  - name: OBJECT_STORAGE_REGION
+    description: Region used when signing presigned requests
+    value: ca-central-1
+  - name: MINIO_SMOKE_IMAGE
+    description: Container image for the presigned PUT/GET smoke test
+    value: python:3.12-slim
   - name: MINIO_IMAGE
     description: Container image for MinIO server
     value: cgr.dev/chainguard/minio:latest
@@ -315,4 +324,142 @@ objects:
       ingress:
         - from:
             - podSelector: {}
+  # Never-firing CronJob used as a Job template. The tools workflow creates a
+  # one-off Job from it with `oc create job --from=cronjob/...`, which keeps
+  # the presigned PUT/GET check inside the cluster where the MinIO service DNS
+  # name and network path match what the backend signs for.
+  - kind: CronJob
+    apiVersion: batch/v1
+    metadata:
+      name: ${NAME}-${ZONE}-${COMPONENT}-presign
+      labels:
+        app: ${NAME}-${ZONE}
+        cronjob: ${NAME}-${ZONE}-${COMPONENT}
+    spec:
+      # 31 February never occurs; the workflow is the only trigger.
+      schedule: "0 0 31 2 *"
+      concurrencyPolicy: Forbid
+      successfulJobsHistoryLimit: 1
+      failedJobsHistoryLimit: 3
+      jobTemplate:
+        metadata:
+          labels:
+            app: ${NAME}-${ZONE}
+            cronjob: ${NAME}-${ZONE}-${COMPONENT}
+        spec:
+          backoffLimit: 0
+          ttlSecondsAfterFinished: 600
+          template:
+            metadata:
+              labels:
+                app: ${NAME}-${ZONE}
+                cronjob: ${NAME}-${ZONE}-${COMPONENT}
+            spec:
+              restartPolicy: Never
+              securityContext:
+                runAsNonRoot: true
+                seccompProfile:
+                  type: RuntimeDefault
+              containers:
+                - name: presign-smoke
+                  image: ${MINIO_SMOKE_IMAGE}
+                  imagePullPolicy: IfNotPresent
+                  securityContext:
+                    allowPrivilegeEscalation: false
+                    capabilities:
+                      drop:
+                        - ALL
+                  command:
+                    - /bin/sh
+                    - -c
+                  args:
+                    - |
+                      set -eu
+                      export HOME=/tmp
+                      pip install --quiet --no-cache-dir --target=/tmp/pylibs boto3==1.35.0
+                      export PYTHONPATH=/tmp/pylibs
+                      python - <<'PY'
+                      import os
+                      import urllib.request
+
+                      import boto3
+                      from botocore.config import Config
+
+                      endpoint = os.environ["MINIO_ENDPOINT"]
+                      base = os.environ["BASE_BUCKET"]
+                      pr = os.environ.get("PR_NUMBER", "0")
+                      bucket = base if pr in ("", "0") else f"{base}-pr-{pr}"
+                      key = "smoke-test-presigned.txt"
+                      payload = b"smoke-test-presigned-payload"
+
+                      s3 = boto3.client(
+                          "s3",
+                          endpoint_url=endpoint,
+                          aws_access_key_id=os.environ["MINIO_ROOT_USER"],
+                          aws_secret_access_key=os.environ["MINIO_ROOT_PASSWORD"],
+                          region_name=os.environ.get("OBJECT_STORAGE_REGION", "ca-central-1"),
+                          config=Config(
+                              signature_version="s3v4",
+                              s3={"addressing_style": "path"},
+                          ),
+                      )
+
+                      try:
+                          s3.head_bucket(Bucket=bucket)
+                      except s3.exceptions.ClientError:
+                          s3.create_bucket(Bucket=bucket)
+
+                      put_url = s3.generate_presigned_url(
+                          "put_object",
+                          Params={"Bucket": bucket, "Key": key},
+                          ExpiresIn=300,
+                      )
+                      get_url = s3.generate_presigned_url(
+                          "get_object",
+                          Params={"Bucket": bucket, "Key": key},
+                          ExpiresIn=300,
+                      )
+
+                      request = urllib.request.Request(put_url, data=payload, method="PUT")
+                      with urllib.request.urlopen(request) as response:
+                          if response.status != 200:
+                              raise SystemExit(f"presigned PUT failed: HTTP {response.status}")
+
+                      with urllib.request.urlopen(get_url) as response:
+                          fetched = response.read()
+                      if fetched != payload:
+                          raise SystemExit(f"presigned GET payload mismatch: {fetched!r}")
+
+                      s3.delete_object(Bucket=bucket, Key=key)
+                      print(f"Presigned PUT and GET verified against {endpoint} (bucket {bucket}).")
+                      PY
+                  env:
+                    - name: MINIO_ENDPOINT
+                      value: http://${NAME}-${ZONE}-${COMPONENT}.${NAMESPACE}.svc.cluster.local:9000
+                    - name: MINIO_ROOT_USER
+                      valueFrom:
+                        secretKeyRef:
+                          name: ${NAME}-${ZONE}-${COMPONENT}
+                          key: root-user
+                    - name: MINIO_ROOT_PASSWORD
+                      valueFrom:
+                        secretKeyRef:
+                          name: ${NAME}-${ZONE}-${COMPONENT}
+                          key: root-password
+                    - name: BASE_BUCKET
+                      valueFrom:
+                        secretKeyRef:
+                          name: ${NAME}-${ZONE}-${COMPONENT}
+                          key: bucket
+                    - name: PR_NUMBER
+                      value: "0"
+                    - name: OBJECT_STORAGE_REGION
+                      value: ${OBJECT_STORAGE_REGION}
+                  resources:
+                    requests:
+                      cpu: 25m
+                      memory: 64Mi
+                    limits:
+                      cpu: 200m
+                      memory: 256Mi
 

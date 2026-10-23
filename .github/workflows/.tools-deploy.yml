@@ -92,6 +92,7 @@ jobs:
             -p MINIO_ROOT_USER="$MINIO_ROOT_USER"
             -p MINIO_ROOT_PASSWORD="$MINIO_ROOT_PASSWORD"
             -p OBJECT_STORAGE_BUCKET=${{ secrets.OBJECT_STORAGE_BUCKET || 'nr-waste' }}
+            -p OBJECT_STORAGE_REGION=${{ secrets.OBJECT_STORAGE_REGION || 'ca-central-1' }}
 
   remove-tools:
     name: Remove database and user
@@ -206,27 +207,10 @@ jobs:
               exit 1
             fi
 
-            # Verify in-cluster Service DNS, routing, and S3 communication
-            echo "Verifying in-cluster S3 service endpoint..."
-            oc exec $POD_NAME -c minio-init -- sh -c '
-              set -e
-              BUCKET="$1"
-              mc --config-dir /tmp/.mc alias set in-cluster http://nr-waste-plus-tools-minio.cffaf3-tools.svc.cluster.local:9000 "$MINIO_ROOT_USER" "$MINIO_ROOT_PASSWORD"
-              echo "smoke-test-payload" | mc --config-dir /tmp/.mc pipe in-cluster/"$BUCKET"/smoke-test.txt
-              FETCHED=$(mc --config-dir /tmp/.mc cat in-cluster/"$BUCKET"/smoke-test.txt)
-              if [ "$FETCHED" != "smoke-test-payload" ]; then
-                echo "Error: In-cluster S3 payload mismatch"
-                exit 1
-              fi
-              mc --config-dir /tmp/.mc rm in-cluster/"$BUCKET"/smoke-test.txt
-              echo "In-cluster S3 service endpoint verified successfully."
-            ' _ "$OBJECT_STORAGE_BUCKET"
-
       - name: Verify presigned PUT and GET
         uses: bcgov/action-oc-runner@111868d1fc50db0a40417ba321d865ef5c931bbd # v1.7.0
         env:
-          OBJECT_STORAGE_BUCKET: ${{ secrets.OBJECT_STORAGE_BUCKET || 'nr-waste' }}-pr-${{ github.event.number }}
-          OBJECT_STORAGE_REGION: ${{ secrets.OBJECT_STORAGE_REGION || 'ca-central-1' }}
+          PR_NUMBER: ${{ github.event.number }}
         with:
           oc_namespace: cffaf3-tools
           oc_server: ${{ secrets.oc_server }}
@@ -234,80 +218,25 @@ jobs:
           commands: |
             set -euo pipefail
 
-            # The running pod's environment is authoritative for the MinIO
-            # credentials: the Secret can be rotated without restarting the
-            # server, so reading the Secret would sign with the wrong key.
-            POD_NAME=$(oc get pods -n cffaf3-tools -l app=nr-waste-plus-tools -l deployment=nr-waste-plus-tools-minio -o jsonpath='{.items[0].metadata.name}')
-            MINIO_ROOT_USER=$(oc exec -n cffaf3-tools "$POD_NAME" -c minio-init -- printenv MINIO_ROOT_USER)
-            MINIO_ROOT_PASSWORD=$(oc exec -n cffaf3-tools "$POD_NAME" -c minio-init -- printenv MINIO_ROOT_PASSWORD)
-            export MINIO_ROOT_USER MINIO_ROOT_PASSWORD
+            # Run the check in-cluster so the request uses the same service
+            # DNS name and network path the backend signs for. The CronJob
+            # never fires on its own; create a one-off Job from it and patch
+            # the PR number into PR_NUMBER.
+            JOB_NAME="minio-presign-pr${PR_NUMBER}-${{ github.run_attempt }}-$(date +%s)"
+            oc create job --from=cronjob/nr-waste-plus-tools-minio-presign "$JOB_NAME" \
+              -n cffaf3-tools --dry-run=client -o yaml \
+              | sed "/name: PR_NUMBER/{n;s/value: \"0\"/value: \"${PR_NUMBER}\"/;}" \
+              | oc apply -f -
 
-            # Generate a presigned PUT and GET against the same in-cluster
-            # endpoint the backend signs with. boto3 mirrors the AWS SDK the
-            # backend uses, so this exercises the real signing path.
-            if python3 -m venv /tmp/presign-venv >/dev/null 2>&1; then
-              PYTHON=/tmp/presign-venv/bin/python
-              /tmp/presign-venv/bin/pip install --quiet boto3
-            else
-              PYTHON=python3
-              python3 -m pip install --quiet --break-system-packages boto3
-            fi
-
-            $PYTHON - <<'PY' > /tmp/presign-urls
-            import os
-            import boto3
-            from botocore.config import Config
-
-            endpoint = "http://nr-waste-plus-tools-minio.cffaf3-tools.svc.cluster.local:9000"
-            s3 = boto3.client(
-                "s3",
-                endpoint_url=endpoint,
-                aws_access_key_id=os.environ["MINIO_ROOT_USER"],
-                aws_secret_access_key=os.environ["MINIO_ROOT_PASSWORD"],
-                region_name=os.environ["OBJECT_STORAGE_REGION"],
-                # MinIO rejects SigV2 presigned PUTs; pin the same SigV4 scheme
-                # the backend's AWS SDK uses.
-                config=Config(signature_version="s3v4"),
-            )
-            key = "smoke-test-presigned.txt"
-            print(s3.generate_presigned_url(
-                "put_object",
-                Params={"Bucket": os.environ["OBJECT_STORAGE_BUCKET"], "Key": key},
-                ExpiresIn=300,
-            ))
-            print(s3.generate_presigned_url(
-                "get_object",
-                Params={"Bucket": os.environ["OBJECT_STORAGE_BUCKET"], "Key": key},
-                ExpiresIn=300,
-            ))
-            PY
-
-            PUT_URL=$(sed -n '1p' /tmp/presign-urls)
-            GET_URL=$(sed -n '2p' /tmp/presign-urls)
-            if [ -z "$PUT_URL" ] || [ -z "$GET_URL" ]; then
-              echo "Error: failed to generate presigned URLs."
+            if ! oc wait --for=condition=complete "job/$JOB_NAME" -n cffaf3-tools --timeout=180s; then
+              echo "Presigned smoke job failed; logs:"
+              oc logs "job/$JOB_NAME" -n cffaf3-tools || true
+              oc describe "job/$JOB_NAME" -n cffaf3-tools || true
               exit 1
             fi
 
-            # The presigned URL is signed for the service DNS name. Execute the
-            # request from inside the MinIO pod so the Host header and network
-            # path match the endpoint the backend signs with. `wget` is part of
-            # the minio-client image and supports PUT via --method.
-            echo "Verifying presigned PUT and GET from inside the cluster..."
-            oc exec -n cffaf3-tools "$POD_NAME" -c minio-init -- sh -c '
-              set -e
-              wget -q -O /dev/null --method=PUT --body-data="smoke-test-presigned-payload" "$1"
-              FETCHED=$(wget -q -O - "$2")
-              if [ "$FETCHED" != "smoke-test-presigned-payload" ]; then
-                echo "Error: presigned GET payload mismatch."
-                exit 1
-              fi
-            ' _ "$PUT_URL" "$GET_URL"
-            echo "Presigned PUT and GET verified against the in-cluster endpoint."
-
-            oc exec -n cffaf3-tools "$POD_NAME" -c minio-init -- sh -c '
-              mc --config-dir /tmp/.mc rm --force local/"$1" >/dev/null 2>&1 || true
-            ' _ "$OBJECT_STORAGE_BUCKET/smoke-test-presigned.txt"
+            oc logs "job/$JOB_NAME" -n cffaf3-tools
+            oc delete "job/$JOB_NAME" -n cffaf3-tools --ignore-not-found
 
   scale-up-legacy:
     name: Scale up legacy
