@@ -71,13 +71,12 @@ describe('Layout', () => {
     await renderLayout();
 
     // The header skip link's href must resolve to an element that exists (R-1386-2).
-    const skipLink = document.querySelector('a[href="#main-content"]');
-    expect(skipLink).not.toBeNull();
+    const skipLink = screen.getByRole('link', { name: /skip to main content/i });
+    expect(skipLink.getAttribute('href')).toBe('#main-content');
 
-    const target = document.querySelector('#main-content');
-    expect(target).not.toBeNull();
-    expect(target?.tagName).toBe('MAIN');
-    expect(target).toBe(screen.getByRole('main'));
+    const target = screen.getByRole('main');
+    expect(target.tagName).toBe('MAIN');
+    expect(target.id).toBe('main-content');
   });
 });
 

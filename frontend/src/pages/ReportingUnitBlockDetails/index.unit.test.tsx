@@ -141,6 +141,7 @@ describe('ReportingUnitBlockDetailsPage', () => {
       await renderPage();
 
       const heading = screen.getByRole('heading', { level: 1 });
+      // eslint-disable-next-line testing-library/no-node-access -- focus assertion requires document.activeElement; this repo has no jest-dom toHaveFocus matcher
       expect(document.activeElement).toBe(heading);
       expect(heading.getAttribute('tabindex')).toBe('-1');
     });
