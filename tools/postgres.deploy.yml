@@ -89,15 +89,6 @@ objects:
                       DB_NAME="$DATABASE_PREFIX$PR_NUMBER"
                       echo "Recreating the PostgreSQL database $DB_NAME"
 
-                      for FUNCTION in admin.drop_database_wasteplus_pr admin.create_database_wasteplus_pr; do
-                        EXISTS=$(psql --dbname="$PGDATABASE" --tuples-only --no-align \
-                          --command="SELECT to_regprocedure('$FUNCTION(text)') IS NOT NULL")
-                        if [ "$EXISTS" != "t" ]; then
-                          echo "Required function $FUNCTION(text) is not available on the target instance" >&2
-                          exit 1
-                        fi
-                      done
-
                       psql --dbname="$PGDATABASE" --set=ON_ERROR_STOP=1 --quiet <<SQL
                       SELECT admin.drop_database_wasteplus_pr('$DB_NAME')
                       WHERE EXISTS (SELECT 1 FROM pg_database WHERE datname = '$DB_NAME');
@@ -250,13 +241,6 @@ objects:
 
                       DB_NAME="$DATABASE_PREFIX$PR_NUMBER"
                       echo "Dropping the PostgreSQL database $DB_NAME"
-
-                      EXISTS=$(psql --dbname="$PGDATABASE" --tuples-only --no-align \
-                        --command="SELECT to_regprocedure('admin.drop_database_wasteplus_pr(text)') IS NOT NULL")
-                      if [ "$EXISTS" != "t" ]; then
-                        echo "Required function admin.drop_database_wasteplus_pr(text) is not available on the target instance" >&2
-                        exit 1
-                      fi
 
                       psql --dbname="$PGDATABASE" --set=ON_ERROR_STOP=1 --quiet <<SQL
                       SELECT admin.drop_database_wasteplus_pr('$DB_NAME')
