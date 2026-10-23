@@ -113,7 +113,7 @@ test.describe('District Volume Table Upload Page - E2E', () => {
       await page.waitForLoadState('domcontentloaded');
 
       // Click the side-nav config link
-      await page.getByTestId('side-nav-link-config').click();
+      await page.getByTestId('side-nav-link-Configuration').click();
       await expect(page).toHaveURL(/\/configuration$/);
 
       // Click the "View or update tables" link

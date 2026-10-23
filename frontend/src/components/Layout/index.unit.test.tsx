@@ -7,28 +7,6 @@ import { renderWithAppAsync } from '@/config/tests/renderWithApp';
 import { LayoutProvider } from '@/context/layout/LayoutProvider';
 import APIs from '@/services/APIs';
 
-vi.mock('@/routing/legacy/routePaths', () => ({
-  getMenuEntries: () => [
-    {
-      id: 'Dashboard',
-      path: '/dashboard',
-      isMenuItem: true,
-    },
-    {
-      id: 'Settings',
-      path: '/settings',
-      isMenuItem: true,
-      children: [
-        {
-          id: 'Profile',
-          path: 'profile',
-          isMenuItem: true,
-        },
-      ],
-    },
-  ],
-  isRouteAccessible: () => true,
-}));
 
 vi.mock('@/services/APIs', () => {
   return {

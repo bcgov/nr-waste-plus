@@ -1,18 +1,20 @@
+import { RouterProvider } from '@tanstack/react-router';
 import { type FC } from 'react';
 
-import RouterHost from '@/routerHost';
+import { router } from '@/router';
 
 /**
  * Root application component.
  *
- * Delegates to {@link RouterHost}, which mounts exactly one router
- * implementation (legacy by default, file-based when
- * `VITE_ROUTER_IMPL=next`) — see DEC-013 for the temporary build-time switch.
+ * Mounts the TanStack Router provider bound to the file-based router
+ * singleton (`src/router.tsx`). The temporary `VITE_ROUTER_IMPL` migration
+ * switch and the legacy router tree were removed at cutover (DEC-013/S7);
+ * this is now the single router implementation.
  *
  * @returns The root JSX element containing the application router.
  */
 const App: FC = () => {
-  return <RouterHost />;
+  return <RouterProvider router={router} />;
 };
 
 export default App;

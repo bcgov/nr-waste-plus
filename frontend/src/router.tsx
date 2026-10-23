@@ -32,15 +32,12 @@ const routerDefaults = {
 
 /**
  * Creates an application router from the generated file-based route tree.
- *
  * Production uses the {@link router} singleton below; tests pass
  * `createMemoryHistory({ initialEntries })` via `options.history` to exercise
  * the real tree without a browser.
  *
- * NOTE (temporary switch, DEC-013): the single `Register` module augmentation
- * stays in `@/routing/legacy/routeTree` until the S7 cutover, so
- * `useNavigate`/`Link` types resolve against the legacy route list. Do **not**
- * declare a second `Register` here.
+ * This module owns the single `Register` augmentation (below), so
+ * `useNavigate`/`Link` types resolve against the generated route tree.
  *
  * @param context - Router context (currently `{ queryClient }`).
  * @param options - Optional router overrides; `history` swaps browser history
@@ -56,7 +53,7 @@ export const createAppRouter = (context: AppRouterContext, options?: { history?:
   });
 
 /**
- * The application router singleton used by `RouterHost` in `next` mode.
+ * The application router singleton used by the root `App` component.
  * Built once at module load with browser history and the shared query client.
  */
 export const router = createAppRouter({ queryClient }, { history: createBrowserHistory() });

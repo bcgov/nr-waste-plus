@@ -92,13 +92,7 @@ export default defineConfig(({ mode }) => {
         clientFiles: [
           './src/main.tsx',
           './src/App.tsx',
-          './src/routerHost.tsx',
           './src/router.tsx',
-          // Legacy tree — warmed while `legacy` is the default build (DEC-013);
-          // removed at the S7 cutover.
-          './src/routing/legacy/AppRouter.tsx',
-          './src/routing/legacy/routeTree.tsx',
-          './src/routing/legacy/routePaths.tsx',
         ],
       },
       watch: {

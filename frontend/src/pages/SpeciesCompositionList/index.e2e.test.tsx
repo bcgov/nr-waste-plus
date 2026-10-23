@@ -31,7 +31,7 @@ test.describe('Species Composition List Page', () => {
       await page.waitForLoadState('domcontentloaded');
 
       // Click side nav config link
-      await page.getByTestId('side-nav-link-config').click();
+      await page.getByTestId('side-nav-link-Configuration').click();
       await expect(page).toHaveURL(/\/configuration$/);
 
       // Click the second "View or update tables" link (species composition card)
@@ -108,7 +108,7 @@ test.describe('Species Composition List Page', () => {
       await page.goto('/search');
       await page.waitForLoadState('domcontentloaded');
 
-      await expect(page.getByTestId('side-nav-link-config')).toHaveCount(0);
+      await expect(page.getByTestId('side-nav-link-Configuration')).toHaveCount(0);
     });
 
     test('should redirect to unauthorized when non-admin user accesses species composition list via direct URL @bceid-only', async ({
