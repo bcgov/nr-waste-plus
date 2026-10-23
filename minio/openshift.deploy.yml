@@ -56,9 +56,10 @@ objects:
       resources:
         requests:
           storage: ${MINIO_PVC_SIZE}
-      # netapp-file-standard is the standard file storage class provisioned in this namespace,
-      # matching database and legacy.
-      storageClassName: netapp-file-standard
+      # MinIO's data directory requires POSIX rename and atomic write semantics.
+      # netapp-file-standard is NFS-backed and does not provide those reliably,
+      # so use the SAN/XFS-backed block class. Data is PR-scoped and disposable.
+      storageClassName: netapp-block-standard
   - kind: Secret
     apiVersion: v1
     metadata:
@@ -203,6 +204,18 @@ objects:
                     secretKeyRef:
                       name: ${NAME}-${ZONE}-${COMPONENT}
                       key: bucket
+              # Keep the pod NotReady until the sidecar has seeded its bucket.
+              # Per-PR bucket readiness is enforced by the tools deploy workflow.
+              readinessProbe:
+                exec:
+                  command:
+                    - /bin/sh
+                    - -c
+                    - mc --config-dir /tmp/.mc ls local/"$OBJECT_STORAGE_BUCKET" >/dev/null
+                initialDelaySeconds: 2
+                periodSeconds: 5
+                timeoutSeconds: 3
+                failureThreshold: 3
               resources:
                 requests:
                   cpu: 10m

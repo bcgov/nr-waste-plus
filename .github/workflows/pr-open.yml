@@ -59,6 +59,8 @@ jobs:
       object-storage-access-key: ${{ secrets.MINIO_ROOT_USER }}
       object-storage-secret-key: ${{ secrets.MINIO_ROOT_PASSWORD }}
       object-storage-force-path-style: 'true'
+      # Each PR gets its own bucket on the shared tools MinIO instance.
+      object-storage-bucket: ${{ secrets.OBJECT_STORAGE_BUCKET || 'nr-waste' }}-pr-${{ github.event.number }}
       configmap-backend: |-
         info:
           app:
