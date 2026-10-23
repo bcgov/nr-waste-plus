@@ -65,10 +65,14 @@ jobs:
           oc_token: ${{ secrets.oc_token_tools }}
           oc_version: "4.13"
           overwrite: false
-          parameters:
-            -p ZONE=tools
+          parameters: -p ZONE=tools
             -p ORACLEDB_PASSWORD=${{ secrets.ORACLEDB_PASSWORD }}
             -p TAG=${{ github.event.number }}
+            -p POSTGRES_HOST=${{ secrets.POSTGRES_HOST }}
+            -p POSTGRES_USERNAME=${{ secrets.POSTGRES_USERNAME }}
+            -p POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
+            -p PG_PR_USER=${{ secrets.PG_PR_USER }}
+            -p PG_PR_PWD=${{ secrets.PG_PR_PWD }}
 
   remove-tools:
     name: Remove database and user
@@ -143,10 +147,22 @@ jobs:
             ESCAPED_BRANCH_NAME=$(echo "$BRANCH_NAME" | sed 's/[\/&]/\\&/g')
             oc create job --from=cronjob/nr-waste-plus-tools-migratedb migrate-pr${{ github.event.number }}-${{ github.run_attempt }}-$(date +%s) --dry-run=client -o yaml | sed "s/value: main/value: ${ESCAPED_BRANCH_NAME}/" | sed "s/value: \"0\"/value: \"${{ github.event.number }}\"/" | oc apply -f -
 
+      - name: Migrate the PR postgres database
+        continue-on-error: true
+        uses: bcgov/action-oc-runner@111868d1fc50db0a40417ba321d865ef5c931bbd # v1.7.0
+        with:
+          oc_namespace: cffaf3-tools
+          oc_server: ${{ secrets.oc_server }}
+          oc_token: ${{ secrets.oc_token_tools }}
+          commands: |
+            BRANCH_NAME="${{ github.head_ref }}"
+            ESCAPED_BRANCH_NAME=$(echo "$BRANCH_NAME" | sed 's/[\/&]/\\&/g')
+            oc create job --from=cronjob/nr-waste-plus-tools-migratepg migratepg-pr${{ github.event.number }}-${{ github.run_attempt }}-$(date +%s) --dry-run=client -o yaml | sed "s/value: main/value: ${ESCAPED_BRANCH_NAME}/" | sed "s/value: \"0\"/value: \"${{ github.event.number }}\"/" | oc apply -f -
+
   scale-up-legacy:
     name: Scale up legacy
     needs: [deploy-tools]
-#    needs: [pre-tools]
+    #    needs: [pre-tools]
     if: always()
     runs-on: ubuntu-26.04
     steps:
