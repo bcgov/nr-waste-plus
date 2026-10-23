@@ -81,7 +81,7 @@ jobs:
               mc --config-dir /tmp/.mc alias set local http://localhost:9000 "$MINIO_ROOT_USER" "$MINIO_ROOT_PASSWORD" >/dev/null 2>&1 || exit 0
               mc --config-dir /tmp/.mc rm --recursive --force local/"$1" >/dev/null 2>&1 || true
               mc --config-dir /tmp/.mc rb --force local/"$1" >/dev/null 2>&1 || true
-            ' sh "$OBJECT_STORAGE_BUCKET"
+            ' _ "$OBJECT_STORAGE_BUCKET"
             echo "Removed bucket $OBJECT_STORAGE_BUCKET (if it existed)."
 
       - name: Remove completed pods and jobs (cronjobs)
