@@ -1,0 +1,12 @@
+# The dev namespace runs pull request deployments against the shared PostgreSQL
+# instance. The tools migration job applies the backend test fixtures
+# (backend/src/test/resources/db/migration/R__test_data.sql) to the PR
+# database, and those repeatable migrations are not part of the application
+# classpath. Flyway validation must not fail because of migrations it cannot
+# resolve locally.
+#
+# Test and production run the application migrations themselves, so they keep
+# the strict default validation.
+spring:
+  flyway:
+    ignore-migration-patterns: repeatable:missing
