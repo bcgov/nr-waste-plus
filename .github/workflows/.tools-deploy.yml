@@ -206,6 +206,12 @@ jobs:
         run: |
           set -uo pipefail
 
+          # Every oc call carries a request timeout. The API endpoint
+          # occasionally drops connections, and without a timeout the client
+          # waits on the socket forever instead of failing over to the retry
+          # and poll logic below.
+          OC="oc --request-timeout=15s"
+
           if ! command -v oc >/dev/null 2>&1; then
             URL="https://mirror.openshift.com/pub/openshift-v4/clients/ocp/stable-${OC_CLI_VERSION}/openshift-client-linux.tar.gz"
             echo "Downloading OpenShift CLI from ${URL}..."
@@ -241,18 +247,18 @@ jobs:
           JOB_NAME="minio-presign-pr${PR_NUMBER}-${{ github.run_attempt }}-$(date +%s)"
 
           login() {
-            oc login --server="${OC_SERVER}" --token="${OC_TOKEN}"
+            ${OC} login --server="${OC_SERVER}" --token="${OC_TOKEN}"
           }
 
           create_job() {
             local rendered patched
-            rendered=$(oc create job --from="cronjob/${JOB_TEMPLATE}" "${JOB_NAME}" -n "${OC_NAMESPACE}" --dry-run=client -o yaml) || return 1
+            rendered=$(${OC} create job --from="cronjob/${JOB_TEMPLATE}" "${JOB_NAME}" -n "${OC_NAMESPACE}" --dry-run=client -o yaml) || return 1
             patched=$(echo "${rendered}" | sed "/name: PR_NUMBER/{n;s/value: \"0\"/value: \"${PR_NUMBER}\"/;}")
             echo "${patched}" | grep -q "value: \"${PR_NUMBER}\"" || {
               echo "::error::PR_NUMBER was not patched into the ${JOB_NAME} job template."
               return 1
             }
-            echo "${patched}" | oc apply -f -
+            echo "${patched}" | ${OC} apply -f -
           }
 
           echo "Logging in to ${OC_SERVER}..."
@@ -265,8 +271,10 @@ jobs:
           succeeded=0
           failed=0
           while [ "$(date +%s)" -lt "${deadline}" ]; do
-            succeeded=$(oc get job "${JOB_NAME}" -n "${OC_NAMESPACE}" -o jsonpath='{.status.succeeded}' 2>/dev/null || true)
-            failed=$(oc get job "${JOB_NAME}" -n "${OC_NAMESPACE}" -o jsonpath='{.status.failed}' 2>/dev/null || true)
+            counts=$(${OC} get job "${JOB_NAME}" -n "${OC_NAMESPACE}" \
+              -o jsonpath='{.status.succeeded}/{.status.failed}' 2>/dev/null || true)
+            succeeded="${counts%%/*}"
+            failed="${counts##*/}"
             succeeded="${succeeded:-0}"
             failed="${failed:-0}"
             if [ "${succeeded}" -ge 1 ]; then
@@ -279,13 +287,20 @@ jobs:
             sleep 10
           done
 
+          # A dropped connection can cost the poll a status read, so read it
+          # once more before deciding the verification failed.
+          if [ "${succeeded}" -lt 1 ]; then
+            counts=$(${OC} get job "${JOB_NAME}" -n "${OC_NAMESPACE}" -o jsonpath='{.status.succeeded}' 2>/dev/null || true)
+            succeeded="${counts:-0}"
+          fi
+
           echo "--- job logs ---"
-          oc logs "job/${JOB_NAME}" -n "${OC_NAMESPACE}" --tail=100 || true
+          ${OC} logs "job/${JOB_NAME}" -n "${OC_NAMESPACE}" --tail=100 || true
           if [ "${succeeded}" -lt 1 ]; then
             echo "--- job description ---"
-            oc describe "job/${JOB_NAME}" -n "${OC_NAMESPACE}" || true
+            ${OC} describe "job/${JOB_NAME}" -n "${OC_NAMESPACE}" || true
           fi
-          oc delete "job/${JOB_NAME}" -n "${OC_NAMESPACE}" --ignore-not-found || true
+          ${OC} delete "job/${JOB_NAME}" -n "${OC_NAMESPACE}" --ignore-not-found || true
 
           if [ "${succeeded}" -lt 1 ]; then
             echo "::error::Presigned PUT and GET verification failed for PR ${PR_NUMBER} (succeeded=${succeeded}, failed=${failed})."
