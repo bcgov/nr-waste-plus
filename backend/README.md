@@ -77,17 +77,19 @@ Set credentials in your local environment or ignored `.env` file. Never commit
 credentials. The backend container uses the Compose-network endpoint
 `http://minio:9000`; the host endpoint is for tools running outside Docker.
 
-## OpenShift dev and tools object storage
+## OpenShift object storage
 
-In pre-production OpenShift environments (`cffaf3-tools` and `cffaf3-dev`), an S3-compatible MinIO workload runs alongside the Oracle database in the `tools` namespace:
+Object storage configuration for the OpenShift environments is supplied through
+GitHub Actions secrets, written into the OpenShift Secret
+`nr-waste-plus-${ZONE}` by the deployment init job, and read by the backend
+with `secretKeyRef`. PR and dev deployments use the in-cluster MinIO service in
+`cffaf3-tools`, which has no public Route, so its presigned URLs are reachable
+only from inside the cluster. Test and prod use the BC Gov object store, with
+one bucket per environment.
 
-- **Workload template**: [`minio/openshift.deploy.yml`](../minio/openshift.deploy.yml) provisions the MinIO server, persistent storage (PVC `nr-waste-plus-tools-minio-data`), an automated bucket seeding sidecar container, and a ClusterIP Service. It creates **no Route**: MinIO is not reachable from the internet, matching the other data-tier components in this repo (`legacydb`, `legacy`, `database`).
-- **Workflow**: Automated deployment is managed by [`.tools-deploy.yml`](../.github/workflows/.tools-deploy.yml).
-- **In-cluster endpoint**: Backend deployments in `dev` / PR environments use `http://nr-waste-plus-tools-minio.cffaf3-tools.svc.cluster.local:9000` for S3 client communication. NetworkPolicies scope ingress to the `cffaf3-dev` namespace and to `cffaf3-tools` itself.
-- **Client presigner endpoint**: The backend signs presigned upload/download URLs against that same in-cluster endpoint. `OBJECT_STORAGE_PRESIGNER_ENDPOINT` overrides it; leaving it unset signs against `OBJECT_STORAGE_ENDPOINT`. Because there is no public endpoint, a browser outside the cluster cannot PUT to MinIO directly - an attachment upload feature that needs that would have to proxy the bytes through the backend rather than hand a presigned URL to the browser. For operator access to the MinIO console, use `oc port-forward svc/nr-waste-plus-tools-minio 9001:9001` from the `cffaf3-tools` namespace instead of a Route.
-- **Bucket seeding**: The default `nr-waste` bucket is seeded automatically on startup by the `minio-init` container and verified during deployment init.
-- **Secrets & credentials**: Credentials (`MINIO_ROOT_USER`, `MINIO_ROOT_PASSWORD`, `OBJECT_STORAGE_*`) are managed strictly through OpenShift secrets and CI secrets; no default or plaintext credentials are committed to version control.
-- **Production separation**: Deployed test and production environments use AWS S3; MinIO is scoped strictly to local Docker Compose, CI integration tests, and pre-production dev/tools environments.
+The configuration contract - secret names, resolution order, the fail-closed
+deploy gate, rotation, verification, and troubleshooting - is documented in the
+[object storage configuration contract](https://github.com/bcgov/nr-waste-plus/wiki/Object-Storage-Configuration-Contract).
 
 ## More information
 

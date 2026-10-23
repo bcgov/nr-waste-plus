@@ -17,18 +17,22 @@ jobs:
     outputs:
       url: ${{ steps.calculate.outputs.url }}
       bucket: ${{ steps.calculate.outputs.bucket }}
+      endpoint: ${{ steps.calculate.outputs.endpoint }}
     steps:
       # steps.calculate.outputs.url => needs.vars.outputs.url
       - name: Calculate the deployment number
         id: calculate
         env:
           BASE_BUCKET: ${{ secrets.OBJECT_STORAGE_BUCKET || 'nr-waste' }}
+          OBJECT_STORAGE_ENDPOINT: ${{ secrets.OBJECT_STORAGE_ENDPOINT }}
         run: |
           echo "url=${{ github.event.repository.name }}-$((${{ github.event.number }} % 50))-frontend.apps.silver.devops.gov.bc.ca" >> $GITHUB_OUTPUT
           echo "url=${{ github.event.repository.name }}-$((${{ github.event.number }} % 50))-frontend.apps.silver.devops.gov.bc.ca"
           # Reusable-workflow `with:` inputs cannot read the secrets context,
-          # so the per-PR bucket is resolved here and passed as an output.
+          # so the per-PR bucket and the endpoint are resolved here and passed
+          # as outputs.
           echo "bucket=${BASE_BUCKET}-pr-${{ github.event.number }}" >> $GITHUB_OUTPUT
+          echo "endpoint=${OBJECT_STORAGE_ENDPOINT}" >> $GITHUB_OUTPUT
 
   builds:
     name: Builds
@@ -59,7 +63,9 @@ jobs:
       oracledb-port: 1521
       oracledb-servicename: PR_${{ github.event.number }}
       oracledb-username: THE
-      object-storage-endpoint: http://nr-waste-plus-tools-minio.cffaf3-tools.svc.cluster.local:9000
+      # The endpoint is a repository secret (the in-cluster MinIO service). It
+      # is resolved in `vars` because `with:` cannot read the secrets context.
+      object-storage-endpoint: ${{ needs.vars.outputs.endpoint }}
       # No separate presigner endpoint: MinIO has no public Route, so presigned
       # URLs are signed against the in-cluster endpoint above.
       object-storage-force-path-style: ${{ 'true' }}
