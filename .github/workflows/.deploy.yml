@@ -46,6 +46,36 @@ on:
         default: ${{ github.event.repository.name }}-$((${{ github.event.number }} % 50))-frontend.apps.silver.devops.gov.bc.ca
         required: false
         type: string
+      object-storage-endpoint:
+        description: Object storage / MinIO endpoint
+        required: false
+        type: string
+        default: ''
+      object-storage-presigner-endpoint:
+        description: Object storage / MinIO client-facing presigner endpoint
+        required: false
+        type: string
+        default: ''
+      object-storage-access-key:
+        description: Object storage access key
+        required: false
+        type: string
+        default: ''
+      object-storage-secret-key:
+        description: Object storage secret key
+        required: false
+        type: string
+        default: ''
+      object-storage-bucket:
+        description: Object storage bucket
+        required: false
+        type: string
+        default: ''
+      object-storage-force-path-style:
+        description: Force path style for S3 requests
+        required: false
+        type: string
+        default: ''
 
 permissions: {}
 
@@ -66,8 +96,41 @@ jobs:
     environment: ${{ inputs.environment }}
     runs-on: ubuntu-26.04
     steps:
+      - name: Require object storage credentials
+        env:
+          # The endpoint comes from the workflow input, or from the secret of
+          # the target environment (test and prod).
+          OBJECT_STORAGE_ENDPOINT: ${{ inputs.object-storage-endpoint || secrets.OBJECT_STORAGE_ENDPOINT }}
+          OBJECT_STORAGE_ACCESS_KEY: ${{ inputs.object-storage-access-key || secrets.OBJECT_STORAGE_ACCESS_KEY }}
+          OBJECT_STORAGE_SECRET_KEY: ${{ inputs.object-storage-secret-key || secrets.OBJECT_STORAGE_SECRET_KEY }}
+          OBJECT_STORAGE_BUCKET: ${{ inputs.object-storage-bucket || secrets.OBJECT_STORAGE_BUCKET }}
+          MINIO_ROOT_USER: ${{ secrets.MINIO_ROOT_USER }}
+          MINIO_ROOT_PASSWORD: ${{ secrets.MINIO_ROOT_PASSWORD }}
+        run: |
+          # Fail closed: this deployment signs against the resolved endpoint,
+          # so the matching credentials must be configured.
+          if [[ "${OBJECT_STORAGE_ENDPOINT}" == *"nr-waste-plus-tools-minio"* ]]; then
+            # The shared tools MinIO serves the PR and dev namespaces.
+            : "${MINIO_ROOT_USER:?MINIO_ROOT_USER secret is required for the MinIO endpoint}"
+            : "${MINIO_ROOT_PASSWORD:?MINIO_ROOT_PASSWORD secret is required for the MinIO endpoint}"
+            : "${OBJECT_STORAGE_BUCKET:?OBJECT_STORAGE_BUCKET is required for the MinIO endpoint}"
+          else
+            # Test and prod point at the BC Gov object store.
+            : "${OBJECT_STORAGE_ENDPOINT:?OBJECT_STORAGE_ENDPOINT secret is required}"
+            [[ "${OBJECT_STORAGE_ENDPOINT}" =~ ^https?:// ]] || { echo "::error::OBJECT_STORAGE_ENDPOINT must be an http(s) URL"; exit 1; }
+            : "${OBJECT_STORAGE_ACCESS_KEY:?OBJECT_STORAGE_ACCESS_KEY secret is required for the object store}"
+            : "${OBJECT_STORAGE_SECRET_KEY:?OBJECT_STORAGE_SECRET_KEY secret is required for the object store}"
+            : "${OBJECT_STORAGE_BUCKET:?OBJECT_STORAGE_BUCKET secret is required for the object store}"
+          fi
+
       - name: Deployment Init
         uses: bcgov/action-deployer-openshift@e2d60eb9cacceb89c3b97d8dcf0a2c460eea5eab # v4.2.3
+        env:
+          # PR deployments point at the in-cluster MinIO service and use its
+          # root credentials. Other endpoints keep using the S3 secrets of the
+          # target environment.
+          OBJECT_STORAGE_ACCESS_KEY: ${{ inputs.object-storage-access-key || (contains(inputs.object-storage-endpoint || secrets.OBJECT_STORAGE_ENDPOINT, 'nr-waste-plus-tools-minio') && secrets.MINIO_ROOT_USER) || secrets.OBJECT_STORAGE_ACCESS_KEY }}
+          OBJECT_STORAGE_SECRET_KEY: ${{ inputs.object-storage-secret-key || (contains(inputs.object-storage-endpoint || secrets.OBJECT_STORAGE_ENDPOINT, 'nr-waste-plus-tools-minio') && secrets.MINIO_ROOT_PASSWORD) || secrets.OBJECT_STORAGE_SECRET_KEY }}
         with:
           file: common/openshift.init.yml
           oc_namespace: ${{ secrets.OC_NAMESPACE }}
@@ -97,6 +160,13 @@ jobs:
             -p VITE_FAM_DOMAIN=${{ secrets.FAM_DOMAIN }}
             -p VITE_BCEID_HELP=${{ secrets.VITE_BCEID_HELP }}
             -p VITE_IDIR_HELP=${{ secrets.VITE_IDIR_HELP }}
+            -p OBJECT_STORAGE_ENDPOINT=${{ inputs.object-storage-endpoint || secrets.OBJECT_STORAGE_ENDPOINT }}
+            -p OBJECT_STORAGE_PRESIGNER_ENDPOINT=${{ inputs.object-storage-presigner-endpoint || secrets.OBJECT_STORAGE_PRESIGNER_ENDPOINT }}
+            -p OBJECT_STORAGE_ACCESS_KEY="$OBJECT_STORAGE_ACCESS_KEY"
+            -p OBJECT_STORAGE_SECRET_KEY="$OBJECT_STORAGE_SECRET_KEY"
+            -p OBJECT_STORAGE_BUCKET=${{ inputs.object-storage-bucket || secrets.OBJECT_STORAGE_BUCKET || 'nr-waste' }}
+            -p OBJECT_STORAGE_REGION=${{ secrets.OBJECT_STORAGE_REGION || 'ca-central-1' }}
+            -p OBJECT_STORAGE_FORCE_PATH_STYLE=${{ inputs.object-storage-force-path-style || secrets.OBJECT_STORAGE_FORCE_PATH_STYLE || 'false' }}
 
   deploy:
     name: Deploy

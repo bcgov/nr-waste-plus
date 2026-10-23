@@ -1,0 +1,468 @@
+apiVersion: template.openshift.io/v1
+kind: Template
+labels:
+  app: ${NAME}-${ZONE}
+  app.kubernetes.io/part-of: ${NAME}-${ZONE}
+parameters:
+  - name: NAME
+    description: Product name
+    value: nr-waste-plus
+  - name: COMPONENT
+    description: Component name
+    value: minio
+  - name: ZONE
+    description: Deployment zone, e.g. tools or dev
+    required: true
+  - name: NAMESPACE
+    description: Namespace used in the in-cluster service DNS name
+    value: cffaf3-tools
+  - name: MINIO_ROOT_USER
+    description: MinIO root user / S3 access key
+    required: true
+  - name: MINIO_ROOT_PASSWORD
+    description: MinIO root password / S3 secret key
+    required: true
+  - name: OBJECT_STORAGE_BUCKET
+    description: Default bucket name to seed
+    value: nr-waste
+  - name: OBJECT_STORAGE_REGION
+    description: Region used when signing presigned requests
+    value: ca-central-1
+  - name: MINIO_SMOKE_IMAGE
+    description: Container image for the presigned PUT/GET smoke test
+    value: python:3.12-slim
+  - name: MINIO_IMAGE
+    description: Container image for MinIO server
+    value: cgr.dev/chainguard/minio:latest
+  - name: MINIO_CLIENT_IMAGE
+    description: Container image for MinIO client (bucket seeding)
+    value: cgr.dev/chainguard/minio-client:latest-dev
+  - name: MINIO_PVC_SIZE
+    description: Persistent volume capacity for MinIO data
+    value: 500Mi
+  - name: CPU_REQUEST
+    value: 50m
+  - name: MEMORY_REQUEST
+    value: 128Mi
+  - name: CPU_LIMIT
+    value: 250m
+  - name: MEMORY_LIMIT
+    value: 512Mi
+  - name: RANDOM_EXPRESSION
+    description: Random expression to ensure deployments update
+    from: "[a-zA-Z0-9]{32}"
+    generate: expression
+objects:
+  - kind: PersistentVolumeClaim
+    apiVersion: v1
+    metadata:
+      name: ${NAME}-${ZONE}-${COMPONENT}-data
+      labels:
+        app: ${NAME}-${ZONE}
+    spec:
+      accessModes:
+        - ReadWriteOnce
+      resources:
+        requests:
+          storage: ${MINIO_PVC_SIZE}
+      # MinIO's data directory requires POSIX rename and atomic write semantics.
+      # netapp-file-standard is NFS-backed and does not provide those reliably,
+      # so use the SAN/XFS-backed block class. Data is PR-scoped and disposable.
+      storageClassName: netapp-block-standard
+  - kind: Secret
+    apiVersion: v1
+    metadata:
+      name: ${NAME}-${ZONE}-${COMPONENT}
+      labels:
+        app: ${NAME}-${ZONE}
+    stringData:
+      root-user: ${MINIO_ROOT_USER}
+      root-password: ${MINIO_ROOT_PASSWORD}
+      bucket: ${OBJECT_STORAGE_BUCKET}
+  - kind: Deployment
+    apiVersion: apps/v1
+    metadata:
+      name: ${NAME}-${ZONE}-${COMPONENT}
+      labels:
+        app: ${NAME}-${ZONE}
+    spec:
+      replicas: 1
+      selector:
+        matchLabels:
+          deployment: ${NAME}-${ZONE}-${COMPONENT}
+      strategy:
+        type: Recreate
+      template:
+        metadata:
+          name: ${NAME}-${ZONE}-${COMPONENT}
+          labels:
+            app: ${NAME}-${ZONE}
+            deployment: ${NAME}-${ZONE}-${COMPONENT}
+        spec:
+          securityContext:
+            runAsNonRoot: true
+            seccompProfile:
+              type: RuntimeDefault
+          volumes:
+            - name: minio-data
+              persistentVolumeClaim:
+                claimName: ${NAME}-${ZONE}-${COMPONENT}-data
+          containers:
+            - name: minio
+              image: ${MINIO_IMAGE}
+              imagePullPolicy: Always
+              securityContext:
+                allowPrivilegeEscalation: false
+                capabilities:
+                  drop:
+                    - ALL
+              command:
+                - minio
+                - server
+                - /data
+                - --console-address
+                - :9001
+              ports:
+                - name: s3-api
+                  containerPort: 9000
+                  protocol: TCP
+                - name: console
+                  containerPort: 9001
+                  protocol: TCP
+              env:
+                - name: MINIO_ROOT_USER
+                  valueFrom:
+                    secretKeyRef:
+                      name: ${NAME}-${ZONE}-${COMPONENT}
+                      key: root-user
+                - name: MINIO_ROOT_PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: ${NAME}-${ZONE}-${COMPONENT}
+                      key: root-password
+                - name: RANDOM_EXPRESSION
+                  value: ${RANDOM_EXPRESSION}
+              volumeMounts:
+                - name: minio-data
+                  mountPath: /data
+              resources:
+                requests:
+                  cpu: ${CPU_REQUEST}
+                  memory: ${MEMORY_REQUEST}
+                limits:
+                  cpu: ${CPU_LIMIT}
+                  memory: ${MEMORY_LIMIT}
+              readinessProbe:
+                httpGet:
+                  path: /minio/health/ready
+                  port: 9000
+                initialDelaySeconds: 5
+                periodSeconds: 10
+                timeoutSeconds: 5
+                failureThreshold: 3
+              livenessProbe:
+                httpGet:
+                  path: /minio/health/live
+                  port: 9000
+                initialDelaySeconds: 15
+                periodSeconds: 20
+                timeoutSeconds: 5
+                failureThreshold: 3
+            - name: minio-init
+              image: ${MINIO_CLIENT_IMAGE}
+              imagePullPolicy: Always
+              securityContext:
+                allowPrivilegeEscalation: false
+                capabilities:
+                  drop:
+                    - ALL
+              command:
+                - /bin/sh
+                - -c
+              args:
+                - |
+                  export HOME=/tmp
+                  echo "Waiting for MinIO server on localhost:9000..."
+                  # A wrong credential keeps this loop running, which keeps the
+                  # sidecar's readiness probe below failing, so the pod stays
+                  # NotReady instead of reporting healthy with no bucket.
+                  until mc --config-dir /tmp/.mc alias set local http://localhost:9000 "$MINIO_ROOT_USER" "$MINIO_ROOT_PASSWORD"; do
+                    sleep 2
+                  done
+                  echo "Ensuring bucket '${OBJECT_STORAGE_BUCKET}' exists..."
+                  until mc --config-dir /tmp/.mc mb --ignore-existing local/"$OBJECT_STORAGE_BUCKET"; do
+                    echo "Bucket creation failed; retrying in 2 seconds..."
+                    sleep 2
+                  done
+                  echo "Bucket '${OBJECT_STORAGE_BUCKET}' is ready."
+                  while true; do
+                    sleep 86400
+                  done
+              env:
+                - name: HOME
+                  value: /tmp
+                - name: MINIO_ROOT_USER
+                  valueFrom:
+                    secretKeyRef:
+                      name: ${NAME}-${ZONE}-${COMPONENT}
+                      key: root-user
+                - name: MINIO_ROOT_PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: ${NAME}-${ZONE}-${COMPONENT}
+                      key: root-password
+                - name: OBJECT_STORAGE_BUCKET
+                  valueFrom:
+                    secretKeyRef:
+                      name: ${NAME}-${ZONE}-${COMPONENT}
+                      key: bucket
+              # Keep the pod NotReady until the sidecar has seeded its bucket.
+              # Per-PR bucket readiness is enforced by the tools deploy workflow.
+              readinessProbe:
+                exec:
+                  command:
+                    - /bin/sh
+                    - -c
+                    - mc --config-dir /tmp/.mc ls local/"$OBJECT_STORAGE_BUCKET" >/dev/null
+                initialDelaySeconds: 2
+                periodSeconds: 5
+                timeoutSeconds: 3
+                failureThreshold: 3
+              resources:
+                requests:
+                  cpu: 10m
+                  memory: 32Mi
+                limits:
+                  cpu: 50m
+                  memory: 64Mi
+          restartPolicy: Always
+          terminationGracePeriodSeconds: 30
+          dnsPolicy: ClusterFirst
+          schedulerName: default-scheduler
+  # The only way in. ClusterIP - no Route is created for this workload, so the
+  # S3 API and the admin console are reachable only from inside the cluster.
+  # See the note below on who is allowed in, and how to port-forward.
+  - kind: Service
+    apiVersion: v1
+    metadata:
+      name: ${NAME}-${ZONE}-${COMPONENT}
+      labels:
+        app: ${NAME}-${ZONE}
+    spec:
+      ports:
+        - name: s3-api
+          port: 9000
+          targetPort: 9000
+          protocol: TCP
+        - name: console
+          port: 9001
+          targetPort: 9001
+          protocol: TCP
+      selector:
+        deployment: ${NAME}-${ZONE}-${COMPONENT}
+      type: ClusterIP
+  # No Route is created for MinIO: the S3 API and the admin console are
+  # reachable only inside the cluster, over the ClusterIP Service above.
+  #
+  # This matches the other data-tier components in this repo (legacydb, legacy,
+  # database), which expose no Route either and are reached at
+  # nr-waste-plus-tools-legacydb.cffaf3-tools.svc.cluster.local:1521.
+  #
+  # It also means the OpenShift router has no path to the MinIO pods. A Route
+  # would be edge-terminated on the shared router, and a NetworkPolicy cannot
+  # make an edge-terminated Route internal-only - the router terminates TLS and
+  # proxies to the pod, so the pod only ever sees a connection from the router,
+  # and any policy admitting network.openshift.io/policy-group: ingress also
+  # admits whatever the router forwarded from the internet. Restricting MinIO
+  # to the dev namespace therefore means having no Route at all, not tightening
+  # a policy.
+  #
+  # Reachability:
+  #   - cffaf3-dev (the apps) -> cffaf3-tools (this workload), via the
+  #     allow-cffaf3-dev-minio-access policy below.
+  #   - the cffaf3-tools namespace itself, via allow-same-namespace-minio.
+  #   - an operator at a terminal -> `oc port-forward
+  #     svc/${NAME}-${ZONE}-${COMPONENT} 9000:9000` (S3 API) or `9001:9001`
+  #     (admin console) from the cffaf3-tools namespace.
+  #
+  # The console port stays on the Service so the port-forward above works.
+  #
+  # Note for a future browser-upload feature: with no public endpoint, a
+  # browser outside the cluster cannot PUT to MinIO directly. Presigned URLs
+  # are signed against the in-cluster endpoint, so uploads would have to be
+  # proxied through the backend rather than handed to the browser.
+  - kind: NetworkPolicy
+    apiVersion: networking.k8s.io/v1
+    metadata:
+      name: allow-cffaf3-dev-minio-access
+      labels:
+        app: ${NAME}-${ZONE}
+    spec:
+      podSelector:
+        matchLabels:
+          deployment: ${NAME}-${ZONE}-${COMPONENT}
+      policyTypes:
+        - Ingress
+      ingress:
+        - from:
+            - namespaceSelector:
+                matchLabels:
+                  environment: dev
+                  name: cffaf3
+  # Same-namespace access, mirroring legacydb's allow-same-namespace - this
+  # covers the deployment's own sidecar container and any other pod in
+  # cffaf3-tools.
+  - kind: NetworkPolicy
+    apiVersion: networking.k8s.io/v1
+    metadata:
+      name: allow-same-namespace-minio
+      labels:
+        app: ${NAME}-${ZONE}
+    spec:
+      podSelector:
+        matchLabels:
+          deployment: ${NAME}-${ZONE}-${COMPONENT}
+      policyTypes:
+        - Ingress
+      ingress:
+        - from:
+            - podSelector: {}
+  # Never-firing CronJob used as a Job template. The tools workflow creates a
+  # one-off Job from it with `oc create job --from=cronjob/...`, which keeps
+  # the presigned PUT/GET check inside the cluster where the MinIO service DNS
+  # name and network path match what the backend signs for.
+  - kind: CronJob
+    apiVersion: batch/v1
+    metadata:
+      name: ${NAME}-${ZONE}-${COMPONENT}-presign
+      labels:
+        app: ${NAME}-${ZONE}
+        cronjob: ${NAME}-${ZONE}-${COMPONENT}
+    spec:
+      # 31 February never occurs; the workflow is the only trigger.
+      schedule: "0 0 31 2 *"
+      concurrencyPolicy: Forbid
+      successfulJobsHistoryLimit: 1
+      failedJobsHistoryLimit: 3
+      jobTemplate:
+        metadata:
+          labels:
+            app: ${NAME}-${ZONE}
+            cronjob: ${NAME}-${ZONE}-${COMPONENT}
+        spec:
+          backoffLimit: 0
+          ttlSecondsAfterFinished: 600
+          template:
+            metadata:
+              labels:
+                app: ${NAME}-${ZONE}
+                cronjob: ${NAME}-${ZONE}-${COMPONENT}
+            spec:
+              restartPolicy: Never
+              securityContext:
+                runAsNonRoot: true
+                seccompProfile:
+                  type: RuntimeDefault
+              containers:
+                - name: presign-smoke
+                  image: ${MINIO_SMOKE_IMAGE}
+                  imagePullPolicy: IfNotPresent
+                  securityContext:
+                    allowPrivilegeEscalation: false
+                    capabilities:
+                      drop:
+                        - ALL
+                  command:
+                    - /bin/sh
+                    - -c
+                  args:
+                    - |
+                      set -eu
+                      export HOME=/tmp
+                      pip install --quiet --no-cache-dir --target=/tmp/pylibs boto3==1.35.0
+                      export PYTHONPATH=/tmp/pylibs
+                      python - <<'PY'
+                      import os
+                      import urllib.request
+
+                      import boto3
+                      from botocore.config import Config
+
+                      endpoint = os.environ["MINIO_ENDPOINT"]
+                      base = os.environ["BASE_BUCKET"]
+                      pr = os.environ.get("PR_NUMBER", "0")
+                      bucket = base if pr in ("", "0") else f"{base}-pr-{pr}"
+                      key = "smoke-test-presigned.txt"
+                      payload = b"smoke-test-presigned-payload"
+
+                      s3 = boto3.client(
+                          "s3",
+                          endpoint_url=endpoint,
+                          aws_access_key_id=os.environ["MINIO_ROOT_USER"],
+                          aws_secret_access_key=os.environ["MINIO_ROOT_PASSWORD"],
+                          region_name=os.environ.get("OBJECT_STORAGE_REGION", "ca-central-1"),
+                          config=Config(
+                              signature_version="s3v4",
+                              s3={"addressing_style": "path"},
+                          ),
+                      )
+
+                      try:
+                          s3.head_bucket(Bucket=bucket)
+                      except s3.exceptions.ClientError:
+                          s3.create_bucket(Bucket=bucket)
+
+                      put_url = s3.generate_presigned_url(
+                          "put_object",
+                          Params={"Bucket": bucket, "Key": key},
+                          ExpiresIn=300,
+                      )
+                      get_url = s3.generate_presigned_url(
+                          "get_object",
+                          Params={"Bucket": bucket, "Key": key},
+                          ExpiresIn=300,
+                      )
+
+                      request = urllib.request.Request(put_url, data=payload, method="PUT")
+                      with urllib.request.urlopen(request) as response:
+                          if response.status != 200:
+                              raise SystemExit(f"presigned PUT failed: HTTP {response.status}")
+
+                      with urllib.request.urlopen(get_url) as response:
+                          fetched = response.read()
+                      if fetched != payload:
+                          raise SystemExit(f"presigned GET payload mismatch: {fetched!r}")
+
+                      s3.delete_object(Bucket=bucket, Key=key)
+                      print(f"Presigned PUT and GET verified against {endpoint} (bucket {bucket}).")
+                      PY
+                  env:
+                    - name: MINIO_ENDPOINT
+                      value: http://${NAME}-${ZONE}-${COMPONENT}.${NAMESPACE}.svc.cluster.local:9000
+                    - name: MINIO_ROOT_USER
+                      valueFrom:
+                        secretKeyRef:
+                          name: ${NAME}-${ZONE}-${COMPONENT}
+                          key: root-user
+                    - name: MINIO_ROOT_PASSWORD
+                      valueFrom:
+                        secretKeyRef:
+                          name: ${NAME}-${ZONE}-${COMPONENT}
+                          key: root-password
+                    - name: BASE_BUCKET
+                      valueFrom:
+                        secretKeyRef:
+                          name: ${NAME}-${ZONE}-${COMPONENT}
+                          key: bucket
+                    - name: PR_NUMBER
+                      value: "0"
+                    - name: OBJECT_STORAGE_REGION
+                      value: ${OBJECT_STORAGE_REGION}
+                  resources:
+                    requests:
+                      cpu: 25m
+                      memory: 64Mi
+                    limits:
+                      cpu: 200m
+                      memory: 256Mi
+

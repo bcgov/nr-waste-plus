@@ -69,7 +69,41 @@ jobs:
           commands: |
             oc create job --from=cronjob/nr-waste-plus-tools-droppg droppg-pr${{ github.event.number }}-${{ github.run_attempt }}-$(date +%s) --dry-run=client -o yaml | sed "s/value: \"0\"/value: \"${{ github.event.number }}\"/" | oc apply -f -
 
+      - name: Remove the PR MinIO bucket
+        continue-on-error: true
+        uses: bcgov/action-oc-runner@111868d1fc50db0a40417ba321d865ef5c931bbd # v1.7.0
+        env:
+          OBJECT_STORAGE_BUCKET: ${{ secrets.OBJECT_STORAGE_BUCKET || 'nr-waste' }}-pr-${{ github.event.number }}
+        with:
+          oc_namespace: cffaf3-tools
+          oc_token: ${{ secrets.oc_token_tools }}
+          oc_server: ${{ secrets.oc_server }}
+          commands: |
+            # Remove only this PR's bucket. The shared MinIO server and the
+            # base bucket are left intact for other open PRs.
+            POD_NAME=$(oc get pods -l app=nr-waste-plus-tools -l deployment=nr-waste-plus-tools-minio -o jsonpath='{.items[0].metadata.name}' 2>/dev/null)
+            if [ -z "$POD_NAME" ]; then
+              echo "MinIO pod not found; nothing to clean up."
+              exit 0
+            fi
+
+            oc exec "$POD_NAME" -c minio-init -- sh -c '
+              mc --config-dir /tmp/.mc alias set local http://localhost:9000 "$MINIO_ROOT_USER" "$MINIO_ROOT_PASSWORD" >/dev/null 2>&1 || exit 0
+              mc --config-dir /tmp/.mc rm --recursive --force local/"$1" >/dev/null 2>&1 || true
+              mc --config-dir /tmp/.mc rb --force local/"$1" >/dev/null 2>&1 || true
+            ' _ "$OBJECT_STORAGE_BUCKET"
+            echo "Removed bucket $OBJECT_STORAGE_BUCKET (if it existed)."
+
       - name: Remove completed pods and jobs (cronjobs)
-        run: |
-          oc delete po --field-selector=status.phase==Succeeded
-          oc delete jobs --field-selector status.successful=1
+        continue-on-error: true
+        uses: bcgov/action-oc-runner@111868d1fc50db0a40417ba321d865ef5c931bbd # v1.7.0
+        with:
+          oc_namespace: cffaf3-tools
+          oc_token: ${{ secrets.oc_token_tools }}
+          oc_server: ${{ secrets.oc_server }}
+          commands: |
+            # Scope to this PR: migration job names include -pr<number>-.
+            JOBS=$(oc get jobs -n cffaf3-tools -o name | grep -E -- "-pr${{ github.event.number }}-" || true)
+            if [ -n "$JOBS" ]; then
+              oc delete $JOBS -n cffaf3-tools --ignore-not-found
+            fi
