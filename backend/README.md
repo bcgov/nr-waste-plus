@@ -77,6 +77,20 @@ Set credentials in your local environment or ignored `.env` file. Never commit
 credentials. The backend container uses the Compose-network endpoint
 `http://minio:9000`; the host endpoint is for tools running outside Docker.
 
+## OpenShift object storage
+
+Object storage configuration for the OpenShift environments is supplied through
+GitHub Actions secrets, written into the OpenShift Secret
+`nr-waste-plus-${ZONE}` by the deployment init job, and read by the backend
+with `secretKeyRef`. PR and dev deployments use the in-cluster MinIO service in
+`cffaf3-tools`, which has no public Route, so its presigned URLs are reachable
+only from inside the cluster. Test and prod use the BC Gov object store, with
+one bucket per environment.
+
+The configuration contract - secret names, resolution order, the fail-closed
+deploy gate, rotation, verification, and troubleshooting - is documented in the
+[object storage configuration contract](https://github.com/bcgov/nr-waste-plus/wiki/Object-Storage-Configuration-Contract).
+
 ## More information
 
 - [Backend architecture overview](https://github.com/bcgov/nr-waste-plus/wiki/Backend-Architecture-Overview)

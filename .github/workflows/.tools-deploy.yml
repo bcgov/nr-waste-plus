@@ -70,6 +70,41 @@ jobs:
             -p ORACLEDB_PASSWORD=${{ secrets.ORACLEDB_PASSWORD }}
             -p TAG=${{ github.event.number }}
 
+  deploy-minio:
+    name: Deploy MinIO
+    needs: [pre-tools]
+    runs-on: ubuntu-26.04
+    steps:
+      - name: Require MinIO credentials
+        env:
+          MINIO_ROOT_USER: ${{ secrets.MINIO_ROOT_USER }}
+          MINIO_ROOT_PASSWORD: ${{ secrets.MINIO_ROOT_PASSWORD }}
+        run: |
+          # Fail closed: the template has no credential defaults, so a missing
+          # repository secret must stop the deploy rather than create a MinIO
+          # instance with empty (or shared) credentials.
+          : "${MINIO_ROOT_USER:?MINIO_ROOT_USER repository secret is required}"
+          : "${MINIO_ROOT_PASSWORD:?MINIO_ROOT_PASSWORD repository secret is required}"
+
+      - name: Initializing MinIO Deployment
+        uses: bcgov/action-deployer-openshift@e2d60eb9cacceb89c3b97d8dcf0a2c460eea5eab # v4.2.3
+        env:
+          MINIO_ROOT_USER: ${{ secrets.MINIO_ROOT_USER }}
+          MINIO_ROOT_PASSWORD: ${{ secrets.MINIO_ROOT_PASSWORD }}
+        with:
+          file: minio/openshift.deploy.yml
+          oc_namespace: cffaf3-tools
+          oc_server: ${{ secrets.oc_server }}
+          oc_token: ${{ secrets.oc_token_tools }}
+          oc_version: "4.13"
+          overwrite: true
+          parameters:
+            -p ZONE=tools
+            -p MINIO_ROOT_USER="$MINIO_ROOT_USER"
+            -p MINIO_ROOT_PASSWORD="$MINIO_ROOT_PASSWORD"
+            -p OBJECT_STORAGE_BUCKET=${{ secrets.OBJECT_STORAGE_BUCKET || 'nr-waste' }}
+            -p OBJECT_STORAGE_REGION=${{ secrets.OBJECT_STORAGE_REGION || 'ca-central-1' }}
+
   remove-tools:
     name: Remove database and user
     needs: [deploy-oracle]
@@ -78,7 +113,7 @@ jobs:
 
   deploy-tools:
     name: Deploy Tools
-    needs: [remove-tools, deploy-oracle]
+    needs: [remove-tools, deploy-oracle, deploy-minio]
     runs-on: ubuntu-26.04
     steps:
       - name: Create the PR database
@@ -142,6 +177,137 @@ jobs:
             BRANCH_NAME="${{ github.head_ref }}"
             ESCAPED_BRANCH_NAME=$(echo "$BRANCH_NAME" | sed 's/[\/&]/\\&/g')
             oc create job --from=cronjob/nr-waste-plus-tools-migratedb migrate-pr${{ github.event.number }}-${{ github.run_attempt }}-$(date +%s) --dry-run=client -o yaml | sed "s/value: main/value: ${ESCAPED_BRANCH_NAME}/" | sed "s/value: \"0\"/value: \"${{ github.event.number }}\"/" | oc apply -f -
+
+      # The OpenShift API intermittently refuses or times out connections from
+      # GitHub-hosted runners. The oc-runner action logs in and then verifies
+      # the namespace without a retry, so a single refused connection fails the
+      # step even when the deployment is healthy. This step owns the oc client
+      # instead: every call is retried with backoff, and a failed read while
+      # polling is treated as "not finished yet" rather than as a failure.
+      #
+      # The check itself still runs in-cluster, from a one-off Job created from
+      # the presign CronJob template, so the request uses the same service DNS
+      # name and network path the backend signs for. The Job creates the
+      # per-PR bucket when it is missing, so a separate bucket-seeding step
+      # would only repeat that work.
+      - name: Restore OpenShift CLI
+        uses: actions/cache@v6
+        with:
+          path: /usr/local/bin/oc
+          key: oc-cli-stable-4.18-${{ runner.os }}-${{ runner.arch }}
+
+      - name: Seed MinIO bucket and verify presigned PUT and GET
+        env:
+          OC_SERVER: ${{ secrets.oc_server }}
+          OC_TOKEN: ${{ secrets.oc_token_tools }}
+          OC_NAMESPACE: cffaf3-tools
+          PR_NUMBER: ${{ github.event.number }}
+          OC_CLI_VERSION: "4.18"
+        run: |
+          set -uo pipefail
+
+          # Every oc call carries a request timeout. The API endpoint
+          # occasionally drops connections, and without a timeout the client
+          # waits on the socket forever instead of failing over to the retry
+          # and poll logic below.
+          OC="oc --request-timeout=15s"
+
+          if ! command -v oc >/dev/null 2>&1; then
+            URL="https://mirror.openshift.com/pub/openshift-v4/clients/ocp/stable-${OC_CLI_VERSION}/openshift-client-linux.tar.gz"
+            echo "Downloading OpenShift CLI from ${URL}..."
+            wget --timeout=15 --tries=3 "${URL}" -qO oc.tar.gz || {
+              echo "::error::Failed to download the OpenShift CLI."
+              exit 1
+            }
+            tar -xzf oc.tar.gz oc || {
+              rm -f oc.tar.gz
+              echo "::error::Failed to extract the OpenShift CLI."
+              exit 1
+            }
+            rm -f oc.tar.gz
+            sudo mv oc /usr/local/bin/oc
+          fi
+
+          # Retry a command until it succeeds or the attempt budget is spent.
+          retry() {
+            local attempts="$1"; shift
+            local attempt=1
+            until "$@"; do
+              if [ "${attempt}" -ge "${attempts}" ]; then
+                echo "::error::Command failed after ${attempts} attempt(s): $*"
+                return 1
+              fi
+              echo "Attempt ${attempt}/${attempts} failed; retrying in $((attempt * 5))s..."
+              sleep $((attempt * 5))
+              attempt=$((attempt + 1))
+            done
+          }
+
+          JOB_TEMPLATE="nr-waste-plus-tools-minio-presign"
+          JOB_NAME="minio-presign-pr${PR_NUMBER}-${{ github.run_attempt }}-$(date +%s)"
+
+          login() {
+            ${OC} login --server="${OC_SERVER}" --token="${OC_TOKEN}"
+          }
+
+          create_job() {
+            local rendered patched
+            rendered=$(${OC} create job --from="cronjob/${JOB_TEMPLATE}" "${JOB_NAME}" -n "${OC_NAMESPACE}" --dry-run=client -o yaml) || return 1
+            patched=$(echo "${rendered}" | sed "/name: PR_NUMBER/{n;s/value: \"0\"/value: \"${PR_NUMBER}\"/;}")
+            echo "${patched}" | grep -q "value: \"${PR_NUMBER}\"" || {
+              echo "::error::PR_NUMBER was not patched into the ${JOB_NAME} job template."
+              return 1
+            }
+            echo "${patched}" | ${OC} apply -f -
+          }
+
+          echo "Logging in to ${OC_SERVER}..."
+          retry 5 login || exit 1
+
+          echo "Creating in-cluster verification job ${JOB_NAME}..."
+          retry 3 create_job || exit 1
+
+          deadline=$(( $(date +%s) + 300 ))
+          succeeded=0
+          failed=0
+          while [ "$(date +%s)" -lt "${deadline}" ]; do
+            counts=$(${OC} get job "${JOB_NAME}" -n "${OC_NAMESPACE}" \
+              -o jsonpath='{.status.succeeded}/{.status.failed}' 2>/dev/null || true)
+            succeeded="${counts%%/*}"
+            failed="${counts##*/}"
+            succeeded="${succeeded:-0}"
+            failed="${failed:-0}"
+            if [ "${succeeded}" -ge 1 ]; then
+              break
+            fi
+            if [ "${failed}" -ge 1 ]; then
+              break
+            fi
+            echo "Waiting for job ${JOB_NAME} to finish (succeeded=${succeeded}, failed=${failed})..."
+            sleep 10
+          done
+
+          # A dropped connection can cost the poll a status read, so read it
+          # once more before deciding the verification failed.
+          if [ "${succeeded}" -lt 1 ]; then
+            counts=$(${OC} get job "${JOB_NAME}" -n "${OC_NAMESPACE}" -o jsonpath='{.status.succeeded}' 2>/dev/null || true)
+            succeeded="${counts:-0}"
+          fi
+
+          echo "--- job logs ---"
+          ${OC} logs "job/${JOB_NAME}" -n "${OC_NAMESPACE}" --tail=100 || true
+          if [ "${succeeded}" -lt 1 ]; then
+            echo "--- job description ---"
+            ${OC} describe "job/${JOB_NAME}" -n "${OC_NAMESPACE}" || true
+          fi
+          ${OC} delete "job/${JOB_NAME}" -n "${OC_NAMESPACE}" --ignore-not-found || true
+
+          if [ "${succeeded}" -lt 1 ]; then
+            echo "::error::Presigned PUT and GET verification failed for PR ${PR_NUMBER} (succeeded=${succeeded}, failed=${failed})."
+            exit 1
+          fi
+
+          echo "Presigned PUT and GET verified for PR ${PR_NUMBER}."
 
   scale-up-legacy:
     name: Scale up legacy
