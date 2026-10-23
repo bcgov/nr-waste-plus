@@ -15,22 +15,18 @@ on:
         description: Configuration map for params.js
         required: true
         type: string
-        default: ''
-      db_testdata:
-        description: Load test data into the database
-        default: false
-        type: boolean
+        default: ""
       environment:
         description: GitHub/OpenShift environment; usually PR number, test or prod
-        default: ''
+        default: ""
         type: string
       zone:
         description: Cognito environment; dev, test or prod
-        default: 'dev'
+        default: "dev"
         type: string
       oracledb-port:
         description: Oracle database port
-        default: '1543'
+        default: "1543"
         type: string
       oracledb-servicename:
         description: Oracle service name
@@ -78,14 +74,13 @@ jobs:
           oc_server: ${{ secrets.oc_server }}
           oc_token: ${{ secrets.oc_token }}
           overwrite: true
-          parameters:
-            -p ZONE=${{ inputs.zone }}
+          parameters: -p ZONE=${{ inputs.zone }}
             -p ORACLEDB_USER=${{ inputs.oracledb-username || secrets.ORACLEDB_USERNAME }}
             -p ORACLEDB_PASSWORD=${{ secrets.ORACLEDB_PASSWORD }}
             -p ORACLEDB_DATABASE=${{ secrets.ORACLEDB_DATABASE }}
             -p ORACLEDB_HOST=${{ secrets.ORACLEDB_HOST }}
             -p ORACLEDB_SERVICENAME=${{ inputs.oracledb-servicename || secrets.ORACLEDB_SERVICENAME }}
-            -p ORACLEDB_SECRET=${{ secrets.ORACLEDB_SECRET }}            
+            -p ORACLEDB_SECRET=${{ secrets.ORACLEDB_SECRET }}
             -p COGNITO_CLIENT_ID=${{ secrets.COGNITO_CLIENT_ID }}
             -p COGNITO_ENVIRONMENT=${{ inputs.target || 'dev' }}
             -p COGNITO_USER_POOL=${{ secrets.COGNITO_USER_POOL }}
@@ -127,7 +122,6 @@ jobs:
               -p CONFIG_MAP="${{ inputs.configmap-backend }}"
               -p POSTGRES_HOST="nr-waste-plus-${{ inputs.zone }}-database"
               -p POSTGRES_PORT=5432
-              -p FLYWAY_LOCATIONS=${{ inputs.db_testdata && 'classpath:db/migration,classpath:db/testdata' || 'classpath:db/migration' }}
           - name: legacy
             overwrite: true
             parameters:
