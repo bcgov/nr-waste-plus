@@ -32,6 +32,10 @@ test.describe('Waste Search - Filters', () => {
     await page.getByRole('option', { name: 'Fort Nelson' }).click();
     await page.getByRole('option', { name: 'Chilliwack' }).click();
 
+    // Close the still-open dropdown: its option labels sit on top of the filter
+    // tags row, and with the tags wrapped they intercept the Dismiss click.
+    await page.keyboard.press('Escape');
+
     // Verify both tags appear
     await expect(page.getByTestId('dt-district-DFN')).toBeVisible();
     const districtFilterTag2 = page.getByTestId('dt-district-DCK');

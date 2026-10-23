@@ -3,11 +3,11 @@ import { renderHook, waitFor } from '@testing-library/react';
 import { type ReactNode } from 'react';
 import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest';
 
-import { useWasteSearchFilterOptions } from './useWasteSearchFilterOptions';
-
 import { makeTestQueryClient } from '@/config/tests/renderWithApp';
 import * as eventHandler from '@/hooks/useNotificationEvents/eventHandler';
 import APIs from '@/services/APIs';
+
+import { useWasteSearchFilterOptions } from './useWasteSearchFilterOptions';
 
 vi.mock('@/services/APIs', () => ({
   default: {

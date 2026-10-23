@@ -1,6 +1,8 @@
 @use '../../../../styles/variables' as vars;
+@use '@carbon/styles/scss/components/toggle';
 @use '@bcgov-nr/nr-theme/design-tokens/colors.scss' as colors;
 @use '@carbon/type';
+
 
 .advanced-search-modal {
   .advanced-search-body {
