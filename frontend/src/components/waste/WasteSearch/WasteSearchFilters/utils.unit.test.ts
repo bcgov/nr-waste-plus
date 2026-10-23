@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { validateWasteSearch } from '@/routes/searchParams';
+import { validateWasteSearch } from '@/routing/searchParams';
 
 import { searchToViewDto, viewDtoToSearch } from './utils';
 

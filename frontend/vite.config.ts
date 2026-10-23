@@ -1,9 +1,12 @@
+import path from 'node:path';
+
+import { tanstackRouter } from '@tanstack/router-plugin/vite';
 import react from '@vitejs/plugin-react';
 import { defineConfig, loadEnv } from 'vite';
 import { configDefaults } from 'vitest/config';
 
 // Shared alias definition to ensure consistency across resolve, test, and tsconfig
-const ALIAS_SRC = new URL('./src/', import.meta.url).pathname;
+const ALIAS_SRC = path.join(import.meta.dirname, 'src', path.sep);
 
 export default defineConfig(({ mode }) => {
   const define = {
@@ -17,7 +20,17 @@ export default defineConfig(({ mode }) => {
       },
       tsconfigPaths: true,
     },
-    plugins: [react()],
+    plugins: [
+      // File-based route codegen. Must run BEFORE `react()` so the generated
+      // tree exists when route modules are transformed. Ignores colocated
+      // test files so they are never treated as routes (DEC-003).
+      tanstackRouter({
+        target: 'react',
+        autoCodeSplitting: true,
+        routeFileIgnorePattern: '.*\\.(unit|e2e)\\.test\\.[jt]sx?$',
+      }),
+      react(),
+    ],
     build: {
       chunkSizeWarningLimit: 1024,
       outDir: 'build',
@@ -78,12 +91,7 @@ export default defineConfig(({ mode }) => {
         overlay: false,
       },
       warmup: {
-        clientFiles: [
-          './src/main.tsx',
-          './src/App.tsx',
-          './src/routes/routeTree.tsx',
-          './src/routes/routePaths.tsx',
-        ],
+        clientFiles: ['./src/main.tsx', './src/App.tsx', './src/router.tsx'],
       },
       watch: {
         ignored: [
@@ -108,6 +116,13 @@ export default defineConfig(({ mode }) => {
       restoreMocks: true,
       unstubGlobals: true,
       unstubEnvs: true,
+      // Keep the default `forks` pool. `vmThreads` was evaluated (2026-10-23,
+      // mono-blocks parity): ~30% faster wall time, but this repo's heavier
+      // tree breaks inside the VM context — the exceljs/spreadsheet CJS chain
+      // throws "Unexpected token 'export'" (10 suites) and tests that
+      // redefine globalThis.location fail ("Cannot redefine property:
+      // location"). The speedup is not worth pinning every CJS dep.
+      pool: 'forks',
       env: loadEnv(mode, process.cwd(), ''),
       exclude: [...configDefaults.exclude, 'dist/**', 'build/**'],
       globals: true,
@@ -119,7 +134,7 @@ export default defineConfig(({ mode }) => {
       },
       coverage: {
         provider: 'v8',
-        reporter: ['lcov', 'text', 'json'],
+        reporter: ['lcov', 'text', 'json', 'html'],
         reportsDirectory: './coverage',
         all: false,
         excludeAfterRemap: true,
@@ -164,10 +179,10 @@ export default defineConfig(({ mode }) => {
           '**/vite.config.ts',
         ],
         include: ['src/**/*.ts', 'src/**/*.tsx'],
-        lines: 80,
-        functions: 80,
-        branches: 80,
-        statements: 80,
+        lines: 85,
+        functions: 85,
+        branches: 85,
+        statements: 85,
       },
       projects: [
         {

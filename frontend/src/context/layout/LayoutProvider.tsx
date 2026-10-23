@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 
 import { useAnnouncer } from '@/context/announcer/useAnnouncer';
 import useBreakpoint from '@/hooks/useBreakpoint';
@@ -20,6 +20,17 @@ export const LayoutProvider = ({ children }: { children: React.ReactNode }) => {
   const [userToggled, setUserToggled] = useState<boolean | null>(false);
   const [headerPanelOpen, setHeaderPanelOpen] = useState(false);
 
+  /**
+   * Clears the manual side-nav toggle, returning expansion to the
+   * breakpoint-derived default.
+   *
+   * Called when navigation commits: the file-based router keeps one persistent
+   * `Layout` mounted across routes (the legacy registry remounted it per page,
+   * resetting this state implicitly), so without this the mobile hamburger menu
+   * stays open over the newly loaded page.
+   */
+  const resetSideNav = useCallback(() => setUserToggled(false), []);
+
   // Derive expanded state: user's choice takes precedence, otherwise use breakpoint
   const sideNavExpanded = useMemo(() => {
     if (userToggled !== null && (breakpoint === 'sm' || breakpoint === 'md')) {
@@ -32,6 +43,7 @@ export const LayoutProvider = ({ children }: { children: React.ReactNode }) => {
     () => ({
       isSideNavExpanded: sideNavExpanded,
       toggleSideNav: () => setUserToggled((prev) => !prev),
+      resetSideNav,
       isHeaderPanelOpen: headerPanelOpen,
       toggleHeaderPanel: () => {
         const nextOpen = !headerPanelOpen;
@@ -45,7 +57,7 @@ export const LayoutProvider = ({ children }: { children: React.ReactNode }) => {
         }
       },
     }),
-    [sideNavExpanded, headerPanelOpen, announce],
+    [sideNavExpanded, resetSideNav, headerPanelOpen, announce],
   );
 
   return <LayoutContext.Provider value={contextValue}>{children}</LayoutContext.Provider>;

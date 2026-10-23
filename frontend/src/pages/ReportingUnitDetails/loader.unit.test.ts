@@ -43,14 +43,18 @@ describe('reportingUnitLoader', () => {
 
   describe('param validation', () => {
     it('throws notFound when ruId is a non-numeric string', async () => {
-      await expect(reportingUnitLoader({ params: { ruId: 'abc' } })).rejects.toMatchObject({
+      await expect(
+        reportingUnitLoader({ context: { queryClient }, params: { ruId: 'abc' } }),
+      ).rejects.toMatchObject({
         isNotFound: true,
       });
       expect(mockEnsureQueryData).not.toHaveBeenCalled();
     });
 
     it('throws notFound when ruId is "NaN"', async () => {
-      await expect(reportingUnitLoader({ params: { ruId: 'NaN' } })).rejects.toMatchObject({
+      await expect(
+        reportingUnitLoader({ context: { queryClient }, params: { ruId: 'NaN' } }),
+      ).rejects.toMatchObject({
         isNotFound: true,
       });
       expect(mockEnsureQueryData).not.toHaveBeenCalled();
@@ -66,7 +70,7 @@ describe('reportingUnitLoader', () => {
         district: { code: 'A', description: 'A' },
       };
       mockEnsureQueryData.mockResolvedValue(mockData);
-      const result = await reportingUnitLoader({ params: { ruId: '0' } });
+      const result = await reportingUnitLoader({ context: { queryClient }, params: { ruId: '0' } });
       expect(result).toEqual(mockData);
       expect(mockEnsureQueryData).toHaveBeenCalledOnce();
     });
@@ -84,7 +88,10 @@ describe('reportingUnitLoader', () => {
       };
       mockEnsureQueryData.mockResolvedValue(mockData);
 
-      const result = await reportingUnitLoader({ params: { ruId: '123' } });
+      const result = await reportingUnitLoader({
+        context: { queryClient },
+        params: { ruId: '123' },
+      });
 
       expect(result).toEqual(mockData);
     });
@@ -100,7 +107,7 @@ describe('reportingUnitLoader', () => {
       };
       mockEnsureQueryData.mockResolvedValue(mockData);
 
-      await reportingUnitLoader({ params: { ruId: '42' } });
+      await reportingUnitLoader({ context: { queryClient }, params: { ruId: '42' } });
 
       expect(mockEnsureQueryData).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -126,7 +133,7 @@ describe('reportingUnitLoader', () => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       mockEnsureQueryData.mockImplementation(({ queryFn }) => (queryFn as any)());
 
-      const result = await reportingUnitLoader({ params: { ruId: '7' } });
+      const result = await reportingUnitLoader({ context: { queryClient }, params: { ruId: '7' } });
 
       expect(mockGetReportingUnit).toHaveBeenCalledWith(7);
       expect(result).toEqual(mockData);
@@ -143,7 +150,7 @@ describe('reportingUnitLoader', () => {
       };
       mockEnsureQueryData.mockResolvedValue(mockData);
 
-      await reportingUnitLoader({ params: { ruId: '999' } });
+      await reportingUnitLoader({ context: { queryClient }, params: { ruId: '999' } });
 
       const call = mockEnsureQueryData.mock.calls[0]?.[0];
       expect(typeof call?.queryKey[2]).toBe('number');
@@ -155,7 +162,9 @@ describe('reportingUnitLoader', () => {
     it('throws notFound when ensureQueryData resolves to null', async () => {
       mockEnsureQueryData.mockResolvedValue(null);
 
-      await expect(reportingUnitLoader({ params: { ruId: '123' } })).rejects.toMatchObject({
+      await expect(
+        reportingUnitLoader({ context: { queryClient }, params: { ruId: '123' } }),
+      ).rejects.toMatchObject({
         isNotFound: true,
       });
     });
@@ -163,7 +172,9 @@ describe('reportingUnitLoader', () => {
     it('throws notFound when ensureQueryData resolves to undefined', async () => {
       mockEnsureQueryData.mockResolvedValue(undefined);
 
-      await expect(reportingUnitLoader({ params: { ruId: '123' } })).rejects.toMatchObject({
+      await expect(
+        reportingUnitLoader({ context: { queryClient }, params: { ruId: '123' } }),
+      ).rejects.toMatchObject({
         isNotFound: true,
       });
     });
@@ -173,7 +184,9 @@ describe('reportingUnitLoader', () => {
     it('throws notFound when the API returns 404', async () => {
       mockEnsureQueryData.mockRejectedValue(makeApiError(404, 'Not Found'));
 
-      await expect(reportingUnitLoader({ params: { ruId: '999' } })).rejects.toMatchObject({
+      await expect(
+        reportingUnitLoader({ context: { queryClient }, params: { ruId: '999' } }),
+      ).rejects.toMatchObject({
         isNotFound: true,
       });
     });
@@ -181,7 +194,9 @@ describe('reportingUnitLoader', () => {
     it('throws notFound when the API returns 403 (non-existent resource reported as Forbidden)', async () => {
       mockEnsureQueryData.mockRejectedValue(makeApiError(403, 'Forbidden'));
 
-      await expect(reportingUnitLoader({ params: { ruId: '999' } })).rejects.toMatchObject({
+      await expect(
+        reportingUnitLoader({ context: { queryClient }, params: { ruId: '999' } }),
+      ).rejects.toMatchObject({
         isNotFound: true,
       });
     });
@@ -190,32 +205,36 @@ describe('reportingUnitLoader', () => {
       const serverError = makeApiError(500, 'Internal Server Error');
       mockEnsureQueryData.mockRejectedValue(serverError);
 
-      await expect(reportingUnitLoader({ params: { ruId: '999' } })).rejects.toThrow(
-        'Internal Server Error',
-      );
+      await expect(
+        reportingUnitLoader({ context: { queryClient }, params: { ruId: '999' } }),
+      ).rejects.toThrow('Internal Server Error');
     });
 
     it('re-throws ApiError as-is when status is 401', async () => {
       const unauthorizedError = makeApiError(401, 'Unauthorized');
       mockEnsureQueryData.mockRejectedValue(unauthorizedError);
 
-      await expect(reportingUnitLoader({ params: { ruId: '99' } })).rejects.toThrow('Unauthorized');
+      await expect(
+        reportingUnitLoader({ context: { queryClient }, params: { ruId: '99' } }),
+      ).rejects.toThrow('Unauthorized');
     });
 
     it('re-throws non-ApiError network errors unchanged', async () => {
       const networkError = new Error('Network Error');
       mockEnsureQueryData.mockRejectedValue(networkError);
 
-      await expect(reportingUnitLoader({ params: { ruId: '123' } })).rejects.toThrow(
-        'Network Error',
-      );
+      await expect(
+        reportingUnitLoader({ context: { queryClient }, params: { ruId: '123' } }),
+      ).rejects.toThrow('Network Error');
     });
 
     it('re-throws unknown thrown values unchanged', async () => {
       const weirdThing = { code: 'WEIRD' };
       mockEnsureQueryData.mockRejectedValue(weirdThing);
 
-      await expect(reportingUnitLoader({ params: { ruId: '1' } })).rejects.toEqual(weirdThing);
+      await expect(
+        reportingUnitLoader({ context: { queryClient }, params: { ruId: '1' } }),
+      ).rejects.toEqual(weirdThing);
     });
   });
 });

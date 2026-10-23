@@ -41,7 +41,7 @@ test.describe('District Volume Table Detail — Navigation & Access Control', ()
       await page.waitForLoadState('domcontentloaded');
 
       // Step 2: Click side nav config link
-      const configLink = page.getByTestId('side-nav-link-config');
+      const configLink = page.getByTestId('side-nav-link-Configuration');
       await expect(configLink).toBeVisible();
       await configLink.click();
       await expect(page).toHaveURL(/\/configuration$/);
@@ -89,7 +89,7 @@ test.describe('District Volume Table Detail — Navigation & Access Control', ()
       await page.waitForLoadState('domcontentloaded');
 
       // Step 2: Click side nav config link
-      const configLink = page.getByTestId('side-nav-link-config');
+      const configLink = page.getByTestId('side-nav-link-Configuration');
       await expect(configLink).toBeVisible();
       await configLink.click();
       await expect(page).toHaveURL(/\/configuration$/);
@@ -184,7 +184,7 @@ test.describe('District Volume Table Detail — Navigation & Access Control', ()
       await page.goto('/search');
       await page.waitForLoadState('domcontentloaded');
 
-      await expect(page.getByTestId('side-nav-link-config')).toHaveCount(0);
+      await expect(page.getByTestId('side-nav-link-Configuration')).toHaveCount(0);
     });
   });
 });

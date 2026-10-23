@@ -32,6 +32,10 @@ import './index.scss';
  * @returns The Reporting Unit Details page layout.
  */
 const ReportingUnitDetailsPage: FC = () => {
+  // Strict loader access (`getRouteApi().useLoaderData()`) is deferred to the
+  // S6 test-harness rewrite: the page unit tests mount this component outside
+  // a router, where strict access throws. `strict: false` returns `undefined`
+  // in that case (see the defensive guard below).
   const data = useLoaderData({ strict: false }) as ReportingUnitDto | undefined;
 
   const blocksListEnabled = featureFlags['reporting-unit-block-details-enabled'];
@@ -42,9 +46,9 @@ const ReportingUnitDetailsPage: FC = () => {
     enabled: Boolean(data) && blocksListEnabled,
   });
 
-  // Defensive guard: TanStack Router with `strict: false` can return `unknown`/`undefined`
-  // if the loader was changed or the component is mounted outside the expected
-  // route. Avoid dereferencing `data` below when it's missing and show a clear
+  // Defensive guard: the loader data is typed via `getRouteApi`, but the
+  // component can still be mounted outside the expected route (e.g. in tests).
+  // Avoid dereferencing `data` below when it's missing and show a clear
   // fallback UI so the error is visible instead of throwing at runtime.
   if (!data) {
     return (

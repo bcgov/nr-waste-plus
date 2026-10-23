@@ -29,8 +29,7 @@ const NoRolePage: FC = () => {
 
   useLayoutEffect(() => {
     if (shouldRedirect) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      void navigate({ to: '/' as any, replace: true });
+      void navigate({ to: '/', replace: true });
     }
   }, [shouldRedirect, navigate]);
 
