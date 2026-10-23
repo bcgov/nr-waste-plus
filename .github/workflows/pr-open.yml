@@ -51,9 +51,19 @@ jobs:
           tag_fallback: latest
           triggers: ('${{ matrix.package }}/')
 
+  tools:
+    name: Tools
+    # The tools environment is prepared before the application is deployed:
+    # the PostgreSQL path destroys and recreates the PR database, so the
+    # application must not start against a database that is being migrated.
+    permissions:
+      packages: write
+    secrets: inherit
+    uses: ./.github/workflows/.tools-deploy.yml
+
   deploy:
     name: Deploy (${{ github.event.number }})
-    needs: [builds, vars]
+    needs: [builds, vars, tools]
     secrets: inherit
     uses: ./.github/workflows/.deploy.yml
     with:
@@ -111,7 +121,7 @@ jobs:
   # ==========================================================================
   results:
     name: PR Results
-    needs: [builds, deploy, tests]
+    needs: [builds, deploy, tests, tools]
     if: always()
     runs-on: ubuntu-26.04
     timeout-minutes: 1

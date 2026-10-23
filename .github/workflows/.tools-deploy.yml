@@ -1,12 +1,7 @@
 name: Tools deployment
 
 on:
-  pull_request:
-
-concurrency:
-  # PR open and close use the same group, allowing only one at a time
-  group: tools-${{ github.event.number }}
-  cancel-in-progress: true
+  workflow_call:
 
 permissions: {}
 
@@ -51,6 +46,114 @@ jobs:
               sleep 5
             done
 
+      - name: Remove completed jobs for this PR
+        continue-on-error: true
+        uses: bcgov/action-oc-runner@111868d1fc50db0a40417ba321d865ef5c931bbd # v1.7.0
+        with:
+          oc_namespace: cffaf3-tools
+          oc_server: ${{ secrets.oc_server }}
+          oc_token: ${{ secrets.oc_token_tools }}
+          commands: |
+            # Scope to this PR: migration job names include -pr<number>-.
+            # This runs before the parallel paths create their jobs so the
+            # paths cannot delete each other's work.
+            JOBS=$(oc get jobs -n cffaf3-tools -o name | grep -E -- "-pr${{ github.event.number }}-" || true)
+            if [ -n "$JOBS" ]; then
+              oc delete $JOBS -n cffaf3-tools --ignore-not-found
+            fi
+
+  deploy-postgres:
+    name: Deploy PostgreSQL
+    needs: [pre-tools]
+    runs-on: ubuntu-26.04
+    steps:
+      - name: Require PostgreSQL credentials
+        env:
+          POSTGRES_HOST: ${{ secrets.POSTGRES_HOST }}
+          POSTGRES_PORT: ${{ secrets.POSTGRES_PORT }}
+          POSTGRES_ADMIN_DATABASE: ${{ secrets.POSTGRES_ADMIN_DATABASE }}
+          POSTGRES_ADMIN_USER: ${{ secrets.PG_PR_USER }}
+          POSTGRES_ADMIN_PASSWORD: ${{ secrets.PG_PR_PWD }}
+          POSTGRES_USERNAME: ${{ secrets.POSTGRES_USERNAME }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+        run: |
+          # Fail closed: the template has no credential defaults, so a missing
+          # repository secret must stop the path rather than create CronJobs
+          # that cannot reach the shared PostgreSQL instance.
+          : "${POSTGRES_HOST:?POSTGRES_HOST repository secret is required}"
+          : "${POSTGRES_PORT:?POSTGRES_PORT repository secret is required}"
+          : "${POSTGRES_ADMIN_DATABASE:?POSTGRES_ADMIN_DATABASE repository secret is required}"
+          : "${POSTGRES_ADMIN_USER:?PG_PR_USER repository secret is required}"
+          : "${POSTGRES_ADMIN_PASSWORD:?PG_PR_PWD repository secret is required}"
+          : "${POSTGRES_USERNAME:?POSTGRES_USERNAME repository secret is required}"
+          : "${POSTGRES_PASSWORD:?POSTGRES_PASSWORD repository secret is required}"
+
+      - name: Initializing PostgreSQL CronJobs
+        uses: bcgov/action-deployer-openshift@e2d60eb9cacceb89c3b97d8dcf0a2c460eea5eab # v4.2.3
+        with:
+          file: tools/postgres.deploy.yml
+          oc_namespace: cffaf3-tools
+          oc_server: ${{ secrets.oc_server }}
+          oc_token: ${{ secrets.oc_token_tools }}
+          oc_version: "4.13"
+          overwrite: true
+          parameters: -p ZONE=tools
+            -p POSTGRES_HOST=${{ secrets.POSTGRES_HOST }}
+            -p POSTGRES_PORT=${{ secrets.POSTGRES_PORT }}
+            -p POSTGRES_ADMIN_DATABASE=${{ secrets.POSTGRES_ADMIN_DATABASE }}
+            -p POSTGRES_ADMIN_USER=${{ secrets.PG_PR_USER }}
+            -p POSTGRES_ADMIN_PASSWORD=${{ secrets.PG_PR_PWD }}
+            -p POSTGRES_USERNAME=${{ secrets.POSTGRES_USERNAME }}
+            -p POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
+
+      - name: Migrate the PR postgres database
+        uses: bcgov/action-oc-runner@111868d1fc50db0a40417ba321d865ef5c931bbd # v1.7.0
+        with:
+          oc_namespace: cffaf3-tools
+          oc_server: ${{ secrets.oc_server }}
+          oc_token: ${{ secrets.oc_token_tools }}
+          commands: |
+            set -uo pipefail
+
+            BRANCH_NAME="${{ github.head_ref }}"
+            ESCAPED_BRANCH_NAME=$(echo "$BRANCH_NAME" | sed 's/[\/&]/\\&/g')
+            JOB_NAME="migratepg-pr${{ github.event.number }}-${{ github.run_attempt }}-$(date +%s)"
+
+            # The job template carries the branch and the PR number as
+            # parameters, the same way the Oracle migration job does.
+            oc create job --from=cronjob/nr-waste-plus-tools-migratepg "${JOB_NAME}" --dry-run=client -o yaml \
+              | sed "s/value: \"main\"/value: \"${ESCAPED_BRANCH_NAME}\"/" \
+              | sed "s/value: \"0\"/value: \"${{ github.event.number }}\"/" \
+              | oc apply -f -
+
+            # The application must not start against a database that is being
+            # destroyed and recreated, so wait for the migration to finish.
+            deadline=$(( $(date +%s) + 600 ))
+            succeeded=0
+            failed=0
+            while [ "$(date +%s)" -lt "${deadline}" ]; do
+              counts=$(oc get job "${JOB_NAME}" -n cffaf3-tools \
+                -o jsonpath='{.status.succeeded}/{.status.failed}' 2>/dev/null || true)
+              succeeded="${counts%%/*}"
+              failed="${counts##*/}"
+              succeeded="${succeeded:-0}"
+              failed="${failed:-0}"
+              if [ "${succeeded}" -ge 1 ] || [ "${failed}" -ge 1 ]; then
+                break
+              fi
+              echo "Waiting for job ${JOB_NAME} to finish (succeeded=${succeeded}, failed=${failed})..."
+              sleep 10
+            done
+
+            echo "--- job logs ---"
+            oc logs "job/${JOB_NAME}" -n cffaf3-tools --tail=100 || true
+            if [ "${succeeded}" -lt 1 ]; then
+              echo "--- job description ---"
+              oc describe "job/${JOB_NAME}" -n cffaf3-tools || true
+              echo "::error::The PostgreSQL migration failed for PR ${{ github.event.number }} (succeeded=${succeeded}, failed=${failed})."
+              exit 1
+            fi
+
   deploy-oracle:
     name: Deploy Oracle Database
     needs: [pre-tools, builds]
@@ -59,7 +162,7 @@ jobs:
       - name: Initializing Deployment
         uses: bcgov/action-deployer-openshift@e2d60eb9cacceb89c3b97d8dcf0a2c460eea5eab # v4.2.3
         with:
-          file: legacydb/openshift.deploy.yml
+          file: tools/oracle.deploy.yml
           oc_namespace: cffaf3-tools
           oc_server: ${{ secrets.oc_server }}
           oc_token: ${{ secrets.oc_token_tools }}
@@ -68,58 +171,32 @@ jobs:
           parameters: -p ZONE=tools
             -p ORACLEDB_PASSWORD=${{ secrets.ORACLEDB_PASSWORD }}
             -p TAG=${{ github.event.number }}
-            -p POSTGRES_HOST=${{ secrets.POSTGRES_HOST }}
-            -p POSTGRES_USERNAME=${{ secrets.POSTGRES_USERNAME }}
-            -p POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
-            -p PG_PR_USER=${{ secrets.PG_PR_USER }}
-            -p PG_PR_PWD=${{ secrets.PG_PR_PWD }}
 
-  deploy-minio:
-    name: Deploy MinIO
-    needs: [pre-tools]
-    runs-on: ubuntu-26.04
-    steps:
-      - name: Require MinIO credentials
-        env:
-          MINIO_ROOT_USER: ${{ secrets.MINIO_ROOT_USER }}
-          MINIO_ROOT_PASSWORD: ${{ secrets.MINIO_ROOT_PASSWORD }}
-        run: |
-          # Fail closed: the template has no credential defaults, so a missing
-          # repository secret must stop the deploy rather than create a MinIO
-          # instance with empty (or shared) credentials.
-          : "${MINIO_ROOT_USER:?MINIO_ROOT_USER repository secret is required}"
-          : "${MINIO_ROOT_PASSWORD:?MINIO_ROOT_PASSWORD repository secret is required}"
-
-      - name: Initializing MinIO Deployment
-        uses: bcgov/action-deployer-openshift@e2d60eb9cacceb89c3b97d8dcf0a2c460eea5eab # v4.2.3
-        env:
-          MINIO_ROOT_USER: ${{ secrets.MINIO_ROOT_USER }}
-          MINIO_ROOT_PASSWORD: ${{ secrets.MINIO_ROOT_PASSWORD }}
+      - name: Remove the PR database
+        continue-on-error: true
+        uses: bcgov/action-oc-runner@111868d1fc50db0a40417ba321d865ef5c931bbd # v1.7.0
         with:
-          file: minio/openshift.deploy.yml
           oc_namespace: cffaf3-tools
           oc_server: ${{ secrets.oc_server }}
           oc_token: ${{ secrets.oc_token_tools }}
-          oc_version: "4.13"
-          overwrite: true
-          parameters:
-            -p ZONE=tools
-            -p MINIO_ROOT_USER="$MINIO_ROOT_USER"
-            -p MINIO_ROOT_PASSWORD="$MINIO_ROOT_PASSWORD"
-            -p OBJECT_STORAGE_BUCKET=${{ secrets.OBJECT_STORAGE_BUCKET || 'nr-waste' }}
-            -p OBJECT_STORAGE_REGION=${{ secrets.OBJECT_STORAGE_REGION || 'ca-central-1' }}
+          commands: |
+            # This removes a new pluggable database, user and service for the PR
+            for i in {1..5}; do
+              POD_NAME=$(oc get pods -l app=nr-waste-plus-tools -l deployment=nr-waste-plus-tools-legacydb -o jsonpath='{.items[0].metadata.name}' 2>/dev/null)
+              if [ -n "$POD_NAME" ]; then
+                echo "Pod found: $POD_NAME"
+                oc exec $POD_NAME -- /opt/oracle/removeDatabase "THE" "PR_${{ github.event.number }}"
+                break
+              else
+                echo "Pod not found, retrying in 10 seconds... ($i/5)"
+                sleep 10
+              fi
+            done
 
-  remove-tools:
-    name: Remove database and user
-    needs: [deploy-oracle]
-    secrets: inherit
-    uses: ./.github/workflows/.tools-cleanup.yml
+            if [ -z "$POD_NAME" ]; then
+              echo "Failed to find the pod after 5 attempts."
+            fi
 
-  deploy-tools:
-    name: Deploy Tools
-    needs: [remove-tools, deploy-oracle, deploy-minio]
-    runs-on: ubuntu-26.04
-    steps:
       - name: Create the PR database
         continue-on-error: true
         uses: bcgov/action-oc-runner@111868d1fc50db0a40417ba321d865ef5c931bbd # v1.7.0
@@ -180,19 +257,70 @@ jobs:
           commands: |
             BRANCH_NAME="${{ github.head_ref }}"
             ESCAPED_BRANCH_NAME=$(echo "$BRANCH_NAME" | sed 's/[\/&]/\\&/g')
-            oc create job --from=cronjob/nr-waste-plus-tools-migratedb migrate-pr${{ github.event.number }}-${{ github.run_attempt }}-$(date +%s) --dry-run=client -o yaml | sed "s/value: main/value: ${ESCAPED_BRANCH_NAME}/" | sed "s/value: \"0\"/value: \"${{ github.event.number }}\"/" | oc apply -f -
+            oc create job --from=cronjob/nr-waste-plus-tools-migratedb migrate-pr${{ github.event.number }}-${{ github.run_attempt }}-$(date +%s) --dry-run=client -o yaml \
+              | sed "s/value: \"main\"/value: \"${ESCAPED_BRANCH_NAME}\"/" \
+              | sed "s/value: \"0\"/value: \"${{ github.event.number }}\"/" \
+              | oc apply -f -
 
-      - name: Migrate the PR postgres database
-        continue-on-error: true
-        uses: bcgov/action-oc-runner@111868d1fc50db0a40417ba321d865ef5c931bbd # v1.7.0
+  deploy-minio:
+    name: Deploy MinIO
+    needs: [pre-tools]
+    runs-on: ubuntu-26.04
+    steps:
+      - name: Require MinIO credentials
+        env:
+          MINIO_ROOT_USER: ${{ secrets.MINIO_ROOT_USER }}
+          MINIO_ROOT_PASSWORD: ${{ secrets.MINIO_ROOT_PASSWORD }}
+        run: |
+          # Fail closed: the template has no credential defaults, so a missing
+          # repository secret must stop the deploy rather than create a MinIO
+          # instance with empty (or shared) credentials.
+          : "${MINIO_ROOT_USER:?MINIO_ROOT_USER repository secret is required}"
+          : "${MINIO_ROOT_PASSWORD:?MINIO_ROOT_PASSWORD repository secret is required}"
+
+      - name: Initializing MinIO Deployment
+        uses: bcgov/action-deployer-openshift@e2d60eb9cacceb89c3b97d8dcf0a2c460eea5eab # v4.2.3
+        env:
+          MINIO_ROOT_USER: ${{ secrets.MINIO_ROOT_USER }}
+          MINIO_ROOT_PASSWORD: ${{ secrets.MINIO_ROOT_PASSWORD }}
         with:
+          file: tools/minio.deploy.yml
           oc_namespace: cffaf3-tools
           oc_server: ${{ secrets.oc_server }}
           oc_token: ${{ secrets.oc_token_tools }}
+          oc_version: "4.13"
+          overwrite: true
+          parameters:
+            -p ZONE=tools
+            -p MINIO_ROOT_USER="$MINIO_ROOT_USER"
+            -p MINIO_ROOT_PASSWORD="$MINIO_ROOT_PASSWORD"
+            -p OBJECT_STORAGE_BUCKET=${{ secrets.OBJECT_STORAGE_BUCKET || 'nr-waste' }}
+            -p OBJECT_STORAGE_REGION=${{ secrets.OBJECT_STORAGE_REGION || 'ca-central-1' }}
+
+      - name: Remove the PR MinIO bucket
+        continue-on-error: true
+        uses: bcgov/action-oc-runner@111868d1fc50db0a40417ba321d865ef5c931bbd # v1.7.0
+        env:
+          OBJECT_STORAGE_BUCKET: ${{ secrets.OBJECT_STORAGE_BUCKET || 'nr-waste' }}-pr-${{ github.event.number }}
+        with:
+          oc_namespace: cffaf3-tools
+          oc_token: ${{ secrets.oc_token_tools }}
+          oc_server: ${{ secrets.oc_server }}
           commands: |
-            BRANCH_NAME="${{ github.head_ref }}"
-            ESCAPED_BRANCH_NAME=$(echo "$BRANCH_NAME" | sed 's/[\/&]/\\&/g')
-            oc create job --from=cronjob/nr-waste-plus-tools-migratepg migratepg-pr${{ github.event.number }}-${{ github.run_attempt }}-$(date +%s) --dry-run=client -o yaml | sed "s/value: main/value: ${ESCAPED_BRANCH_NAME}/" | sed "s/value: \"0\"/value: \"${{ github.event.number }}\"/" | oc apply -f -
+            # Remove only this PR's bucket. The shared MinIO server and the
+            # base bucket are left intact for other open PRs.
+            POD_NAME=$(oc get pods -l app=nr-waste-plus-tools -l deployment=nr-waste-plus-tools-minio -o jsonpath='{.items[0].metadata.name}' 2>/dev/null)
+            if [ -z "$POD_NAME" ]; then
+              echo "MinIO pod not found; nothing to clean up."
+              exit 0
+            fi
+
+            oc exec "$POD_NAME" -c minio-init -- sh -c '
+              mc --config-dir /tmp/.mc alias set local http://localhost:9000 "$MINIO_ROOT_USER" "$MINIO_ROOT_PASSWORD" >/dev/null 2>&1 || exit 0
+              mc --config-dir /tmp/.mc rm --recursive --force local/"$1" >/dev/null 2>&1 || true
+              mc --config-dir /tmp/.mc rb --force local/"$1" >/dev/null 2>&1 || true
+            ' _ "$OBJECT_STORAGE_BUCKET"
+            echo "Removed bucket $OBJECT_STORAGE_BUCKET (if it existed)."
 
       # The OpenShift API intermittently refuses or times out connections from
       # GitHub-hosted runners. The oc-runner action logs in and then verifies
@@ -307,7 +435,7 @@ jobs:
           # once more before deciding the verification failed.
           if [ "${succeeded}" -lt 1 ]; then
             counts=$(${OC} get job "${JOB_NAME}" -n "${OC_NAMESPACE}" -o jsonpath='{.status.succeeded}' 2>/dev/null || true)
-            succeeded="${counts:-0}"
+            succeeded="${succeeded:-0}"
           fi
 
           echo "--- job logs ---"
@@ -327,7 +455,7 @@ jobs:
 
   scale-up-legacy:
     name: Scale up legacy
-    needs: [deploy-tools]
+    needs: [deploy-postgres, deploy-oracle, deploy-minio]
     #    needs: [pre-tools]
     if: always()
     runs-on: ubuntu-26.04
