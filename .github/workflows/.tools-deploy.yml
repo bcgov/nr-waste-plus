@@ -237,9 +237,9 @@ jobs:
             # The running pod's environment is authoritative for the MinIO
             # credentials: the Secret can be rotated without restarting the
             # server, so reading the Secret would sign with the wrong key.
-            POD_NAME=$(oc get pods -l app=nr-waste-plus-tools -l deployment=nr-waste-plus-tools-minio -o jsonpath='{.items[0].metadata.name}')
-            MINIO_ROOT_USER=$(oc exec "$POD_NAME" -c minio-init -- printenv MINIO_ROOT_USER)
-            MINIO_ROOT_PASSWORD=$(oc exec "$POD_NAME" -c minio-init -- printenv MINIO_ROOT_PASSWORD)
+            POD_NAME=$(oc get pods -n cffaf3-tools -l app=nr-waste-plus-tools -l deployment=nr-waste-plus-tools-minio -o jsonpath='{.items[0].metadata.name}')
+            MINIO_ROOT_USER=$(oc exec -n cffaf3-tools "$POD_NAME" -c minio-init -- printenv MINIO_ROOT_USER)
+            MINIO_ROOT_PASSWORD=$(oc exec -n cffaf3-tools "$POD_NAME" -c minio-init -- printenv MINIO_ROOT_PASSWORD)
             export MINIO_ROOT_USER MINIO_ROOT_PASSWORD
 
             # Generate a presigned PUT and GET against the same in-cluster
@@ -289,37 +289,25 @@ jobs:
               exit 1
             fi
 
-            # The presigned URL is signed for the service DNS name, which the
-            # runner cannot resolve. Port-forward the service and resolve that
-            # name to localhost so the Host header the signature covers is kept.
-            oc port-forward svc/nr-waste-plus-tools-minio 9000:9000 -n cffaf3-tools >/tmp/minio-port-forward.log 2>&1 &
-            PF_PID=$!
-            trap 'kill "$PF_PID" 2>/dev/null || true' EXIT
-
-            for i in {1..15}; do
-              if curl -fsS -o /dev/null http://127.0.0.1:9000/minio/health/live; then
-                break
+            # The presigned URL is signed for the service DNS name. Execute the
+            # request from inside the MinIO pod so the Host header and network
+            # path match the endpoint the backend signs with. `wget` is part of
+            # the minio-client image and supports PUT via --method.
+            echo "Verifying presigned PUT and GET from inside the cluster..."
+            oc exec -n cffaf3-tools "$POD_NAME" -c minio-init -- sh -c '
+              set -e
+              wget -q -O /dev/null --method=PUT --body-data="smoke-test-presigned-payload" "$1"
+              FETCHED=$(wget -q -O - "$2")
+              if [ "$FETCHED" != "smoke-test-presigned-payload" ]; then
+                echo "Error: presigned GET payload mismatch."
+                exit 1
               fi
-              sleep 1
-            done
-
-            RESOLVE="nr-waste-plus-tools-minio.cffaf3-tools.svc.cluster.local:9000:127.0.0.1"
-            echo "smoke-test-presigned-payload" > /tmp/presign-payload
-            curl -fsS -X PUT --data-binary @/tmp/presign-payload --resolve "$RESOLVE" "$PUT_URL"
-            FETCHED=$(curl -fsS --resolve "$RESOLVE" "$GET_URL")
-            if [ "$FETCHED" != "smoke-test-presigned-payload" ]; then
-              echo "Error: presigned GET payload mismatch."
-              exit 1
-            fi
+            ' _ "$PUT_URL" "$GET_URL"
             echo "Presigned PUT and GET verified against the in-cluster endpoint."
 
-            POD_NAME=$(oc get pods -l app=nr-waste-plus-tools -l deployment=nr-waste-plus-tools-minio -o jsonpath='{.items[0].metadata.name}' 2>/dev/null)
-            if [ -n "$POD_NAME" ]; then
-              oc exec "$POD_NAME" -c minio-init -- sh -c '
-                mc --config-dir /tmp/.mc alias set local http://localhost:9000 "$MINIO_ROOT_USER" "$MINIO_ROOT_PASSWORD" >/dev/null 2>&1
-                mc --config-dir /tmp/.mc rm --force local/"$1" >/dev/null 2>&1 || true
-              ' _ "$OBJECT_STORAGE_BUCKET/smoke-test-presigned.txt"
-            fi
+            oc exec -n cffaf3-tools "$POD_NAME" -c minio-init -- sh -c '
+              mc --config-dir /tmp/.mc rm --force local/"$1" >/dev/null 2>&1 || true
+            ' _ "$OBJECT_STORAGE_BUCKET/smoke-test-presigned.txt"
 
   scale-up-legacy:
     name: Scale up legacy
