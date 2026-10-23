@@ -35,9 +35,27 @@ const useTestRouter = (initialEntries: string[], queryClient: QueryClient) =>
     [],
   );
 
-export function NextRouterHarness({ initialEntries = ['/'] }: { initialEntries?: string[] }) {
+export function NextRouterHarness({
+  initialEntries = ['/'],
+  onRouter,
+}: {
+  initialEntries?: string[];
+  /** Test-only: receives the freshly created router (for location assertions). */
+  onRouter?: (router: ReturnType<typeof createAppRouter>) => void;
+}) {
   const queryClient = useMemo(() => makeTestQueryClient(), []);
-  const router = useTestRouter(initialEntries, queryClient);
+  const router = useMemo(
+    () => {
+      const instance = createAppRouter(
+        { queryClient },
+        { history: createMemoryHistory({ initialEntries }) },
+      );
+      onRouter?.(instance);
+      return instance;
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- initialEntries is a per-mount literal
+    [],
+  );
   return (
     <AnnouncerProvider>
       <QueryClientProvider client={queryClient}>

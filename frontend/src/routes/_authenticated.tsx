@@ -40,7 +40,7 @@ function AuthenticatedLayout() {
     select: (s) => s.matches.at(-1)?.routeId === CATCH_ALL_ROUTE_ID,
   });
 
-  const redirectTo = computeAuthRedirect({ user, isLoading, pathname });
+  const redirectHref = computeAuthRedirect({ user, isLoading, pathname })?.href;
 
   useLayoutEffect(() => {
     if (isLoading) return;
@@ -62,12 +62,16 @@ function AuthenticatedLayout() {
       return;
     }
 
-    if (redirectTo) {
-      void navigate({ href: redirectTo.href, replace: true });
+    if (redirectHref) {
+      void navigate({ href: redirectHref, replace: true });
     }
-  }, [isLoading, user, pathname, searchStr, navigate, redirectTo, isCatchAll]);
+    // NOTE: `redirectHref` (a primitive) must be the dep, not the redirect
+    // object — a fresh `{ href }` per render would re-fire this effect on
+    // every transition and each new navigate() would cancel the pending one,
+    // producing an infinite cancel/restart loop that never commits the hop.
+  }, [isLoading, user, pathname, searchStr, navigate, redirectHref, isCatchAll]);
 
-  if (isLoading || !user || redirectTo) {
+  if (isLoading || !user || redirectHref) {
     return <Loading data-testid="loading" withOverlay />;
   }
 
