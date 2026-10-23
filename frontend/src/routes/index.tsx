@@ -29,4 +29,9 @@ function PublicOnlyLanding() {
 
 export const Route = createFileRoute('/')({
   component: PublicOnlyLanding,
+  staticData: {
+    // Legacy route id 'Landing' — the root title sync renders
+    // "<app name> - Landing" for fresh anonymous visits.
+    title: 'Landing',
+  },
 });

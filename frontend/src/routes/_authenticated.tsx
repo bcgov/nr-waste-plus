@@ -40,7 +40,13 @@ function AuthenticatedLayout() {
     select: (s) => s.matches.at(-1)?.routeId === CATCH_ALL_ROUTE_ID,
   });
 
-  const redirectHref = computeAuthRedirect({ user, isLoading, pathname })?.href;
+  const statusHref = computeAuthRedirect({ user, isLoading, pathname })?.href;
+  // The legacy 404 handler rendered the 404 for ANY authenticated user —
+  // status redirects (no-role / role-error) only applied to known routes via
+  // their guard. Exclude catch-all matches from the status decision so an
+  // authenticated no-role or role-error user still sees the 404 on unknown
+  // URLs instead of being redirected to /no-role or /unauthorized.
+  const redirectHref = isCatchAll ? undefined : statusHref;
 
   useLayoutEffect(() => {
     if (isLoading) return;

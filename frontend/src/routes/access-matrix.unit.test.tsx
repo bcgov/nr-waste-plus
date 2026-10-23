@@ -131,6 +131,8 @@ describe('public and entry routes', () => {
     // Landing is a standalone page with its own header markup (not the
     // application shell) — assert the landing hero renders.
     expect(await screen.findByTestId('landing-title')).toBeTruthy();
+    // Legacy title parity: "<app name> - Landing" via staticData.
+    expect(document.title).toContain('Landing');
   });
 
   it('authenticated / redirects through dashboard to the search page', async () => {
@@ -285,6 +287,16 @@ describe('unknown URLs and static precedence', () => {
     renderAt('/does-not-exist');
     expect(await screen.findByRole('heading', { name: 'Content Not Found' })).toBeTruthy();
     expectOneShell();
+  });
+
+  it('renders the 404 for a no-role user on an unknown URL (no status redirect)', async () => {
+    state.user = user([]);
+    renderAt('/does-not-exist');
+    // Legacy parity: the 404 rendered for ANY authenticated user; no-role /
+    // role-error redirects only applied to known routes.
+    expect(await screen.findByRole('heading', { name: 'Content Not Found' })).toBeTruthy();
+    expectOneShell();
+    expect(screen.queryByText("You don't have FAM authorization")).toBeNull();
   });
 
   it('static /reporting-units/create outranks $ruId', async () => {

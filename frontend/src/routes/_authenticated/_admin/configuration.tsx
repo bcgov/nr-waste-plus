@@ -16,6 +16,11 @@ export const Route = createFileRoute('/_authenticated/_admin/configuration')({
   },
   staticData: {
     featureFlag: 'configuration-enabled',
+    // Visible while offline: the legacy side nav hard-coded this link outside
+    // the registry's connectivity filter, so an ADMIN with the flag on kept
+    // seeing it offline. `offlineReady` preserves that (the other entries
+    // came from the filtered registry and stay hidden offline).
+    offlineReady: true,
     nav: { label: 'Configuration', icon: ToolKit, order: 40, to: '/configuration' },
   },
 });

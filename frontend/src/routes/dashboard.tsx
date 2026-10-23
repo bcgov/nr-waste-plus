@@ -57,4 +57,8 @@ function DashboardRedirect() {
  */
 export const Route = createFileRoute('/dashboard')({
   component: DashboardRedirect,
+  staticData: {
+    // Legacy route id 'Dashboard' — title parity if the redirect is slow.
+    title: 'Dashboard',
+  },
 });

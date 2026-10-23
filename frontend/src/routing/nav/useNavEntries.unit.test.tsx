@@ -119,16 +119,18 @@ describe('useNavEntries', () => {
     expect(entries.map((entry) => entry.id)).not.toContain('Configuration');
   });
 
-  it('hides non-offline entries while offline (dormant predicate, legacy parity)', () => {
+  it('keeps Configuration visible offline; hides non-offline entries (legacy parity)', () => {
     state.user = { roles: [role(Role.ADMIN)] } as FamLoginUser;
     state.isOnline = false;
 
     const entries = renderProbe();
 
-    // Legacy getMenuEntries predicate: while offline, only routes declaring
-    // `offlineReady`/`offlineOnly` survive. No route declares either today,
-    // so the nav empties — the predicate is dormant but enforced.
-    expect(entries).toEqual([]);
+    // Legacy parity: the Configuration side-nav link was hard-coded outside
+    // the registry's connectivity filter, so an ADMIN kept seeing it offline
+    // (`offlineReady` in its staticData now encodes that). The other entries
+    // came from the filtered registry, declare no offline metadata, and stay
+    // hidden while offline.
+    expect(entries.map((entry) => entry.id)).toEqual(['Configuration']);
   });
 
   it('returns no entries for an anonymous user (role gates exclude tiered entries)', () => {
