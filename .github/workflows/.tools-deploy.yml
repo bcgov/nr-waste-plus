@@ -1,7 +1,12 @@
 name: Tools deployment
 
 on:
-  workflow_call:
+  pull_request:
+
+concurrency:
+  # PR open and close use the same group, allowing only one at a time
+  group: tools-${{ github.event.number }}
+  cancel-in-progress: true
 
 permissions: {}
 
@@ -88,8 +93,28 @@ jobs:
           : "${POSTGRES_USERNAME:?POSTGRES_USERNAME repository secret is required}"
           : "${POSTGRES_PASSWORD:?POSTGRES_PASSWORD repository secret is required}"
 
+      - name: Remove the existing PostgreSQL CronJobs
+        uses: bcgov/action-oc-runner@111868d1fc50db0a40417ba321d865ef5c931bbd # v1.7.0
+        with:
+          oc_namespace: cffaf3-tools
+          oc_server: ${{ secrets.oc_server }}
+          oc_token: ${{ secrets.oc_token_tools }}
+          commands: |
+            # The pod template of a CronJob is immutable, so an existing
+            # CronJob has to be removed before the new template is applied.
+            oc delete cronjob/nr-waste-plus-tools-migratepg --ignore-not-found
+            oc delete cronjob/nr-waste-plus-tools-droppg --ignore-not-found
+
       - name: Initializing PostgreSQL CronJobs
         uses: bcgov/action-deployer-openshift@e2d60eb9cacceb89c3b97d8dcf0a2c460eea5eab # v4.2.3
+        env:
+          POSTGRES_HOST: ${{ secrets.POSTGRES_HOST }}
+          POSTGRES_PORT: ${{ secrets.POSTGRES_PORT }}
+          POSTGRES_ADMIN_DATABASE: ${{ secrets.POSTGRES_ADMIN_DATABASE }}
+          POSTGRES_ADMIN_USER: ${{ secrets.PG_PR_USER }}
+          POSTGRES_ADMIN_PASSWORD: ${{ secrets.PG_PR_PWD }}
+          POSTGRES_USERNAME: ${{ secrets.POSTGRES_USERNAME }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
         with:
           file: tools/postgres.deploy.yml
           oc_namespace: cffaf3-tools
@@ -98,13 +123,13 @@ jobs:
           oc_version: "4.13"
           overwrite: true
           parameters: -p ZONE=tools
-            -p POSTGRES_HOST=${{ secrets.POSTGRES_HOST }}
-            -p POSTGRES_PORT=${{ secrets.POSTGRES_PORT }}
-            -p POSTGRES_ADMIN_DATABASE=${{ secrets.POSTGRES_ADMIN_DATABASE }}
-            -p POSTGRES_ADMIN_USER=${{ secrets.PG_PR_USER }}
-            -p POSTGRES_ADMIN_PASSWORD=${{ secrets.PG_PR_PWD }}
-            -p POSTGRES_USERNAME=${{ secrets.POSTGRES_USERNAME }}
-            -p POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
+            -p POSTGRES_HOST="$POSTGRES_HOST"
+            -p POSTGRES_PORT="$POSTGRES_PORT"
+            -p POSTGRES_ADMIN_DATABASE="$POSTGRES_ADMIN_DATABASE"
+            -p POSTGRES_ADMIN_USER="$POSTGRES_ADMIN_USER"
+            -p POSTGRES_ADMIN_PASSWORD="$POSTGRES_ADMIN_PASSWORD"
+            -p POSTGRES_USERNAME="$POSTGRES_USERNAME"
+            -p POSTGRES_PASSWORD="$POSTGRES_PASSWORD"
 
       - name: Migrate the PR postgres database
         uses: bcgov/action-oc-runner@111868d1fc50db0a40417ba321d865ef5c931bbd # v1.7.0
