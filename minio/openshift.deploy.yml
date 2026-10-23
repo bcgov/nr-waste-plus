@@ -183,6 +183,9 @@ objects:
                 - |
                   export HOME=/tmp
                   echo "Waiting for MinIO server on localhost:9000..."
+                  # A wrong credential keeps this loop running, which keeps the
+                  # sidecar's readiness probe below failing, so the pod stays
+                  # NotReady instead of reporting healthy with no bucket.
                   until mc --config-dir /tmp/.mc alias set local http://localhost:9000 "$MINIO_ROOT_USER" "$MINIO_ROOT_PASSWORD"; do
                     sleep 2
                   done

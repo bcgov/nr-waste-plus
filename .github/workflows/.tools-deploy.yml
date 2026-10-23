@@ -75,6 +75,17 @@ jobs:
     needs: [pre-tools]
     runs-on: ubuntu-26.04
     steps:
+      - name: Require MinIO credentials
+        env:
+          MINIO_ROOT_USER: ${{ secrets.MINIO_ROOT_USER }}
+          MINIO_ROOT_PASSWORD: ${{ secrets.MINIO_ROOT_PASSWORD }}
+        run: |
+          # Fail closed: the template has no credential defaults, so a missing
+          # repository secret must stop the deploy rather than create a MinIO
+          # instance with empty (or shared) credentials.
+          : "${MINIO_ROOT_USER:?MINIO_ROOT_USER repository secret is required}"
+          : "${MINIO_ROOT_PASSWORD:?MINIO_ROOT_PASSWORD repository secret is required}"
+
       - name: Initializing MinIO Deployment
         uses: bcgov/action-deployer-openshift@e2d60eb9cacceb89c3b97d8dcf0a2c460eea5eab # v4.2.3
         env:

@@ -96,6 +96,17 @@ jobs:
     environment: ${{ inputs.environment }}
     runs-on: ubuntu-26.04
     steps:
+      - name: Require MinIO credentials
+        if: contains(inputs.object-storage-endpoint, 'nr-waste-plus-tools-minio')
+        env:
+          MINIO_ROOT_USER: ${{ secrets.MINIO_ROOT_USER }}
+          MINIO_ROOT_PASSWORD: ${{ secrets.MINIO_ROOT_PASSWORD }}
+        run: |
+          # Fail closed: this deployment signs against the in-cluster MinIO
+          # service, so the MinIO root credentials must be configured.
+          : "${MINIO_ROOT_USER:?MINIO_ROOT_USER repository secret is required}"
+          : "${MINIO_ROOT_PASSWORD:?MINIO_ROOT_PASSWORD repository secret is required}"
+
       - name: Deployment Init
         uses: bcgov/action-deployer-openshift@e2d60eb9cacceb89c3b97d8dcf0a2c460eea5eab # v4.2.3
         env:
