@@ -57,7 +57,12 @@ public class SearchController {
    * other endpoints.
    *
    * @param jwt the JWT principal for the authenticated caller
-   * @param filters the search filters (mapped from request parameters)
+   * @param filters the search filters (mapped from request parameters), including the lenient
+   *     {@code legacy} source flag (issue #1238, DEC-011): exactly {@code false} selects the
+   *     PostgreSQL source; absent, {@code true}, or any other value selects legacy. The flag is
+   *     bound as a String on {@link ReportingUnitSearchParametersDto} — never Boolean, since
+   *     Spring's Boolean conversion would reject unknown values with HTTP 400, contradicting the
+   *     leniency contract
    * @param pageable pageable information (page, size, sort)
    * @return a page of {@link ReportingUnitSearchResultDto} matching the provided filters
    * @throws InvalidSelectedValueException when a BCEID caller specifies a client number that is not
@@ -110,8 +115,11 @@ public class SearchController {
         reportingUnitId,
         JwtPrincipalUtil.getUserId(jwt));
 
-    // Look up the reporting unit's client number to enforce client-scoped authorization
-    String clientNumber = service.getClientNumberForReportingUnit(reportingUnitId);
+    // Look up the reporting unit's client number to enforce client-scoped authorization.
+    // Source-aware (DEC-019): the lookup reads the same source the expanded query will read, so a
+    // PostgreSQL-only reporting unit authorizes against PostgreSQL rather than a legacy miss.
+    String clientNumber =
+        service.getClientNumberForReportingUnit(reportingUnitId, wasteAssessmentAreaId);
 
     // For BCeID callers, verify the reporting unit belongs to one of their clients
     if (IdentityProvider.BUSINESS_BCEID.equals(JwtPrincipalUtil.getIdentityProvider(jwt))) {

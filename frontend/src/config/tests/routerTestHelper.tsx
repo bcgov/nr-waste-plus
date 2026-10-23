@@ -6,14 +6,21 @@ import {
 } from '@tanstack/react-router';
 import { useState, type ReactElement, type ReactNode } from 'react';
 
+import { searchParamCodec } from '@/routing/searchParams';
+
 /**
  * Creates a minimal TanStack Router instance for unit tests.
  *
- * The router uses an in-memory history so no browser APIs are required.
+ * The router uses an in-memory history so no browser APIs are required, and shares
+ * the application's search-param codec so URL encoding behaves identically.
  * Use the returned instance with {@link RouterProvider} in `render()` calls.
  *
  * @param component - The root component to render inside the router.
  * @param initialPath - The initial URL path (default: `'/'`).
+ * @param options - Optional router behaviour overrides.
+ * @param options.validateSearch - When provided, attached to the root route so
+ *   `useSearch` returns validated, typed search params (the root route matches
+ *   every path).
  * @returns A configured TanStack Router instance with an in-memory history.
  *
  * @example
@@ -22,11 +29,16 @@ import { useState, type ReactElement, type ReactNode } from 'react';
  * await waitFor(() => expect(screen.getByText('Dashboard')).toBeDefined());
  * ```
  */
-export function createTestRouter(component: () => ReactElement, initialPath = '/') {
-  const rootRoute = createRootRoute({ component });
+export function createTestRouter(
+  component: () => ReactElement,
+  initialPath = '/',
+  options?: { validateSearch?: (search: unknown) => unknown },
+) {
+  const rootRoute = createRootRoute({ component, validateSearch: options?.validateSearch });
   return createRouter({
     routeTree: rootRoute,
     history: createMemoryHistory({ initialEntries: [initialPath] }),
+    ...searchParamCodec,
   });
 }
 

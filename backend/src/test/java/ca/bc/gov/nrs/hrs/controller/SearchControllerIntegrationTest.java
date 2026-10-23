@@ -1,11 +1,14 @@
 package ca.bc.gov.nrs.hrs.controller;
 
+import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.notFound;
 import static com.github.tomakehurst.wiremock.client.WireMock.okJson;
 import static com.github.tomakehurst.wiremock.client.WireMock.serviceUnavailable;
 import static com.github.tomakehurst.wiremock.client.WireMock.unauthorized;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.containsString;
 import static org.springframework.boot.webmvc.test.autoconfigure.MockMvcPrint.SYSTEM_OUT;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -19,6 +22,7 @@ import ca.bc.gov.nrs.hrs.extensions.WiremockLogNotifier;
 import ca.bc.gov.nrs.hrs.extensions.WithMockJwt;
 import ca.bc.gov.nrs.hrs.provider.forestclient.ForestClientApiProviderTestConstants;
 import ca.bc.gov.nrs.hrs.repository.UserBookmarkRepository;
+import com.github.tomakehurst.wiremock.client.CountMatchingStrategy;
 import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
@@ -510,5 +514,224 @@ class SearchControllerIntegrationTest extends AbstractTestContainerIntegrationTe
         .andExpect(jsonPath("$.content.length()").value(1))
         .andExpect(jsonPath("$.content[0].bookmarked").value(true))
         .andReturn();
+  }
+
+  @Test
+  @DisplayName("Search Reporting Unit | legacy param absent routes to legacy (called exactly once)")
+  void searchReportingUnit_legacyAbsent_shouldCallLegacyOnce() throws Exception {
+    legacyApiStub.stubFor(
+        WireMock.get(urlPathEqualTo("/api/search/reporting-units"))
+            .willReturn(
+                okJson(ForestClientApiProviderTestConstants.REPORTING_UNITS_SEARCH_RESPONSE)));
+
+    clientApiStub.stubFor(
+        WireMock.get(urlPathEqualTo("/clients/findByClientNumber/00010002"))
+            .willReturn(okJson(ForestClientApiProviderTestConstants.CLIENT_00010002)));
+
+    mockMvc
+        .perform(
+            get("/api/search/reporting-units")
+                .header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
+                .queryParam("mainSearchTerm", "36834")
+                .queryParam("page", "0")
+                .queryParam("size", "10")
+                .accept(MediaType.APPLICATION_JSON))
+        .andExpect(status().isOk())
+        .andExpect(content().contentType("application/json;charset=UTF-8"))
+        .andExpect(jsonPath("$.content.length()").value(1))
+        .andReturn();
+
+    legacyApiStub.verify(
+        1, getRequestedFor(urlPathEqualTo("/api/search/reporting-units")));
+  }
+
+  @Test
+  @DisplayName("Search Reporting Unit | legacy=true routes to legacy (lenient, called once)")
+  void searchReportingUnit_legacyTrue_shouldCallLegacyOnce() throws Exception {
+    legacyApiStub.stubFor(
+        WireMock.get(urlPathEqualTo("/api/search/reporting-units"))
+            .willReturn(
+                okJson(ForestClientApiProviderTestConstants.REPORTING_UNITS_SEARCH_RESPONSE)));
+
+    clientApiStub.stubFor(
+        WireMock.get(urlPathEqualTo("/clients/findByClientNumber/00010002"))
+            .willReturn(okJson(ForestClientApiProviderTestConstants.CLIENT_00010002)));
+
+    mockMvc
+        .perform(
+            get("/api/search/reporting-units")
+                .header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
+                .queryParam("mainSearchTerm", "36834")
+                .queryParam("legacy", "true")
+                .queryParam("page", "0")
+                .queryParam("size", "10")
+                .accept(MediaType.APPLICATION_JSON))
+        .andExpect(status().isOk())
+        .andExpect(content().contentType("application/json;charset=UTF-8"))
+        .andExpect(jsonPath("$.content.length()").value(1))
+        .andReturn();
+
+    legacyApiStub.verify(
+        1, getRequestedFor(urlPathEqualTo("/api/search/reporting-units")));
+  }
+
+  @Test
+  @DisplayName("Search Reporting Unit | legacy=garbage is lenient and routes to legacy (no 400)")
+  void searchReportingUnit_legacyGarbage_shouldBeLenientAndCallLegacyOnce() throws Exception {
+    legacyApiStub.stubFor(
+        WireMock.get(urlPathEqualTo("/api/search/reporting-units"))
+            .willReturn(
+                okJson(ForestClientApiProviderTestConstants.REPORTING_UNITS_SEARCH_RESPONSE)));
+
+    clientApiStub.stubFor(
+        WireMock.get(urlPathEqualTo("/clients/findByClientNumber/00010002"))
+            .willReturn(okJson(ForestClientApiProviderTestConstants.CLIENT_00010002)));
+
+    // Garbage value must not produce a 400: the parameter is bound leniently as a String (DEC-011).
+    mockMvc
+        .perform(
+            get("/api/search/reporting-units")
+                .header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
+                .queryParam("mainSearchTerm", "36834")
+                .queryParam("legacy", "yes")
+                .queryParam("page", "0")
+                .queryParam("size", "10")
+                .accept(MediaType.APPLICATION_JSON))
+        .andExpect(status().isOk())
+        .andExpect(content().contentType("application/json;charset=UTF-8"))
+        .andExpect(jsonPath("$.content.length()").value(1))
+        .andReturn();
+
+    legacyApiStub.verify(
+        1, getRequestedFor(urlPathEqualTo("/api/search/reporting-units")));
+  }
+
+  @Test
+  @DisplayName(
+      "Search Reporting Unit | legacy=false routes to PostgreSQL (real query, legacy not called)")
+  void searchReportingUnit_legacyFalse_shouldQueryPostgres_withoutLegacyCall() throws Exception {
+    legacyApiStub.stubFor(
+        WireMock.get(urlPathEqualTo("/api/search/reporting-units"))
+            .willReturn(
+                okJson(ForestClientApiProviderTestConstants.REPORTING_UNITS_SEARCH_RESPONSE)));
+
+    mockMvc
+        .perform(
+            get("/api/search/reporting-units")
+                .header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
+                .queryParam("mainSearchTerm", "36834")
+                .queryParam("legacy", "false")
+                .queryParam("page", "0")
+                .queryParam("size", "10")
+                .accept(MediaType.APPLICATION_JSON))
+        // D3b: the PostgreSQL source executes the real list query. No seeded RU matches the
+        // digits-only term, so the honest result is an empty page — not an error and not a
+        // cross-source fallback.
+        .andExpect(status().isOk())
+        .andExpect(content().contentType("application/json;charset=UTF-8"))
+        .andExpect(jsonPath("$.content.length()").value(0))
+        .andExpect(jsonPath("$.page.totalElements").value(0))
+        .andReturn();
+
+    legacyApiStub.verify(
+        0, getRequestedFor(urlPathEqualTo("/api/search/reporting-units")));
+  }
+
+  @Test
+  @DisplayName(
+      "Search Reporting Unit | legacy failure stays on legacy source (no cross-source fallback)")
+  void searchReportingUnit_legacyFailure_shouldNotFallbackToPostgres() throws Exception {
+    legacyApiStub.stubFor(
+        WireMock.get(urlPathEqualTo("/api/search/reporting-units"))
+            .willReturn(serviceUnavailable()));
+
+    mockMvc
+        .perform(
+            get("/api/search/reporting-units")
+                .header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
+                .queryParam("mainSearchTerm", "36834")
+                .queryParam("page", "0")
+                .queryParam("size", "10")
+                .accept(MediaType.APPLICATION_JSON))
+        // Existing legacy error convention: circuit-breaker fallback yields 200 with an empty
+        // page. A cross-source fallback would surface as 501 instead.
+        .andExpect(status().isOk())
+        .andExpect(content().contentType("application/json;charset=UTF-8"))
+        .andExpect(jsonPath("$.content.length()").value(0))
+        .andReturn();
+
+    // Legacy was actually hit; the count is not pinned because the HTTP stack may retry the same
+    // source on 503 (pre-existing behavior documented at
+    // LegacyReportingUnitClientIntegrationTest.shouldReturnEmptyBlockList_whenLegacyBlockListReturnsServerError).
+    // Cross-source fallback is excluded by the 200 response above.
+    // Legacy was actually hit; the count is not pinned because the HTTP stack may retry the same
+    // source on 503 (pre-existing behavior documented at
+    // LegacyReportingUnitClientIntegrationTest.shouldReturnEmptyBlockList_whenLegacyBlockListReturnsServerError).
+    // Cross-source fallback is excluded by the 200 response above.
+    legacyApiStub.verify(
+        new CountMatchingStrategy(CountMatchingStrategy.GREATER_THAN_OR_EQUAL, 1),
+        getRequestedFor(urlPathEqualTo("/api/search/reporting-units")));
+  }
+
+  @Test
+  @DisplayName("Search Reporting Unit | legacy flag alone keeps the empty-filters gate (no dispatch)")
+  void searchReportingUnit_legacyFlagAlone_shouldReturnEmptyPage_withoutProviderCall()
+      throws Exception {
+    // The gate is exercised with legacy=false: if `legacy` were ever counted by
+    // ReportingUnitSearchParametersDto.isEmpty(), this request would dispatch to the PostgreSQL
+    // stub and fail with 501 instead of returning an empty page (#1238).
+    legacyApiStub.stubFor(
+        WireMock.get(urlPathEqualTo("/api/search/reporting-units"))
+            .willReturn(
+                okJson(ForestClientApiProviderTestConstants.REPORTING_UNITS_SEARCH_RESPONSE)));
+
+    mockMvc
+        .perform(
+            get("/api/search/reporting-units")
+                .header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
+                .queryParam("legacy", "false")
+                .queryParam("page", "0")
+                .queryParam("size", "10")
+                .accept(MediaType.APPLICATION_JSON))
+        .andExpect(status().isOk())
+        .andExpect(content().contentType("application/json;charset=UTF-8"))
+        .andExpect(jsonPath("$.content.length()").value(0))
+        .andReturn();
+
+    legacyApiStub.verify(
+        0, getRequestedFor(urlPathEqualTo("/api/search/reporting-units")));
+  }
+
+  @Test
+  @DisplayName(
+      "Search Reporting Unit | forwarded legacy request does not carry the legacy flag (#1238)")
+  void searchReportingUnit_legacySource_shouldNotForwardLegacyParamToLegacy() throws Exception {
+    legacyApiStub.stubFor(
+        WireMock.get(urlPathEqualTo("/api/search/reporting-units"))
+            .willReturn(
+                okJson(ForestClientApiProviderTestConstants.REPORTING_UNITS_SEARCH_RESPONSE)));
+
+    clientApiStub.stubFor(
+        WireMock.get(urlPathEqualTo("/clients/findByClientNumber/00010002"))
+            .willReturn(okJson(ForestClientApiProviderTestConstants.CLIENT_00010002)));
+
+    mockMvc
+        .perform(
+            get("/api/search/reporting-units")
+                .header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
+                .queryParam("mainSearchTerm", "36834")
+                .queryParam("legacy", "true")
+                .queryParam("page", "0")
+                .queryParam("size", "10")
+                .accept(MediaType.APPLICATION_JSON))
+        .andExpect(status().isOk())
+        .andExpect(content().contentType("application/json;charset=UTF-8"))
+        .andExpect(jsonPath("$.content.length()").value(1))
+        .andReturn();
+
+    var forwardedRequests =
+        legacyApiStub.findAll(getRequestedFor(urlPathEqualTo("/api/search/reporting-units")));
+    assertThat(forwardedRequests).hasSize(1);
+    assertThat(forwardedRequests.getFirst().getQueryParams()).doesNotContainKey("legacy");
   }
 }

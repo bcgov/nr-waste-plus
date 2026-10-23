@@ -10,6 +10,7 @@ import {
   ModalFooter,
   ModalHeader,
   TextInput,
+  Toggle,
 } from '@carbon/react';
 import { type FC } from 'react';
 
@@ -266,7 +267,7 @@ const WasteSearchFiltersAdvanced: FC<WasteSearchFiltersAdvancedProps> = ({
           </Column>
 
           {/* Checkboxes */}
-          <Column sm={4} md={8} lg={16}>
+          <Column sm={4} md={6} lg={13}>
             <CheckboxGroup legendText="" orientation="horizontal">
               <Checkbox
                 id="as-created-by-me-checkbox"
@@ -292,6 +293,18 @@ const WasteSearchFiltersAdvanced: FC<WasteSearchFiltersAdvancedProps> = ({
                 />
               )}
             </CheckboxGroup>
+          </Column>
+
+          {/* Source toggle (mirrors the filter-bar toggle) */}
+          <Column sm={4} md={2} lg={3}>
+            <Toggle
+              id="as-read-from-legacy-toggle"
+              data-testid="as-read-from-legacy-toggle"
+              labelText="Read from legacy"
+              hideLabel
+              toggled={filters.legacy !== false}
+              onToggle={(toggled) => onChange('legacy')(toggled)}
+            />
           </Column>
         </Grid>
       </ModalBody>

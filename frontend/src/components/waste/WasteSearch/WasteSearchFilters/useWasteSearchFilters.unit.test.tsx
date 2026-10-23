@@ -1,263 +1,311 @@
+import {
+  createMemoryHistory,
+  createRootRoute,
+  createRoute,
+  createRouter,
+  Outlet,
+  RouterProvider,
+} from '@tanstack/react-router';
 import { act, renderHook, waitFor } from '@testing-library/react';
+import { useState, type ReactNode } from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 import useSyncPreferencesToFilters from '@/hooks/useSyncPreferencesToFilters';
+import { searchParamCodec, validateWasteSearch } from '@/routing/searchParams';
 
 import { useWasteSearchFilters } from './useWasteSearchFilters';
-
-import type { ReportingUnitSearchParametersViewDto } from '@/types/search.types';
-
-vi.mock('@/hooks/useSyncFiltersToSearchParams', () => ({
-  default: vi.fn(),
-}));
 
 vi.mock('@/hooks/useSyncPreferencesToFilters', () => ({
   default: vi.fn(),
 }));
 
-const defaultValue: ReportingUnitSearchParametersViewDto = {
-  mainSearchTerm: '',
-  sampling: [],
-  district: [],
-  status: [],
-};
+/**
+ * Router wrapper that mounts a real `/search` route with the production
+ * `validateSearch` schema and codec, so hooks read the URL through the same
+ * pipeline as the application.
+ */
+function createSearchRouterWrapper(initialPath: string) {
+  return function SearchRouterWrapper({ children }: { children: ReactNode }) {
+    const [router] = useState(() => {
+      const rootRoute = createRootRoute({ component: () => <Outlet /> });
+      const searchRoute = createRoute({
+        getParentRoute: () => rootRoute,
+        path: '/search',
+        validateSearch: validateWasteSearch,
+        component: () => <>{children}</>,
+      });
+      return createRouter({
+        routeTree: rootRoute.addChildren([searchRoute]),
+        history: createMemoryHistory({ initialEntries: [initialPath] }),
+        ...searchParamCodec,
+      });
+    });
+    return <RouterProvider router={router} />;
+  };
+}
+
+/**
+ * Mounts the hook and waits for the router to render the matched route —
+ * RouterProvider resolves matches asynchronously, so the first synchronous
+ * render completes before the hook's component tree exists.
+ */
+async function mountHook(path = '/search') {
+  const rendered = renderHook(() => useWasteSearchFilters(), {
+    wrapper: createSearchRouterWrapper(path),
+  });
+  await waitFor(() => {
+    expect(rendered.result.current).not.toBeNull();
+  });
+  return rendered;
+}
 
 describe('useWasteSearchFilters', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it('shouldReturnInitialFilterState_whenValuePropProvided', () => {
-    const value: ReportingUnitSearchParametersViewDto = {
-      mainSearchTerm: 'initial',
-      sampling: ['A'],
-      district: [],
-      status: [],
-    };
-    const { result } = renderHook(() => useWasteSearchFilters(value, vi.fn()));
+  describe('URL hydration', () => {
+    it('shouldDeriveFiltersFromUrlSearch_whenMountedWithParams', async () => {
+      const { result } = await mountHook(
+        '/search?mainSearchTerm=abc&district=DCC,DSC&legacy=false',
+      );
 
-    expect(result.current.filters).toEqual(value);
-  });
-
-  it('shouldReturnFalseForIsAdvancedSearchOpen_whenInitialized', () => {
-    const { result } = renderHook(() => useWasteSearchFilters(defaultValue, vi.fn()));
-
-    expect(result.current.isAdvancedSearchOpen).toBe(false);
-  });
-
-  it('shouldToggleModalState_whenSetIsAdvancedSearchOpenCalled', () => {
-    const { result } = renderHook(() => useWasteSearchFilters(defaultValue, vi.fn()));
-
-    act(() => {
-      result.current.setIsAdvancedSearchOpen(true);
+      expect(result.current.filters.mainSearchTerm).toBe('abc');
+      expect(result.current.filters.district).toEqual(['DCC', 'DSC']);
+      expect(result.current.filters.legacy).toBe(false);
     });
 
-    expect(result.current.isAdvancedSearchOpen).toBe(true);
+    it('shouldSeedLegacyTrue_whenMountedOnBareSearch', async () => {
+      const { result } = await mountHook('/search');
 
-    act(() => {
-      result.current.setIsAdvancedSearchOpen(false);
-    });
-
-    expect(result.current.isAdvancedSearchOpen).toBe(false);
-  });
-
-  it('shouldUpdateFilterKey_whenHandleStringChangeCalled', () => {
-    const { result } = renderHook(() => useWasteSearchFilters(defaultValue, vi.fn()));
-
-    act(() => {
-      result.current.handleStringChange('mainSearchTerm')('search text');
-    });
-
-    expect(result.current.filters.mainSearchTerm).toBe('search text');
-  });
-
-  it('shouldNotAffectOtherKeys_whenHandleStringChangeCalled', () => {
-    const value: ReportingUnitSearchParametersViewDto = {
-      ...defaultValue,
-      sampling: ['S1'],
-    };
-    const { result } = renderHook(() => useWasteSearchFilters(value, vi.fn()));
-
-    act(() => {
-      result.current.handleStringChange('mainSearchTerm')('new search');
-    });
-
-    expect(result.current.filters.sampling).toEqual(['S1']);
-  });
-
-  it('shouldMapSelectedItemsToCodes_whenHandleActiveMultiSelectChangeCalled', () => {
-    const { result } = renderHook(() => useWasteSearchFilters(defaultValue, vi.fn()));
-
-    act(() => {
-      result.current.handleActiveMultiSelectChange('sampling')({
-        selectedItems: [
-          { code: 'A', description: 'Option A' },
-          { code: 'B', description: 'Option B' },
-        ],
+      // The source flag is always explicit in the URL: the toggle defaults to ON.
+      await waitFor(() => {
+        expect(result.current.filters).toEqual({ legacy: true });
       });
     });
 
-    expect(result.current.filters.sampling).toEqual(['A', 'B']);
-  });
+    it('shouldNotReseedLegacy_whenUrlAlreadyCarriesTheFlag', async () => {
+      const { result } = await mountHook('/search?legacy=false');
 
-  it('shouldClearArrayKey_whenHandleActiveMultiSelectChangeWithEmptySelection', () => {
-    const value: ReportingUnitSearchParametersViewDto = {
-      ...defaultValue,
-      sampling: ['A', 'B'],
-    };
-    const { result } = renderHook(() => useWasteSearchFilters(value, vi.fn()));
-
-    act(() => {
-      result.current.handleActiveMultiSelectChange('sampling')({ selectedItems: [] });
+      expect(result.current.filters.legacy).toBe(false);
     });
 
-    expect(result.current.filters.sampling).toEqual([]);
-  });
+    it('shouldDegradeMalformedValuesToUndefined_whenUrlCarriesGarbage', async () => {
+      const { result } = await mountHook('/search?multiMark=garbage&requestByMe=yes');
 
-  it('shouldUpdateSpecifiedKey_whenHandleChangeCalled', () => {
-    const { result } = renderHook(() => useWasteSearchFilters(defaultValue, vi.fn()));
-
-    act(() => {
-      result.current.handleChange('district')(['D1', 'D2']);
+      expect(result.current.filters.multiMark).toBeUndefined();
+      expect(result.current.filters.requestByMe).toBeUndefined();
     });
 
-    expect(result.current.filters.district).toEqual(['D1', 'D2']);
-  });
+    it('shouldCoerceNumericSearchTermsBackToStrings_whenUrlCarriesDigits', async () => {
+      const { result } = await mountHook('/search?mainSearchTerm=12345');
 
-  it('shouldNotAffectOtherKeys_whenHandleChangeCalled', () => {
-    const value: ReportingUnitSearchParametersViewDto = {
-      ...defaultValue,
-      mainSearchTerm: 'keep me',
-    };
-    const { result } = renderHook(() => useWasteSearchFilters(value, vi.fn()));
-
-    act(() => {
-      result.current.handleChange('district')(['D1']);
-    });
-
-    expect(result.current.filters.mainSearchTerm).toBe('keep me');
-  });
-
-  it('shouldRemoveKey_whenOnRemoveFilterCalledWithoutValue', () => {
-    const value: ReportingUnitSearchParametersViewDto = {
-      ...defaultValue,
-      mainSearchTerm: 'remove me',
-    };
-    const { result } = renderHook(() => useWasteSearchFilters(value, vi.fn()));
-
-    act(() => {
-      result.current.onRemoveFilter('mainSearchTerm', undefined);
-    });
-
-    expect(result.current.filters.mainSearchTerm).toBeUndefined();
-  });
-
-  it('shouldRemoveOnlySpecifiedItem_whenOnRemoveFilterCalledWithValue', () => {
-    const value: ReportingUnitSearchParametersViewDto = {
-      ...defaultValue,
-      sampling: ['A', 'B', 'C'],
-    };
-    const { result } = renderHook(() => useWasteSearchFilters(value, vi.fn()));
-
-    act(() => {
-      result.current.onRemoveFilter('sampling', 'B');
-    });
-
-    expect(result.current.filters.sampling).toEqual(['A', 'C']);
-  });
-
-  it('shouldKeepOtherKeys_whenOnRemoveFilterCalled', () => {
-    const value: ReportingUnitSearchParametersViewDto = {
-      ...defaultValue,
-      sampling: ['A', 'B'],
-      district: ['D1'],
-    };
-    const { result } = renderHook(() => useWasteSearchFilters(value, vi.fn()));
-
-    act(() => {
-      result.current.onRemoveFilter('sampling', 'A');
-    });
-
-    expect(result.current.filters.district).toEqual(['D1']);
-  });
-
-  it('shouldCallOnChange_whenFiltersChange', async () => {
-    const onChange = vi.fn();
-    const { result } = renderHook(() => useWasteSearchFilters(defaultValue, onChange));
-
-    // onChange is called once on mount with the initial (empty) state
-    await waitFor(() => {
-      expect(onChange).toHaveBeenCalled();
-    });
-
-    const callCountBefore = onChange.mock.calls.length;
-
-    act(() => {
-      result.current.handleStringChange('mainSearchTerm')('hello');
-    });
-
-    await waitFor(() => {
-      expect(onChange.mock.calls.length).toBeGreaterThan(callCountBefore);
+      expect(result.current.filters.mainSearchTerm).toBe('12345');
     });
   });
 
-  it('shouldOmitEmptyArraysInOnChangeOutput_whenFiltersContainEmptyArrays', async () => {
-    const onChange = vi.fn();
-    renderHook(() =>
-      useWasteSearchFilters(
-        { mainSearchTerm: 'test', sampling: [], district: [], status: [] },
-        onChange,
-      ),
-    );
+  describe('modal state', () => {
+    it('shouldReturnFalseForIsAdvancedSearchOpen_whenInitialized', async () => {
+      const { result } = await mountHook('/search');
 
-    await waitFor(() => {
-      expect(onChange).toHaveBeenCalled();
+      expect(result.current.isAdvancedSearchOpen).toBe(false);
     });
 
-    // The last call should not contain empty-array keys (removeEmpty strips them)
-    const lastCall = onChange.mock.calls[onChange.mock.calls.length - 1][0];
-    expect(lastCall.sampling).toBeUndefined();
-    expect(lastCall.district).toBeUndefined();
-    expect(lastCall.status).toBeUndefined();
-    expect(lastCall.mainSearchTerm).toBe('test');
+    it('shouldToggleModalState_whenSetIsAdvancedSearchOpenCalled', async () => {
+      const { result } = await mountHook('/search');
+
+      act(() => {
+        result.current.setIsAdvancedSearchOpen(true);
+      });
+
+      expect(result.current.isAdvancedSearchOpen).toBe(true);
+
+      act(() => {
+        result.current.setIsAdvancedSearchOpen(false);
+      });
+
+      expect(result.current.isAdvancedSearchOpen).toBe(false);
+    });
   });
 
-  it('shouldReturnAllHandlerFunctions_whenInitialized', () => {
-    const { result } = renderHook(() => useWasteSearchFilters(defaultValue, vi.fn()));
+  describe('filter updates (routed through the URL)', () => {
+    it('shouldUpdateFilterKey_whenHandleStringChangeCalled', async () => {
+      const { result } = await mountHook('/search');
 
-    expect(typeof result.current.handleStringChange).toBe('function');
-    expect(typeof result.current.handleActiveMultiSelectChange).toBe('function');
-    expect(typeof result.current.handleChange).toBe('function');
-    expect(typeof result.current.onRemoveFilter).toBe('function');
-    expect(typeof result.current.setIsAdvancedSearchOpen).toBe('function');
+      act(() => {
+        result.current.handleStringChange('mainSearchTerm')('search text');
+      });
+
+      await waitFor(() => {
+        expect(result.current.filters.mainSearchTerm).toBe('search text');
+      });
+    });
+
+    it('shouldDropEmptyStringValueFromUrl_whenHandleStringChangeCalledWithEmpty', async () => {
+      const { result } = await mountHook('/search?mainSearchTerm=abc');
+
+      act(() => {
+        result.current.handleStringChange('mainSearchTerm')('');
+      });
+
+      await waitFor(() => {
+        expect(result.current.filters.mainSearchTerm).toBeUndefined();
+      });
+    });
+
+    it('shouldMapSelectedItemsToCodes_whenHandleActiveMultiSelectChangeCalled', async () => {
+      const { result } = await mountHook('/search');
+
+      act(() => {
+        result.current.handleActiveMultiSelectChange('sampling')({
+          selectedItems: [
+            { code: 'A', description: 'Option A' },
+            { code: 'B', description: 'Option B' },
+          ],
+        });
+      });
+
+      await waitFor(() => {
+        expect(result.current.filters.sampling).toEqual(['A', 'B']);
+      });
+    });
+
+    it('shouldClearArrayKey_whenHandleActiveMultiSelectChangeWithEmptySelection', async () => {
+      const { result } = await mountHook('/search?sampling=A,B');
+
+      act(() => {
+        result.current.handleActiveMultiSelectChange('sampling')({ selectedItems: [] });
+      });
+
+      await waitFor(() => {
+        expect(result.current.filters.sampling).toBeUndefined();
+      });
+    });
+
+    it('shouldKeepLegacyFalseOnTheWire_whenToggledToPostgresSource', async () => {
+      const { result } = await mountHook('/search');
+
+      act(() => {
+        result.current.handleChange('legacy')(false);
+      });
+
+      await waitFor(() => {
+        expect(result.current.filters.legacy).toBe(false);
+      });
+
+      act(() => {
+        result.current.handleChange('legacy')(true);
+      });
+
+      await waitFor(() => {
+        expect(result.current.filters.legacy).toBe(true);
+      });
+    });
+
+    it('shouldDropUncheckedCheckboxesFromTheUrl_whenSetToFalse', async () => {
+      const { result } = await mountHook('/search?requestByMe=true&multiMark=true');
+
+      expect(result.current.filters.requestByMe).toBe(true);
+
+      act(() => {
+        result.current.handleChange('requestByMe')(false);
+      });
+
+      await waitFor(() => {
+        expect(result.current.filters.requestByMe).toBeUndefined();
+      });
+
+      // The untouched sibling checkbox stays put.
+      expect(result.current.filters.multiMark).toBe(true);
+    });
+
+    it('shouldRemoveKey_whenOnRemoveFilterCalledWithoutValue', async () => {
+      const { result } = await mountHook('/search?mainSearchTerm=remove-me');
+
+      act(() => {
+        result.current.onRemoveFilter('mainSearchTerm', undefined);
+      });
+
+      await waitFor(() => {
+        expect(result.current.filters.mainSearchTerm).toBeUndefined();
+      });
+    });
+
+    it('shouldRemoveOnlySpecifiedItem_whenOnRemoveFilterCalledWithValue', async () => {
+      const { result } = await mountHook('/search?sampling=A,B,C');
+
+      act(() => {
+        result.current.onRemoveFilter('sampling', 'B');
+      });
+
+      await waitFor(() => {
+        expect(result.current.filters.sampling).toEqual(['A', 'C']);
+      });
+    });
+
+    it('shouldKeepOtherKeys_whenOnRemoveFilterCalled', async () => {
+      const { result } = await mountHook('/search?sampling=A,B&district=D1');
+
+      act(() => {
+        result.current.onRemoveFilter('sampling', 'A');
+      });
+
+      await waitFor(() => {
+        expect(result.current.filters.district).toEqual(['D1']);
+      });
+    });
+
+    it('shouldReturnAllHandlerFunctions_whenInitialized', async () => {
+      const { result } = await mountHook('/search');
+
+      expect(typeof result.current.handleStringChange).toBe('function');
+      expect(typeof result.current.handleActiveMultiSelectChange).toBe('function');
+      expect(typeof result.current.handleChange).toBe('function');
+      expect(typeof result.current.onRemoveFilter).toBe('function');
+      expect(typeof result.current.setIsAdvancedSearchOpen).toBe('function');
+    });
   });
 
   describe('useSyncPreferencesToFilters callback', () => {
-    it('shouldReturnValueAsArray_whenKeyIsSelectedClient', () => {
-      renderHook(() => useWasteSearchFilters(defaultValue, vi.fn()));
-      // Extract the transform callback passed to useSyncPreferencesToFilters
+    it('shouldReturnViewShapedItems_whenKeyIsSelectedClient', async () => {
+      await mountHook('/search');
       const calls = vi.mocked(useSyncPreferencesToFilters).mock.calls;
       expect(calls.length).toBeGreaterThan(0);
       const transformFn = calls[0][2]!;
-      expect(transformFn('selectedClient', '100')).toEqual(['100']);
+      // Bare client-number strings are wrapped so viewDtoToSearch can read `.code`.
+      expect(transformFn('selectedClient', '100')).toEqual([{ code: '100', description: '100' }]);
     });
 
-    it('shouldReturnEmptyArray_whenKeyIsSelectedClientAndValueIsFalsy', () => {
-      renderHook(() => useWasteSearchFilters(defaultValue, vi.fn()));
+    it('shouldPassViewShapedPreferenceThrough_whenSelectedClientIsAnObject', async () => {
+      await mountHook('/search');
+      const calls = vi.mocked(useSyncPreferencesToFilters).mock.calls;
+      const transformFn = calls[0][2]!;
+      // Real preference payloads arrive already view-shaped — String() coercion
+      // would corrupt them into "[object Object]".
+      expect(
+        transformFn('selectedClient', {
+          code: '90000003',
+          description: '90000003 OAK HERITAGE LTD. (OAK)',
+        }),
+      ).toEqual([{ code: '90000003', description: '90000003 OAK HERITAGE LTD. (OAK)' }]);
+    });
+
+    it('shouldReturnEmptyArray_whenKeyIsSelectedClientAndValueIsFalsy', async () => {
+      await mountHook('/search');
       const calls = vi.mocked(useSyncPreferencesToFilters).mock.calls;
       const transformFn = calls[0][2]!;
       expect(transformFn('selectedClient', '')).toEqual([]);
     });
 
-    it('shouldReturnValueAsArray_whenKeyIsSelectedDistrict', () => {
-      renderHook(() => useWasteSearchFilters(defaultValue, vi.fn()));
+    it('shouldReturnValueAsArray_whenKeyIsSelectedDistrict', async () => {
+      await mountHook('/search');
       const calls = vi.mocked(useSyncPreferencesToFilters).mock.calls;
       const transformFn = calls[0][2]!;
       expect(transformFn('selectedDistrict', 'DT01')).toEqual(['DT01']);
     });
 
-    it('shouldReturnValuePassthrough_whenKeyIsUnknown', () => {
-      renderHook(() => useWasteSearchFilters(defaultValue, vi.fn()));
+    it('shouldReturnValuePassthrough_whenKeyIsUnknown', async () => {
+      await mountHook('/search');
       const calls = vi.mocked(useSyncPreferencesToFilters).mock.calls;
       const transformFn = calls[0][2]!;
       expect(transformFn('someOtherKey' as never, 'raw-value')).toBe('raw-value');

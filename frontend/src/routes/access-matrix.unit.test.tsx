@@ -176,7 +176,8 @@ describe('DashboardRedirect', () => {
     renderAt('/dashboard?a=1&b=two');
     expect(await screen.findByRole('heading', { name: 'Waste search' })).toBeTruthy();
     expect(capturedRouter?.state.location.pathname).toBe('/search');
-    expect(capturedRouter?.state.location.search).toMatchObject({ a: '1', b: 'two' });
+    // The #1238 search-param codec decodes numeric-looking values as numbers.
+    expect(capturedRouter?.state.location.search).toMatchObject({ a: 1, b: 'two' });
     expect(sessionStorage.getItem('redirectAfterLogin')).toBeNull();
   });
 });

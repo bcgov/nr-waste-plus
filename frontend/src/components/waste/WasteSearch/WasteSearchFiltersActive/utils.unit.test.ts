@@ -19,6 +19,7 @@ describe('mapDisplayFilter', () => {
     expect(mapDisplayFilter('timberMark')).toBe('Timber Mark');
     expect(mapDisplayFilter('clientLocationCode')).toBe('Client Location Code');
     expect(mapDisplayFilter('clientNumbers')).toBe('Client');
+    expect(mapDisplayFilter('legacy')).toBe('Read from legacy');
   });
 
   it('returns key itself for unknown keys', () => {

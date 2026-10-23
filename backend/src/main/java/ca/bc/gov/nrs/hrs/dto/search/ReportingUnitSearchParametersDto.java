@@ -55,6 +55,16 @@ public class ReportingUnitSearchParametersDto {
   private List<Long> reportingUnitIds;
 
   /**
+   * Lenient search-source flag (issue #1238, DEC-011): the exact value {@code false} selects the
+   * PostgreSQL source; an absent value, {@code true}, or any other value (case variants, garbage)
+   * selects the legacy source. Bound as a String, never a Boolean — Spring's Boolean conversion
+   * would reject unrecognized values with HTTP 400, contradicting the leniency contract.
+   * Deliberately excluded from {@link #toMultiMap(Pageable)} (never forwarded to the legacy API)
+   * and from {@link #isEmpty()} (the flag alone must not enable a search).
+   */
+  private String legacy;
+
+  /**
    * Convert the populated search parameters into a {@link MultiValueMap} of query parameters
    * suitable for building a request URL. Only non-empty fields are included. The provided {@code
    * page} will be translated into paging parameters and appended.
@@ -134,6 +144,10 @@ public class ReportingUnitSearchParametersDto {
 
   /**
    * Checks whether all search parameters are empty or unset.
+   *
+   * <p>The {@code legacy} source flag (issue #1238) is deliberately NOT considered here: the flag
+   * alone must never enable a search, mirroring the frontend {@code hasFilters} rule that excludes
+   * it.
    *
    * @return true if no search parameters have been set; false otherwise
    */

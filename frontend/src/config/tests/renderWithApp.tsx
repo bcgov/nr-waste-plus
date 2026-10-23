@@ -17,6 +17,12 @@ export interface RenderWithAppOptions {
   route?: string;
   /** Custom QueryClient; defaults to a new client with retry: false. */
   queryClient?: QueryClient;
+  /**
+   * Optional search-param validator attached to the test router's root route, so
+   * `useSearch` returns validated params (needed by components that read route
+   * search state, e.g. the waste-search filters).
+   */
+  validateSearch?: (search: unknown) => unknown;
 }
 
 /**
@@ -70,6 +76,7 @@ export function renderWithApp(ui: ReactElement, options?: RenderWithAppOptions) 
                   </AuthProvider>
                 ),
                 options?.route,
+                { validateSearch: options?.validateSearch },
               )}
             />
           </ThemeProvider>

@@ -3,6 +3,7 @@ import { createBrowserHistory, createRouter, type RouterHistory } from '@tanstac
 
 import { queryClient } from '@/config/react-query/config';
 import GlobalErrorPage from '@/pages/GlobalError';
+import { searchParamCodec } from '@/routing/searchParams';
 
 // Side-effect import: loads the `StaticDataRouteOption` module augmentation so
 // route `staticData` is fully typed everywhere the router is used.
@@ -49,6 +50,10 @@ export const createAppRouter = (context: AppRouterContext, options?: { history?:
     routeTree,
     context,
     ...routerDefaults,
+    // URL search params use a plain, human-readable format (see
+    // `@/routing/searchParams`): strings unquoted, arrays comma-joined,
+    // booleans `true`/`false`, with legacy JSON-encoded URLs still parsed.
+    ...searchParamCodec,
     ...options,
   });
 

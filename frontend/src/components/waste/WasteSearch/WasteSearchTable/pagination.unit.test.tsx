@@ -1,10 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { useNavigate, useSearch } from '@tanstack/react-router';
 import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi, beforeEach, type Mock } from 'vitest';
 
 import { renderWithAppAsync } from '@/config/tests/renderWithApp';
 import * as useNotificationEvents from '@/hooks/useNotificationEvents';
+import { validateWasteSearch } from '@/routing/searchParams';
 import APIs from '@/services/APIs';
 
 import WasteSearchTable from './index';
@@ -12,23 +14,37 @@ import WasteSearchTable from './index';
 import type { ReportingUnitSearchResultDto } from '@/types/search.types';
 import type { PageableResponse } from '@/types/tableResource.types';
 
-// Mock WasteSearchFilters
+// Mock WasteSearchFilters. The mock mirrors the real component's URL-backed
+// state: it reads mainSearchTerm from the route's validated search params and
+// writes changes back through navigate.
 vi.mock('@/components/waste/WasteSearch/WasteSearchFilters', () => ({
-  default: ({ value, onChange, onSearch }: any) => (
-    <div>
-      <input
-        placeholder="Search by RU No. or Block ID"
-        value={value.mainSearchTerm || ''}
-        onChange={(e) => onChange({ ...value, mainSearchTerm: e.target.value })}
-      />
-      <button data-testid="search-button-most" onClick={onSearch}>
-        Search
-      </button>
-      <button data-testid="advanced-search-button-most" onClick={() => {}}>
-        Advanced
-      </button>
-    </div>
-  ),
+  default: function MockWasteSearchFilters({ onSearch }: any) {
+    const search = useSearch({ strict: false }) as { mainSearchTerm?: string } | null;
+    const navigate = useNavigate();
+    return (
+      <div>
+        <input
+          placeholder="Search by RU No. or Block ID"
+          value={(search?.mainSearchTerm as string) ?? ''}
+          onChange={(e) =>
+            void navigate({
+              search: (prev: Record<string, unknown>) => ({
+                ...prev,
+                mainSearchTerm: e.target.value,
+              }),
+              replace: true,
+            } as never)
+          }
+        />
+        <button data-testid="search-button-most" onClick={onSearch}>
+          Search
+        </button>
+        <button data-testid="advanced-search-button-most" onClick={() => {}}>
+          Advanced
+        </button>
+      </div>
+    );
+  },
 }));
 
 // Mock TableResource
@@ -208,7 +224,11 @@ const setInputValue = async (input: HTMLElement, value: string) => {
   await userEvent.type(input, value);
 };
 
-const renderWithProps = () => renderWithAppAsync(<WasteSearchTable />);
+const renderWithProps = () =>
+  renderWithAppAsync(<WasteSearchTable />, {
+    route: '/search',
+    validateSearch: validateWasteSearch,
+  });
 
 describe('WasteSearchTable - Pagination', () => {
   let sendEventMock: Mock;

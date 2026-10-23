@@ -36,6 +36,8 @@ export const mapDisplayFilter = (key: keyof ReportingUnitSearchParametersDto): s
       return 'Client Location Code';
     case 'clientNumbers':
       return 'Client';
+    case 'legacy':
+      return 'Read from legacy';
     default:
       return key;
   }

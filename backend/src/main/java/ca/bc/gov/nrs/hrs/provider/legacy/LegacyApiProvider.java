@@ -8,6 +8,7 @@ import ca.bc.gov.nrs.hrs.dto.search.MyForestClientSearchResultDto;
 import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchExpandedDto;
 import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchParametersDto;
 import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchResultDto;
+import ca.bc.gov.nrs.hrs.provider.search.ReportingUnitSearchProvider;
 import io.micrometer.observation.annotation.Observed;
 import java.util.List;
 import java.util.Set;
@@ -26,11 +27,14 @@ import org.springframework.stereotype.Component;
  * <p>The LegacyApiProvider acts as a single entry point for all legacy API operations, abstracting
  * away the complexity of multiple specialized client components. This facade pattern ensures that
  * service layer code remains decoupled from the underlying implementation details of each client.
+ *
+ * <p>#1238: this facade is the LEGACY implementation of the {@link ReportingUnitSearchProvider}
+ * source seam.
  */
 @Component
 @Observed
 @RequiredArgsConstructor
-public class LegacyApiProvider {
+public class LegacyApiProvider implements ReportingUnitSearchProvider {
 
   private final LegacyCodesClient codesClient;
   private final LegacyReportingUnitClient reportingUnitClient;
@@ -85,6 +89,7 @@ public class LegacyApiProvider {
    * @param pageable pageable information to include in the request
    * @return a {@link Page} of {@link ReportingUnitSearchResultDto}
    */
+  @Override
   public Page<ReportingUnitSearchResultDto> searchReportingUnit(
       ReportingUnitSearchParametersDto filters, Pageable pageable) {
     return reportingUnitClient.searchReportingUnit(filters, pageable);
