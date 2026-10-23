@@ -53,8 +53,8 @@ public class ObjectStorageConfiguration {
         S3Presigner.builder()
             .region(Region.of(properties.getRegion()))
             .credentialsProvider(resolveCredentials());
-    if (StringUtils.isNotBlank(properties.getEndpoint())) {
-      builder.endpointOverride(URI.create(properties.getEndpoint()));
+    if (StringUtils.isNotBlank(properties.getPresignerEndpoint())) {
+      builder.endpointOverride(URI.create(properties.getPresignerEndpoint()));
     }
     builder.serviceConfiguration(pathStyleConfiguration());
     return builder.build();
