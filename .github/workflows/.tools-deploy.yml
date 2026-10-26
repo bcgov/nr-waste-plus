@@ -241,52 +241,6 @@ jobs:
     needs: [pre-tools]
     runs-on: ubuntu-26.04
     steps:
-      - name: Prepare the PR database
-        uses: bcgov/action-oc-runner@111868d1fc50db0a40417ba321d865ef5c931bbd # v1.7.0
-        with:
-          oc_namespace: cffaf3-tools
-          oc_server: ${{ secrets.oc_server }}
-          oc_token: ${{ secrets.oc_token_tools }}
-          commands: |
-            set -uo pipefail
-
-            NS="cffaf3-tools"
-            PR="${{ github.event.number }}"
-            STATEFULSET="nr-waste-plus-${PR}-database"
-
-            # Clear jobs left behind by earlier pushes to this PR. This runs
-            # before the new jobs exist, so it cannot race with them.
-            STALE=$(oc get jobs -n "${NS}" -o name | grep -E -- "-pr${PR}-" || true)
-            if [ -n "${STALE}" ]; then
-              # The names are one word each, so splitting is what we want.
-              # shellcheck disable=SC2086
-              oc delete ${STALE} -n "${NS}" --ignore-not-found
-            fi
-
-            # The database component is deployed by the PR Open workflow, which
-            # runs in parallel with this one, so wait for it instead of failing
-            # on a race that resolves on its own.
-            ready=0
-            deadline=$(( $(date +%s) + 600 ))
-            while [ "$(date +%s)" -lt "${deadline}" ]; do
-              ready=$(oc get "statefulset/${STATEFULSET}" -n "${NS}" -o jsonpath='{.status.readyReplicas}' 2>/dev/null || true)
-              if [ "${ready:-0}" -ge 1 ]; then
-                echo "StatefulSet ${STATEFULSET} is ready."
-                break
-              fi
-              echo "Waiting for ${STATEFULSET} to become ready..."
-              sleep 10
-            done
-            if [ "${ready:-0}" -lt 1 ]; then
-              echo "::error::StatefulSet ${STATEFULSET} did not become ready within 10 minutes."
-              exit 1
-            fi
-
-            # A CronJob pod template is immutable, so an existing CronJob has to
-            # be removed before the new template is applied.
-            oc delete cronjob/nr-waste-plus-pr${PR}-droppg -n "${NS}" --ignore-not-found
-            oc delete cronjob/nr-waste-plus-pr${PR}-migratepg -n "${NS}" --ignore-not-found
-
       - name: Initializing PostgreSQL CronJobs
         uses: bcgov/action-deployer-openshift@e2d60eb9cacceb89c3b97d8dcf0a2c460eea5eab # v4.2.3
         with:
