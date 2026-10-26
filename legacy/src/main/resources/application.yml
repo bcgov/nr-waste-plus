@@ -72,6 +72,21 @@ management:
     export:
       prometheus:
         enabled: true
+    # Common tags applied to every meter. Previously registered by the
+    # HrsMetricConfiguration Java class; the property placeholders resolve
+    # from the same sources (application.properties and deployment env).
+    tags:
+      version: ${info.app.version}
+      app: ${info.app.name}
+      zone: ${info.app.zone}
+    # Distribution statistics for every timer, applied via the `all` key:
+    # published percentiles plus SLO histogram boundaries — the same values
+    # the removed Java MeterFilter configured.
+    distribution:
+      percentiles:
+        all: 0.5, 0.95, 0.99
+      slo:
+        all: 100ms, 250ms, 500ms, 1s, 2s, 5s, 15s, 30s, 1m
   observations:
     annotations:
       enabled: true
