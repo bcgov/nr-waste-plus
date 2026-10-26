@@ -252,9 +252,10 @@ jobs:
           overwrite: true
           parameters: -p NAME=nr-waste-plus
             -p ZONE=pr${{ github.event.number }}
-            -p POSTGRES_HOST=nr-waste-plus-${{ github.event.number }}-database
+            -p POSTGRES_HOST=nr-waste-plus-${{ github.event.number }}-database.cffaf3-dev.svc.cluster.local
             -p POSTGRES_PORT=5432
-            -p POSTGRES_SERVER_SECRET=nr-waste-plus-${{ github.event.number }}
+            -p POSTGRES_USER=nr-waste-plus
+            -p POSTGRES_PASSWORD=${{ secrets.DB_PASSWORD }}
             -p POSTGRES_SCHEMA=hrs
 
       - name: Drop and migrate the PR postgres database

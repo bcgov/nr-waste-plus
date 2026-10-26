@@ -16,9 +16,11 @@ parameters:
   - name: POSTGRES_PORT
     description: Port of the per-PR PostgreSQL instance
     required: true
-    value: "5432"
-  - name: POSTGRES_SERVER_SECRET
-    description: Secret holding database-name, database-user and database-password
+  - name: POSTGRES_USER
+    description: User for the per-PR PostgreSQL instance
+    required: true
+  - name: POSTGRES_PASSWORD
+    description: Password for the per-PR PostgreSQL instance
     required: true
   - name: POSTGRES_SCHEMA
     description: Schema managed by Flyway
@@ -86,20 +88,11 @@ objects:
                     - name: PGPORT
                       value: ${POSTGRES_PORT}
                     - name: PGUSER
-                      valueFrom:
-                        secretKeyRef:
-                          name: ${POSTGRES_SERVER_SECRET}
-                          key: database-user
+                      value: ${POSTGRES_USER}
                     - name: PGPASSWORD
-                      valueFrom:
-                        secretKeyRef:
-                          name: ${POSTGRES_SERVER_SECRET}
-                          key: database-password
+                      value: ${POSTGRES_PASSWORD}
                     - name: PGDATABASE
-                      valueFrom:
-                        secretKeyRef:
-                          name: ${POSTGRES_SERVER_SECRET}
-                          key: database-name
+                      value: ${NAME}
               restartPolicy: OnFailure
   - kind: CronJob
     apiVersion: batch/v1
@@ -153,20 +146,11 @@ objects:
                     - name: PGPORT
                       value: ${POSTGRES_PORT}
                     - name: PGUSER
-                      valueFrom:
-                        secretKeyRef:
-                          name: ${POSTGRES_SERVER_SECRET}
-                          key: database-user
+                      value: ${POSTGRES_USER}
                     - name: PGPASSWORD
-                      valueFrom:
-                        secretKeyRef:
-                          name: ${POSTGRES_SERVER_SECRET}
-                          key: database-password
+                      value: ${POSTGRES_PASSWORD}
                     - name: PGDATABASE
-                      valueFrom:
-                        secretKeyRef:
-                          name: ${POSTGRES_SERVER_SECRET}
-                          key: database-name
+                      value: ${NAME}
                 - name: curl-container
                   image: curlimages/curl
                   command: ["/bin/sh", "-c"]
@@ -231,20 +215,11 @@ objects:
                     - name: FLYWAY_PORT
                       value: ${POSTGRES_PORT}
                     - name: FLYWAY_USER
-                      valueFrom:
-                        secretKeyRef:
-                          name: ${POSTGRES_SERVER_SECRET}
-                          key: database-user
+                      value: ${POSTGRES_USER}
                     - name: FLYWAY_PASSWORD
-                      valueFrom:
-                        secretKeyRef:
-                          name: ${POSTGRES_SERVER_SECRET}
-                          key: database-password
+                      value: ${POSTGRES_PASSWORD}
                     - name: FLYWAY_DATABASE
-                      valueFrom:
-                        secretKeyRef:
-                          name: ${POSTGRES_SERVER_SECRET}
-                          key: database-name
+                      value: ${NAME}
                     - name: FLYWAY_SCHEMA
                       value: ${POSTGRES_SCHEMA}
                   volumeMounts:
