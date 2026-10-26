@@ -1,7 +1,6 @@
 import { getUserAccessStatus, UNAUTHORIZED_PATH } from '@/context/auth/userAccessValidation';
 
-import type { FamLoginUser, FamRole } from '@/types/auth.types';
-import type { Role } from '@/types/auth.types';
+import type { FamLoginUser, FamRole, Role } from '@/types/auth.types';
 
 /**
  * Normalized redirect decision consumed by the `_authenticated` layout.

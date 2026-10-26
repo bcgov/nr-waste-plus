@@ -1,3 +1,4 @@
+import { queryOptions } from '@tanstack/react-query';
 import { notFound } from '@tanstack/react-router';
 
 import { ApiError } from '@/config/api/types';
@@ -37,10 +38,12 @@ export const reportingUnitLoader = async ({
 
   let data: ReportingUnitDto;
   try {
-    data = await context.queryClient.ensureQueryData({
-      queryKey: queryKeys.reportingUnit.details(ruIdNum),
-      queryFn: () => service.reportingUnit.getReportingUnit(ruIdNum),
-    });
+    data = await context.queryClient.ensureQueryData(
+      queryOptions({
+        queryKey: queryKeys.reportingUnit.details(ruIdNum),
+        queryFn: () => service.reportingUnit.getReportingUnit(ruIdNum),
+      }),
+    );
   } catch (error) {
     if (error instanceof ApiError && (error.status === 404 || error.status === 403)) {
       throw notFound();

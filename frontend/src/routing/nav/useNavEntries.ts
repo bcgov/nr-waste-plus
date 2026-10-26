@@ -81,6 +81,10 @@ export function useNavEntries(): NavEntry[] {
       entries.push({ id: nav.label, to: nav.to, icon: nav.icon, order: nav.order });
     }
 
-    return entries.sort((a, b) => a.order - b.order).map(({ id, to, icon }) => ({ id, to, icon }));
+    // Sort before projecting: keep the in-place mutation out of the return
+    // expression (SonarCloud S4043).
+    entries.sort((a, b) => a.order - b.order);
+
+    return entries.map(({ id, to, icon }) => ({ id, to, icon }));
   }, [router, userRoles, isOnline]);
 }
