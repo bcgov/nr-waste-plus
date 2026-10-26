@@ -246,7 +246,7 @@ jobs:
         with:
           oc_namespace: cffaf3-tools
           oc_server: ${{ secrets.oc_server }}
-          oc_token: ${{ secrets.oc_token }}
+          oc_token: ${{ secrets.oc_token_tools }}
           commands: |
             set -uo pipefail
 
@@ -293,7 +293,7 @@ jobs:
           file: tools/postgres.deploy.yml
           oc_namespace: cffaf3-tools
           oc_server: ${{ secrets.oc_server }}
-          oc_token: ${{ secrets.oc_token }}
+          oc_token: ${{ secrets.oc_token_tools }}
           oc_version: "4.13"
           overwrite: true
           parameters: -p NAME=nr-waste-plus
@@ -308,7 +308,7 @@ jobs:
         with:
           oc_namespace: cffaf3-tools
           oc_server: ${{ secrets.oc_server }}
-          oc_token: ${{ secrets.oc_token }}
+          oc_token: ${{ secrets.oc_token_tools }}
           commands: |
             set -uo pipefail
 
