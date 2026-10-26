@@ -55,7 +55,8 @@ objects:
                       set -eu
 
                       : "${PGDATABASE:?database-name is required}"
-                      echo "Dropping the PostgreSQL database ${PGDATABASE}"
+                      : "${PGUSER:?database-user is required}"
+                      echo "Resetting the PostgreSQL database ${PGDATABASE}"
 
                       # FORCE terminates sessions left behind by a previous
                       # backend pod, so a redeploy cannot fail on a held
@@ -67,7 +68,18 @@ objects:
                       DROP DATABASE IF EXISTS :"db" WITH (FORCE);
                       SQL
 
-                      echo "Dropped the PostgreSQL database ${PGDATABASE}"
+                      # Recreate it immediately. The application connects to
+                      # this database, and so do the readiness and liveness
+                      # probes, so leaving it dropped marks the server unready,
+                      # empties its Service endpoints, and makes the migration
+                      # job unable to connect at all.
+                      psql --dbname=postgres --set=ON_ERROR_STOP=1 --quiet \
+                        --set=db="${PGDATABASE}" \
+                        --set=owner="${PGUSER}" <<'SQL'
+                      CREATE DATABASE :"db" OWNER :"owner";
+                      SQL
+
+                      echo "Reset the PostgreSQL database ${PGDATABASE}"
                   env:
                     - name: PGHOST
                       value: ${POSTGRES_HOST}
