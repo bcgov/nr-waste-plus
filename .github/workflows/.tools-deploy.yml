@@ -44,6 +44,198 @@ jobs:
               oc delete $JOBS -n cffaf3-tools --ignore-not-found
             fi
 
+  deploy-minio:
+    name: Deploy MinIO
+    needs: [pre-tools]
+    runs-on: ubuntu-26.04
+    steps:
+      - name: Require MinIO credentials
+        env:
+          MINIO_ROOT_USER: ${{ secrets.MINIO_ROOT_USER }}
+          MINIO_ROOT_PASSWORD: ${{ secrets.MINIO_ROOT_PASSWORD }}
+        run: |
+          # Fail closed: the template has no credential defaults, so a missing
+          # repository secret must stop the deploy rather than create a MinIO
+          # instance with empty (or shared) credentials.
+          : "${MINIO_ROOT_USER:?MINIO_ROOT_USER repository secret is required}"
+          : "${MINIO_ROOT_PASSWORD:?MINIO_ROOT_PASSWORD repository secret is required}"
+
+      - name: Remove the existing MinIO presign CronJob
+        uses: bcgov/action-oc-runner@111868d1fc50db0a40417ba321d865ef5c931bbd # v1.7.0
+        with:
+          oc_namespace: cffaf3-tools
+          oc_server: ${{ secrets.oc_server }}
+          oc_token: ${{ secrets.oc_token_tools }}
+          commands: |
+            # The MinIO server is deployed only when it is missing, so the
+            # existing Deployment, Service, PVC and Secret are left alone. The
+            # presign CronJob is the exception: its pod template has to match
+            # the current branch, so it is removed and recreated.
+            oc delete cronjob/nr-waste-plus-tools-minio-presign --ignore-not-found
+
+      - name: Initializing MinIO Deployment
+        uses: bcgov/action-deployer-openshift@e2d60eb9cacceb89c3b97d8dcf0a2c460eea5eab # v4.2.3
+        env:
+          MINIO_ROOT_USER: ${{ secrets.MINIO_ROOT_USER }}
+          MINIO_ROOT_PASSWORD: ${{ secrets.MINIO_ROOT_PASSWORD }}
+        with:
+          file: tools/minio.deploy.yml
+          oc_namespace: cffaf3-tools
+          oc_server: ${{ secrets.oc_server }}
+          oc_token: ${{ secrets.oc_token_tools }}
+          oc_version: "4.13"
+          overwrite: false
+          parameters:
+            -p ZONE=tools
+            -p MINIO_ROOT_USER="$MINIO_ROOT_USER"
+            -p MINIO_ROOT_PASSWORD="$MINIO_ROOT_PASSWORD"
+            -p OBJECT_STORAGE_BUCKET=${{ secrets.OBJECT_STORAGE_BUCKET || 'nr-waste' }}
+            -p OBJECT_STORAGE_REGION=${{ secrets.OBJECT_STORAGE_REGION || 'ca-central-1' }}
+
+      - name: Restore OpenShift CLI
+        uses: actions/cache@v6
+        with:
+          path: /usr/local/bin/oc
+          key: oc-cli-stable-4.18-${{ runner.os }}-${{ runner.arch }}
+
+      - name: Seed MinIO bucket and verify presigned PUT and GET
+        env:
+          OC_SERVER: ${{ secrets.oc_server }}
+          OC_TOKEN: ${{ secrets.oc_token_tools }}
+          OC_NAMESPACE: cffaf3-tools
+          PR_NUMBER: ${{ github.event.number }}
+          OC_CLI_VERSION: "4.18"
+          OBJECT_STORAGE_BUCKET: ${{ secrets.OBJECT_STORAGE_BUCKET || 'nr-waste' }}-pr-${{ github.event.number }}
+        run: |
+          set -uo pipefail
+
+          # Every oc call carries a request timeout. The API endpoint
+          # occasionally drops connections, and without a timeout the client
+          # waits on the socket forever instead of failing over to the retry
+          # and poll logic below.
+          OC="oc --request-timeout=15s"
+
+          if ! command -v oc >/dev/null 2>&1; then
+            URL="https://mirror.openshift.com/pub/openshift-v4/clients/ocp/stable-${OC_CLI_VERSION}/openshift-client-linux.tar.gz"
+            echo "Downloading OpenShift CLI from ${URL}..."
+            wget --timeout=15 --tries=3 "${URL}" -qO oc.tar.gz || {
+              echo "::error::Failed to download the OpenShift CLI."
+              exit 1
+            }
+            tar -xzf oc.tar.gz oc || {
+              rm -f oc.tar.gz
+              echo "::error::Failed to extract the OpenShift CLI."
+              exit 1
+            }
+            rm -f oc.tar.gz
+            sudo mv oc /usr/local/bin/oc
+          fi
+
+          # Retry a command until it succeeds or the attempt budget is spent.
+          retry() {
+            local attempts="$1"; shift
+            local attempt=1
+            until "$@"; do
+              if [ "${attempt}" -ge "${attempts}" ]; then
+                echo "::error::Command failed after ${attempts} attempt(s): $*"
+                return 1
+              fi
+              echo "Attempt ${attempt}/${attempts} failed; retrying in $((attempt * 5))s..."
+              sleep $((attempt * 5))
+              attempt=$((attempt + 1))
+            done
+          }
+
+          JOB_TEMPLATE="nr-waste-plus-tools-minio-presign"
+          JOB_NAME="minio-presign-pr${PR_NUMBER}-${{ github.run_attempt }}-$(date +%s)"
+
+          login() {
+            ${OC} login --server="${OC_SERVER}" --token="${OC_TOKEN}"
+          }
+
+          create_job() {
+            local rendered patched
+            rendered=$(${OC} create job --from="cronjob/${JOB_TEMPLATE}" "${JOB_NAME}" -n "${OC_NAMESPACE}" --dry-run=client -o yaml) || return 1
+            patched=$(echo "${rendered}" | sed "/name: PR_NUMBER/{n;s/value: \"0\"/value: \"${PR_NUMBER}\"/;}")
+            echo "${patched}" | grep -q "value: \"${PR_NUMBER}\"" || {
+              echo "::error::PR_NUMBER was not patched into the ${JOB_NAME} job template."
+              return 1
+            }
+            echo "${patched}" | ${OC} apply -f -
+          }
+
+          echo "Logging in to ${OC_SERVER}..."
+          retry 5 login || exit 1
+
+          # Remove only this PR's bucket, leaving the shared MinIO server and
+          # the base bucket intact for other open PRs. This is best effort: the
+          # verification job below recreates the bucket, so an unreachable
+          # server must not stop it.
+          remove_bucket() {
+            local pod_name
+            pod_name=$(${OC} get pods -n "${OC_NAMESPACE}" -l app=nr-waste-plus-tools \
+              -l deployment=nr-waste-plus-tools-minio -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || true)
+            if [ -z "${pod_name}" ]; then
+              echo "MinIO pod not found; skipping bucket removal."
+              return 0
+            fi
+            # The inner script runs inside the container, where these
+            # variables exist, so single quotes are deliberate.
+            # shellcheck disable=SC2016
+            ${OC} exec "${pod_name}" -n "${OC_NAMESPACE}" -c minio-init -- sh -c '
+              mc --config-dir /tmp/.mc alias set local http://localhost:9000 "$MINIO_ROOT_USER" "$MINIO_ROOT_PASSWORD" >/dev/null 2>&1 || exit 0
+              mc --config-dir /tmp/.mc rm --recursive --force local/"$1" >/dev/null 2>&1 || true
+              mc --config-dir /tmp/.mc rb --force local/"$1" >/dev/null 2>&1 || true
+            ' _ "${OBJECT_STORAGE_BUCKET}" || true
+            echo "Removed bucket ${OBJECT_STORAGE_BUCKET} (if it existed)."
+          }
+          retry 2 remove_bucket || echo "::warning::Could not remove ${OBJECT_STORAGE_BUCKET}; continuing."
+
+          echo "Creating in-cluster verification job ${JOB_NAME}..."
+          retry 3 create_job || exit 1
+
+          deadline=$(( $(date +%s) + 300 ))
+          succeeded=0
+          failed=0
+          while [ "$(date +%s)" -lt "${deadline}" ]; do
+            counts=$(${OC} get job "${JOB_NAME}" -n "${OC_NAMESPACE}" \
+              -o jsonpath='{.status.succeeded}/{.status.failed}' 2>/dev/null || true)
+            succeeded="${counts%%/*}"
+            failed="${counts##*/}"
+            succeeded="${succeeded:-0}"
+            failed="${failed:-0}"
+            if [ "${succeeded}" -ge 1 ]; then
+              break
+            fi
+            if [ "${failed}" -ge 1 ]; then
+              break
+            fi
+            echo "Waiting for job ${JOB_NAME} to finish (succeeded=${succeeded}, failed=${failed})..."
+            sleep 10
+          done
+
+          # A dropped connection can cost the poll a status read, so read it
+          # once more before deciding the verification failed.
+          if [ "${succeeded}" -lt 1 ]; then
+            counts=$(${OC} get job "${JOB_NAME}" -n "${OC_NAMESPACE}" -o jsonpath='{.status.succeeded}' 2>/dev/null || true)
+            succeeded="${succeeded:-0}"
+          fi
+
+          echo "--- job logs ---"
+          ${OC} logs "job/${JOB_NAME}" -n "${OC_NAMESPACE}" --tail=100 || true
+          if [ "${succeeded}" -lt 1 ]; then
+            echo "--- job description ---"
+            ${OC} describe "job/${JOB_NAME}" -n "${OC_NAMESPACE}" || true
+          fi
+          ${OC} delete "job/${JOB_NAME}" -n "${OC_NAMESPACE}" --ignore-not-found || true
+
+          if [ "${succeeded}" -lt 1 ]; then
+            echo "::error::Presigned PUT and GET verification failed for PR ${PR_NUMBER} (succeeded=${succeeded}, failed=${failed})."
+            exit 1
+          fi
+
+          echo "Presigned PUT and GET verified for PR ${PR_NUMBER}."
+
   deploy-postgres:
     name: Deploy PostgreSQL
     needs: [pre-tools]
@@ -52,13 +244,13 @@ jobs:
       - name: Prepare the PR database
         uses: bcgov/action-oc-runner@111868d1fc50db0a40417ba321d865ef5c931bbd # v1.7.0
         with:
-          oc_namespace: ${{ secrets.oc_namespace }}
+          oc_namespace: cffaf3-tools
           oc_server: ${{ secrets.oc_server }}
           oc_token: ${{ secrets.oc_token }}
           commands: |
             set -uo pipefail
 
-            NS="${{ secrets.OC_NAMESPACE }}"
+            NS="cffaf3-tools"
             PR="${{ github.event.number }}"
             STATEFULSET="nr-waste-plus-${PR}-database"
 
@@ -99,7 +291,7 @@ jobs:
         uses: bcgov/action-deployer-openshift@e2d60eb9cacceb89c3b97d8dcf0a2c460eea5eab # v4.2.3
         with:
           file: tools/postgres.deploy.yml
-          oc_namespace: ${{ secrets.oc_namespace }}
+          oc_namespace: cffaf3-tools
           oc_server: ${{ secrets.oc_server }}
           oc_token: ${{ secrets.oc_token }}
           oc_version: "4.13"
@@ -111,21 +303,16 @@ jobs:
             -p POSTGRES_SERVER_SECRET=nr-waste-plus-${{ github.event.number }}
             -p POSTGRES_SCHEMA=hrs
 
-      # Dropping first guarantees the migration starts from an empty database,
-      # so a Flyway history from an earlier revision of the branch cannot block
-      # the current one. Both jobs are awaited: applying a Job only means the
-      # API server accepted it, which is how a failed migration used to stay
-      # green.
       - name: Drop and migrate the PR postgres database
         uses: bcgov/action-oc-runner@111868d1fc50db0a40417ba321d865ef5c931bbd # v1.7.0
         with:
-          oc_namespace: ${{ secrets.oc_namespace }}
+          oc_namespace: cffaf3-tools
           oc_server: ${{ secrets.oc_server }}
           oc_token: ${{ secrets.oc_token }}
           commands: |
             set -uo pipefail
 
-            NS="${{ secrets.OC_NAMESPACE }}"
+            NS="cffaf3-tools"
             PR="${{ github.event.number }}"
             BRANCH_NAME="${{ github.head_ref }}"
             ESCAPED_BRANCH_NAME=$(echo "${BRANCH_NAME}" | sed 's/[\/&]/\\&/g')
@@ -181,3 +368,14 @@ jobs:
 
             run_job droppg 300
             run_job migratepg 900 branch
+
+  results:
+    name: PR Results
+    needs: [builds, deploy-minio, deploy-postgres]
+    if: always()
+    runs-on: ubuntu-26.04
+    timeout-minutes: 1
+    steps:
+      - uses: bcgov/actions/workflow-results@79aefe3a7abb2d0d00b1b3ea4cfbf12727a10638 # v0.9.0
+        with:
+          needs: ${{ toJson(needs) }}
