@@ -59,15 +59,21 @@ jobs:
               echo "Failed to find the pod after 5 attempts."
             fi
 
-      - name: Drop the PR postgres database
+      - name: Remove the PR PostgreSQL CronJobs
         continue-on-error: true
         uses: bcgov/action-oc-runner@111868d1fc50db0a40417ba321d865ef5c931bbd # v1.7.0
         with:
-          oc_namespace: cffaf3-tools
+          oc_namespace: ${{ secrets.oc_namespace }}
           oc_server: ${{ secrets.oc_server }}
-          oc_token: ${{ secrets.oc_token_tools }}
+          oc_token: ${{ secrets.oc_token }}
           commands: |
-            oc create job --from=cronjob/nr-waste-plus-tools-droppg droppg-pr${{ github.event.number }}-${{ github.run_attempt }}-$(date +%s) --dry-run=client -o yaml | sed "s/value: \"0\"/value: \"${{ github.event.number }}\"/" | oc apply -f -
+            # The per-PR CronJobs live beside the per-PR database, because
+            # their credentials come from that namespace's secret. Deleting
+            # them also deletes their Jobs through owner references. The
+            # database itself goes away with the StatefulSet teardown.
+            oc delete cronjob/nr-waste-plus-pr${{ github.event.number }}-droppg \
+              cronjob/nr-waste-plus-pr${{ github.event.number }}-migratepg \
+              -n ${{ secrets.OC_NAMESPACE }} --ignore-not-found
 
       - name: Remove the PR MinIO bucket
         continue-on-error: true

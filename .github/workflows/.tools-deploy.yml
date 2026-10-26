@@ -28,29 +28,6 @@ jobs:
     name: Pre Deploy Tools
     runs-on: ubuntu-26.04
     steps:
-      - name: Scale down legacy
-        continue-on-error: true
-        uses: bcgov/action-oc-runner@111868d1fc50db0a40417ba321d865ef5c931bbd # v1.7.0
-        with:
-          oc_namespace: ${{ secrets.oc_namespace }}
-          oc_token: ${{ secrets.oc_token }}
-          oc_server: ${{ secrets.oc_server }}
-          commands: |
-            oc scale deployment/nr-waste-plus-${{ github.event.number }}-legacy --replicas=0 -n ${{ secrets.OC_NAMESPACE }}
-            undesired_replicas=0
-
-            while true; do
-              available_replicas=$(oc get deployment/nr-waste-plus-${{ github.event.number }}-legacy -n ${{ secrets.OC_NAMESPACE }} -o jsonpath='{.status.availableReplicas}')
-
-              if [[ "$available_replicas" -ge "$undesired_replicas" ]]; then
-                echo "DeploymentConfig ${{ secrets.OC_NAMESPACE }}-${{ github.event.number }}-legacy is now available with $available_replicas replicas."
-                break
-              fi
-
-              echo "Waiting... ($available_replicas pods available)"
-              sleep 5
-            done
-
       - name: Remove completed jobs for this PR
         continue-on-error: true
         uses: bcgov/action-oc-runner@111868d1fc50db0a40417ba321d865ef5c931bbd # v1.7.0
@@ -67,97 +44,109 @@ jobs:
               oc delete $JOBS -n cffaf3-tools --ignore-not-found
             fi
 
+      - name: Remove completed PostgreSQL jobs for this PR
+        continue-on-error: true
+        uses: bcgov/action-oc-runner@111868d1fc50db0a40417ba321d865ef5c931bbd # v1.7.0
+        with:
+          oc_namespace: ${{ secrets.oc_namespace }}
+          oc_server: ${{ secrets.oc_server }}
+          oc_token: ${{ secrets.oc_token }}
+          commands: |
+            # The per-PR PostgreSQL jobs run beside the per-PR database, so
+            # they pile up here on every push rather than in the tools
+            # namespace. Scope to this PR: the names include -pr<number>-.
+            JOBS=$(oc get jobs -n ${{ secrets.OC_NAMESPACE }} -o name | grep -E -- "-pr${{ github.event.number }}-" || true)
+            if [ -n "$JOBS" ]; then
+              oc delete $JOBS -n ${{ secrets.OC_NAMESPACE }} --ignore-not-found
+            fi
+
   deploy-postgres:
     name: Deploy PostgreSQL
     needs: [pre-tools]
     runs-on: ubuntu-26.04
     steps:
-      - name: Require PostgreSQL credentials
-        env:
-          POSTGRES_HOST: ${{ secrets.POSTGRES_HOST }}
-          POSTGRES_PORT: ${{ secrets.POSTGRES_PORT }}
-          POSTGRES_ADMIN_DATABASE: ${{ secrets.POSTGRES_ADMIN_DATABASE }}
-          POSTGRES_ADMIN_USER: ${{ secrets.PG_PR_USER }}
-          POSTGRES_ADMIN_PASSWORD: ${{ secrets.PG_PR_PWD }}
-          POSTGRES_USERNAME: ${{ secrets.POSTGRES_USERNAME }}
-          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
-        run: |
-          # Fail closed: the template has no credential defaults, so a missing
-          # repository secret must stop the path rather than create CronJobs
-          # that cannot reach the shared PostgreSQL instance.
-          : "${POSTGRES_HOST:?POSTGRES_HOST repository secret is required}"
-          : "${POSTGRES_PORT:?POSTGRES_PORT repository secret is required}"
-          : "${POSTGRES_ADMIN_DATABASE:?POSTGRES_ADMIN_DATABASE repository secret is required}"
-          : "${POSTGRES_ADMIN_USER:?PG_PR_USER repository secret is required}"
-          : "${POSTGRES_ADMIN_PASSWORD:?PG_PR_PWD repository secret is required}"
-          : "${POSTGRES_USERNAME:?POSTGRES_USERNAME repository secret is required}"
-          : "${POSTGRES_PASSWORD:?POSTGRES_PASSWORD repository secret is required}"
+      - name: Wait for the PR database
+        uses: bcgov/action-oc-runner@111868d1fc50db0a40417ba321d865ef5c931bbd # v1.7.0
+        with:
+          oc_namespace: ${{ secrets.oc_namespace }}
+          oc_server: ${{ secrets.oc_server }}
+          oc_token: ${{ secrets.oc_token }}
+          commands: |
+            set -uo pipefail
+
+            NS="${{ secrets.OC_NAMESPACE }}"
+            STATEFULSET="nr-waste-plus-${{ github.event.number }}-database"
+
+            # The database component is deployed by the PR Open workflow, which
+            # runs in parallel with this one, so the StatefulSet may not exist
+            # yet. Wait for it instead of failing on a race that resolves.
+            deadline=$(( $(date +%s) + 600 ))
+            while [ "$(date +%s)" -lt "${deadline}" ]; do
+              ready=$(oc get "statefulset/${STATEFULSET}" -n "${NS}" -o jsonpath='{.status.readyReplicas}' 2>/dev/null || true)
+              if [ "${ready:-0}" -ge 1 ]; then
+                echo "StatefulSet ${STATEFULSET} is ready."
+                exit 0
+              fi
+              echo "Waiting for ${STATEFULSET} to become ready..."
+              sleep 10
+            done
+
+            echo "::error::StatefulSet ${STATEFULSET} did not become ready within 10 minutes."
+            exit 1
 
       - name: Remove the existing PostgreSQL CronJobs
         uses: bcgov/action-oc-runner@111868d1fc50db0a40417ba321d865ef5c931bbd # v1.7.0
         with:
-          oc_namespace: cffaf3-tools
+          oc_namespace: ${{ secrets.oc_namespace }}
           oc_server: ${{ secrets.oc_server }}
-          oc_token: ${{ secrets.oc_token_tools }}
+          oc_token: ${{ secrets.oc_token }}
           commands: |
             # The pod template of a CronJob is immutable, so an existing
             # CronJob has to be removed before the new template is applied.
-            oc delete cronjob/nr-waste-plus-tools-migratepg --ignore-not-found
-            oc delete cronjob/nr-waste-plus-tools-droppg --ignore-not-found
+            oc delete cronjob/nr-waste-plus-pr${{ github.event.number }}-droppg -n ${{ secrets.OC_NAMESPACE }} --ignore-not-found
+            oc delete cronjob/nr-waste-plus-pr${{ github.event.number }}-migratepg -n ${{ secrets.OC_NAMESPACE }} --ignore-not-found
 
       - name: Initializing PostgreSQL CronJobs
         uses: bcgov/action-deployer-openshift@e2d60eb9cacceb89c3b97d8dcf0a2c460eea5eab # v4.2.3
-        env:
-          POSTGRES_HOST: ${{ secrets.POSTGRES_HOST }}
-          POSTGRES_PORT: ${{ secrets.POSTGRES_PORT }}
-          POSTGRES_ADMIN_DATABASE: ${{ secrets.POSTGRES_ADMIN_DATABASE }}
-          POSTGRES_ADMIN_USER: ${{ secrets.PG_PR_USER }}
-          POSTGRES_ADMIN_PASSWORD: ${{ secrets.PG_PR_PWD }}
-          POSTGRES_USERNAME: ${{ secrets.POSTGRES_USERNAME }}
-          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
         with:
           file: tools/postgres.deploy.yml
-          oc_namespace: cffaf3-tools
+          oc_namespace: ${{ secrets.oc_namespace }}
           oc_server: ${{ secrets.oc_server }}
-          oc_token: ${{ secrets.oc_token_tools }}
+          oc_token: ${{ secrets.oc_token }}
           oc_version: "4.13"
           overwrite: true
-          parameters: -p ZONE=tools
-            -p POSTGRES_HOST="$POSTGRES_HOST"
-            -p POSTGRES_PORT="$POSTGRES_PORT"
-            -p POSTGRES_ADMIN_DATABASE="$POSTGRES_ADMIN_DATABASE"
-            -p POSTGRES_ADMIN_USER="$POSTGRES_ADMIN_USER"
-            -p POSTGRES_ADMIN_PASSWORD="$POSTGRES_ADMIN_PASSWORD"
-            -p POSTGRES_USERNAME="$POSTGRES_USERNAME"
-            -p POSTGRES_PASSWORD="$POSTGRES_PASSWORD"
+          parameters: -p NAME=nr-waste-plus
+            -p ZONE=pr${{ github.event.number }}
+            -p POSTGRES_HOST=nr-waste-plus-${{ github.event.number }}-database
+            -p POSTGRES_PORT=5432
+            -p POSTGRES_SERVER_SECRET=nr-waste-plus-${{ github.event.number }}
+            -p POSTGRES_SCHEMA=hrs
 
-      - name: Migrate the PR postgres database
+      # Drop runs as its own job so a failure to drop is reported as a drop
+      # failure, not as a migration failure. It also guarantees the migration
+      # starts from an empty database, so a Flyway history from an earlier
+      # revision of the branch cannot block the current one.
+      - name: Drop the PR postgres database
         uses: bcgov/action-oc-runner@111868d1fc50db0a40417ba321d865ef5c931bbd # v1.7.0
         with:
-          oc_namespace: cffaf3-tools
+          oc_namespace: ${{ secrets.oc_namespace }}
           oc_server: ${{ secrets.oc_server }}
-          oc_token: ${{ secrets.oc_token_tools }}
+          oc_token: ${{ secrets.oc_token }}
           commands: |
             set -uo pipefail
 
-            BRANCH_NAME="${{ github.head_ref }}"
-            ESCAPED_BRANCH_NAME=$(echo "$BRANCH_NAME" | sed 's/[\/&]/\\&/g')
-            JOB_NAME="migratepg-pr${{ github.event.number }}-${{ github.run_attempt }}-$(date +%s)"
+            JOB_NAME="droppg-pr${{ github.event.number }}-${{ github.run_attempt }}-$(date +%s)"
+            if ! oc create job --from=cronjob/nr-waste-plus-pr${{ github.event.number }}-droppg "${JOB_NAME}" --dry-run=client -o yaml \
+              | oc apply -f -; then
+              echo "::error::Could not create the PostgreSQL drop job ${JOB_NAME}."
+              exit 1
+            fi
 
-            # The job template carries the branch and the PR number as
-            # parameters, the same way the Oracle migration job does.
-            oc create job --from=cronjob/nr-waste-plus-tools-migratepg "${JOB_NAME}" --dry-run=client -o yaml \
-              | sed "s/value: \"main\"/value: \"${ESCAPED_BRANCH_NAME}\"/" \
-              | sed "s/value: \"0\"/value: \"${{ github.event.number }}\"/" \
-              | oc apply -f -
-
-            # The application must not start against a database that is being
-            # destroyed and recreated, so wait for the migration to finish.
-            deadline=$(( $(date +%s) + 600 ))
+            deadline=$(( $(date +%s) + 300 ))
             succeeded=0
             failed=0
             while [ "$(date +%s)" -lt "${deadline}" ]; do
-              counts=$(oc get job "${JOB_NAME}" -n cffaf3-tools \
+              counts=$(oc get job "${JOB_NAME}" -n ${{ secrets.OC_NAMESPACE }} \
                 -o jsonpath='{.status.succeeded}/{.status.failed}' 2>/dev/null || true)
               succeeded="${counts%%/*}"
               failed="${counts##*/}"
@@ -171,14 +160,62 @@ jobs:
             done
 
             echo "--- job logs ---"
-            oc logs "job/${JOB_NAME}" -n cffaf3-tools --tail=100 || true
+            oc logs "job/${JOB_NAME}" -n ${{ secrets.OC_NAMESPACE }} --tail=100 || true
             if [ "${succeeded}" -lt 1 ]; then
               echo "--- job description ---"
-              oc describe "job/${JOB_NAME}" -n cffaf3-tools || true
-              echo "::error::The PostgreSQL migration failed for PR ${{ github.event.number }} (succeeded=${succeeded}, failed=${failed})."
+              oc describe "job/${JOB_NAME}" -n ${{ secrets.OC_NAMESPACE }} || true
+              echo "::error::Dropping the PostgreSQL database failed for PR ${{ github.event.number }} (succeeded=${succeeded}, failed=${failed})."
               exit 1
             fi
 
+      - name: Migrate the PR postgres database
+        uses: bcgov/action-oc-runner@111868d1fc50db0a40417ba321d865ef5c931bbd # v1.7.0
+        with:
+          oc_namespace: ${{ secrets.oc_namespace }}
+          oc_server: ${{ secrets.oc_server }}
+          oc_token: ${{ secrets.oc_token }}
+          commands: |
+            set -uo pipefail
+
+            BRANCH_NAME="${{ github.head_ref }}"
+            ESCAPED_BRANCH_NAME=$(echo "$BRANCH_NAME" | sed 's/[\/&]/\\&/g')
+            JOB_NAME="migratepg-pr${{ github.event.number }}-${{ github.run_attempt }}-$(date +%s)"
+
+            # oc re-serializes the cronjob template, so the branch value comes
+            # back unquoted ("value: main"). Matching the bare form is what
+            # makes the job migrate this branch instead of main.
+            if ! oc create job --from=cronjob/nr-waste-plus-pr${{ github.event.number }}-migratepg "${JOB_NAME}" --dry-run=client -o yaml \
+              | sed "s/value: main/value: ${ESCAPED_BRANCH_NAME}/" \
+              | oc apply -f -; then
+              echo "::error::Could not create the PostgreSQL migration job ${JOB_NAME}."
+              exit 1
+            fi
+
+            deadline=$(( $(date +%s) + 900 ))
+            succeeded=0
+            failed=0
+            while [ "$(date +%s)" -lt "${deadline}" ]; do
+              counts=$(oc get job "${JOB_NAME}" -n ${{ secrets.OC_NAMESPACE }} \
+                -o jsonpath='{.status.succeeded}/{.status.failed}' 2>/dev/null || true)
+              succeeded="${counts%%/*}"
+              failed="${counts##*/}"
+              succeeded="${succeeded:-0}"
+              failed="${failed:-0}"
+              if [ "${succeeded}" -ge 1 ] || [ "${failed}" -ge 1 ]; then
+                break
+              fi
+              echo "Waiting for job ${JOB_NAME} to finish (succeeded=${succeeded}, failed=${failed})..."
+              sleep 10
+            done
+
+            echo "--- job logs ---"
+            oc logs "job/${JOB_NAME}" -n ${{ secrets.OC_NAMESPACE }} --tail=200 || true
+            if [ "${succeeded}" -lt 1 ]; then
+              echo "--- job description ---"
+              oc describe "job/${JOB_NAME}" -n ${{ secrets.OC_NAMESPACE }} || true
+              echo "::error::The PostgreSQL migration failed for PR ${{ github.event.number }} (succeeded=${succeeded}, failed=${failed})."
+              exit 1
+            fi
   deploy-oracle:
     name: Deploy Oracle Database
     needs: [pre-tools, builds]
@@ -197,6 +234,41 @@ jobs:
             -p ORACLEDB_PASSWORD=${{ secrets.ORACLEDB_PASSWORD }}
             -p TAG=${{ github.event.number }}
 
+      - name: Stop the legacy service
+        uses: bcgov/action-oc-runner@111868d1fc50db0a40417ba321d865ef5c931bbd # v1.7.0
+        with:
+          oc_namespace: ${{ secrets.oc_namespace }}
+          oc_server: ${{ secrets.oc_server }}
+          oc_token: ${{ secrets.oc_token }}
+          commands: |
+            set -uo pipefail
+
+            NS="${{ secrets.OC_NAMESPACE }}"
+            LEGACY="nr-waste-plus-${{ github.event.number }}-legacy"
+
+            # A missing deployment means the PR app has never been deployed, so
+            # there is nothing holding the pluggable database. Any other oc
+            # error must fail the path instead of leaving the app running.
+            if ! oc get "deployment/${LEGACY}" -n "${NS}" >/dev/null 2>&1; then
+              echo "Deployment ${LEGACY} does not exist yet; nothing to stop."
+              exit 0
+            fi
+
+            oc scale "deployment/${LEGACY}" --replicas=0 -n "${NS}"
+
+            deadline=$(( $(date +%s) + 300 ))
+            while [ "$(date +%s)" -lt "${deadline}" ]; do
+              available=$(oc get "deployment/${LEGACY}" -n "${NS}" -o jsonpath='{.status.availableReplicas}' 2>/dev/null || true)
+              if [ "${available:-0}" -eq 0 ]; then
+                echo "Deployment ${LEGACY} is stopped."
+                exit 0
+              fi
+              echo "Waiting for ${LEGACY} to stop (${available} pod(s) still available)..."
+              sleep 5
+            done
+
+            echo "::error::Deployment ${LEGACY} did not scale to zero within 5 minutes."
+            exit 1
       - name: Remove the PR database
         continue-on-error: true
         uses: bcgov/action-oc-runner@111868d1fc50db0a40417ba321d865ef5c931bbd # v1.7.0
@@ -272,21 +344,61 @@ jobs:
               echo "Failed to find the pod after 5 attempts."
             fi
 
+      # This is the last thing that validates the PR database. The create steps
+      # above are continue-on-error because they also fail when the objects
+      # already exist, so Flyway is what surfaces a broken pluggable database.
+      # It must stay red on failure and must wait for the Job: applying the Job
+      # only means the API server accepted it.
       - name: Migrate the PR database
-        continue-on-error: true
         uses: bcgov/action-oc-runner@111868d1fc50db0a40417ba321d865ef5c931bbd # v1.7.0
         with:
           oc_namespace: cffaf3-tools
           oc_server: ${{ secrets.oc_server }}
           oc_token: ${{ secrets.oc_token_tools }}
           commands: |
+            set -uo pipefail
+
             BRANCH_NAME="${{ github.head_ref }}"
             ESCAPED_BRANCH_NAME=$(echo "$BRANCH_NAME" | sed 's/[\/&]/\\&/g')
-            oc create job --from=cronjob/nr-waste-plus-tools-migratedb migrate-pr${{ github.event.number }}-${{ github.run_attempt }}-$(date +%s) --dry-run=client -o yaml \
-              | sed "s/value: \"main\"/value: \"${ESCAPED_BRANCH_NAME}\"/" \
-              | sed "s/value: \"0\"/value: \"${{ github.event.number }}\"/" \
-              | oc apply -f -
+            JOB_NAME="migrate-pr${{ github.event.number }}-${{ github.run_attempt }}-$(date +%s)"
 
+            # oc re-serializes the cronjob template, so the branch value comes
+            # back unquoted ("value: main") while "0" keeps its quotes.
+            if ! oc create job --from=cronjob/nr-waste-plus-tools-migratedb "${JOB_NAME}" --dry-run=client -o yaml \
+              | sed "s/value: main/value: ${ESCAPED_BRANCH_NAME}/" \
+              | sed "s/value: \"0\"/value: \"${{ github.event.number }}\"/" \
+              | oc apply -f -; then
+              echo "::error::Could not create the Oracle migration job ${JOB_NAME} for PR ${{ github.event.number }}."
+              exit 1
+            fi
+
+            # The job downloads the branch archive from GitHub before running
+            # Flyway, so allow more time than a pure in-cluster run would need.
+            deadline=$(( $(date +%s) + 900 ))
+            succeeded=0
+            failed=0
+            while [ "$(date +%s)" -lt "${deadline}" ]; do
+              counts=$(oc get job "${JOB_NAME}" -n cffaf3-tools \
+                -o jsonpath='{.status.succeeded}/{.status.failed}' 2>/dev/null || true)
+              succeeded="${counts%%/*}"
+              failed="${counts##*/}"
+              succeeded="${succeeded:-0}"
+              failed="${failed:-0}"
+              if [ "${succeeded}" -ge 1 ] || [ "${failed}" -ge 1 ]; then
+                break
+              fi
+              echo "Waiting for job ${JOB_NAME} to finish (succeeded=${succeeded}, failed=${failed})..."
+              sleep 10
+            done
+
+            echo "--- job logs ---"
+            oc logs "job/${JOB_NAME}" -n cffaf3-tools --tail=200 || true
+            if [ "${succeeded}" -lt 1 ]; then
+              echo "--- job description ---"
+              oc describe "job/${JOB_NAME}" -n cffaf3-tools || true
+              echo "::error::The Oracle migration failed for PR ${{ github.event.number }} (succeeded=${succeeded}, failed=${failed})."
+              exit 1
+            fi
   deploy-minio:
     name: Deploy MinIO
     needs: [pre-tools]
@@ -303,6 +415,18 @@ jobs:
           : "${MINIO_ROOT_USER:?MINIO_ROOT_USER repository secret is required}"
           : "${MINIO_ROOT_PASSWORD:?MINIO_ROOT_PASSWORD repository secret is required}"
 
+      - name: Remove the existing MinIO presign CronJob
+        uses: bcgov/action-oc-runner@111868d1fc50db0a40417ba321d865ef5c931bbd # v1.7.0
+        with:
+          oc_namespace: cffaf3-tools
+          oc_server: ${{ secrets.oc_server }}
+          oc_token: ${{ secrets.oc_token_tools }}
+          commands: |
+            # The MinIO server is deployed only when it is missing, so the
+            # existing Deployment, Service, PVC and Secret are left alone. The
+            # presign CronJob is the exception: its pod template has to match
+            # the current branch, so it is removed and recreated.
+            oc delete cronjob/nr-waste-plus-tools-minio-presign --ignore-not-found
       - name: Initializing MinIO Deployment
         uses: bcgov/action-deployer-openshift@e2d60eb9cacceb89c3b97d8dcf0a2c460eea5eab # v4.2.3
         env:
@@ -314,7 +438,7 @@ jobs:
           oc_server: ${{ secrets.oc_server }}
           oc_token: ${{ secrets.oc_token_tools }}
           oc_version: "4.13"
-          overwrite: true
+          overwrite: false
           parameters:
             -p ZONE=tools
             -p MINIO_ROOT_USER="$MINIO_ROOT_USER"
@@ -481,16 +605,29 @@ jobs:
   scale-up-legacy:
     name: Scale up legacy
     needs: [deploy-postgres, deploy-oracle, deploy-minio]
-    #    needs: [pre-tools]
-    if: always()
     runs-on: ubuntu-26.04
     steps:
+      # No continue-on-error and no if: always(). A failed database or object
+      # storage path skips this job, which keeps the run red, instead of
+      # restarting an application against a database that was never prepared.
       - name: Start the Legacy Service
-        continue-on-error: true
         uses: bcgov/action-oc-runner@111868d1fc50db0a40417ba321d865ef5c931bbd # v1.7.0
         with:
           oc_namespace: ${{ secrets.oc_namespace }}
           oc_token: ${{ secrets.oc_token }}
           oc_server: ${{ secrets.oc_server }}
           commands: |
-            oc scale deployment/nr-waste-plus-${{ github.event.number }}-legacy --replicas=1
+            set -uo pipefail
+
+            NS="${{ secrets.OC_NAMESPACE }}"
+            LEGACY="nr-waste-plus-${{ github.event.number }}-legacy"
+
+            # The PR application is deployed by the PR Open workflow. It may not
+            # exist yet on the first push, and that workflow starts it itself,
+            # so a missing deployment is not an error here.
+            if ! oc get "deployment/${LEGACY}" -n "${NS}" >/dev/null 2>&1; then
+              echo "Deployment ${LEGACY} does not exist yet; the PR workflow will start it."
+              exit 0
+            fi
+
+            oc scale "deployment/${LEGACY}" --replicas=1 -n "${NS}"
