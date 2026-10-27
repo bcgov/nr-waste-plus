@@ -24,7 +24,7 @@ test.describe('Configuration Page', () => {
       await page.goto('/search');
       await page.waitForLoadState('domcontentloaded');
 
-      const configLink = page.getByTestId('side-nav-link-config');
+      const configLink = page.getByTestId('side-nav-link-Configuration');
       await expect(configLink).toBeVisible();
 
       await configLink.click();
@@ -95,7 +95,7 @@ test.describe('Configuration Page', () => {
       await page.goto('/search');
       await page.waitForLoadState('domcontentloaded');
 
-      await expect(page.getByTestId('side-nav-link-config')).toHaveCount(0);
+      await expect(page.getByTestId('side-nav-link-Configuration')).toHaveCount(0);
     });
 
     test('should redirect to unauthorized when non-admin user accesses Configuration via direct URL @bceid-only', async ({

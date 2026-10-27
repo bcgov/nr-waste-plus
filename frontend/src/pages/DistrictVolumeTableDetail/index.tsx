@@ -8,7 +8,6 @@ import PageTitle from '@/components/core/PageTitle';
 import DistrictVolumeDetailView from '@/components/waste/DistrictAverage/DistrictVolumeDetail';
 import DistrictVolumeDetailSkeleton from '@/components/waste/DistrictAverage/DistrictVolumeDetail/DistrictVolumeDetailSkeleton';
 import { useDistrictVolumeTableDetailQuery } from '@/config/react-query/hooks';
-import { navigateInTree } from '@/routes/inTreePaths';
 
 import './index.scss';
 
@@ -67,7 +66,7 @@ const DistrictVolumeTableDetailPage: FC = () => {
         >
           <Button
             kind="secondary"
-            onClick={() => navigateInTree(navigate, '/configuration/district-volume-tables')}
+            onClick={() => void navigate({ to: '/configuration/district-volume-tables' })}
             renderIcon={ArrowLeft}
           >
             Back
@@ -102,7 +101,7 @@ const DistrictVolumeTableDetailPage: FC = () => {
       >
         <Button
           kind="secondary"
-          onClick={() => navigateInTree(navigate, '/configuration/district-volume-tables')}
+          onClick={() => void navigate({ to: '/configuration/district-volume-tables' })}
           renderIcon={ArrowLeft}
         >
           Back

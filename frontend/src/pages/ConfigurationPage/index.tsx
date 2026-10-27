@@ -5,7 +5,6 @@ import { type FC } from 'react';
 
 import ConfigurationCard from '@/components/core/ConfigurationCard';
 import PageTitle from '@/components/core/PageTitle';
-import { navigateInTree } from '@/routes/inTreePaths';
 
 import './index.scss';
 
@@ -14,7 +13,7 @@ import './index.scss';
  *
  * Renders a {@link PageTitle} header followed by a set of {@link ConfigurationCard}
  * tiles, each linking to a specific configuration section. Card actions use
- * {@link navigateInTree} for type-safe in-tree navigation.
+ * typed `navigate` for type-safe in-tree navigation.
  *
  * @returns A fragment containing the page header and configuration card columns.
  */
@@ -39,9 +38,7 @@ const ConfigurationPage: FC = () => {
               buttonLabel="View or update tables"
               linkVariant={true}
               linkIcon={<ArrowRight />}
-              onButtonClick={() =>
-                navigateInTree(navigate, '/configuration/district-volume-tables')
-              }
+              onButtonClick={() => void navigate({ to: '/configuration/district-volume-tables' })}
             />
 
             <ConfigurationCard
@@ -51,7 +48,7 @@ const ConfigurationPage: FC = () => {
               buttonLabel="View or update tables"
               linkVariant={true}
               linkIcon={<ArrowRight />}
-              onButtonClick={() => navigateInTree(navigate, '/configuration/species-composition')}
+              onButtonClick={() => void navigate({ to: '/configuration/species-composition' })}
             />
           </div>
         </div>
@@ -67,7 +64,7 @@ const ConfigurationPage: FC = () => {
               buttonLabel="View or update formulas"
               linkVariant={true}
               linkIcon={<ArrowRight />}
-              onButtonClick={() => navigateInTree(navigate, '/configuration/formulas')}
+              onButtonClick={() => void navigate({ to: '/configuration/formulas' })}
             />
           </div>
         </div>

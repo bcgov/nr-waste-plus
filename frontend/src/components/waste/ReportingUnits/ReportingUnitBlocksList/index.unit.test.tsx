@@ -292,7 +292,10 @@ describe('ReportingUnitBlocksList', () => {
 
     await userEvent.click(screen.getAllByRole('button', { name: 'See details' })[0]);
 
-    expect(mockNavigate).toHaveBeenCalledWith({ to: '/reporting-units/468/1' });
+    expect(mockNavigate).toHaveBeenCalledWith({
+      to: '/reporting-units/$ruId/$blockId',
+      params: { ruId: '468', blockId: '1' },
+    });
   });
 
   it('navigates to the correct details path for each selected block row', async () => {
@@ -303,8 +306,14 @@ describe('ReportingUnitBlocksList', () => {
     await userEvent.click(detailsButtons[1]);
     await userEvent.click(detailsButtons[8]);
 
-    expect(mockNavigate).toHaveBeenNthCalledWith(1, { to: '/reporting-units/468/2' });
-    expect(mockNavigate).toHaveBeenNthCalledWith(2, { to: '/reporting-units/468/9' });
+    expect(mockNavigate).toHaveBeenNthCalledWith(1, {
+      to: '/reporting-units/$ruId/$blockId',
+      params: { ruId: '468', blockId: '2' },
+    });
+    expect(mockNavigate).toHaveBeenNthCalledWith(2, {
+      to: '/reporting-units/$ruId/$blockId',
+      params: { ruId: '468', blockId: '9' },
+    });
   });
 
   it('renders loading and error states from the query props', async () => {

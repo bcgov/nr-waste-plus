@@ -8,7 +8,6 @@ import PageTitle from '@/components/core/PageTitle';
 import FormulaConfigurationDetail from '@/components/waste/Formula/FormulaConfigurationDetail';
 import FormulaConfigurationDetailSkeleton from '@/components/waste/Formula/FormulaConfigurationDetail/FormulaConfigurationDetailSkeleton';
 import { useFormulaSetDetail } from '@/hooks/useFormulaConfiguration';
-import { navigateInTree } from '@/routes/inTreePaths';
 
 import './index.scss';
 
@@ -46,7 +45,7 @@ const FormulaConfigurationDetailPage: FC = () => {
         >
           <Button
             kind="secondary"
-            onClick={() => navigateInTree(navigate, '/configuration/formulas')}
+            onClick={() => void navigate({ to: '/configuration/formulas' })}
             renderIcon={ArrowLeft}
           >
             Back
@@ -89,7 +88,7 @@ const FormulaConfigurationDetailPage: FC = () => {
       >
         <Button
           kind="secondary"
-          onClick={() => navigateInTree(navigate, '/configuration/formulas')}
+          onClick={() => void navigate({ to: '/configuration/formulas' })}
           renderIcon={ArrowLeft}
         >
           Back

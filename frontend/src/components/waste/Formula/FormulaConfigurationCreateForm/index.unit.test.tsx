@@ -1,6 +1,6 @@
-import React from 'react';
-import { render, screen, fireEvent, act } from '@testing-library/react';
+import { render, screen, fireEvent, act, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import React from 'react';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 
 import { ApiError } from '@/config/api/types.ts';
@@ -21,8 +21,7 @@ const mocks = vi.hoisted(() => ({
   },
   variablesParams: null as { date: string; area: string; districtCode: string } | null,
   formulaSectionOnChange: null as
-    | ((key: string, expression: string, validationErrors?: unknown[]) => void)
-    | null,
+    ((key: string, expression: string, validationErrors?: unknown[]) => void) | null,
   // Last-rendered `formulas` prop captured from the FormulaSection mock — lets
   // tests assert what the form store actually pushed down to the sections.
   formulaSectionFormulas: null as { formulaKey: string; expression: string }[] | null,
@@ -297,7 +296,8 @@ describe('FormulaConfigurationCreateForm', () => {
     expect(mocks.navigate).toHaveBeenCalledWith({ to: '/configuration/formulas' });
   });
 
-  it('returns to edit mode when Back is clicked (is reviewing)', () => {
+  it('returns to edit mode when Back is clicked (is reviewing)', async () => {
+    const user = userEvent.setup();
     mocks.current.isFetched = true;
     render(<FormulaConfigurationCreateForm />);
 
@@ -306,7 +306,7 @@ describe('FormulaConfigurationCreateForm', () => {
     expect(screen.getByRole('button', { name: 'Create formula set' })).toBeTruthy();
 
     // Click Back (type="button", not submit, so userEvent works)
-    fireEvent.click(screen.getByRole('button', { name: 'Back to edit' }));
+    await user.click(screen.getByRole('button', { name: 'Back to edit' }));
 
     expect(screen.getByRole('button', { name: 'Review formulas' })).toBeTruthy();
     expect(screen.queryByRole('button', { name: 'Create formula set' })).toBeNull();
@@ -326,7 +326,13 @@ describe('FormulaConfigurationCreateForm', () => {
     // Submit the form (second submit triggers handleSubmit)
     submitForm();
 
-    await act(async () => {});
+    // waitFor runs act and drains the resolved mutation's deferred updates.
+    await waitFor(() => {
+      expect(mocks.navigate).toHaveBeenCalledWith({
+        to: '/configuration/formulas/$id',
+        params: { id: '42' },
+      });
+    });
 
     expect(mocks.mutateAsync).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -334,7 +340,6 @@ describe('FormulaConfigurationCreateForm', () => {
         formulas: expect.any(Array),
       }),
     );
-    expect(mocks.navigate).toHaveBeenCalledWith({ to: '/configuration/formulas/42' });
   });
 
   it('shows error message when form submission fails', async () => {
@@ -345,7 +350,8 @@ describe('FormulaConfigurationCreateForm', () => {
     submitForm(); // enter review
     submitForm(); // submit
 
-    await act(async () => {});
+    // findByRole drains the deferred mutation update (waitFor/findBy run act).
+    await screen.findByRole('alert');
 
     expect(screen.getByRole('alert').textContent).toContain('Network error');
   });
@@ -358,7 +364,8 @@ describe('FormulaConfigurationCreateForm', () => {
     submitForm(); // enter review
     submitForm(); // submit
 
-    await act(async () => {});
+    // findByRole drains the deferred mutation update (waitFor/findBy run act).
+    await screen.findByRole('alert');
 
     expect(screen.getByRole('alert').textContent).toContain('Formula set creation failed');
   });
@@ -484,11 +491,12 @@ describe('FormulaConfigurationCreateForm', () => {
     // Trigger a submission error
     submitForm(); // enter review
     submitForm(); // submit (fails)
-    await act(async () => {});
+    // findByRole drains the deferred mutation update (waitFor/findBy run act).
+    await screen.findByRole('alert');
     expect(screen.getByRole('alert').textContent).toContain('Network error');
 
     // Exit review mode to access the edit buttons
-    fireEvent.click(screen.getByRole('button', { name: 'Back to edit' }));
+    await user.click(screen.getByRole('button', { name: 'Back to edit' }));
 
     // Click edit formula — should clear submitError
     const editBtns = screen.getAllByRole('button', { name: 'Edit formula' });
@@ -499,47 +507,47 @@ describe('FormulaConfigurationCreateForm', () => {
 
   // ─── Date Change / handleDateChange ────────────────────────────────────────
 
-  it('sets empty date when no date is provided', () => {
+  it('sets empty date when no date is provided', async () => {
+    const user = userEvent.setup();
     render(<FormulaConfigurationCreateForm />);
-    const datePicker = screen.getByTestId('start-date-picker');
+    // The testid sits on the Carbon input itself — drive it with userEvent.
+    const datePickerInput = screen.getByTestId('start-date-picker');
 
-    act(() => {
-      fireEvent.change(datePicker, { target: { value: '' } });
-    });
+    await user.clear(datePickerInput);
 
     expect(screen.getByRole('button', { name: 'Review formulas' })).toBeTruthy();
   });
 
-  it('handles date input with valid future date', () => {
+  it('handles date input with valid future date', async () => {
+    const user = userEvent.setup();
     render(<FormulaConfigurationCreateForm />);
-    const datePicker = screen.getByTestId('start-date-picker');
+    // The testid sits on the Carbon input itself — drive it with userEvent.
+    const datePickerInput = screen.getByTestId('start-date-picker');
 
-    act(() => {
-      fireEvent.change(datePicker, { target: { value: '2099/12/31' } });
-    });
+    await user.type(datePickerInput, '2099/12/31');
 
     expect(screen.getByRole('button', { name: 'Review formulas' })).toBeTruthy();
   });
 
-  it('handles date input with invalid/past date', () => {
+  it('handles date input with invalid/past date', async () => {
+    const user = userEvent.setup();
     render(<FormulaConfigurationCreateForm />);
-    const datePicker = screen.getByTestId('start-date-picker');
+    // The testid sits on the Carbon input itself — drive it with userEvent.
+    const datePickerInput = screen.getByTestId('start-date-picker');
 
-    act(() => {
-      fireEvent.change(datePicker, { target: { value: '2020/01/01' } });
-    });
+    await user.type(datePickerInput, '2020/01/01');
 
     expect(screen.getByRole('button', { name: 'Review formulas' })).toBeTruthy();
   });
 
-  it('blocks review and explains why when the start date is invalid', () => {
+  it('blocks review and explains why when the start date is invalid', async () => {
+    const user = userEvent.setup();
     render(<FormulaConfigurationCreateForm />);
-    const datePicker = screen.getByTestId('start-date-picker');
+    // The testid sits on the Carbon input itself — drive it with userEvent.
+    const datePickerInput = screen.getByTestId('start-date-picker');
 
     // A past date is rejected by the handler, which clears the form value.
-    act(() => {
-      fireEvent.change(datePicker, { target: { value: '2020/01/01' } });
-    });
+    await user.type(datePickerInput, '2020/01/01');
 
     expect(screen.getByRole('button', { name: 'Review formulas' })).toHaveProperty(
       'disabled',
@@ -550,16 +558,15 @@ describe('FormulaConfigurationCreateForm', () => {
     ).toBeTruthy();
   });
 
-  it('re-enables review once a future start date is entered', () => {
+  it('re-enables review once a future start date is entered', async () => {
+    const user = userEvent.setup();
     render(<FormulaConfigurationCreateForm />);
-    const datePicker = screen.getByTestId('start-date-picker');
+    // The testid sits on the Carbon input itself — drive it with userEvent.
+    const datePickerInput = screen.getByTestId('start-date-picker');
 
-    act(() => {
-      fireEvent.change(datePicker, { target: { value: '2020/01/01' } });
-    });
-    act(() => {
-      fireEvent.change(datePicker, { target: { value: '2099/12/31' } });
-    });
+    await user.type(datePickerInput, '2020/01/01');
+    await user.clear(datePickerInput);
+    await user.type(datePickerInput, '2099/12/31');
 
     expect(screen.getByRole('button', { name: 'Review formulas' })).toHaveProperty(
       'disabled',
@@ -585,7 +592,8 @@ describe('FormulaConfigurationCreateForm', () => {
 
     submitForm(); // enter review
     submitForm(); // submit
-    await act(async () => {});
+    // findByRole drains the deferred mutation update (waitFor/findBy run act).
+    await screen.findByRole('alert');
 
     const alerts = screen.getAllByRole('alert');
     const hasSubmitError = alerts.some((a) => a.textContent?.includes('Submit failed'));
@@ -818,7 +826,8 @@ describe('FormulaConfigurationCreateForm', () => {
           },
         ],
       });
-      await act(async () => {});
+      // findByRole drains the deferred mutation update (waitFor/findBy run act).
+      await screen.findByRole('alert');
 
       expect(screen.getByRole('alert').textContent).toContain(
         'One or more formulas failed validation: Unknown variable: da.mature; Syntax error',
@@ -827,7 +836,8 @@ describe('FormulaConfigurationCreateForm', () => {
 
     it('uses detail alone when there are no itemized messages', async () => {
       submitFailingForm({ detail: 'Formula keys must be unique.' });
-      await act(async () => {});
+      // findByRole drains the deferred mutation update (waitFor/findBy run act).
+      await screen.findByRole('alert');
 
       expect(screen.getByRole('alert').textContent).toContain('Formula keys must be unique.');
       expect(screen.getByRole('alert').textContent).not.toContain(': ');
@@ -846,7 +856,8 @@ describe('FormulaConfigurationCreateForm', () => {
           },
         ],
       });
-      await act(async () => {});
+      // findByRole drains the deferred mutation update (waitFor/findBy run act).
+      await screen.findByRole('alert');
 
       expect(screen.getByRole('alert').textContent).toContain(
         'Unknown variable: da.a; Syntax error',
@@ -872,7 +883,8 @@ describe('FormulaConfigurationCreateForm', () => {
           },
         ],
       });
-      await act(async () => {});
+      // findByRole drains the deferred mutation update (waitFor/findBy run act).
+      await screen.findByRole('alert');
 
       const alert = screen.getByRole('alert').textContent ?? '';
       expect(alert).toContain('Validation failed: Good message');
@@ -882,21 +894,24 @@ describe('FormulaConfigurationCreateForm', () => {
 
     it('uses the ApiError message when the body has no usable problem detail', async () => {
       submitFailingForm({ detail: 123, validationErrors: 'not-an-array' });
-      await act(async () => {});
+      // findByRole drains the deferred mutation update (waitFor/findBy run act).
+      await screen.findByRole('alert');
 
       expect(screen.getByRole('alert').textContent).toContain('Unprocessable Content');
     });
 
     it('uses the ApiError message when the body is null', async () => {
       submitFailingForm(null);
-      await act(async () => {});
+      // findByRole drains the deferred mutation update (waitFor/findBy run act).
+      await screen.findByRole('alert');
 
       expect(screen.getByRole('alert').textContent).toContain('Unprocessable Content');
     });
 
     it('uses the ApiError message when the body is not an object', async () => {
       submitFailingForm('plain string body');
-      await act(async () => {});
+      // findByRole drains the deferred mutation update (waitFor/findBy run act).
+      await screen.findByRole('alert');
 
       expect(screen.getByRole('alert').textContent).toContain('Unprocessable Content');
     });

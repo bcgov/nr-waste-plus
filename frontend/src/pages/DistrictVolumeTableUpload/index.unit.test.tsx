@@ -3,11 +3,10 @@ import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-import DistrictVolumeTableUploadPage from './index';
-
 import * as hooks from '@/config/react-query/hooks';
 import { renderWithAppAsync } from '@/config/tests/renderWithApp';
-import * as inTreePaths from '@/routes/inTreePaths';
+
+import DistrictVolumeTableUploadPage from './index';
 
 // ============================================================================
 // Mocks
@@ -15,14 +14,17 @@ import * as inTreePaths from '@/routes/inTreePaths';
 
 vi.mock('@/config/react-query/hooks');
 
+const mockNavigate = vi.fn();
+
+vi.mock('@tanstack/react-router', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@tanstack/react-router')>()),
+  useNavigate: () => mockNavigate,
+}));
+
 const mockMutateAsync = vi.fn();
 const mockUseDistrictVolumeTableCreateMutation = vi.mocked(
   hooks.useDistrictVolumeTableCreateMutation,
 );
-
-vi.mock('@/routes/inTreePaths', () => ({
-  navigateInTree: vi.fn(),
-}));
 
 // Mock FileUploadInput to avoid Excel processing in tests
 vi.mock('@/components/Form/FileUploadInput', () => ({
@@ -140,16 +142,15 @@ describe('DistrictVolumeTableUploadPage', () => {
   });
 
   describe('navigation', () => {
-    it('should call navigateInTree with list path when Cancel is clicked', async () => {
+    it('should navigate to the list path when Cancel is clicked', async () => {
       await renderWithAppAsync(<DistrictVolumeTableUploadPage />);
 
       const cancelButton = await screen.findByRole('button', { name: 'Cancel' });
       await userEvent.click(cancelButton);
 
-      expect(inTreePaths.navigateInTree).toHaveBeenCalledWith(
-        expect.anything(),
-        '/configuration/district-volume-tables',
-      );
+      expect(mockNavigate).toHaveBeenCalledWith({
+        to: '/configuration/district-volume-tables',
+      });
     });
 
     it('should navigate to details page on successful upload', async () => {
@@ -165,10 +166,10 @@ describe('DistrictVolumeTableUploadPage', () => {
       // Simulate successful upload
       capturedOnSuccess?.(42);
 
-      expect(inTreePaths.navigateInTree).toHaveBeenCalledWith(
-        expect.anything(),
-        '/configuration/district-volume-tables/42',
-      );
+      expect(mockNavigate).toHaveBeenCalledWith({
+        to: '/configuration/district-volume-tables/$id',
+        params: { id: '42' },
+      });
     });
   });
 

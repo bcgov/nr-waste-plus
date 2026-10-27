@@ -60,7 +60,7 @@ const barrelPlugin = {
 };
 
 export default defineConfig([
-  globalIgnores(['dist', 'coverage', 'node_modules', 'dev-dist', '.devcontainer', 'scripts']),
+  globalIgnores(['dist', 'coverage', 'node_modules', 'dev-dist', '.devcontainer', 'scripts', 'src/routeTree.gen.ts']),
   ...compat.config({
     extends: ['plugin:react-hooks/recommended'],
   }),

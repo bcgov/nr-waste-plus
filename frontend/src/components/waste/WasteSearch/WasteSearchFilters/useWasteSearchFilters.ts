@@ -7,7 +7,7 @@ import { reportingUnitSearchParametersView2Plain } from '@/services/search.utils
 
 import { searchToViewDto, viewDtoToSearch } from './utils';
 
-import type { WasteSearchFilters } from '@/routes/searchParams';
+import type { WasteSearchFilters } from '@/routing/searchParams';
 import type {
   CodeDescriptionDto,
   ReportingUnitSearchParametersDto,
