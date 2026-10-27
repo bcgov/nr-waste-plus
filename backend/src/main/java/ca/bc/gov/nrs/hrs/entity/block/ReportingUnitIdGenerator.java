@@ -23,7 +23,7 @@ public class ReportingUnitIdGenerator extends SequenceStyleGenerator {
     if (currentValue != null) {
       return currentValue;
     }
-    return super.generate(session, owner, currentValue, eventType);
+    return super.generate(session, owner);
   }
 
   @Override
