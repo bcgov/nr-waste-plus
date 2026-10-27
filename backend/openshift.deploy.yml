@@ -50,12 +50,6 @@ parameters:
     description: Random expression to make sure deployments update
     from: "[a-zA-Z0-9]{32}"
     generate: expression
-  - name: POSTGRES_HOST
-    description: Postgres host
-    value: "${NAME}-${ZONE}-database"
-  - name: POSTGRES_PORT
-    description: Postgres port
-    value: "5432"
 objects:
   - kind: Deployment
     apiVersion: apps/v1
@@ -111,10 +105,20 @@ objects:
                   value: http://${NAME}-${ZONE}-legacy
                 - name: SELF_URI
                   value: https://${NAME}-${ZONE}-${COMPONENT}.${DOMAIN}
+                # The full PostgreSQL connection comes from the namespace
+                # Secret (host, port, database, user, password), so each
+                # environment points at its designated database server without
+                # rebuilding the image.
                 - name: POSTGRES_HOST
-                  value: ${POSTGRES_HOST}
+                  valueFrom:
+                    secretKeyRef:
+                      name: ${NAME}-${ZONE}
+                      key: database-host
                 - name: POSTGRES_PORT
-                  value: ${POSTGRES_PORT}
+                  valueFrom:
+                    secretKeyRef:
+                      name: ${NAME}-${ZONE}
+                      key: database-port
                 - name: POSTGRES_DATABASE
                   valueFrom:
                     secretKeyRef:
