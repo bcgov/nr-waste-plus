@@ -7,7 +7,7 @@ parameters:
   - name: ZONE
     description: Deployment zone, e.g. pr-### or prod
     required: true
-  - name: DB_PASSWORD
+  - name: POSTGRES_PASSWORD
     description: Password for the PostgreSQL connection user.
     required: true
   - name: POSTGRES_HOST
@@ -116,7 +116,7 @@ objects:
         app: ${NAME}-${ZONE}
     stringData:
       database-name: ${POSTGRES_DATABASE}
-      database-password: ${DB_PASSWORD}
+      database-password: ${POSTGRES_PASSWORD}
       database-user: ${POSTGRES_USER}
       database-host: ${POSTGRES_HOST}
       database-port: ${POSTGRES_PORT}
