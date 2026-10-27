@@ -4,7 +4,6 @@ import { useState, type FC } from 'react';
 
 import EmptySection from '@/components/core/EmptySection';
 import TableResource from '@/components/Form/TableResource';
-import { navigateInTree } from '@/routes/inTreePaths';
 
 import { BLOCKS_TABLE_HEADERS, EMPTY_BLOCKS_CONTENT } from './constants';
 
@@ -71,7 +70,10 @@ const ReportingUnitBlocksList: FC<ReportingUnitBlocksListProps> = ({
       label: 'See details',
       icon: <TableShortcut />,
       onClick: (selectedRow) => {
-        navigateInTree(navigate, `/reporting-units/${ruId}/${selectedRow.id}`);
+        void navigate({
+          to: '/reporting-units/$ruId/$blockId',
+          params: { ruId: String(ruId), blockId: String(selectedRow.id) },
+        });
       },
     },
     {

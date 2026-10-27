@@ -11,7 +11,7 @@ import { useState, type ReactNode } from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 import useSyncPreferencesToFilters from '@/hooks/useSyncPreferencesToFilters';
-import { searchParamCodec, validateWasteSearch } from '@/routes/searchParams';
+import { searchParamCodec, validateWasteSearch } from '@/routing/searchParams';
 
 import { useWasteSearchFilters } from './useWasteSearchFilters';
 

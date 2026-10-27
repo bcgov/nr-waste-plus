@@ -5,94 +5,385 @@ on:
 
 permissions: {}
 
+# Every step removes one kind of resource, so they are independent: a failure in
+# one must not stop the others from running, and must still leave the run red.
+# Removal is verified instead of assumed. Only real answers are acted on: a
+# refused or timed-out API connection is retried and never read as "it is
+# already gone".
 jobs:
   tools-cleanup:
     name: Cleanup tools environment
     runs-on: ubuntu-26.04
     steps:
+      # Stops the PR legacy app so it releases its sessions on the Oracle
+      # database. Best effort: removeDatabase closes the database with
+      # IMMEDIATE, and the PR deployment may already be gone.
       - name: Scale down legacy
         continue-on-error: true
         uses: bcgov/action-oc-runner@111868d1fc50db0a40417ba321d865ef5c931bbd # v1.7.0
         with:
           oc_namespace: ${{ secrets.oc_namespace }}
           oc_token: ${{ secrets.oc_token }}
+          login_attempts: "8"
           oc_server: ${{ secrets.oc_server }}
           commands: |
-            oc scale deployment/nr-waste-plus-${{ github.event.number }}-legacy --replicas=0
-            undesired_replicas=0
+            set -uo pipefail
 
-            while true; do
-              available_replicas=$(oc get deployment/nr-waste-plus-${{ github.event.number }}-legacy -n ${{ secrets.OC_NAMESPACE }} -o jsonpath='{.status.availableReplicas}')
+            NS="${{ secrets.OC_NAMESPACE }}"
+            LEGACY="nr-waste-plus-${{ github.event.number }}-legacy"
 
-              if [[ "$available_replicas" -ge "$undesired_replicas" ]]; then
-                echo "DeploymentConfig ${{ secrets.OC_NAMESPACE }}-${{ github.event.number }}-legacy is now available with $available_replicas replicas."
+            exists=""
+            for attempt in 1 2 3 4 5 6; do
+              if out=$(oc get "deployment/${LEGACY}" -n "${NS}" -o name 2>&1); then
+                exists="yes"
                 break
               fi
+              if printf '%s' "${out}" | grep -qi 'NotFound'; then
+                exists="no"
+                break
+              fi
+              echo "Could not check ${LEGACY} (attempt ${attempt}/6); retrying..."
+              sleep $((attempt * 5))
+            done
+            if [ -z "${exists}" ]; then
+              echo "::error::Could not reach the OpenShift API to check ${LEGACY}."
+              exit 1
+            fi
+            if [ "${exists}" = "no" ]; then
+              echo "Deployment ${LEGACY} does not exist; nothing to stop."
+              exit 0
+            fi
 
-              echo "Waiting... ($available_replicas pods available)"
+            scaled=0
+            for attempt in 1 2 3 4 5 6; do
+              if oc scale "deployment/${LEGACY}" --replicas=0 -n "${NS}"; then
+                scaled=1
+                break
+              fi
+              echo "Could not scale ${LEGACY} (attempt ${attempt}/6); retrying..."
+              sleep $((attempt * 5))
+            done
+            if [ "${scaled}" -ne 1 ]; then
+              echo "::error::Could not scale ${LEGACY} down."
+              exit 1
+            fi
+
+            # A failed read is not "zero replicas": only a successful read that
+            # reports no available replicas means the app is stopped.
+            deadline=$(( $(date +%s) + 300 ))
+            while [ "$(date +%s)" -lt "${deadline}" ]; do
+              if available=$(oc get "deployment/${LEGACY}" -n "${NS}" -o jsonpath='{.status.availableReplicas}' 2>/dev/null); then
+                if [ "${available:-0}" -eq 0 ]; then
+                  echo "Deployment ${LEGACY} is stopped."
+                  # Let the terminating pods drop their database sessions.
+                  sleep 10
+                  exit 0
+                fi
+                echo "Waiting for ${LEGACY} to stop (${available} pod(s) still available)..."
+              else
+                echo "Could not read ${LEGACY}; retrying..."
+              fi
               sleep 5
             done
-            sleep 10
+            echo "::error::Deployment ${LEGACY} did not scale to zero within 5 minutes."
+            exit 1
 
-      - name: Remove the PR database
-        continue-on-error: true
+      # removeDatabase drops the PR's user, pluggable database and service, so
+      # it only has to be called. The result is checked afterwards, because a
+      # leaked pluggable database keeps using the instance's memory.
+      - name: Remove the PR Oracle database
+        if: ${{ !cancelled() }}
         uses: bcgov/action-oc-runner@111868d1fc50db0a40417ba321d865ef5c931bbd # v1.7.0
         with:
           oc_namespace: cffaf3-tools
-          oc_token: ${{ secrets.oc_token_tools }}
           oc_server: ${{ secrets.oc_server }}
+          oc_token: ${{ secrets.oc_token_tools }}
+          login_attempts: "8"
           commands: |
-            # This removes a new pluggable database, user and service for the PR
-            for i in {1..5}; do
-              POD_NAME=$(oc get pods -l app=nr-waste-plus-tools -l deployment=nr-waste-plus-tools-legacydb -o jsonpath='{.items[0].metadata.name}' 2>/dev/null)
-              if [ -n "$POD_NAME" ]; then
-                echo "Pod found: $POD_NAME"
-                oc exec $POD_NAME -- /opt/oracle/removeDatabase "THE" "PR_${{ github.event.number }}"
+            set -uo pipefail
+
+            NS="cffaf3-tools"
+            PR="${{ github.event.number }}"
+
+            # Only connection errors are retried; any other failure is the
+            # command's own answer and is returned as it is.
+            oc_exec_retry() {
+              local attempt out rc
+              for attempt in 1 2 3 4 5 6; do
+                out=$(oc exec "$@" 2>&1)
+                rc=$?
+                printf '%s\n' "${out}"
+                if [ "${rc}" -eq 0 ]; then
+                  return 0
+                fi
+                if printf '%s' "${out}" | grep -qiE 'connection to the server|connection refused|i/o timeout|unable to connect|TLS handshake|error dialing|request canceled'; then
+                  if [ "${attempt}" -lt 6 ]; then
+                    echo "API connection problem (attempt ${attempt}/6); retrying in $((attempt * 5))s..."
+                    sleep $((attempt * 5))
+                  fi
+                  continue
+                fi
+                return "${rc}"
+              done
+              echo "The OpenShift API stayed unreachable after 6 attempts."
+              return 1
+            }
+
+            # Prints 1 when the pluggable database exists, 0 when it does not,
+            # and nothing when the answer could not be read.
+            pdb_exists() {
+              oc_exec_retry "${POD_NAME}" -- bash -c "printf 'set heading off feedback off pagesize 0\nselect count(*) from dba_pdbs where pdb_name = '\''PR_${PR}'\'';\nexit;\n' | sqlplus -s / as sysdba" \
+                | grep -E '^[[:space:]]*[0-9]+[[:space:]]*$' | tail -1 | tr -d '[:space:]'
+            }
+
+            listed=0
+            POD_NAME=""
+            for attempt in 1 2 3 4 5 6 7 8; do
+              if out=$(oc get pods -n "${NS}" -l app=nr-waste-plus-tools -l deployment=nr-waste-plus-tools-legacydb -o name 2>&1); then
+                POD_NAME=$(printf '%s\n' "${out}" | head -1)
+                listed=1
                 break
-              else
-                echo "Pod not found, retrying in 10 seconds... ($i/5)"
-                sleep 10
               fi
+              echo "Could not list the Oracle pods (attempt ${attempt}/8); retrying..."
+              sleep $(( attempt * 5 > 30 ? 30 : attempt * 5 ))
             done
-
-            if [ -z "$POD_NAME" ]; then
-              echo "Failed to find the pod after 5 attempts."
+            if [ "${listed}" -ne 1 ]; then
+              echo "::error::Could not reach the OpenShift API to find the Oracle pod."
+              exit 1
             fi
+            if [ -z "${POD_NAME}" ]; then
+              echo "The Oracle database is not deployed; nothing to remove."
+              exit 0
+            fi
+            POD_NAME="${POD_NAME#pod/}"
+            echo "Oracle pod: ${POD_NAME}"
 
+            case "$(pdb_exists)" in
+              0)
+                echo "Pluggable database PR_${PR} does not exist; nothing to remove."
+                exit 0
+                ;;
+              1)
+                ;;
+              *)
+                echo "::error::Could not determine whether PR_${PR} exists."
+                exit 1
+                ;;
+            esac
+
+            oc_exec_retry "${POD_NAME}" -- /opt/oracle/removeDatabase "THE" "PR_${PR}" \
+              || echo "::warning::removeDatabase reported a failure for PR_${PR}; verifying."
+
+            if [ "$(pdb_exists)" != "0" ]; then
+              echo "::error::The pluggable database PR_${PR} still exists after removeDatabase."
+              exit 1
+            fi
+            echo "Pluggable database PR_${PR} removed."
+
+      # Only this PR's bucket goes. The shared MinIO server and the base bucket
+      # stay for the other open PRs.
       - name: Remove the PR MinIO bucket
-        continue-on-error: true
+        if: ${{ !cancelled() }}
         uses: bcgov/action-oc-runner@111868d1fc50db0a40417ba321d865ef5c931bbd # v1.7.0
         env:
           OBJECT_STORAGE_BUCKET: ${{ secrets.OBJECT_STORAGE_BUCKET || 'nr-waste' }}-pr-${{ github.event.number }}
         with:
           oc_namespace: cffaf3-tools
           oc_token: ${{ secrets.oc_token_tools }}
+          login_attempts: "8"
           oc_server: ${{ secrets.oc_server }}
           commands: |
-            # Remove only this PR's bucket. The shared MinIO server and the
-            # base bucket are left intact for other open PRs.
-            POD_NAME=$(oc get pods -l app=nr-waste-plus-tools -l deployment=nr-waste-plus-tools-minio -o jsonpath='{.items[0].metadata.name}' 2>/dev/null)
-            if [ -z "$POD_NAME" ]; then
-              echo "MinIO pod not found; nothing to clean up."
+            set -uo pipefail
+
+            NS="cffaf3-tools"
+
+            oc_exec_retry() {
+              local attempt out rc
+              for attempt in 1 2 3 4 5 6; do
+                out=$(oc exec "$@" 2>&1)
+                rc=$?
+                printf '%s\n' "${out}"
+                if [ "${rc}" -eq 0 ]; then
+                  return 0
+                fi
+                if printf '%s' "${out}" | grep -qiE 'connection to the server|connection refused|i/o timeout|unable to connect|TLS handshake|error dialing|request canceled'; then
+                  if [ "${attempt}" -lt 6 ]; then
+                    echo "API connection problem (attempt ${attempt}/6); retrying in $((attempt * 5))s..."
+                    sleep $((attempt * 5))
+                  fi
+                  continue
+                fi
+                return "${rc}"
+              done
+              echo "The OpenShift API stayed unreachable after 6 attempts."
+              return 1
+            }
+
+            listed=0
+            POD_NAME=""
+            for attempt in 1 2 3 4 5 6 7 8; do
+              if out=$(oc get pods -n "${NS}" -l app=nr-waste-plus-tools -l deployment=nr-waste-plus-tools-minio -o name 2>&1); then
+                POD_NAME=$(printf '%s\n' "${out}" | head -1)
+                listed=1
+                break
+              fi
+              echo "Could not list the MinIO pods (attempt ${attempt}/8); retrying..."
+              sleep $(( attempt * 5 > 30 ? 30 : attempt * 5 ))
+            done
+            if [ "${listed}" -ne 1 ]; then
+              echo "::error::Could not reach the OpenShift API to find the MinIO pod."
+              exit 1
+            fi
+            if [ -z "${POD_NAME}" ]; then
+              echo "MinIO is not deployed; nothing to clean up."
               exit 0
             fi
+            POD_NAME="${POD_NAME#pod/}"
 
-            oc exec "$POD_NAME" -c minio-init -- sh -c '
-              mc --config-dir /tmp/.mc alias set local http://localhost:9000 "$MINIO_ROOT_USER" "$MINIO_ROOT_PASSWORD" >/dev/null 2>&1 || exit 0
-              mc --config-dir /tmp/.mc rm --recursive --force local/"$1" >/dev/null 2>&1 || true
-              mc --config-dir /tmp/.mc rb --force local/"$1" >/dev/null 2>&1 || true
-            ' _ "$OBJECT_STORAGE_BUCKET"
-            echo "Removed bucket $OBJECT_STORAGE_BUCKET (if it existed)."
+            # The inner script runs inside the container, where these variables
+            # exist, so single quotes are deliberate. Exit 3 means MinIO could
+            # not be reached; exit 4 means the bucket is still there.
+            # shellcheck disable=SC2016
+            oc_exec_retry "${POD_NAME}" -c minio-init -- sh -c '
+              mc --config-dir /tmp/.mc alias set local http://localhost:9000 "$MINIO_ROOT_USER" "$MINIO_ROOT_PASSWORD" >/dev/null 2>&1 || exit 3
+              if mc --config-dir /tmp/.mc ls local/"$1" >/dev/null 2>&1; then
+                mc --config-dir /tmp/.mc rm --recursive --force local/"$1" >/dev/null 2>&1 || true
+                mc --config-dir /tmp/.mc rb --force local/"$1" >/dev/null 2>&1 || true
+                if mc --config-dir /tmp/.mc ls local/"$1" >/dev/null 2>&1; then
+                  exit 4
+                fi
+                echo "Removed bucket $1."
+              else
+                echo "Bucket $1 does not exist; nothing to remove."
+              fi
+            ' _ "${OBJECT_STORAGE_BUCKET}"
+            rc=$?
+            if [ "${rc}" -ne 0 ]; then
+              echo "::error::Could not remove the MinIO bucket ${OBJECT_STORAGE_BUCKET} (exit ${rc})."
+              exit 1
+            fi
+
+      # Drops the PR database on the shared instance by running the removal
+      # CronJob that the tools deployment created for this PR.
+      - name: Remove the PR PostgreSQL database
+        id: remove-pg
+        if: ${{ !cancelled() }}
+        uses: bcgov/action-oc-runner@111868d1fc50db0a40417ba321d865ef5c931bbd # v1.7.0
+        with:
+          oc_namespace: cffaf3-tools
+          oc_server: ${{ secrets.oc_server }}
+          oc_token: ${{ secrets.oc_token_tools }}
+          login_attempts: "8"
+          commands: |
+            set -uo pipefail
+
+            NS="cffaf3-tools"
+            PR="${{ github.event.number }}"
+            CRONJOB="nr-waste-plus-pr${PR}-removepg"
+            JOB="remove-pr${PR}-cleanup-${{ github.run_attempt }}-$(date +%s)"
+            ERR_FILE=$(mktemp)
+
+            # Block on the Job with watches instead of polling: oc wait returns the
+            # moment the Job reports a condition. Completion and failure are
+            # watched together, and the status is re-read once afterwards so a
+            # dropped watch only costs another round, not a false result.
+            wait_for_job() {
+              local job="$1" deadline remaining ok_pid fail_pid counts
+              deadline=$(( $(date +%s) + $2 ))
+              succeeded=0
+              failed=0
+              while [ "$(date +%s)" -lt "${deadline}" ]; do
+                remaining=$(( deadline - $(date +%s) ))
+                oc wait --for=condition=complete "job/${job}" -n "${NS}" --timeout="${remaining}s" >/dev/null 2>&1 &
+                ok_pid=$!
+                oc wait --for=condition=failed "job/${job}" -n "${NS}" --timeout="${remaining}s" >/dev/null 2>&1 &
+                fail_pid=$!
+                # Stop as soon as either watch has returned. Checking the local
+                # PIDs makes no API calls.
+                while kill -0 "${ok_pid}" 2>/dev/null && kill -0 "${fail_pid}" 2>/dev/null; do
+                  sleep 1
+                done
+                kill "${ok_pid}" "${fail_pid}" 2>/dev/null || true
+                wait "${ok_pid}" "${fail_pid}" 2>/dev/null || true
+
+                counts=$(oc get "job/${job}" -n "${NS}" -o jsonpath='{.status.succeeded}/{.status.failed}' 2>/dev/null || true)
+                succeeded="${counts%%/*}"
+                failed="${counts##*/}"
+                succeeded="${succeeded:-0}"
+                failed="${failed:-0}"
+                if [ "${succeeded}" -ge 1 ] || [ "${failed}" -ge 1 ]; then
+                  return 0
+                fi
+                echo "Waiting for job ${job} (succeeded=${succeeded}, failed=${failed})..."
+                sleep 2
+              done
+            }
+
+            # The OpenShift API intermittently times out from GitHub runners,
+            # so creating the Job is retried. The Job name is fixed above, so a
+            # retry can never start a second copy. A CronJob that does not exist
+            # means the tools deployment never ran for this PR, so there is no
+            # database to remove.
+            created=0
+            for attempt in 1 2 3 4 5 6 7 8; do
+              if RENDERED=$(oc create job --from="cronjob/${CRONJOB}" "${JOB}" --dry-run=client -o yaml 2>"${ERR_FILE}"); then
+                if printf '%s\n' "${RENDERED}" \
+                  | sed "s/value: \"0\"/value: \"${PR}\"/g" \
+                  | oc apply -n "${NS}" -f -; then
+                  created=1
+                  break
+                fi
+              elif grep -qi 'NotFound' "${ERR_FILE}"; then
+                echo "CronJob ${CRONJOB} does not exist; no PostgreSQL database to remove."
+                exit 0
+              fi
+              echo "Could not create job ${JOB} (attempt ${attempt}/8); retrying..."
+              sleep $(( attempt * 5 > 30 ? 30 : attempt * 5 ))
+            done
+            if [ "${created}" -ne 1 ]; then
+              echo "::error::Could not create database removal job ${JOB}."
+              exit 1
+            fi
+
+            wait_for_job "${JOB}" 300
+
+            oc logs "job/${JOB}" -n "${NS}" --tail=100 || true
+            if [ "${succeeded}" -lt 1 ]; then
+              oc describe "job/${JOB}" -n "${NS}" || true
+              echo "::error::PostgreSQL database removal failed for PR ${PR}."
+              exit 1
+            fi
+
+      # Only after the database is gone: the CronJobs and credentials are what
+      # a retry of the removal would need.
+      - name: Remove the PR PostgreSQL CronJobs and credentials
+        if: ${{ !cancelled() && steps.remove-pg.outcome == 'success' }}
+        continue-on-error: true
+        uses: bcgov/action-oc-runner@111868d1fc50db0a40417ba321d865ef5c931bbd # v1.7.0
+        with:
+          oc_namespace: cffaf3-tools
+          oc_server: ${{ secrets.oc_server }}
+          oc_token: ${{ secrets.oc_token_tools }}
+          login_attempts: "8"
+          commands: |
+            oc delete cronjob/nr-waste-plus-pr${{ github.event.number }}-removepg \
+              cronjob/nr-waste-plus-pr${{ github.event.number }}-createpg \
+              cronjob/nr-waste-plus-pr${{ github.event.number }}-droppg \
+              cronjob/nr-waste-plus-pr${{ github.event.number }}-migratepg \
+              secret/nr-waste-plus-pr${{ github.event.number }}-postgres \
+              -n cffaf3-tools --ignore-not-found
 
       - name: Remove completed pods and jobs (cronjobs)
+        if: ${{ !cancelled() }}
         continue-on-error: true
         uses: bcgov/action-oc-runner@111868d1fc50db0a40417ba321d865ef5c931bbd # v1.7.0
         with:
           oc_namespace: cffaf3-tools
           oc_token: ${{ secrets.oc_token_tools }}
+          login_attempts: "8"
           oc_server: ${{ secrets.oc_server }}
           commands: |
-            # Scope to this PR: migration job names include -pr<number>-.
+            # Scope to this PR: job names include -pr<number>-.
             JOBS=$(oc get jobs -n cffaf3-tools -o name | grep -E -- "-pr${{ github.event.number }}-" || true)
             if [ -n "$JOBS" ]; then
               oc delete $JOBS -n cffaf3-tools --ignore-not-found

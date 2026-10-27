@@ -6,7 +6,7 @@ import { describe, expect, it, vi, beforeEach, type Mock } from 'vitest';
 
 import { renderWithAppAsync } from '@/config/tests/renderWithApp';
 import * as useNotificationEvents from '@/hooks/useNotificationEvents';
-import { validateWasteSearch } from '@/routes/searchParams';
+import { validateWasteSearch } from '@/routing/searchParams';
 import APIs from '@/services/APIs';
 
 import WasteSearchTable from './index';

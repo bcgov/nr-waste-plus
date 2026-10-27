@@ -19,7 +19,6 @@ import {
   useDistrictOptionsQuery,
   useDistrictVolumeTableCreateMutation,
 } from '@/config/react-query/hooks.ts';
-import { navigateInTree } from '@/routes/inTreePaths.ts';
 import { DistrictVolumeProcessor } from '@/services/districtvolumes/processors/districtVolumeProcessor.ts';
 import { coastValidator } from '@/services/districtvolumes/validators/coastValidator.ts';
 import { interiorValidator } from '@/services/districtvolumes/validators/interiorValidator.ts';
@@ -152,7 +151,10 @@ const DistrictVolumeTableUpload: FC = () => {
     notificationTarget: 'upload-table',
     onSuccess: (tableId) => {
       // Navigate to the details page of the newly created table
-      navigateInTree(navigate, `/configuration/district-volume-tables/${tableId}`);
+      void navigate({
+        to: '/configuration/district-volume-tables/$id',
+        params: { id: String(tableId) },
+      });
     },
   });
 
@@ -299,7 +301,7 @@ const DistrictVolumeTableUpload: FC = () => {
    * Navigates the user back to the district volume tables list page.
    */
   const handleCancel = useCallback(() => {
-    navigateInTree(navigate, '/configuration/district-volume-tables');
+    void navigate({ to: '/configuration/district-volume-tables' });
   }, [navigate]);
 
   const hasUploadedData =

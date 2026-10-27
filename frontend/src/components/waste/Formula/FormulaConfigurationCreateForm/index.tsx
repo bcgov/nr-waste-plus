@@ -140,7 +140,10 @@ const FormulaConfigurationCreateForm: FC = () => {
       };
       try {
         const created = await createMutation.mutateAsync(dto);
-        navigate({ to: `/configuration/formulas/${created.id}` });
+        navigate({
+          to: '/configuration/formulas/$id',
+          params: { id: String(created.id) },
+        });
       } catch (error) {
         setSubmitError(toSubmitErrorMessage(error));
       }
@@ -245,7 +248,7 @@ const FormulaConfigurationCreateForm: FC = () => {
       setIsReviewing(false);
       return;
     }
-    // @ts-expect-error TanStack Router cannot infer this dynamically selected route.
+    // `/configuration/formulas` is a typed route target in the file-based tree.
     navigate({ to: '/configuration/formulas' });
   };
 

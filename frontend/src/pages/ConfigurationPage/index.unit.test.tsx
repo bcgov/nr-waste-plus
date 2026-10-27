@@ -14,22 +14,15 @@ vi.mock('@tanstack/react-router', async () => {
   };
 });
 
-vi.mock('@/routes/inTreePaths', () => ({
-  navigateInTree: vi.fn(),
-}));
-
 vi.mock('@/context/pageTitle/usePageTitle', () => ({
   usePageTitle: () => ({
     setPageTitle: vi.fn(),
   }),
 }));
 
-import { navigateInTree } from '@/routes/inTreePaths';
-
 describe('ConfigurationPage', () => {
   beforeEach(() => {
     mockNavigate.mockClear();
-    vi.mocked(navigateInTree).mockClear();
   });
 
   it('renders the page heading', () => {
@@ -65,18 +58,17 @@ describe('ConfigurationPage', () => {
     expect(links.length).toBeGreaterThanOrEqual(1);
   });
 
-  it('calls navigateInTree with correct path when first card link is clicked', async () => {
+  it('navigates to district volume tables when the first card link is clicked', async () => {
     const user = userEvent.setup();
     render(<ConfigurationPage />);
 
     const links = screen.getAllByText('View or update tables');
     await user.click(links[0]);
 
-    expect(navigateInTree).toHaveBeenCalledOnce();
-    expect(navigateInTree).toHaveBeenCalledWith(
-      mockNavigate,
-      '/configuration/district-volume-tables',
-    );
+    expect(mockNavigate).toHaveBeenCalledOnce();
+    expect(mockNavigate).toHaveBeenCalledWith({
+      to: '/configuration/district-volume-tables',
+    });
   });
 
   it('renders the species composition card title', () => {
@@ -91,7 +83,7 @@ describe('ConfigurationPage', () => {
     );
   });
 
-  it('species composition card link calls navigateInTree when clicked', async () => {
+  it('species composition card link navigates when clicked', async () => {
     const user = userEvent.setup();
     render(<ConfigurationPage />);
 
@@ -99,7 +91,9 @@ describe('ConfigurationPage', () => {
     // links[1] is the species composition card (second card)
     await user.click(links[1]);
 
-    expect(navigateInTree).toHaveBeenCalledOnce();
-    expect(navigateInTree).toHaveBeenCalledWith(mockNavigate, '/configuration/species-composition');
+    expect(mockNavigate).toHaveBeenCalledOnce();
+    expect(mockNavigate).toHaveBeenCalledWith({
+      to: '/configuration/species-composition',
+    });
   });
 });

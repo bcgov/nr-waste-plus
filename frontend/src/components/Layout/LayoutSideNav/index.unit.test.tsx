@@ -1,13 +1,19 @@
-import { screen } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-import { renderWithAppAsync } from '@/config/tests/renderWithApp';
-import * as useAuthModule from '@/context/auth/useAuth';
+import { NextRouterContextHarness } from '@/config/tests/nextRouterTestHelper';
+import AnnouncerProvider from '@/context/announcer/AnnouncerProvider';
 import { LayoutProvider } from '@/context/layout/LayoutProvider';
-import * as routePathsModule from '@/routes/routePaths';
 import { Role } from '@/types/auth.types';
 
 import { LayoutSideNav } from './index';
+
+// ── Module mocks ──────────────────────────────────────────────────────────────
+
+const state = vi.hoisted(() => ({
+  user: undefined as
+    { idpProvider?: string; roles?: { role: string; clients: string[] }[] } | undefined,
+}));
 
 vi.mock(import('@/env'), async (importOriginal) => {
   const actual = await importOriginal();
@@ -18,264 +24,89 @@ vi.mock(import('@/env'), async (importOriginal) => {
       VITE_IDIR_HELP: 'https://test-idir-help.example.com',
       VITE_BCEID_HELP: 'https://test-bceid-help.example.com',
     },
-    featureFlags: {
-      'offline-mode-enabled': false,
-      'bookmark-ru-enabled': false,
-      'reporting-unit-details-enabled': false,
-      'reporting-unit-create-enabled': true,
-      'configuration-enabled': true,
-    },
   };
 });
 
 vi.mock('@/context/auth/useAuth', () => ({
-  useAuth: vi.fn(),
+  useAuth: () => ({
+    user: state.user,
+    isLoading: false,
+    isLoggedIn: !!state.user,
+    getClients: () => state.user?.roles?.flatMap((assignment) => assignment.clients ?? []) ?? [],
+  }),
 }));
 
-vi.mock('@/context/layout/useLayout', () => ({
-  useLayout: () => ({ isSideNavExpanded: true }),
-}));
+vi.mock('@/hooks/useOfflineMode', () => ({ default: () => ({ isOnline: true }) }));
 
-const defaultMenuEntries = [
-  {
-    id: 'Dashboard',
-    path: '/dashboard',
-  },
-  {
-    id: 'Settings',
-    path: '/settings',
-    children: [
-      {
-        id: 'Profile',
-        path: 'profile',
-      },
-    ],
-  },
-];
+// ── Helpers ──────────────────────────────────────────────────────────────────
 
-vi.mock('@/routes/routePaths', () => ({
-  getMenuEntries: vi.fn(),
-  isRouteAccessible: vi.fn(),
-}));
-
-const renderWithProviders = (pathname = '/dashboard') =>
-  renderWithAppAsync(
-    <LayoutProvider>
-      <LayoutSideNav />
-    </LayoutProvider>,
-    { route: pathname },
+const renderNav = () =>
+  render(
+    <AnnouncerProvider>
+      <NextRouterContextHarness>
+        <LayoutProvider>
+          <LayoutSideNav />
+        </LayoutProvider>
+      </NextRouterContextHarness>
+    </AnnouncerProvider>,
   );
 
+const navLink = (id: string) => screen.queryByTestId(`side-nav-link-${id}`);
+
+beforeEach(() => {
+  state.user = { idpProvider: 'IDIR', roles: [{ role: Role.VIEWER, clients: ['00000001'] }] };
+});
+
 describe('LayoutSideNav', () => {
-  beforeEach(() => {
-    vi.mocked(routePathsModule.getMenuEntries).mockReturnValue(defaultMenuEntries);
-    vi.mocked(routePathsModule.isRouteAccessible).mockReturnValue(true);
-    vi.mocked(useAuthModule.useAuth).mockReturnValue({
-      user: undefined,
-      isLoggedIn: false,
-      isLoading: false,
-      login: vi.fn(),
-      logout: vi.fn(),
-      userToken: vi.fn(),
-      getClients: vi.fn(),
+  describe('nav entries (projected from route staticData)', () => {
+    it('renders the viewer nav in order: clients, search, create reporting unit', () => {
+      renderNav();
+
+      expect(navLink('My clients')).toBeTruthy();
+      expect(navLink('Waste search')).toBeTruthy();
+      expect(navLink('Create reporting unit')).toBeTruthy();
+      expect(navLink('Configuration')).toBeNull();
+
+      // Order: clients (10) before search (20) before create (30).
+      const ids = screen
+        .getAllByTestId(/^side-nav-link-/)
+        .filter((el) => el.getAttribute('data-testid') !== 'side-nav-link-help')
+        .map((el) => el.getAttribute('data-testid')?.replace('side-nav-link-', ''));
+      expect(ids).toEqual(['My clients', 'Waste search', 'Create reporting unit']);
+    });
+
+    it('renders the admin nav: search, create reporting unit, configuration (no clients)', () => {
+      state.user = { idpProvider: 'IDIR', roles: [{ role: Role.ADMIN, clients: [] }] };
+      renderNav();
+
+      expect(navLink('My clients')).toBeNull();
+      expect(navLink('Waste search')).toBeTruthy();
+      expect(navLink('Create reporting unit')).toBeTruthy();
+      expect(navLink('Configuration')).toBeTruthy();
+    });
+
+    it('renders icons for nav entries', () => {
+      renderNav();
+      // eslint-disable-next-line testing-library/no-node-access -- Carbon renders icons as raw <svg> with no queryable role
+      expect(navLink('Waste search')?.querySelector('svg')).not.toBeNull();
     });
   });
 
-  it('shouldRenderMenuLinksAndMenuItems_whenDefaultEntries', async () => {
-    await renderWithProviders('/dashboard');
-    screen.getByText('Dashboard');
-    screen.getByText('Settings');
-    screen.getByText('Profile');
-    expect(screen.queryByText('Admin')).toBeNull();
-    expect(screen.queryByText('Hidden')).toBeNull();
-  });
-
-  it('shouldMarkCorrectLinkAsActive_whenPathMatches', async () => {
-    await renderWithProviders('/settings/profile');
-    const profileLink = screen.getByRole('link', { name: 'Profile' });
-    expect(profileLink?.className).toContain('cds--side-nav__link--current');
-  });
-
-  it('shouldRenderIcons_whenRouteHasIconComponent', async () => {
-    const MockIcon = () => <svg data-testid="mock-icon" />;
-    vi.mocked(routePathsModule.getMenuEntries).mockReturnValue([
-      {
-        id: 'Dashboard',
-        path: '/dashboard',
-        icon: MockIcon,
-      },
-      {
-        id: 'Settings',
-        path: '/settings',
-        icon: MockIcon,
-        children: [
-          {
-            id: 'Profile',
-            path: 'profile',
-            icon: MockIcon,
-          },
-        ],
-      },
-    ]);
-    await renderWithProviders('/dashboard');
-    expect(screen.getAllByTestId('mock-icon').length).toBeGreaterThan(0);
-  });
-
-  it('shouldRenderChildRoute_whenChildHasNoPath', async () => {
-    vi.mocked(routePathsModule.getMenuEntries).mockReturnValue([
-      {
-        id: 'Settings',
-        path: '/settings',
-        children: [
-          {
-            id: 'Overview',
-            path: '',
-          },
-        ],
-      },
-    ]);
-    await renderWithProviders('/settings');
-    screen.getByText('Overview');
-  });
-
   describe('help link', () => {
-    it('shouldUseIdirHelpUrl_whenUserIsIdirProvider', async () => {
-      vi.mocked(useAuthModule.useAuth).mockReturnValue({
-        user: { idpProvider: 'IDIR', privileges: {} },
-        isLoggedIn: true,
-        isLoading: false,
-        login: vi.fn(),
-        logout: vi.fn(),
-        userToken: vi.fn(),
-        getClients: vi.fn(),
-      });
-      await renderWithProviders('/dashboard');
+    it('uses the IDIR help URL for IDIR users', () => {
+      renderNav();
       const helpLink = screen.getByRole('link', { name: 'Need Help?' });
       expect(helpLink.getAttribute('href')).toBe('https://test-idir-help.example.com');
     });
 
-    it('shouldUseBceidHelpUrl_whenUserIsBceidProvider', async () => {
-      vi.mocked(useAuthModule.useAuth).mockReturnValue({
-        user: { idpProvider: 'BCEIDBUSINESS', privileges: {} },
-        isLoggedIn: true,
-        isLoading: false,
-        login: vi.fn(),
-        logout: vi.fn(),
-        userToken: vi.fn(),
-        getClients: vi.fn(),
-      });
-      await renderWithProviders('/dashboard');
+    it('uses the BCEIDBUSINESS help URL for BCEID users', () => {
+      state.user = {
+        idpProvider: 'BCEIDBUSINESS',
+        roles: [{ role: Role.VIEWER, clients: ['00000001'] }],
+      };
+      renderNav();
       const helpLink = screen.getByRole('link', { name: 'Need Help?' });
       expect(helpLink.getAttribute('href')).toBe('https://test-bceid-help.example.com');
-    });
-  });
-
-  describe('configuration link', () => {
-    it('shouldRenderConfigurationLink_whenUserHasAdminRole', async () => {
-      vi.mocked(routePathsModule.isRouteAccessible).mockReturnValue(true);
-      vi.mocked(useAuthModule.useAuth).mockReturnValue({
-        user: {
-          idpProvider: 'IDIR',
-          roles: [{ role: Role.ADMIN, clients: [] }],
-          privileges: {},
-        },
-        isLoggedIn: true,
-        isLoading: false,
-        login: vi.fn(),
-        logout: vi.fn(),
-        userToken: vi.fn(),
-        getClients: vi.fn(),
-      });
-      await renderWithProviders('/dashboard');
-      screen.getByTestId('side-nav-link-config');
-    });
-
-    it('shouldNotRenderConfigurationLink_whenUserHasNoAdminRole', async () => {
-      vi.mocked(routePathsModule.isRouteAccessible).mockReturnValue(false);
-      vi.mocked(useAuthModule.useAuth).mockReturnValue({
-        user: {
-          idpProvider: 'IDIR',
-          roles: [{ role: Role.VIEWER, clients: [] }],
-          privileges: {},
-        },
-        isLoggedIn: true,
-        isLoading: false,
-        login: vi.fn(),
-        logout: vi.fn(),
-        userToken: vi.fn(),
-        getClients: vi.fn(),
-      });
-      await renderWithProviders('/dashboard');
-      expect(screen.queryByTestId('side-nav-link-config')).toBeNull();
-    });
-
-    it('shouldNotRenderConfigurationLink_whenUserHasMultipleRolesButNoAdmin', async () => {
-      vi.mocked(routePathsModule.isRouteAccessible).mockReturnValue(false);
-      vi.mocked(useAuthModule.useAuth).mockReturnValue({
-        user: {
-          idpProvider: 'IDIR',
-          roles: [
-            { role: Role.VIEWER, clients: [] },
-            { role: Role.SUBMITTER, clients: [] },
-          ],
-          privileges: {},
-        },
-        isLoggedIn: true,
-        isLoading: false,
-        login: vi.fn(),
-        logout: vi.fn(),
-        userToken: vi.fn(),
-        getClients: vi.fn(),
-      });
-      await renderWithProviders('/dashboard');
-      expect(screen.queryByTestId('side-nav-link-config')).toBeNull();
-    });
-
-    it('shouldNotRenderConfigurationLink_whenUserIsUndefined', async () => {
-      vi.mocked(routePathsModule.isRouteAccessible).mockReturnValue(false);
-      await renderWithProviders('/dashboard');
-      expect(screen.queryByTestId('side-nav-link-config')).toBeNull();
-    });
-
-    it('shouldRenderConfigurationLink_whenUserHasAdminAmongMultipleRoles', async () => {
-      vi.mocked(routePathsModule.isRouteAccessible).mockReturnValue(true);
-      vi.mocked(useAuthModule.useAuth).mockReturnValue({
-        user: {
-          idpProvider: 'IDIR',
-          roles: [
-            { role: Role.VIEWER, clients: [] },
-            { role: Role.ADMIN, clients: [] },
-          ],
-          privileges: {},
-        },
-        isLoggedIn: true,
-        isLoading: false,
-        login: vi.fn(),
-        logout: vi.fn(),
-        userToken: vi.fn(),
-        getClients: vi.fn(),
-      });
-      await renderWithProviders('/dashboard');
-      screen.getByTestId('side-nav-link-config');
-    });
-
-    it('shouldNotRenderConfigurationLink_whenFeatureFlagDisabled', async () => {
-      vi.mocked(routePathsModule.isRouteAccessible).mockReturnValue(false);
-      vi.mocked(useAuthModule.useAuth).mockReturnValue({
-        user: {
-          idpProvider: 'IDIR',
-          roles: [{ role: Role.ADMIN, clients: [] }],
-          privileges: {},
-        },
-        isLoggedIn: true,
-        isLoading: false,
-        login: vi.fn(),
-        logout: vi.fn(),
-        userToken: vi.fn(),
-        getClients: vi.fn(),
-      });
-      await renderWithProviders('/dashboard');
-      expect(screen.queryByTestId('side-nav-link-config')).toBeNull();
     });
   });
 });
