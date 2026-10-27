@@ -22,6 +22,7 @@ jobs:
           oc_namespace: cffaf3-tools
           oc_server: ${{ secrets.oc_server }}
           oc_token: ${{ secrets.oc_token_tools }}
+          login_attempts: "8"
           commands: |
             # Scope to this PR: migration job names include -pr<number>-.
             # This runs before the parallel paths create their jobs so the
@@ -53,6 +54,7 @@ jobs:
           oc_namespace: cffaf3-tools
           oc_server: ${{ secrets.oc_server }}
           oc_token: ${{ secrets.oc_token_tools }}
+          login_attempts: "8"
           commands: |
             # The MinIO server is deployed only when it is missing, so the
             # existing Deployment, Service, PVC and Secret are left alone. The
@@ -70,6 +72,7 @@ jobs:
           oc_namespace: cffaf3-tools
           oc_server: ${{ secrets.oc_server }}
           oc_token: ${{ secrets.oc_token_tools }}
+          oc_login_attempts: "8"
           oc_version: "4.13"
           overwrite: false
           parameters:
@@ -265,6 +268,7 @@ jobs:
           oc_namespace: cffaf3-tools
           oc_server: ${{ secrets.oc_server }}
           oc_token: ${{ secrets.oc_token_tools }}
+          login_attempts: "8"
           commands: |
             PR="${{ github.event.number }}"
             oc delete cronjob/nr-waste-plus-pr${PR}-droppg \
@@ -288,6 +292,7 @@ jobs:
           oc_namespace: cffaf3-tools
           oc_server: ${{ secrets.oc_server }}
           oc_token: ${{ secrets.oc_token_tools }}
+          oc_login_attempts: "8"
           oc_version: "4.13"
           overwrite: true
           parameters: >-
@@ -307,6 +312,7 @@ jobs:
           oc_namespace: cffaf3-tools
           oc_server: ${{ secrets.oc_server }}
           oc_token: ${{ secrets.oc_token_tools }}
+          login_attempts: "8"
           commands: |
             set -uo pipefail
 
@@ -419,6 +425,7 @@ jobs:
           oc_namespace: cffaf3-tools
           oc_server: ${{ secrets.oc_server }}
           oc_token: ${{ secrets.oc_token_tools }}
+          oc_login_attempts: "8"
           oc_version: "4.13"
           overwrite: false
           parameters: -p ZONE=tools
@@ -431,6 +438,7 @@ jobs:
           oc_namespace: ${{ secrets.oc_namespace }}
           oc_server: ${{ secrets.oc_server }}
           oc_token: ${{ secrets.oc_token }}
+          login_attempts: "8"
           commands: |
             set -uo pipefail
 
@@ -502,6 +510,7 @@ jobs:
           oc_namespace: cffaf3-tools
           oc_server: ${{ secrets.oc_server }}
           oc_token: ${{ secrets.oc_token_tools }}
+          login_attempts: "8"
           commands: |
             set -uo pipefail
 
@@ -654,6 +663,7 @@ jobs:
         with:
           oc_namespace: ${{ secrets.oc_namespace }}
           oc_token: ${{ secrets.oc_token }}
+          login_attempts: "8"
           oc_server: ${{ secrets.oc_server }}
           commands: |
             set -uo pipefail

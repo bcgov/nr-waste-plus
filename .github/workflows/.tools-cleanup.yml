@@ -24,6 +24,7 @@ jobs:
         with:
           oc_namespace: ${{ secrets.oc_namespace }}
           oc_token: ${{ secrets.oc_token }}
+          login_attempts: "8"
           oc_server: ${{ secrets.oc_server }}
           commands: |
             set -uo pipefail
@@ -97,6 +98,7 @@ jobs:
           oc_namespace: cffaf3-tools
           oc_server: ${{ secrets.oc_server }}
           oc_token: ${{ secrets.oc_token_tools }}
+          login_attempts: "8"
           commands: |
             set -uo pipefail
 
@@ -188,6 +190,7 @@ jobs:
         with:
           oc_namespace: cffaf3-tools
           oc_token: ${{ secrets.oc_token_tools }}
+          login_attempts: "8"
           oc_server: ${{ secrets.oc_server }}
           commands: |
             set -uo pipefail
@@ -270,6 +273,7 @@ jobs:
           oc_namespace: cffaf3-tools
           oc_server: ${{ secrets.oc_server }}
           oc_token: ${{ secrets.oc_token_tools }}
+          login_attempts: "8"
           commands: |
             set -uo pipefail
 
@@ -360,6 +364,7 @@ jobs:
           oc_namespace: cffaf3-tools
           oc_server: ${{ secrets.oc_server }}
           oc_token: ${{ secrets.oc_token_tools }}
+          login_attempts: "8"
           commands: |
             oc delete cronjob/nr-waste-plus-pr${{ github.event.number }}-removepg \
               cronjob/nr-waste-plus-pr${{ github.event.number }}-createpg \
@@ -375,6 +380,7 @@ jobs:
         with:
           oc_namespace: cffaf3-tools
           oc_token: ${{ secrets.oc_token_tools }}
+          login_attempts: "8"
           oc_server: ${{ secrets.oc_server }}
           commands: |
             # Scope to this PR: job names include -pr<number>-.
