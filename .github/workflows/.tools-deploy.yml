@@ -241,8 +241,48 @@ jobs:
     needs: [pre-tools]
     runs-on: ubuntu-26.04
     steps:
+      - name: Require PostgreSQL connection parameters
+        env:
+          POSTGRES_HOST: ${{ secrets.POSTGRES_HOST }}
+          POSTGRES_PORT: ${{ secrets.POSTGRES_PORT }}
+          POSTGRES_ADMIN_DATABASE: ${{ secrets.POSTGRES_ADMIN_DATABASE }}
+          POSTGRES_ADMIN_USER: ${{ secrets.PG_PR_USER }}
+          POSTGRES_ADMIN_PASSWORD: ${{ secrets.PG_PR_PWD }}
+          POSTGRES_USERNAME: ${{ secrets.POSTGRES_USERNAME }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+        run: |
+          : "${POSTGRES_HOST:?POSTGRES_HOST repository secret is required}"
+          : "${POSTGRES_PORT:?POSTGRES_PORT repository secret is required}"
+          : "${POSTGRES_ADMIN_DATABASE:?POSTGRES_ADMIN_DATABASE repository secret is required}"
+          : "${POSTGRES_ADMIN_USER:?PG_PR_USER repository secret is required}"
+          : "${POSTGRES_ADMIN_PASSWORD:?PG_PR_PWD repository secret is required}"
+          : "${POSTGRES_USERNAME:?POSTGRES_USERNAME repository secret is required}"
+          : "${POSTGRES_PASSWORD:?POSTGRES_PASSWORD repository secret is required}"
+
+      - name: Remove existing PostgreSQL CronJobs
+        uses: bcgov/action-oc-runner@111868d1fc50db0a40417ba321d865ef5c931bbd # v1.7.0
+        with:
+          oc_namespace: cffaf3-tools
+          oc_server: ${{ secrets.oc_server }}
+          oc_token: ${{ secrets.oc_token_tools }}
+          commands: |
+            PR="${{ github.event.number }}"
+            oc delete cronjob/nr-waste-plus-pr${PR}-droppg \
+              cronjob/nr-waste-plus-pr${PR}-migratepg \
+              cronjob/nr-waste-plus-pr${PR}-removepg \
+              cronjob/nr-waste-plus-pr${PR}-createpg \
+              -n cffaf3-tools --ignore-not-found
+
       - name: Initializing PostgreSQL CronJobs
         uses: bcgov/action-deployer-openshift@e2d60eb9cacceb89c3b97d8dcf0a2c460eea5eab # v4.2.3
+        env:
+          POSTGRES_HOST: ${{ secrets.POSTGRES_HOST }}
+          POSTGRES_PORT: ${{ secrets.POSTGRES_PORT }}
+          POSTGRES_ADMIN_DATABASE: ${{ secrets.POSTGRES_ADMIN_DATABASE }}
+          POSTGRES_ADMIN_USER: ${{ secrets.PG_PR_USER }}
+          POSTGRES_ADMIN_PASSWORD: ${{ secrets.PG_PR_PWD }}
+          POSTGRES_USERNAME: ${{ secrets.POSTGRES_USERNAME }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
         with:
           file: tools/postgres.deploy.yml
           oc_namespace: cffaf3-tools
@@ -250,15 +290,18 @@ jobs:
           oc_token: ${{ secrets.oc_token_tools }}
           oc_version: "4.13"
           overwrite: true
-          parameters: -p NAME=nr-waste-plus
+          parameters: >-
+            -p NAME=nr-waste-plus
             -p ZONE=pr${{ github.event.number }}
-            -p POSTGRES_HOST=nr-waste-plus-${{ github.event.number }}-database.cffaf3-dev.svc.cluster.local
-            -p POSTGRES_PORT=5432
-            -p POSTGRES_USER=nr-waste-plus
-            -p POSTGRES_PASSWORD=${{ secrets.DB_PASSWORD }}
-            -p POSTGRES_SCHEMA=hrs
+            -p POSTGRES_HOST="$POSTGRES_HOST"
+            -p POSTGRES_PORT="$POSTGRES_PORT"
+            -p POSTGRES_ADMIN_DATABASE="$POSTGRES_ADMIN_DATABASE"
+            -p POSTGRES_ADMIN_USER="$POSTGRES_ADMIN_USER"
+            -p POSTGRES_ADMIN_PASSWORD="$POSTGRES_ADMIN_PASSWORD"
+            -p POSTGRES_USERNAME="$POSTGRES_USERNAME"
+            -p POSTGRES_PASSWORD="$POSTGRES_PASSWORD"
 
-      - name: Drop and migrate the PR postgres database
+      - name: Remove, create and migrate PR PostgreSQL database
         uses: bcgov/action-oc-runner@111868d1fc50db0a40417ba321d865ef5c931bbd # v1.7.0
         with:
           oc_namespace: cffaf3-tools
@@ -272,24 +315,16 @@ jobs:
             BRANCH_NAME="${{ github.head_ref }}"
             ESCAPED_BRANCH_NAME=$(echo "${BRANCH_NAME}" | sed 's/[\/&]/\\&/g')
 
-            # Run a Job created from a CronJob, wait for it, and surface its
-            # logs so a failure explains itself.
-            #
-            #   $1 cronjob suffix, $2 timeout in seconds, $3 "branch" when the
-            #   job has to be retargeted from main to this branch
+            # Run each lifecycle CronJob in order and stop before the next stage
+            # if the current Job fails.
             run_job() {
               CRONJOB="nr-waste-plus-pr${PR}-$1"
               JOB="$1-pr${PR}-${{ github.run_attempt }}-$(date +%s)"
 
-              # oc re-serializes the cronjob template, so the branch value comes
-              # back unquoted ("value: main"). Matching the bare form is what
-              # makes the job migrate this branch instead of main.
-              if [ "${3:-}" = "branch" ]; then
-                RENDERED=$(oc create job --from="cronjob/${CRONJOB}" "${JOB}" --dry-run=client -o yaml \
-                  | sed "s/value: main/value: ${ESCAPED_BRANCH_NAME}/")
-              else
-                RENDERED=$(oc create job --from="cronjob/${CRONJOB}" "${JOB}" --dry-run=client -o yaml)
-              fi
+              RENDERED=$(oc create job --from="cronjob/${CRONJOB}" "${JOB}" --dry-run=client -o yaml)
+              RENDERED=$(printf '%s\n' "${RENDERED}" \
+                | sed "s/value: \"0\"/value: \"${PR}\"/g" \
+                | sed "s/value: main/value: ${ESCAPED_BRANCH_NAME}/g")
               if ! echo "${RENDERED}" | oc apply -n "${NS}" -f -; then
                 echo "::error::Could not create job ${JOB}."
                 exit 1
@@ -297,7 +332,7 @@ jobs:
 
               succeeded=0
               failed=0
-              deadline=$(( $(date +%s) + $2 ))
+              deadline=$(( $(date +%s) + 900 ))
               while [ "$(date +%s)" -lt "${deadline}" ]; do
                 counts=$(oc get "job/${JOB}" -n "${NS}" -o jsonpath='{.status.succeeded}/{.status.failed}' 2>/dev/null || true)
                 succeeded="${counts%%/*}"
@@ -321,8 +356,9 @@ jobs:
               fi
             }
 
-            run_job droppg 300
-            run_job migratepg 900 branch
+            run_job removepg
+            run_job createpg
+            run_job migratepg
 
   results:
     name: PR Results

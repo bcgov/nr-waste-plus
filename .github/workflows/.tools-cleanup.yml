@@ -59,21 +59,67 @@ jobs:
               echo "Failed to find the pod after 5 attempts."
             fi
 
-      - name: Remove the PR PostgreSQL CronJobs
+      - name: Remove the PR PostgreSQL database
+        uses: bcgov/action-oc-runner@111868d1fc50db0a40417ba321d865ef5c931bbd # v1.7.0
+        with:
+          oc_namespace: cffaf3-tools
+          oc_server: ${{ secrets.oc_server }}
+          oc_token: ${{ secrets.oc_token_tools }}
+          commands: |
+            set -uo pipefail
+
+            NS="cffaf3-tools"
+            PR="${{ github.event.number }}"
+            CRONJOB="nr-waste-plus-pr${PR}-removepg"
+            JOB="remove-pr${PR}-cleanup-${{ github.run_attempt }}-$(date +%s)"
+
+            RENDERED=$(oc create job --from="cronjob/${CRONJOB}" "${JOB}" \
+              --dry-run=client -o yaml)
+            RENDERED=$(printf '%s\n' "${RENDERED}" \
+              | sed "s/value: \"0\"/value: \"${PR}\"/g")
+            if ! printf '%s\n' "${RENDERED}" | oc apply -n "${NS}" -f -; then
+              echo "::error::Could not create database removal job ${JOB}."
+              exit 1
+            fi
+
+            succeeded=0
+            failed=0
+            deadline=$(( $(date +%s) + 300 ))
+            while [ "$(date +%s)" -lt "${deadline}" ]; do
+              counts=$(oc get "job/${JOB}" -n "${NS}" \
+                -o jsonpath='{.status.succeeded}/{.status.failed}' 2>/dev/null || true)
+              succeeded="${counts%%/*}"
+              failed="${counts##*/}"
+              succeeded="${succeeded:-0}"
+              failed="${failed:-0}"
+              if [ "${succeeded}" -ge 1 ] || [ "${failed}" -ge 1 ]; then
+                break
+              fi
+              echo "Waiting for PostgreSQL removal job ${JOB} (succeeded=${succeeded}, failed=${failed})..."
+              sleep 10
+            done
+
+            oc logs "job/${JOB}" -n "${NS}" --tail=100 || true
+            if [ "${succeeded}" -lt 1 ]; then
+              oc describe "job/${JOB}" -n "${NS}" || true
+              echo "::error::PostgreSQL database removal failed for PR ${PR}."
+              exit 1
+            fi
+
+      - name: Remove the PR PostgreSQL CronJobs and credentials
         continue-on-error: true
         uses: bcgov/action-oc-runner@111868d1fc50db0a40417ba321d865ef5c931bbd # v1.7.0
         with:
-          oc_namespace: ${{ secrets.oc_namespace }}
+          oc_namespace: cffaf3-tools
           oc_server: ${{ secrets.oc_server }}
-          oc_token: ${{ secrets.oc_token }}
+          oc_token: ${{ secrets.oc_token_tools }}
           commands: |
-            # The per-PR CronJobs live beside the per-PR database, because
-            # their credentials come from that namespace's secret. Deleting
-            # them also deletes their Jobs through owner references. The
-            # database itself goes away with the StatefulSet teardown.
-            oc delete cronjob/nr-waste-plus-pr${{ github.event.number }}-droppg \
+            oc delete cronjob/nr-waste-plus-pr${{ github.event.number }}-removepg \
+              cronjob/nr-waste-plus-pr${{ github.event.number }}-createpg \
+              cronjob/nr-waste-plus-pr${{ github.event.number }}-droppg \
               cronjob/nr-waste-plus-pr${{ github.event.number }}-migratepg \
-              -n ${{ secrets.OC_NAMESPACE }} --ignore-not-found
+              secret/nr-waste-plus-pr${{ github.event.number }}-postgres \
+              -n cffaf3-tools --ignore-not-found
 
       - name: Remove the PR MinIO bucket
         continue-on-error: true
