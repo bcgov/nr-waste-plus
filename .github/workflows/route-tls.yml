@@ -23,7 +23,7 @@ jobs:
       contents: read
     timeout-minutes: 5
     steps:
-      - uses: bcgov/actions-openshift/route-tls@4dbe4f6d25d14cbdb01e525a302e61e31f96c3ed # v0.5.0
+      - uses: bcgov/actions-openshift/route-tls@46f2614322f7ba1a5ad88a7e4e1b98569c80dcf7 # v0.6.0
         with:
           hostname: wasteplus.nrs.gov.bc.ca
           route_name: nr-waste-plus-prod-frontend-vanity

@@ -93,7 +93,7 @@ jobs:
           done
 
       - name: Run Cypress End-to-End
-        uses: cypress-io/github-action@v7.4.6
+        uses: cypress-io/github-action@v7.4.8
         with:
           working-directory: cypress
           browser: chrome
