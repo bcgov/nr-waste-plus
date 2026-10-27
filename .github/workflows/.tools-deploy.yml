@@ -315,6 +315,42 @@ jobs:
             BRANCH_NAME="${{ github.head_ref }}"
             ESCAPED_BRANCH_NAME=$(echo "${BRANCH_NAME}" | sed 's/[\/&]/\\&/g')
 
+            # Block on the Job with watches instead of polling: oc wait returns the
+            # moment the Job reports a condition. Completion and failure are
+            # watched together, and the status is re-read once afterwards so a
+            # dropped watch only costs another round, not a false result.
+            wait_for_job() {
+              local job="$1" deadline remaining ok_pid fail_pid counts
+              deadline=$(( $(date +%s) + $2 ))
+              succeeded=0
+              failed=0
+              while [ "$(date +%s)" -lt "${deadline}" ]; do
+                remaining=$(( deadline - $(date +%s) ))
+                oc wait --for=condition=complete "job/${job}" -n "${NS}" --timeout="${remaining}s" >/dev/null 2>&1 &
+                ok_pid=$!
+                oc wait --for=condition=failed "job/${job}" -n "${NS}" --timeout="${remaining}s" >/dev/null 2>&1 &
+                fail_pid=$!
+                # Stop as soon as either watch has returned. Checking the local
+                # PIDs makes no API calls.
+                while kill -0 "${ok_pid}" 2>/dev/null && kill -0 "${fail_pid}" 2>/dev/null; do
+                  sleep 1
+                done
+                kill "${ok_pid}" "${fail_pid}" 2>/dev/null || true
+                wait "${ok_pid}" "${fail_pid}" 2>/dev/null || true
+
+                counts=$(oc get "job/${job}" -n "${NS}" -o jsonpath='{.status.succeeded}/{.status.failed}' 2>/dev/null || true)
+                succeeded="${counts%%/*}"
+                failed="${counts##*/}"
+                succeeded="${succeeded:-0}"
+                failed="${failed:-0}"
+                if [ "${succeeded}" -ge 1 ] || [ "${failed}" -ge 1 ]; then
+                  return 0
+                fi
+                echo "Waiting for job ${job} (succeeded=${succeeded}, failed=${failed})..."
+                sleep 2
+              done
+            }
+
             # Run each lifecycle CronJob in order and stop before the next stage
             # if the current Job fails.
             run_job() {
@@ -330,21 +366,7 @@ jobs:
                 exit 1
               fi
 
-              succeeded=0
-              failed=0
-              deadline=$(( $(date +%s) + 900 ))
-              while [ "$(date +%s)" -lt "${deadline}" ]; do
-                counts=$(oc get "job/${JOB}" -n "${NS}" -o jsonpath='{.status.succeeded}/{.status.failed}' 2>/dev/null || true)
-                succeeded="${counts%%/*}"
-                failed="${counts##*/}"
-                succeeded="${succeeded:-0}"
-                failed="${failed:-0}"
-                if [ "${succeeded}" -ge 1 ] || [ "${failed}" -ge 1 ]; then
-                  break
-                fi
-                echo "Waiting for job ${JOB} (succeeded=${succeeded}, failed=${failed})..."
-                sleep 10
-              done
+              wait_for_job "${JOB}" 900
 
               echo "--- logs for ${JOB} ---"
               oc logs "job/${JOB}" -n "${NS}" --tail=200 || true
