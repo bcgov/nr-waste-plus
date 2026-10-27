@@ -1,0 +1,280 @@
+apiVersion: template.openshift.io/v1
+kind: Template
+labels:
+  app: ${NAME}-${ZONE}
+  app.kubernetes.io/part-of: ${NAME}-${ZONE}
+parameters:
+  - name: NAME
+    description: Product name
+    value: nr-waste-plus
+  - name: ZONE
+    description: Deployment zone, e.g. tools
+    required: true
+  - name: POSTGRES_HOST
+    description: Host of the shared PostgreSQL instance
+    required: true
+  - name: POSTGRES_PORT
+    description: Port of the shared PostgreSQL instance
+    required: true
+  - name: POSTGRES_ADMIN_DATABASE
+    description: Database used for admin database-management operations
+    required: true
+  - name: POSTGRES_ADMIN_USER
+    description: User permitted to create and drop per-PR databases
+    required: true
+  - name: POSTGRES_ADMIN_PASSWORD
+    description: Password for the PostgreSQL admin user
+    required: true
+  - name: POSTGRES_USERNAME
+    description: Owner and Flyway user for per-PR databases
+    required: true
+  - name: POSTGRES_PASSWORD
+    description: Password for the per-PR migration user
+    required: true
+  - name: POSTGRES_DATABASE_PREFIX
+    description: Prefix used for per-PR database names
+    value: wasteplus_pr_
+  - name: POSTGRES_SCHEMA
+    description: Schema managed by Flyway
+    value: hrs
+objects:
+  - kind: Secret
+    apiVersion: v1
+    metadata:
+      name: ${NAME}-${ZONE}-postgres
+      labels:
+        app: ${NAME}-${ZONE}
+    stringData:
+      admin-user: ${POSTGRES_ADMIN_USER}
+      admin-password: ${POSTGRES_ADMIN_PASSWORD}
+      migration-user: ${POSTGRES_USERNAME}
+      migration-password: ${POSTGRES_PASSWORD}
+  - kind: CronJob
+    apiVersion: batch/v1
+    metadata:
+      name: ${NAME}-${ZONE}-removepg
+      labels:
+        app: ${NAME}-${ZONE}
+        cronjob: ${NAME}-${ZONE}
+    spec:
+      schedule: "0 0 31 2 *"
+      concurrencyPolicy: "Replace"
+      jobTemplate:
+        metadata:
+          labels:
+            app: ${NAME}-${ZONE}
+            cronjob: ${NAME}-${ZONE}
+        spec:
+          template:
+            metadata:
+              labels:
+                app: ${NAME}-${ZONE}
+                cronjob: ${NAME}-${ZONE}
+            spec:
+              containers:
+                - name: remove-pr-database
+                  image: postgres:17.11-alpine
+                  command: ["/bin/sh", "-c"]
+                  args:
+                    - |
+                      set -eu
+                      case "${PR_NUMBER}" in
+                        ''|*[!0-9]*) echo "PR_NUMBER must contain only digits" >&2; exit 1 ;;
+                      esac
+                      DB_NAME="${DATABASE_PREFIX}${PR_NUMBER}"
+                      echo "Removing PostgreSQL database ${DB_NAME}"
+                      EXISTS=$(psql --dbname="${PGDATABASE}" --tuples-only --no-align \
+                        --command="SELECT to_regprocedure('admin.drop_database_wasteplus_pr(text)') IS NOT NULL")
+                      if [ "${EXISTS}" != "t" ]; then
+                        echo "Required function admin.drop_database_wasteplus_pr(text) is unavailable" >&2
+                        exit 1
+                      fi
+                      psql --dbname="${PGDATABASE}" --set=ON_ERROR_STOP=1 --quiet <<SQL
+                      SELECT admin.drop_database_wasteplus_pr('${DB_NAME}')
+                      WHERE EXISTS (SELECT 1 FROM pg_database WHERE datname = '${DB_NAME}');
+                      SQL
+                      echo "Removed PostgreSQL database ${DB_NAME} if it existed"
+                  env:
+                    - name: PGHOST
+                      value: ${POSTGRES_HOST}
+                    - name: PGPORT
+                      value: ${POSTGRES_PORT}
+                    - name: PGDATABASE
+                      value: ${POSTGRES_ADMIN_DATABASE}
+                    - name: PGUSER
+                      valueFrom:
+                        secretKeyRef:
+                          name: ${NAME}-${ZONE}-postgres
+                          key: admin-user
+                    - name: PGPASSWORD
+                      valueFrom:
+                        secretKeyRef:
+                          name: ${NAME}-${ZONE}-postgres
+                          key: admin-password
+                    - name: PGSSLMODE
+                      value: "require"
+                    - name: DATABASE_PREFIX
+                      value: ${POSTGRES_DATABASE_PREFIX}
+                    - name: PR_NUMBER
+                      value: "0"
+              restartPolicy: OnFailure
+  - kind: CronJob
+    apiVersion: batch/v1
+    metadata:
+      name: ${NAME}-${ZONE}-createpg
+      labels:
+        app: ${NAME}-${ZONE}
+        cronjob: ${NAME}-${ZONE}
+    spec:
+      schedule: "0 0 31 2 *"
+      concurrencyPolicy: "Replace"
+      jobTemplate:
+        metadata:
+          labels:
+            app: ${NAME}-${ZONE}
+            cronjob: ${NAME}-${ZONE}
+        spec:
+          template:
+            metadata:
+              labels:
+                app: ${NAME}-${ZONE}
+                cronjob: ${NAME}-${ZONE}
+            spec:
+              containers:
+                - name: create-pr-database
+                  image: postgres:17.11-alpine
+                  command: ["/bin/sh", "-c"]
+                  args:
+                    - |
+                      set -eu
+                      case "${PR_NUMBER}" in
+                        ''|*[!0-9]*) echo "PR_NUMBER must contain only digits" >&2; exit 1 ;;
+                      esac
+                      DB_NAME="${DATABASE_PREFIX}${PR_NUMBER}"
+                      echo "Creating PostgreSQL database ${DB_NAME}"
+                      psql --dbname="${PGDATABASE}" --set=ON_ERROR_STOP=1 --quiet <<SQL
+                      SELECT admin.create_database_wasteplus_pr('${DB_NAME}');
+                      SQL
+                      echo "Created PostgreSQL database ${DB_NAME}"
+                  env:
+                    - name: PGHOST
+                      value: ${POSTGRES_HOST}
+                    - name: PGPORT
+                      value: ${POSTGRES_PORT}
+                    - name: PGDATABASE
+                      value: ${POSTGRES_ADMIN_DATABASE}
+                    - name: PGUSER
+                      valueFrom:
+                        secretKeyRef:
+                          name: ${NAME}-${ZONE}-postgres
+                          key: admin-user
+                    - name: PGPASSWORD
+                      valueFrom:
+                        secretKeyRef:
+                          name: ${NAME}-${ZONE}-postgres
+                          key: admin-password
+                    - name: PGSSLMODE
+                      value: "require"
+                    - name: DATABASE_PREFIX
+                      value: ${POSTGRES_DATABASE_PREFIX}
+                    - name: PR_NUMBER
+                      value: "0"
+              restartPolicy: OnFailure
+  - kind: CronJob
+    apiVersion: batch/v1
+    metadata:
+      name: ${NAME}-${ZONE}-migratepg
+      labels:
+        app: ${NAME}-${ZONE}
+        cronjob: ${NAME}-${ZONE}
+    spec:
+      schedule: "0 0 31 2 *"
+      concurrencyPolicy: "Replace"
+      jobTemplate:
+        metadata:
+          labels:
+            app: ${NAME}-${ZONE}
+            cronjob: ${NAME}-${ZONE}
+        spec:
+          template:
+            metadata:
+              labels:
+                app: ${NAME}-${ZONE}
+                cronjob: ${NAME}-${ZONE}
+            spec:
+              initContainers:
+                - name: download-migrations
+                  image: curlimages/curl
+                  command: ["/bin/sh", "-c"]
+                  args:
+                    - |
+                      set -eu
+                      echo "Downloading migration files for ${BRANCH_NAME}"
+                      curl -fL "https://github.com/bcgov/nr-waste-plus/archive/refs/heads/${BRANCH_NAME}.zip" -o /data/nr-waste-plus.zip
+                      unzip -q /data/nr-waste-plus.zip -d /data
+                      MIGRATION_DIR_MAIN=$(find /data -type d -path "*/backend/src/main/resources/db/migration" -print -quit)
+                      if [ -z "${MIGRATION_DIR_MAIN}" ]; then
+                        echo "Main migration directory not found" >&2
+                        exit 1
+                      fi
+                      mkdir -p /data/sql
+                      cp "${MIGRATION_DIR_MAIN}"/* /data/sql
+                      MIGRATION_DIR_TEST=$(find /data -type d -path "*/backend/src/test/resources/db/migration" -print -quit)
+                      if [ -n "${MIGRATION_DIR_TEST}" ]; then
+                        cp "${MIGRATION_DIR_TEST}"/* /data/sql 2>/dev/null || true
+                      fi
+                      rm -rf /data/nr-waste-plus*
+                  env:
+                    - name: BRANCH_NAME
+                      value: "main"
+                  volumeMounts:
+                    - name: data-volume
+                      mountPath: /data
+              containers:
+                - name: flyway
+                  image: flyway/flyway
+                  command: ["/bin/sh", "-c"]
+                  args:
+                    - |
+                      set -eu
+                      case "${PR_NUMBER}" in
+                        ''|*[!0-9]*) echo "PR_NUMBER must contain only digits" >&2; exit 1 ;;
+                      esac
+                      DB_NAME="${DATABASE_PREFIX}${PR_NUMBER}"
+                      echo "Migrating PostgreSQL database ${DB_NAME}"
+                      flyway \
+                        -url="jdbc:postgresql://${FLYWAY_HOST}:${FLYWAY_PORT}/${DB_NAME}?sslmode=require" \
+                        -user="${FLYWAY_USER}" \
+                        -password="${FLYWAY_PASSWORD}" \
+                        -schemas="${FLYWAY_SCHEMA}" \
+                        -defaultSchema="${FLYWAY_SCHEMA}" \
+                        -locations=filesystem:/data/sql \
+                        migrate
+                  env:
+                    - name: FLYWAY_HOST
+                      value: ${POSTGRES_HOST}
+                    - name: FLYWAY_PORT
+                      value: ${POSTGRES_PORT}
+                    - name: FLYWAY_USER
+                      valueFrom:
+                        secretKeyRef:
+                          name: ${NAME}-${ZONE}-postgres
+                          key: migration-user
+                    - name: FLYWAY_PASSWORD
+                      valueFrom:
+                        secretKeyRef:
+                          name: ${NAME}-${ZONE}-postgres
+                          key: migration-password
+                    - name: FLYWAY_SCHEMA
+                      value: ${POSTGRES_SCHEMA}
+                    - name: DATABASE_PREFIX
+                      value: ${POSTGRES_DATABASE_PREFIX}
+                    - name: PR_NUMBER
+                      value: "0"
+                  volumeMounts:
+                    - name: data-volume
+                      mountPath: /data
+              restartPolicy: OnFailure
+              volumes:
+                - name: data-volume
+                  emptyDir: {}
