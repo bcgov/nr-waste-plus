@@ -10,12 +10,24 @@ parameters:
   - name: DB_PASSWORD
     description: Password for the PostgreSQL connection user.
     required: true
+  - name: POSTGRES_HOST
+    description: PostgreSQL host the backend connects to (e.g. the in-namespace database service or the data-center server)
+    required: true
+  - name: POSTGRES_PORT
+    description: PostgreSQL port
+    value: "5432"
+  - name: POSTGRES_DATABASE
+    description: PostgreSQL database the backend connects to (for PR zones, the tools workflow creates wasteplus_pr_<PR>)
+    required: true
+  - name: POSTGRES_USER
+    description: PostgreSQL connection user
+    required: true
   - name: ORACLEDB_USER
     description: Oracle database user name
     required: true
   - name: ORACLEDB_PASSWORD
     description: Oracle database password
-    required: true    
+    required: true
   - name: ORACLEDB_DATABASE
     description: Oracle database database name
     required: true
@@ -36,7 +48,7 @@ parameters:
   - name: COGNITO_CLIENT_ID
     required: true
   - name: COGNITO_DOMAIN
-    value: 'prod-fam-user-pool-domain'
+    value: "prod-fam-user-pool-domain"
   - name: COGNITO_ENVIRONMENT
     required: true
   - name: COGNITO_USER_POOL
@@ -44,7 +56,7 @@ parameters:
     required: true
   - name: COGNITO_REGION
     description: Cognito region information
-    value: 'ca-central-1'
+    value: "ca-central-1"
   - name: VITE_LEGACY_BASE_URL
     description: Green domain
     required: true
@@ -103,18 +115,20 @@ objects:
       labels:
         app: ${NAME}-${ZONE}
     stringData:
-      database-name: ${NAME}
+      database-name: ${POSTGRES_DATABASE}
       database-password: ${DB_PASSWORD}
-      database-user: ${NAME}
+      database-user: ${POSTGRES_USER}
+      database-host: ${POSTGRES_HOST}
+      database-port: ${POSTGRES_PORT}
       oracle-user: ${ORACLEDB_USER}
       oracle-password: ${ORACLEDB_PASSWORD}
       oracle-database: ${ORACLEDB_DATABASE}
       oracle-host: ${ORACLEDB_HOST}
       oracle-service: ${ORACLEDB_SERVICENAME}
-      oracle-secret: ${ORACLEDB_SECRET}  
+      oracle-secret: ${ORACLEDB_SECRET}
       cognito-user-pool: ${COGNITO_USER_POOL}
       cognito-client-id: ${COGNITO_CLIENT_ID}
-      cognito-environment: ${COGNITO_ENVIRONMENT}      
+      cognito-environment: ${COGNITO_ENVIRONMENT}
       spring-profiles-active: "container,${SPRING_PROFILES_ACTIVE}"
       client-base-url: ${CLIENT_BASE_URL}
       client-base-key: ${CLIENT_BASE_KEY}

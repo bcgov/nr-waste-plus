@@ -36,6 +36,10 @@ on:
         description: Oracle username
         required: false
         type: string
+      postgres-database:
+        description: PostgreSQL database the backend connects to; PR callers pass wasteplus_pr_<PR>, shared zones use an environment secret
+        required: false
+        type: string
       target:
         description: Deployment target; usually PR number, test or prod
         default: ${{ github.event.number }}
@@ -50,32 +54,32 @@ on:
         description: Object storage / MinIO endpoint
         required: false
         type: string
-        default: ''
+        default: ""
       object-storage-presigner-endpoint:
         description: Object storage / MinIO client-facing presigner endpoint
         required: false
         type: string
-        default: ''
+        default: ""
       object-storage-access-key:
         description: Object storage access key
         required: false
         type: string
-        default: ''
+        default: ""
       object-storage-secret-key:
         description: Object storage secret key
         required: false
         type: string
-        default: ''
+        default: ""
       object-storage-bucket:
         description: Object storage bucket
         required: false
         type: string
-        default: ''
+        default: ""
       object-storage-force-path-style:
         description: Force path style for S3 requests
         required: false
         type: string
-        default: ''
+        default: ""
 
 permissions: {}
 
@@ -151,6 +155,10 @@ jobs:
             -p URL_FRONTEND=${{ inputs.url }}
             -p LANDING_URL=${{ inputs.url }}
             -p DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+            -p POSTGRES_HOST=${{ secrets.POSTGRES_HOST }}
+            -p POSTGRES_PORT=${{ secrets.POSTGRES_PORT }}
+            -p POSTGRES_DATABASE=${{ inputs.postgres-database || secrets.POSTGRES_DATABASE }}
+            -p POSTGRES_USER=${{ secrets.POSTGRES_USERNAME }}
             -p SPRING_PROFILES_ACTIVE=${{ secrets.OC_NAMESPACE }}
             -p VITE_ZONE=${{ inputs.zone || 'dev' }}
             -p VITE_LEGACY_BASE_URL=${{ secrets.GREEN_DOMAIN }}
@@ -182,20 +190,15 @@ jobs:
             overwrite: false
           - name: frontend
             overwrite: true
-            parameters:
-              -p URL=${{ inputs.url }}
+            parameters: -p URL=${{ inputs.url }}
               -p CONFIG_MAP="${{ inputs.configmap-frontend }}"
           - name: backend
             overwrite: true
-            parameters:
-              -p FRONTEND_URL=${{ inputs.url }}
+            parameters: -p FRONTEND_URL=${{ inputs.url }}
               -p CONFIG_MAP="${{ inputs.configmap-backend }}"
-              -p POSTGRES_HOST="nr-waste-plus-${{ inputs.zone }}-database"
-              -p POSTGRES_PORT=5432
           - name: legacy
             overwrite: true
-            parameters:
-              -p ORACLEDB_PORT=${{ inputs.oracledb-port }}
+            parameters: -p ORACLEDB_PORT=${{ inputs.oracledb-port }}
             verification_path: actuator/health
     steps:
       - uses: bcgov/action-deployer-openshift@e2d60eb9cacceb89c3b97d8dcf0a2c460eea5eab # v4.2.3
@@ -206,7 +209,6 @@ jobs:
           oc_server: ${{ secrets.oc_server }}
           oc_token: ${{ secrets.oc_token }}
           overwrite: ${{ matrix.overwrite }}
-          parameters:
-            -p TAG=${{ needs.vars.outputs.tag }}
+          parameters: -p TAG=${{ needs.vars.outputs.tag }}
             -p ZONE=${{ inputs.zone }}
             ${{ matrix.parameters }}
