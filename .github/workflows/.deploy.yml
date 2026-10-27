@@ -40,10 +40,6 @@ on:
         description: PostgreSQL database the backend connects to; PR callers pass wasteplus_pr_<PR>, shared zones use an environment secret
         required: false
         type: string
-      spring-profiles-active:
-        description: Additional Spring profiles after the container profile
-        required: false
-        type: string
       target:
         description: Deployment target; usually PR number, test or prod
         default: ${{ github.event.number }}
@@ -164,7 +160,7 @@ jobs:
             -p POSTGRES_PORT=${{ secrets.POSTGRES_PORT }}
             -p POSTGRES_DATABASE=${{ inputs.postgres-database || secrets.POSTGRES_DATABASE }}
             -p POSTGRES_USER=${{ secrets.POSTGRES_USERNAME }}
-            -p SPRING_PROFILES_ACTIVE=${{ inputs.spring-profiles-active || secrets.OC_NAMESPACE }}
+            -p SPRING_PROFILES_ACTIVE=${{ secrets.OC_NAMESPACE }}
             -p VITE_ZONE=${{ inputs.zone || 'dev' }}
             -p VITE_LEGACY_BASE_URL=${{ secrets.GREEN_DOMAIN }}
             -p CLIENT_BASE_URL=${{ secrets.CLIENT_API_URL }}

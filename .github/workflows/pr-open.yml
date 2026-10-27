@@ -65,7 +65,6 @@ jobs:
       # The per-PR database on the shared data-center PostgreSQL, provisioned and
       # seeded by the tools workflow for this PR number.
       postgres-database: wasteplus_pr_${{ github.event.number }}
-      spring-profiles-active: prod,cffaf3-dev
       # The object storage endpoint is a secret, so it cannot be passed here:
       # reusable-workflow `with:` inputs cannot read the secrets context, and
       # the runner drops job outputs that may contain a secret. The deployment
@@ -77,6 +76,9 @@ jobs:
       # bucket is computed in `vars` because `with:` cannot read secrets.
       object-storage-bucket: ${{ needs.vars.outputs.bucket }}
       configmap-backend: |-
+        spring:
+          profiles:
+            active: container,prod,cffaf3-dev
         info:
           app:
             component: backend
