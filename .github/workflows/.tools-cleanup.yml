@@ -109,11 +109,22 @@ jobs:
               done
             }
 
-            RENDERED=$(oc create job --from="cronjob/${CRONJOB}" "${JOB}" \
-              --dry-run=client -o yaml)
-            RENDERED=$(printf '%s\n' "${RENDERED}" \
-              | sed "s/value: \"0\"/value: \"${PR}\"/g")
-            if ! printf '%s\n' "${RENDERED}" | oc apply -n "${NS}" -f -; then
+            # The OpenShift API intermittently times out from GitHub runners,
+            # so creating the Job is retried. The Job name is fixed above, so a
+            # retry can never start a second copy.
+            created=0
+            for attempt in 1 2 3 4; do
+              if RENDERED=$(oc create job --from="cronjob/${CRONJOB}" "${JOB}" --dry-run=client -o yaml) \
+                && printf '%s\n' "${RENDERED}" \
+                  | sed "s/value: \"0\"/value: \"${PR}\"/g" \
+                  | oc apply -n "${NS}" -f -; then
+                created=1
+                break
+              fi
+              echo "Could not create job ${JOB} (attempt ${attempt}/4); retrying..."
+              sleep $((attempt * 3))
+            done
+            if [ "${created}" -ne 1 ]; then
               echo "::error::Could not create database removal job ${JOB}."
               exit 1
             fi
