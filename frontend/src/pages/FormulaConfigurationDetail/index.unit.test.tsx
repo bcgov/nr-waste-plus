@@ -5,7 +5,6 @@ import { type ReactNode } from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 import { useFormulaSetDetail } from '@/hooks/useFormulaConfiguration';
-import { navigateInTree } from '@/routes/inTreePaths';
 
 import FormulaConfigurationDetailPage from './index';
 
@@ -68,10 +67,6 @@ vi.mock('@/components/core/PageNotification', () => ({
   default: ({ eventTarget }: { eventTarget: string }) => (
     <div data-testid="page-notification" data-event-target={eventTarget} />
   ),
-}));
-
-vi.mock('@/routes/inTreePaths', () => ({
-  navigateInTree: vi.fn(),
 }));
 
 // ============================================================================
@@ -152,7 +147,7 @@ describe('FormulaConfigurationDetailPage', () => {
 
     await user.click(screen.getByRole('button', { name: 'Back' }));
 
-    expect(navigateInTree).toHaveBeenCalledWith(mockNavigate, '/configuration/formulas');
+    expect(mockNavigate).toHaveBeenCalledWith({ to: '/configuration/formulas' });
   });
 
   it('should render page title with data and FormulaConfigurationDetailView', () => {
@@ -232,7 +227,7 @@ describe('FormulaConfigurationDetailPage', () => {
     const backButton = screen.getByRole('button', { name: 'Back' });
     await user.click(backButton);
 
-    expect(navigateInTree).toHaveBeenCalledWith(mockNavigate, '/configuration/formulas');
+    expect(mockNavigate).toHaveBeenCalledWith({ to: '/configuration/formulas' });
 
     // The Back button is placed at the bottom of the page, not in the page title.
     expect(

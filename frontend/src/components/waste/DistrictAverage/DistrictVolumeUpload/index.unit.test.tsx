@@ -5,7 +5,6 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 import * as hooks from '@/config/react-query/hooks.ts';
 import { renderWithAppAsync } from '@/config/tests/renderWithApp.tsx';
-import * as inTreePaths from '@/routes/inTreePaths.ts';
 
 import DistrictVolumeTableUpload from './index.tsx';
 
@@ -49,6 +48,13 @@ vi.mock('@/services/districtvolumes/validators/interiorValidator', () => ({
 }));
 
 vi.mock('@/config/react-query/hooks');
+
+const mockNavigate = vi.fn();
+
+vi.mock('@tanstack/react-router', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@tanstack/react-router')>()),
+  useNavigate: () => mockNavigate,
+}));
 
 vi.mock('@carbon/react', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@carbon/react')>();
@@ -117,10 +123,6 @@ const mockMutateAsync = vi.fn();
 const mockUseDistrictVolumeTableCreateMutation = vi.mocked(
   hooks.useDistrictVolumeTableCreateMutation,
 );
-
-vi.mock('@/routes/inTreePaths', () => ({
-  navigateInTree: vi.fn(),
-}));
 
 /**
  * FileUploadInput mock that mirrors the real component's validation flow:
@@ -264,16 +266,15 @@ describe('DistrictVolumeTableUpload', () => {
   });
 
   describe('navigation', () => {
-    it('should call navigateInTree with list path when Cancel is clicked', async () => {
+    it('should navigate to the list path when Cancel is clicked', async () => {
       const user = userEvent.setup();
       await renderWithAppAsync(<DistrictVolumeTableUpload />);
 
       await user.click(screen.getByRole('button', { name: 'Cancel' }));
 
-      expect(inTreePaths.navigateInTree).toHaveBeenCalledWith(
-        expect.anything(),
-        '/configuration/district-volume-tables',
-      );
+      expect(mockNavigate).toHaveBeenCalledWith({
+        to: '/configuration/district-volume-tables',
+      });
     });
   });
 
@@ -391,10 +392,10 @@ describe('DistrictVolumeTableUpload', () => {
       // Simulate successful creation
       capturedOnSuccess?.(42);
 
-      expect(inTreePaths.navigateInTree).toHaveBeenCalledWith(
-        expect.anything(),
-        '/configuration/district-volume-tables/42',
-      );
+      expect(mockNavigate).toHaveBeenCalledWith({
+        to: '/configuration/district-volume-tables/$id',
+        params: { id: '42' },
+      });
     });
   });
 

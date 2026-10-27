@@ -3,23 +3,18 @@ import { renderHook, act } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 const mockNavigate = vi.fn();
-const mockNavigateInTree = vi.fn();
 
 vi.mock('@tanstack/react-router', () => ({
   useNavigate: () => mockNavigate,
-}));
-
-vi.mock('@/routes/inTreePaths', () => ({
-  navigateInTree: (...args: any[]) => mockNavigateInTree(...args),
 }));
 
 vi.mock('@/utils/businessDate', () => ({
   isFutureDated: vi.fn(),
 }));
 
-import { useListTableRowActions } from './useListTableRowActions';
-
 import { isFutureDated } from '@/utils/businessDate';
+
+import { useListTableRowActions } from './useListTableRowActions';
 
 const mockIsFutureDated = vi.mocked(isFutureDated);
 
@@ -80,10 +75,9 @@ describe('useListTableRowActions', () => {
         actions[0].onClick(row as any);
       });
 
-      expect(mockNavigateInTree).toHaveBeenCalledWith(
-        mockNavigate,
-        '/configuration/district-volume-tables/row-42',
-      );
+      expect(mockNavigate).toHaveBeenCalledWith({
+        href: '/configuration/district-volume-tables/row-42',
+      });
     });
   });
 

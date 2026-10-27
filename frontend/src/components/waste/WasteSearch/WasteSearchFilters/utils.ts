@@ -1,4 +1,4 @@
-import type { WasteSearchFilters } from '@/routes/searchParams';
+import type { WasteSearchFilters } from '@/routing/searchParams';
 import type {
   CodeDescriptionDto,
   ReportingUnitSearchParametersViewDto,

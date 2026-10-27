@@ -49,7 +49,10 @@ const ReportingUnitCreate: FC = () => {
     notificationTarget: 'create-ru',
     onSuccess: (ruId) => {
       // Navigate to the details page of the newly created reporting unit
-      router.navigate({ to: `/reporting-units/${ruId}` });
+      router.navigate({
+        to: '/reporting-units/$ruId',
+        params: { ruId: String(ruId) },
+      });
     },
   });
 

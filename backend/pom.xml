@@ -7,7 +7,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>4.1.1</version>
+        <version>4.1.2</version>
         <relativePath/> </parent>
     <groupId>ca.bc.gov.nrs</groupId>
     <artifactId>nr-waste-plus-backend</artifactId>
@@ -93,7 +93,7 @@
         <mapstruct.version>1.6.3</mapstruct.version>
         <lombok.version>1.18.48</lombok.version>
         <lombok-mapstruct-binding.version>0.2.0</lombok-mapstruct-binding.version>
-        <aws-sdk.version>2.56.0</aws-sdk.version>
+        <aws-sdk.version>2.57.0</aws-sdk.version>
     </properties>
 
     <dependencyManagement>

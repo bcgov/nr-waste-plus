@@ -7,7 +7,7 @@ import { describe, expect, it, vi, beforeEach, type Mock } from 'vitest';
 import { renderWithAppAsync } from '@/config/tests/renderWithApp';
 import * as useNotificationEvents from '@/hooks/useNotificationEvents';
 import * as eventHandler from '@/hooks/useNotificationEvents/eventHandler';
-import { validateWasteSearch } from '@/routes/searchParams';
+import { validateWasteSearch } from '@/routing/searchParams';
 import APIs from '@/services/APIs';
 
 import WasteSearchTable from './index';
@@ -60,114 +60,115 @@ vi.mock('@/env', async (importOriginal) => {
 });
 
 // Mock TableResource to avoid slow Carbon component rendering
-vi.mock('@/components/Form/TableResource', () => ({
-  default: ({
-    headers,
-    content,
-    loading,
-    error,
-    onPageChange,
-    onSortChange,
-    id,
-    onRowExpanded,
-    getRowActions,
-  }: any) => {
-    if (loading) {
-      return <div data-testid="loading-skeleton">Loading...</div>;
-    }
-    if (error) {
-      return <div>Something went wrong!</div>;
-    }
-    if (!content?.content || content.content.length === 0) {
-      return content?.page?.totalElements === 0 ? (
-        <div>No results</div>
-      ) : (
-        <div>Nothing to show yet!</div>
-      );
-    }
-    return (
-      <div data-testid={id}>
-        <table>
-          <thead>
-            <tr>
-              {headers.map((h: any, idx: number) => (
-                <th
-                  key={`${idx}-${h.key}`}
-                  onClick={() => h.isSortable && onSortChange?.({ [h.key]: 'ASC' })}
-                >
-                  {h.header}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {content.content.map((row: any) => (
-              <tr key={row.id} data-testid={`row-${row.id}`}>
-                <td>{row.cutBlockId}</td>
-                <td>{row.ruNumber}</td>
-                {onRowExpanded ? (
-                  <td>
-                    <button
-                      type="button"
-                      onClick={async () => {
-                        const node = await onRowExpanded(row.id);
-                        const el = document.createElement('div');
-                        el.setAttribute('data-testid', `expanded-${row.id}`);
-                        el.textContent = String(node);
-                        const container = document.body.querySelector(
-                          `[data-testid="row-${row.id}"]`,
-                        )?.parentElement;
-                        if (container) container.appendChild(el);
-                      }}
-                    >
-                      Expand
-                    </button>
-                  </td>
-                ) : null}
-                {getRowActions ? (
-                  <td>
-                    {(getRowActions(row) || []).map((action: any) => (
-                      <button
-                        key={action.id}
-                        type="button"
-                        disabled={action.isLoading?.(row)}
-                        onClick={() => action.onClick(row)}
-                      >
-                        {action.label}
-                      </button>
-                    ))}
-                  </td>
-                ) : null}
+vi.mock('@/components/Form/TableResource', async () => {
+  const { useState } = await import('react');
+  return {
+    default: function MockTableResource({
+      headers,
+      content,
+      loading,
+      error,
+      onPageChange,
+      onSortChange,
+      id,
+      onRowExpanded,
+      getRowActions,
+    }: any) {
+      const [expandedRows, setExpandedRows] = useState<Record<string, string>>({});
+      if (loading) {
+        return <div data-testid="loading-skeleton">Loading...</div>;
+      }
+      if (error) {
+        return <div>Something went wrong!</div>;
+      }
+      if (!content?.content || content.content.length === 0) {
+        return content?.page?.totalElements === 0 ? (
+          <div>No results</div>
+        ) : (
+          <div>Nothing to show yet!</div>
+        );
+      }
+      return (
+        <div data-testid={id}>
+          <table>
+            <thead>
+              <tr>
+                {headers.map((h: any, idx: number) => (
+                  <th
+                    key={`${idx}-${h.key}`}
+                    onClick={() => h.isSortable && onSortChange?.({ [h.key]: 'ASC' })}
+                  >
+                    {h.header}
+                  </th>
+                ))}
               </tr>
-            ))}
-          </tbody>
-        </table>
-        <div>
-          <label htmlFor="page-size-select">Items per page:</label>
-          <select
-            id="page-size-select"
-            aria-label="Items per page:"
-            onChange={(e) =>
-              onPageChange?.({ page: content.page.number, pageSize: Number(e.target.value) })
-            }
-          >
-            <option value="10">10</option>
-            <option value="20">20</option>
-            <option value="50">50</option>
-          </select>
-          <button
-            aria-label="Next page"
-            onClick={() =>
-              onPageChange?.({ page: content.page.number + 1, pageSize: content.page.size })
-            }
-          >
-            Next
-          </button>
+            </thead>
+            <tbody>
+              {content.content.map((row: any) => (
+                <tr key={row.id} data-testid={`row-${row.id}`}>
+                  <td>{row.cutBlockId}</td>
+                  <td>{row.ruNumber}</td>
+                  {onRowExpanded ? (
+                    <td>
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          const node = await onRowExpanded(row.id);
+                          setExpandedRows((prev) => ({ ...prev, [row.id]: String(node) }));
+                        }}
+                      >
+                        Expand
+                      </button>
+                      {expandedRows[row.id] !== undefined && (
+                        <div data-testid={`expanded-${row.id}`}>{expandedRows[row.id]}</div>
+                      )}
+                    </td>
+                  ) : null}
+                  {getRowActions ? (
+                    <td>
+                      {(getRowActions(row) || []).map((action: any) => (
+                        <button
+                          key={action.id}
+                          type="button"
+                          disabled={action.isLoading?.(row)}
+                          onClick={() => action.onClick(row)}
+                        >
+                          {action.label}
+                        </button>
+                      ))}
+                    </td>
+                  ) : null}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <div>
+            <label htmlFor="page-size-select">Items per page:</label>
+            <select
+              id="page-size-select"
+              aria-label="Items per page:"
+              onChange={(e) =>
+                onPageChange?.({ page: content.page.number, pageSize: Number(e.target.value) })
+              }
+            >
+              <option value="10">10</option>
+              <option value="20">20</option>
+              <option value="50">50</option>
+            </select>
+            <button
+              aria-label="Next page"
+              onClick={() =>
+                onPageChange?.({ page: content.page.number + 1, pageSize: content.page.size })
+              }
+            >
+              Next
+            </button>
+          </div>
         </div>
-      </div>
-    );
-  },
-}));
+      );
+    },
+  };
+});
 
 vi.mock('@/services/APIs', () => {
   return {
@@ -716,7 +717,7 @@ describe('WasteSearchTable - additional coverage', () => {
     await setInputValue(keywordInput, 'BLOCK');
     const searchButton = screen.getByTestId('search-button-most');
     await userEvent.click(searchButton);
-    await waitFor(() => screen.getByText('411B'));
+    await screen.findByText('411B');
     expect(screen.getAllByText('Bookmark this reporting unit').length).toBeGreaterThan(0);
   });
 
@@ -726,7 +727,7 @@ describe('WasteSearchTable - additional coverage', () => {
     await setInputValue(keywordInput, 'BLOCK');
     const searchButton = screen.getByTestId('search-button-most');
     await userEvent.click(searchButton);
-    await waitFor(() => screen.getByText('411B'));
+    await screen.findByText('411B');
     const expandBtn = screen.getAllByRole('button', { name: 'Expand' })[0];
     await userEvent.click(expandBtn);
     expect(await screen.findByTestId(/expanded-/)).toBeDefined();

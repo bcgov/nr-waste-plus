@@ -6,7 +6,7 @@ import {
 } from '@tanstack/react-router';
 import { useState, type ReactElement, type ReactNode } from 'react';
 
-import { searchParamCodec } from '@/routes/searchParams';
+import { searchParamCodec } from '@/routing/searchParams';
 
 /**
  * Creates a minimal TanStack Router instance for unit tests.

@@ -3,7 +3,6 @@ import { renderHook } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest';
 
 import { resolveTableRowActionValue } from '@/components/Form/TableResource/utils.ts';
-import { navigateInTree } from '@/routes/inTreePaths.ts';
 import { isFutureDated } from '@/utils/businessDate.ts';
 
 import { useFormulaConfigurationListRowActions } from './actions.tsx';
@@ -13,10 +12,6 @@ import type { PageableResponse } from '@/types/tableResource.types.ts';
 
 vi.mock('@tanstack/react-router', () => ({
   useNavigate: vi.fn(),
-}));
-
-vi.mock('@/routes/inTreePaths', () => ({
-  navigateInTree: vi.fn(),
 }));
 
 vi.mock('@/utils/businessDate', () => ({
@@ -159,7 +154,7 @@ describe('useFormulaConfigurationListRowActions', () => {
 
       await result.current(row)[0].onClick(row);
 
-      expect(navigateInTree).toHaveBeenCalledWith(mockNavigate, '/configuration/formulas/99');
+      expect(mockNavigate).toHaveBeenCalledWith({ href: '/configuration/formulas/99' });
     });
 
     it('navigates with different row ids', async () => {
@@ -168,7 +163,7 @@ describe('useFormulaConfigurationListRowActions', () => {
 
       await result.current(row)[0].onClick(row);
 
-      expect(navigateInTree).toHaveBeenCalledWith(mockNavigate, '/configuration/formulas/7');
+      expect(mockNavigate).toHaveBeenCalledWith({ href: '/configuration/formulas/7' });
     });
   });
 });

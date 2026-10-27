@@ -89,7 +89,10 @@ describe('ReportingUnitBlocksList row actions', () => {
     );
 
     await user.click(screen.getByRole('button', { name: 'See details' }));
-    expect(mockNavigate).toHaveBeenCalledWith({ to: '/reporting-units/468/12' });
+    expect(mockNavigate).toHaveBeenCalledWith({
+      to: '/reporting-units/$ruId/$blockId',
+      params: { ruId: '468', blockId: '12' },
+    });
 
     await user.click(screen.getByRole('button', { name: 'Delete block' }));
     expect(mockNavigate).toHaveBeenCalledOnce();
