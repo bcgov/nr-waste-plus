@@ -36,10 +36,10 @@ parameters:
     value: 200Mi
   - name: COGNITO_REGION
     description: Cognito region to be used
-    value: 'ca-central-1'
+    value: "ca-central-1"
   - name: COGNITO_DOMAIN
     description: Cognito domain to be used
-    value: 'lza-prod-fam-user-pool-domain'
+    value: "lza-prod-fam-user-pool-domain"
   - name: FRONTEND_URL
     description: Frontend URL
     required: true
@@ -108,9 +108,9 @@ objects:
                 - name: FRONTEND_URL
                   value: https://${FRONTEND_URL}
                 - name: LEGACY_URL
-                  value: http://${NAME}-${ZONE}-legacy                
+                  value: http://${NAME}-${ZONE}-legacy
                 - name: SELF_URI
-                  value: https://${NAME}-${ZONE}-${COMPONENT}.${DOMAIN}                
+                  value: https://${NAME}-${ZONE}-${COMPONENT}.${DOMAIN}
                 - name: POSTGRES_HOST
                   value: ${POSTGRES_HOST}
                 - name: POSTGRES_PORT
@@ -129,7 +129,7 @@ objects:
                   valueFrom:
                     secretKeyRef:
                       name: ${NAME}-${ZONE}
-                      key: database-user                
+                      key: database-user
                 - name: COGNITO_USER_POOL
                   valueFrom:
                     secretKeyRef:
@@ -149,7 +149,7 @@ objects:
                 - name: APP_ZONE
                   value: ${ZONE}
                 - name: APP_COMPONENT
-                  value: ${COMPONENT}                
+                  value: ${COMPONENT}
                 - name: RANDOM_EXPRESSION
                   value: ${RANDOM_EXPRESSION}
                 - name: FORESTCLIENTAPI_KEY
