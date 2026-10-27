@@ -433,24 +433,59 @@ jobs:
             NS="${{ secrets.OC_NAMESPACE }}"
             LEGACY="nr-waste-plus-${{ github.event.number }}-legacy"
 
-            # A missing deployment means the PR app has never been deployed, so
-            # there is nothing holding the pluggable database. Any other oc
-            # error must fail the path instead of leaving the app running.
-            if ! oc get "deployment/${LEGACY}" -n "${NS}" >/dev/null 2>&1; then
+            # Only "NotFound" means the PR app has never been deployed, so there
+            # is nothing holding the pluggable database. A refused or timed-out
+            # API connection says nothing about the app, so it is retried
+            # instead of being read as "absent" and skipping the stop.
+            exists=""
+            for attempt in 1 2 3 4 5 6; do
+              if out=$(oc get "deployment/${LEGACY}" -n "${NS}" -o name 2>&1); then
+                exists="yes"
+                break
+              fi
+              if printf '%s' "${out}" | grep -qi 'NotFound'; then
+                exists="no"
+                break
+              fi
+              echo "Could not check ${LEGACY} (attempt ${attempt}/6); retrying..."
+              sleep $((attempt * 5))
+            done
+            if [ -z "${exists}" ]; then
+              echo "::error::Could not reach the OpenShift API to check ${LEGACY}."
+              exit 1
+            fi
+            if [ "${exists}" = "no" ]; then
               echo "Deployment ${LEGACY} does not exist yet; nothing to stop."
               exit 0
             fi
 
-            oc scale "deployment/${LEGACY}" --replicas=0 -n "${NS}"
+            scaled=0
+            for attempt in 1 2 3 4 5 6; do
+              if oc scale "deployment/${LEGACY}" --replicas=0 -n "${NS}"; then
+                scaled=1
+                break
+              fi
+              echo "Could not scale ${LEGACY} (attempt ${attempt}/6); retrying..."
+              sleep $((attempt * 5))
+            done
+            if [ "${scaled}" -ne 1 ]; then
+              echo "::error::Could not scale ${LEGACY} down."
+              exit 1
+            fi
 
+            # A failed read is not "zero replicas": only a successful read that
+            # reports no available replicas means the app is stopped.
             deadline=$(( $(date +%s) + 300 ))
             while [ "$(date +%s)" -lt "${deadline}" ]; do
-              available=$(oc get "deployment/${LEGACY}" -n "${NS}" -o jsonpath='{.status.availableReplicas}' 2>/dev/null || true)
-              if [ "${available:-0}" -eq 0 ]; then
-                echo "Deployment ${LEGACY} is stopped."
-                exit 0
+              if available=$(oc get "deployment/${LEGACY}" -n "${NS}" -o jsonpath='{.status.availableReplicas}' 2>/dev/null); then
+                if [ "${available:-0}" -eq 0 ]; then
+                  echo "Deployment ${LEGACY} is stopped."
+                  exit 0
+                fi
+                echo "Waiting for ${LEGACY} to stop (${available} pod(s) still available)..."
+              else
+                echo "Could not read ${LEGACY}; retrying..."
               fi
-              echo "Waiting for ${LEGACY} to stop (${available} pod(s) still available)..."
               sleep 5
             done
 
@@ -490,12 +525,54 @@ jobs:
               exit 1
             fi
 
-            oc exec "${POD_NAME}" -- /opt/oracle/removeDatabase "THE" "PR_${PR}" \
+            # The OpenShift API intermittently refuses connections from GitHub
+            # runners. A refused connection must not be mistaken for the
+            # command's own answer (for example "it already exists"), so only
+            # connection errors are retried; any other failure is returned.
+            oc_exec_retry() {
+              local attempt out rc
+              for attempt in 1 2 3 4 5 6; do
+                out=$(oc exec "$@" 2>&1)
+                rc=$?
+                printf '%s\n' "${out}"
+                if [ "${rc}" -eq 0 ]; then
+                  return 0
+                fi
+                if printf '%s' "${out}" | grep -qiE 'connection to the server|connection refused|i/o timeout|unable to connect|TLS handshake|error dialing|request canceled'; then
+                  if [ "${attempt}" -lt 6 ]; then
+                    echo "API connection problem (attempt ${attempt}/6); retrying in $((attempt * 5))s..."
+                    sleep $((attempt * 5))
+                  fi
+                  continue
+                fi
+                return "${rc}"
+              done
+              echo "The OpenShift API stayed unreachable after 6 attempts."
+              return 1
+            }
+
+            # Prints 1 when the pluggable database exists, 0 when it does not,
+            # and nothing when the answer could not be read.
+            pdb_exists() {
+              oc_exec_retry "${POD_NAME}" -- bash -c "printf 'set heading off feedback off pagesize 0\nselect count(*) from dba_pdbs where pdb_name = '\''PR_${PR}'\'';\nexit;\n' | sqlplus -s / as sysdba" \
+                | grep -E '^[[:space:]]*[0-9]+[[:space:]]*$' | tail -1 | tr -d '[:space:]'
+            }
+
+            oc_exec_retry "${POD_NAME}" -- /opt/oracle/removeDatabase "THE" "PR_${PR}" \
               || echo "::warning::Could not remove PR_${PR}; it may not exist yet."
-            oc exec "${POD_NAME}" -- /opt/oracle/createDatabase "PR_${PR}" \
-              || echo "::warning::Could not create PR_${PR}; it may already exist."
-            oc exec "${POD_NAME}" -- /opt/oracle/createAppUser "THE" "${{ secrets.ORACLEDB_PASSWORD }}" "PR_${PR}" \
-              || echo "::warning::Could not create the PR user; it may already exist."
+            oc_exec_retry "${POD_NAME}" -- /opt/oracle/createDatabase "PR_${PR}" \
+              || echo "::warning::createDatabase reported a failure for PR_${PR}; checking whether it exists."
+
+            # The migration cannot work without the pluggable database, so its
+            # presence is verified instead of being assumed.
+            if [ "$(pdb_exists)" != "1" ]; then
+              echo "::error::The pluggable database PR_${PR} does not exist after the create step."
+              exit 1
+            fi
+            echo "Pluggable database PR_${PR} exists."
+
+            oc_exec_retry "${POD_NAME}" -- /opt/oracle/createAppUser "THE" "${{ secrets.ORACLEDB_PASSWORD }}" "PR_${PR}" \
+              || echo "::warning::createAppUser reported a failure for PR_${PR}; the migration will fail if the user is missing."
 
             JOB_NAME="migrate-pr${PR}-${{ github.run_attempt }}-$(date +%s)"
 
@@ -582,13 +659,40 @@ jobs:
 
             # The PR application is deployed by the PR Open workflow. It may not
             # exist yet on the first push, and that workflow starts it itself,
-            # so a missing deployment is not an error here.
-            if ! oc get "deployment/${LEGACY}" -n "${NS}" >/dev/null 2>&1; then
+            # so a missing deployment is not an error here. Only "NotFound"
+            # counts as missing: a refused API connection is retried instead of
+            # leaving the app stopped.
+            exists=""
+            for attempt in 1 2 3 4 5 6; do
+              if out=$(oc get "deployment/${LEGACY}" -n "${NS}" -o name 2>&1); then
+                exists="yes"
+                break
+              fi
+              if printf '%s' "${out}" | grep -qi 'NotFound'; then
+                exists="no"
+                break
+              fi
+              echo "Could not check ${LEGACY} (attempt ${attempt}/6); retrying..."
+              sleep $((attempt * 5))
+            done
+            if [ -z "${exists}" ]; then
+              echo "::error::Could not reach the OpenShift API to check ${LEGACY}."
+              exit 1
+            fi
+            if [ "${exists}" = "no" ]; then
               echo "Deployment ${LEGACY} does not exist yet; the PR workflow will start it."
               exit 0
             fi
 
-            oc scale "deployment/${LEGACY}" --replicas=1 -n "${NS}"
+            for attempt in 1 2 3 4 5 6; do
+              if oc scale "deployment/${LEGACY}" --replicas=1 -n "${NS}"; then
+                exit 0
+              fi
+              echo "Could not scale ${LEGACY} (attempt ${attempt}/6); retrying..."
+              sleep $((attempt * 5))
+            done
+            echo "::error::Could not scale ${LEGACY} back up."
+            exit 1
 
   results:
     name: PR Results
