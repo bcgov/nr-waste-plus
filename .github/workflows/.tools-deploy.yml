@@ -152,7 +152,7 @@ jobs:
           }
 
           echo "Logging in to ${OC_SERVER}..."
-          retry 5 login || exit 1
+          retry 8 login || exit 1
 
           # Remove only this PR's bucket, leaving the shared MinIO server and
           # the base bucket intact for other open PRs. This is best effort: the
@@ -179,7 +179,7 @@ jobs:
           retry 2 remove_bucket || echo "::warning::Could not remove ${OBJECT_STORAGE_BUCKET}; continuing."
 
           echo "Creating in-cluster verification job ${JOB_NAME}..."
-          retry 3 create_job || exit 1
+          retry 8 create_job || exit 1
 
           # Block on the Job with watches instead of polling: oc wait returns the
           # moment the Job reports a condition. Completion and failure are
