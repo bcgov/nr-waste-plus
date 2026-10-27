@@ -45,7 +45,7 @@ objects:
       labels:
         app: ${NAME}-${ZONE}
     spec:
-      replicas: 1        
+      replicas: 1
       selector:
         matchLabels:
           deployment: ${NAME}-${ZONE}-${COMPONENT}
@@ -60,7 +60,7 @@ objects:
           labels:
             app: ${NAME}-${ZONE}
             deployment: ${NAME}-${ZONE}-${COMPONENT}
-        spec:          
+        spec:
           containers:
             - name: ${NAME}
               image: ${REGISTRY}/${ORG}/${NAME}/${COMPONENT}:${TAG}
@@ -105,15 +105,15 @@ objects:
           schedulerName: default-scheduler
           securityContext:
             supplementalGroups:
-              - 54321  # oracle's primary group
-              - 54322  # dba
-              - 54323  # oper
-              - 54324  # backupdba
-              - 54325  # dgdba
-              - 54326  # kmdba
-              - 54330  # racdba
+              - 54321 # oracle's primary group
+              - 54322 # dba
+              - 54323 # oper
+              - 54324 # backupdba
+              - 54325 # dgdba
+              - 54326 # kmdba
+              - 54330 # racdba
   - kind: Service
-    apiVersion: v1    
+    apiVersion: v1
     metadata:
       labels:
         app: ${NAME}-${ZONE}
@@ -137,15 +137,18 @@ objects:
     spec:
       podSelector: {}
       policyTypes:
-      - Ingress
+        - Ingress
       ingress:
-      - from:
-        - namespaceSelector:
-            matchLabels:
-              environment: dev  # Restrict to namespace cffaf3-dev
-              name: cffaf3  # Restrict to namespace cffaf3-dev
+        - from:
+            - namespaceSelector:
+                matchLabels:
+                  environment: dev # Restrict to namespace cffaf3-dev
+                  name: cffaf3 # Restrict to namespace cffaf3-dev
+            - namespaceSelector:
+                matchLabels:
+                  name: cffaf3-tools
   - kind: NetworkPolicy
-    apiVersion: networking.k8s.io/v1    
+    apiVersion: networking.k8s.io/v1
     metadata:
       name: allow-same-namespace
       labels:
@@ -184,40 +187,40 @@ objects:
                   image: curlimages/curl
                   command: ["/bin/sh", "-c"]
                   args:
-                  - |
-                    echo "Downloading zip file from GitHub repository bcgov/nr-waste-plus/ branch ${BRANCH_NAME}"
-                    curl -L https://github.com/bcgov/nr-waste-plus/archive/refs/heads/${BRANCH_NAME}.zip -o /data/nr-waste-plus.zip
-                    
-                    unzip -q /data/nr-waste-plus.zip -d /data
-                    MIGRATION_DIR=$(find "/data" -type d -path "*/legacy/src/test/resources/db/migration" -print -quit)
+                    - |
+                      echo "Downloading zip file from GitHub repository bcgov/nr-waste-plus/ branch ${BRANCH_NAME}"
+                      curl -fL https://github.com/bcgov/nr-waste-plus/archive/refs/heads/${BRANCH_NAME}.zip -o /data/nr-waste-plus.zip
 
-                    # Check if migration directory was found
-                    if [ -z "$MIGRATION_DIR" ]; then
-                      echo "Migration directory not found!"
-                      exit 1
-                    fi
+                      unzip -q /data/nr-waste-plus.zip -d /data
+                      MIGRATION_DIR=$(find "/data" -type d -path "*/legacy/src/test/resources/db/migration" -print -quit)
 
-                    # Move the contents to the target directory
-                    mkdir -p "/data/sql"
-                    mv "$MIGRATION_DIR"/* "/data/sql"
+                      # Check if migration directory was found
+                      if [ -z "$MIGRATION_DIR" ]; then
+                        echo "Migration directory not found!"
+                        exit 1
+                      fi
 
-                    # Clean up
-                    rm -rf "nr-waste-plus*"
+                      # Move the contents to the target directory
+                      mkdir -p "/data/sql"
+                      mv "$MIGRATION_DIR"/* "/data/sql"
 
-                    echo "Migration files moved to /data/sql"              
+                      # Clean up
+                      rm -rf "nr-waste-plus*"
+
+                      echo "Migration files moved to /data/sql"
                   env:
                     - name: BRANCH_NAME
                       value: "main"
                   volumeMounts:
-                  - name: data-volume
-                    mountPath: /data
+                    - name: data-volume
+                      mountPath: /data
               containers:
                 - name: flyway
                   image: flyway/flyway
                   command: ["/bin/sh", "-c"]
-                  args: 
-                  - |
-                    flyway -url=${FLYWAY_URL}_${PR_NUMBER} -user=${FLYWAY_USER} -password=${FLYWAY_PASSWORD} -locations=filesystem:/data/sql migrate
+                  args:
+                    - |
+                      flyway -url=${FLYWAY_URL}_${PR_NUMBER} -user=${FLYWAY_USER} -password=${FLYWAY_PASSWORD} -locations=filesystem:/data/sql migrate
                   env:
                     - name: FLYWAY_URL
                       value: "jdbc:oracle:thin:@nr-waste-plus-tools-legacydb.cffaf3-tools.svc.cluster.local:1521/PR"
@@ -228,8 +231,8 @@ objects:
                     - name: PR_NUMBER
                       value: "0"
                   volumeMounts:
-                  - name: data-volume
-                    mountPath: /data
+                    - name: data-volume
+                      mountPath: /data
               restartPolicy: OnFailure
               volumes:
                 - name: data-volume
