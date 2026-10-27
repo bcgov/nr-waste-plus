@@ -361,7 +361,7 @@ jobs:
               # so creating the Job is retried. The Job name is fixed above, so
               # a retry can never start a second copy.
               created=0
-              for attempt in 1 2 3 4; do
+              for attempt in 1 2 3 4 5 6 7 8; do
                 if RENDERED=$(oc create job --from="cronjob/${CRONJOB}" "${JOB}" --dry-run=client -o yaml) \
                   && printf '%s\n' "${RENDERED}" \
                     | sed "s/value: \"0\"/value: \"${PR}\"/g" \
@@ -370,8 +370,8 @@ jobs:
                   created=1
                   break
                 fi
-                echo "Could not create job ${JOB} (attempt ${attempt}/4); retrying..."
-                sleep $((attempt * 3))
+                echo "Could not create job ${JOB} (attempt ${attempt}/8); retrying..."
+                sleep $(( attempt * 5 > 30 ? 30 : attempt * 5 ))
               done
               if [ "${created}" -ne 1 ]; then
                 echo "::error::Could not create job ${JOB}."
@@ -401,12 +401,16 @@ jobs:
     permissions:
       packages: write
     steps:
+      # The image is only rebuilt when something that goes into it changes. Any
+      # other change under legacydb/ (such as its deployment template) reuses
+      # the :latest image, retagged for this PR. The Dockerfile copies only
+      # removeDatabase, so those two files are the whole image input.
       - uses: bcgov/action-builder-ghcr@cb2629351c87dd1c2130073e4ebb7233a9653a63 # v4.4.1
         name: Build (legacydb)
         with:
           package: legacydb
           tag_fallback: latest
-          triggers: ('legacydb/')
+          triggers: ('legacydb/Dockerfile' 'legacydb/removeDatabase')
 
       - name: Initializing Deployment
         uses: bcgov/action-deployer-openshift@e2d60eb9cacceb89c3b97d8dcf0a2c460eea5eab # v4.2.3
@@ -580,7 +584,7 @@ jobs:
             # creating the Job is retried. The Job name is fixed above, so a
             # retry can never start a second copy.
             created=0
-            for attempt in 1 2 3 4; do
+            for attempt in 1 2 3 4 5 6 7 8; do
               if oc create job --from=cronjob/nr-waste-plus-tools-migratedb "${JOB_NAME}" --dry-run=client -o yaml \
                 | sed "s/value: main/value: ${ESCAPED_BRANCH_NAME}/" \
                 | sed "s/value: \"0\"/value: \"${PR}\"/" \
@@ -588,8 +592,8 @@ jobs:
                 created=1
                 break
               fi
-              echo "Could not create job ${JOB_NAME} (attempt ${attempt}/4); retrying..."
-              sleep $((attempt * 3))
+              echo "Could not create job ${JOB_NAME} (attempt ${attempt}/8); retrying..."
+              sleep $(( attempt * 5 > 30 ? 30 : attempt * 5 ))
             done
             if [ "${created}" -ne 1 ]; then
               echo "::error::Could not create the Oracle migration job ${JOB_NAME}."
