@@ -1,5 +1,6 @@
 package ca.bc.gov.nrs.hrs.service.reliability;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -24,7 +25,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class IdempotencyFingerprinter {
 
-  private static final ObjectMapper MAPPER = new ObjectMapper();
+  private static final ObjectMapper MAPPER = new ObjectMapper()
+      .enable(DeserializationFeature.USE_BIG_DECIMAL_FOR_FLOATS)
+      .setNodeFactory(JsonNodeFactory.withExactBigDecimals(true));
 
   /**
    * Computes a canonical SHA-256 fingerprint for the given request, body bytes, and caller.

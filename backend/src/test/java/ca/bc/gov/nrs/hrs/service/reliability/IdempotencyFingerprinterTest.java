@@ -107,6 +107,20 @@ class IdempotencyFingerprinterTest {
     assertThat(fpUser1).isNotEqualTo(fpUser2);
   }
 
+  @Test
+  @DisplayName("distinguishes high-precision decimal numbers without floating-point truncation")
+  void shouldDistinguishHighPrecisionDecimals() {
+    HttpServletRequest request = mockRequest("POST", "/api/test", null);
+
+    byte[] body1 = "{\"factor\":1.00000000000000001}".getBytes(StandardCharsets.UTF_8);
+    byte[] body2 = "{\"factor\":1.00000000000000002}".getBytes(StandardCharsets.UTF_8);
+
+    String fp1 = IdempotencyFingerprinter.computeFingerprint(request, body1);
+    String fp2 = IdempotencyFingerprinter.computeFingerprint(request, body2);
+
+    assertThat(fp1).isNotEqualTo(fp2);
+  }
+
   private HttpServletRequest mockRequest(String method, String uri, String query) {
     HttpServletRequest request = mock(HttpServletRequest.class);
     when(request.getMethod()).thenReturn(method);
