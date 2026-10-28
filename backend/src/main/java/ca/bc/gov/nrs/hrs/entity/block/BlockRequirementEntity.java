@@ -17,7 +17,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 /** Requirement response and optional evidence link. */
 @Entity
-@Table(name = "block_requirement", schema = "hrs")
+@Table(name = "block_requirement", schema = "wasteplus")
 @EntityListeners(AuditingEntityListener.class)
 @Getter
 @Setter

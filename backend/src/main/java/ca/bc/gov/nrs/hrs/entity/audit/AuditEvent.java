@@ -11,7 +11,7 @@ import lombok.Getter;
 
 /** Immutable audit event grouping one temporal mutation operation. */
 @Entity
-@Table(name = "audit_event", schema = "hrs")
+@Table(name = "audit_event", schema = "wasteplus")
 @Getter
 public class AuditEvent {
 

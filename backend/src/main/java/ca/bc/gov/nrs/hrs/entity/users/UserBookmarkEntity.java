@@ -17,12 +17,12 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 /**
  * JPA entity that stores bookmarked reporting units for users.
  *
- * <p>Maps to {@code hrs.user_bookmarks}. The table uses a composite primary key made of {@link
+ * <p>Maps to {@code wasteplus.user_bookmarks}. The table uses a composite primary key made of {@link
  * #userId} and {@link #reportingUnitId}, allowing each user to bookmark multiple reporting units
  * while preventing duplicate bookmarks for the same user/reporting-unit pair.
  */
 @Entity
-@Table(name = "user_bookmarks", schema = "hrs")
+@Table(name = "user_bookmarks", schema = "wasteplus")
 @IdClass(UserBookmarkEntityId.class)
 @Data
 @Builder

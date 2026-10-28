@@ -5,7 +5,7 @@
 -- Geographic rows map each source district to geo_type DISTRICT. Status rows
 -- are Oracle WAA values approved for HRS block status.
 
-INSERT INTO hrs.geographic_code (
+INSERT INTO wasteplus.geographic_code (
     id,
     code,
     description,
@@ -138,7 +138,7 @@ ON CONFLICT (code) DO UPDATE SET
     expiry_date = excluded.expiry_date,
     update_timestamp = excluded.update_timestamp;
 
-INSERT INTO hrs.sampling_option_code (
+INSERT INTO wasteplus.sampling_option_code (
     code,
     description,
     effective_date,
@@ -171,7 +171,7 @@ ON CONFLICT (code) DO UPDATE SET
 -- Historical WAA status snapshot from legacy test migration
 -- V2.0.1__code_table_pump.sql, generated 2025-08-15. The approved HRS block
 -- mapping is in the schema migration.
-INSERT INTO hrs.waa_status_code (
+INSERT INTO wasteplus.waa_status_code (
     code,
     description,
     effective_date,

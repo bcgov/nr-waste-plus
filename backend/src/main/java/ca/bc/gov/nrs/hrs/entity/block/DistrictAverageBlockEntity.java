@@ -24,7 +24,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 /** District-average extension whose primary key is the block id. */
 @Entity
-@Table(name = "district_average_block", schema = "hrs")
+@Table(name = "district_average_block", schema = "wasteplus")
 @EntityListeners(AuditingEntityListener.class)
 @Getter
 @Setter

@@ -64,23 +64,23 @@ public final class ReportingUnitSearchQueryConstants {
     * same long-form aliases as {@code ReportingUnitBlockService.resolveStatus}, falling back to
     * {@code DFT/Draft} when the block has no events (the established convention: a block without
     * status history is a draft), and falling back to {@code block.status_code} once the lifecycle
-    * starts writing it. The description comes from the local {@code hrs.waa_status_code} table
+    * starts writing it. The description comes from the local {@code wasteplus.waa_status_code} table
     * ({@code 'Draft'} fallback for unmapped codes, again mirroring {@code resolveStatus}).
     * RU-only rows carry no block and therefore no status (rendered "Not applicable").
     */
   private static final String SEARCH_ROWS_FRAGMENT =
       """
-          from hrs.reporting_unit ru
-          left join hrs.block b
+          from wasteplus.reporting_unit ru
+          left join wasteplus.block b
                  on b.reporting_unit_id = ru.reporting_unit_id
                 and b.is_deleted = false
-          left join hrs.block_mark pm
+          left join wasteplus.block_mark pm
                  on pm.block_id = b.block_id
                 and pm.mark_type = 'PRIMARY'
                 and pm.is_deleted = false
                 and not exists (
                         select 1
-                        from hrs.block_mark bmx
+                        from wasteplus.block_mark bmx
                         where bmx.block_id = pm.block_id
                           and bmx.mark_type = 'PRIMARY'
                           and bmx.is_deleted = false
@@ -89,7 +89,7 @@ public final class ReportingUnitSearchQueryConstants {
                     )
           left join lateral (
                   select se3.status
-                  from hrs.status_event se3
+                  from wasteplus.status_event se3
                   where se3.block_id = b.block_id
                   order by se3.created_at desc, se3.status_event_id desc
                   limit 1
@@ -107,7 +107,7 @@ public final class ReportingUnitSearchQueryConstants {
                                       'DFT')
                          end as code
               ) st on true
-          left join hrs.waa_status_code wcs
+          left join wasteplus.waa_status_code wcs
                  on wcs.code = st.code
           where ru.is_deleted = false
             and ('NOVALUE' in (:#{#filter.district})
@@ -134,7 +134,7 @@ public final class ReportingUnitSearchQueryConstants {
   /**
    * LIST query: one row per live block; a null-extended RU-only row when the RU has no live
    * blocks (DEC-014). {@code wasteAssessmentAreaId} is the legacy WAA identity, which maps 1:1 to
-   * the exploded {@code hrs.block.block_id} — so it equals {@code blockId} on block rows and is
+   * the exploded {@code wasteplus.block.block_id} — so it equals {@code blockId} on block rows and is
    * NULL on RU-only rows (the faithful analog of the legacy no-WAA left-join row). Sampling is the
    * fixed {@code AVG/Average} constant; {@code multiMark} AND {@code secondaryEntry} are DERIVED
    * the same way (existence of a live {@code SECONDARY} mark — HRS has no stored multi-mark flag
@@ -160,14 +160,14 @@ public final class ReportingUnitSearchQueryConstants {
               pm.timber_mark                                as "timberMark",
               exists (
                       select 1
-                      from hrs.block_mark bm
+                      from wasteplus.block_mark bm
                       where bm.block_id = b.block_id
                         and bm.mark_type = 'SECONDARY'
                         and bm.is_deleted = false
                   )                                         as "multiMark",
               exists (
                       select 1
-                      from hrs.block_mark bm
+                      from wasteplus.block_mark bm
                       where bm.block_id = b.block_id
                         and bm.mark_type = 'SECONDARY'
                         and bm.is_deleted = false
@@ -202,7 +202,7 @@ public final class ReportingUnitSearchQueryConstants {
    * EXPANDED query: a single row for the selected {@code (reportingUnitId, blockId)} — the
    * PostgreSQL analog of the legacy Oracle {@code GET_SEARCH_BLOCK_EXPANDED_CONTENT} (issue #1238,
    * expanded search). Keyed by {@code (reportingUnitId, blockId)} because the legacy WAA identity
-   * maps 1:1 onto the exploded {@code hrs.block.block_id}: {@code id} projects {@code block_id}.
+   * maps 1:1 onto the exploded {@code wasteplus.block.block_id}: {@code id} projects {@code block_id}.
    *
    * <p>Field aliases mirror the legacy {@code ReportingUnitSearchExpandedProjection} getters so a
    * legacy-equivalent mapper can consume the row unchanged. {@code licenseNo/cuttingPermit/
@@ -213,9 +213,9 @@ public final class ReportingUnitSearchQueryConstants {
    * normalised through the same long-form aliases with the {@code DFT/Draft} fallback as the
    * list-row badge (see the {@link #SEARCH_ROWS_FRAGMENT} Javadoc), so the row and its expanded
    * panel can never disagree (supersedes the DEC-018 RU-scoped selection and the A-14 no-op note:
-   * {@code hrs.status_event} is still an append-only table with no production writer, so rows fall
+   * {@code wasteplus.status_event} is still an append-only table with no production writer, so rows fall
    * back to {@code DFT/Draft} until the lifecycle starts writing events); {@code statusName} comes
-   * from the local {@code hrs.waa_status_code} table ({@code null} when the resolved code has no
+   * from the local {@code wasteplus.waa_status_code} table ({@code null} when the resolved code has no
    * description row); {@code attachmentId/attachmentName} are the latest live {@code
    * block_attachment} narrowed to the finalized survey map ({@code document_type = 'FINAL_MAP' AND
    * status = 'FINALIZED'}, the HRS analog of the legacy {@code WASTE_ASSESSMENT_SURVEY_MAP}
@@ -246,13 +246,13 @@ public final class ReportingUnitSearchQueryConstants {
               false                                        as "exempted",
               exists (
                       select 1
-                      from hrs.block_mark bm
+                      from wasteplus.block_mark bm
                       where bm.block_id = b.block_id
                         and bm.mark_type = 'SECONDARY'
                         and bm.is_deleted = false
                   )                                        as "multiMark",
               (select coalesce(sum(bas.net_waste_area_ha), 0)
-                 from hrs.block_area_segment bas
+                 from wasteplus.block_area_segment bas
                 where bas.block_id = b.block_id
                   and bas.is_deleted = false)              as "netArea",
               cast(null as numeric)                        as "markArea",
@@ -261,11 +261,11 @@ public final class ReportingUnitSearchQueryConstants {
               att.file_name                                as "attachmentName",
               cmt.comment                                  as "comments",
               (select count(*)
-                 from hrs.block b2
+                 from wasteplus.block b2
                 where b2.reporting_unit_id = b.reporting_unit_id
                   and b2.is_deleted = false)               as "totalBlockCount",
               (select count(*)
-                 from hrs.block_mark bm
+                 from wasteplus.block_mark bm
                 where bm.block_id = b.block_id
                   and bm.mark_type = 'SECONDARY'
                   and bm.is_deleted = false)               as "totalChildCount",
@@ -279,14 +279,14 @@ public final class ReportingUnitSearchQueryConstants {
                                   'area', null)
                               order by coalesce(nullif(btrim(bm.timber_mark), ''), bm.mark)),
                           '[]'::jsonb)::text
-                 from hrs.block_mark bm
+                 from wasteplus.block_mark bm
                 where bm.block_id = b.block_id
                   and bm.mark_type = 'SECONDARY'
                   and bm.is_deleted = false)               as "secondary"
-          from hrs.block b
+          from wasteplus.block b
           left join lateral (
               select bm2.forest_file_id, bm2.cutting_permit_id, bm2.timber_mark
-              from hrs.block_mark bm2
+              from wasteplus.block_mark bm2
               where bm2.block_id = b.block_id
                 and bm2.mark_type = 'PRIMARY'
                 and bm2.is_deleted = false
@@ -295,7 +295,7 @@ public final class ReportingUnitSearchQueryConstants {
           ) pm on true
           left join lateral (
               select se3.status
-              from hrs.status_event se3
+              from wasteplus.status_event se3
               where se3.block_id = b.block_id
               order by se3.created_at desc, se3.status_event_id desc
               limit 1
@@ -310,11 +310,11 @@ public final class ReportingUnitSearchQueryConstants {
                          end,
                          'DFT') as code
           ) st on true
-          left join hrs.waa_status_code wcs
+          left join wasteplus.waa_status_code wcs
                  on wcs.code = st.code
           left join lateral (
               select bs.submitter_name
-              from hrs.block_submitter bs
+              from wasteplus.block_submitter bs
               where bs.block_id = b.block_id
                 and bs.is_deleted = false
               order by bs.block_submitter_id
@@ -322,7 +322,7 @@ public final class ReportingUnitSearchQueryConstants {
           ) sub on true
           left join lateral (
               select ba.block_attachment_id, ba.file_name
-              from hrs.block_attachment ba
+              from wasteplus.block_attachment ba
               where ba.block_id = b.block_id
                 and ba.is_deleted = false
                 and ba.document_type = 'FINAL_MAP'
@@ -332,7 +332,7 @@ public final class ReportingUnitSearchQueryConstants {
           ) att on true
           left join lateral (
               select bc.comment
-              from hrs.block_comment bc
+              from wasteplus.block_comment bc
               where bc.block_id = b.block_id
                 and bc.is_deleted = false
               order by bc.created_at desc, bc.block_comment_id desc
@@ -356,7 +356,7 @@ public final class ReportingUnitSearchQueryConstants {
       """
           select exists (
                    select 1
-                   from hrs.block b
+                   from wasteplus.block b
                    where b.reporting_unit_id = :reportingUnitId
                      and b.block_id = :blockId
                      and b.is_deleted = false
@@ -373,7 +373,7 @@ public final class ReportingUnitSearchQueryConstants {
   public static final String LIVE_CLIENT_NUMBER_QUERY =
       """
           select ru.client_number
-          from hrs.reporting_unit ru
+          from wasteplus.reporting_unit ru
           where ru.reporting_unit_id = :reportingUnitId
             and ru.is_deleted = false
           """;

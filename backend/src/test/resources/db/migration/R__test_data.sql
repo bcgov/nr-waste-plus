@@ -1,4 +1,4 @@
-INSERT INTO hrs.user_preferences (user_id,preferences,updated_date,revision) VALUES
+INSERT INTO wasteplus.user_preferences (user_id,preferences,updated_date,revision) VALUES
      ('IDIR\\test','{"theme": "g10"}','2025-08-26 11:22:16.371268',2)
 ON CONFLICT (user_id) DO UPDATE SET
     preferences = EXCLUDED.preferences,
@@ -14,7 +14,7 @@ ON CONFLICT (user_id) DO UPDATE SET
 -- active records for the same area. Closing rather than deleting preserves foreign-key references
 -- from formula and calculation-snapshot tests. The legacy predicate is retained for rows created
 -- before the stable fixture discriminator was added.
-UPDATE hrs.district_volume
+UPDATE wasteplus.district_volume
 SET end_date = '2019-12-31',
     updated_at = NOW(),
     updated_by = 'test-seed:reporting-unit-dkm-v1'
@@ -27,7 +27,7 @@ WHERE created_by = 'test-seed'
       OR table_data @> '{"sections":[{"districts":[{"district":{"code":"DKM"}}]}]}'::JSONB
   );
 
-UPDATE hrs.district_volume
+UPDATE wasteplus.district_volume
 SET end_date = '2019-12-31',
     updated_at = NOW(),
     updated_by = 'test-seed:reporting-unit-dkm-v1'
@@ -36,7 +36,7 @@ WHERE created_by = 'test-seed:reporting-unit-dkm-v1'
   AND end_date IS NULL
   AND area IN ('INTERIOR', 'COASTAL');
 
-INSERT INTO hrs.district_volume
+INSERT INTO wasteplus.district_volume
     (area, start_date, end_date, table_data, table_level_factor, heli_multiplier,
      created_at, created_by, updated_at, updated_by)
 VALUES
@@ -106,12 +106,12 @@ VALUES
 -- rather than deleting them because audit and other test data may reference them.
 -- The test-data-1254 predicate also retires rows created by the initial manual seed.
 -- Legacy values are remapped while retiring them to satisfy the geographic FK.
-UPDATE hrs.district_average_block dab
+UPDATE wasteplus.district_average_block dab
 SET is_deleted = TRUE,
     updated_at = NOW(),
     updated_by = 'test-seed:reporting-unit-block-list-v1'
-FROM hrs.block b
-JOIN hrs.reporting_unit ru ON ru.reporting_unit_id = b.reporting_unit_id
+FROM wasteplus.block b
+JOIN wasteplus.reporting_unit ru ON ru.reporting_unit_id = b.reporting_unit_id
 WHERE dab.district_average_block_id = b.block_id
   AND ru.client_number = '00001271'
   AND ru.client_locn_code = 'TEST-1254-B'
@@ -120,11 +120,11 @@ WHERE dab.district_average_block_id = b.block_id
   AND b.created_by IN ('test-seed:reporting-unit-block-list-v1', 'test-data-1254')
   AND NOT dab.is_deleted;
 
-UPDATE hrs.block b
+UPDATE wasteplus.block b
 SET is_deleted = TRUE,
     updated_at = NOW(),
     updated_by = 'test-seed:reporting-unit-block-list-v1'
-FROM hrs.reporting_unit ru
+FROM wasteplus.reporting_unit ru
 WHERE ru.reporting_unit_id = b.reporting_unit_id
   AND ru.client_number = '00001271'
   AND ru.client_locn_code = 'TEST-1254-B'
@@ -133,7 +133,7 @@ WHERE ru.reporting_unit_id = b.reporting_unit_id
   AND b.created_by IN ('test-seed:reporting-unit-block-list-v1', 'test-data-1254')
   AND NOT b.is_deleted;
 
-UPDATE hrs.reporting_unit
+UPDATE wasteplus.reporting_unit
 SET geographic_code = CASE geographic_code
         WHEN 'T01' THEN 'DND'
         WHEN 'T02' THEN 'DKM'
@@ -151,13 +151,13 @@ WHERE client_number = '00001271'
   AND created_by IN ('test-seed:reporting-unit-block-list-v1', 'test-data-1254')
   AND NOT is_deleted;
 
-INSERT INTO hrs.reporting_unit (
+INSERT INTO wasteplus.reporting_unit (
     client_number, client_locn_code, geographic_code, sampling_code, created_by, updated_by)
 VALUES
     ('00001271', 'TEST-1254-A', 'DND', 'AVG', 'test-seed:reporting-unit-block-list-v1', 'test-seed:reporting-unit-block-list-v1'),
     ('00001271', 'TEST-1254-B', 'DKM', 'AVG', 'test-seed:reporting-unit-block-list-v1', 'test-seed:reporting-unit-block-list-v1');
 
-INSERT INTO hrs.block
+INSERT INTO wasteplus.block
     (reporting_unit_id, block_type, is_draft, created_by, updated_by)
 SELECT
     ru.reporting_unit_id,
@@ -165,7 +165,7 @@ SELECT
     TRUE,
     'test-seed:reporting-unit-block-list-v1',
     'test-seed:reporting-unit-block-list-v1'
-FROM hrs.reporting_unit ru
+FROM wasteplus.reporting_unit ru
 WHERE ru.client_number = '00001271'
   AND ru.client_locn_code = 'TEST-1254-B'
   AND ru.geographic_code = 'DKM'
@@ -176,7 +176,7 @@ WHERE ru.client_number = '00001271'
 -- block table surface licence no / cutting permit / block id / timber mark from the
 -- PRIMARY block_mark, so the fixture carries real legacy values (THE.WASTE_ASSESSMENT_AREA
 -- waste_assessment_area_id 180575) instead of rendering blank columns.
-INSERT INTO hrs.block_mark
+INSERT INTO wasteplus.block_mark
     (block_id, mark_type, sequence_no, mark, forest_file_id, cutting_permit_id, cut_block_id, timber_mark, created_by, updated_by)
 SELECT
     b.block_id,
@@ -189,8 +189,8 @@ SELECT
     'BJ6994',
     'test-seed:reporting-unit-block-list-v1',
     'test-seed:reporting-unit-block-list-v1'
-FROM hrs.block b
-JOIN hrs.reporting_unit ru ON ru.reporting_unit_id = b.reporting_unit_id
+FROM wasteplus.block b
+JOIN wasteplus.reporting_unit ru ON ru.reporting_unit_id = b.reporting_unit_id
 WHERE ru.client_number = '00001271'
   AND ru.client_locn_code = 'TEST-1254-B'
   AND ru.geographic_code = 'DKM'
@@ -200,13 +200,13 @@ WHERE ru.client_number = '00001271'
   AND NOT b.is_deleted
   AND NOT EXISTS (
       SELECT 1
-      FROM hrs.block_mark bm
+      FROM wasteplus.block_mark bm
       WHERE bm.block_id = b.block_id
         AND bm.mark_type = 'PRIMARY'
         AND bm.is_deleted = FALSE
   );
 
-INSERT INTO hrs.district_average_block
+INSERT INTO wasteplus.district_average_block
     (district_average_block_id, has_dispersed_retention, is_heli_logging, created_by, updated_by)
 SELECT
     b.block_id,
@@ -214,8 +214,8 @@ SELECT
     FALSE,
     'test-seed:reporting-unit-block-list-v1',
     'test-seed:reporting-unit-block-list-v1'
-FROM hrs.block b
-JOIN hrs.reporting_unit ru ON ru.reporting_unit_id = b.reporting_unit_id
+FROM wasteplus.block b
+JOIN wasteplus.reporting_unit ru ON ru.reporting_unit_id = b.reporting_unit_id
 WHERE ru.client_number = '00001271'
   AND ru.client_locn_code = 'TEST-1254-B'
   AND ru.geographic_code = 'DKM'

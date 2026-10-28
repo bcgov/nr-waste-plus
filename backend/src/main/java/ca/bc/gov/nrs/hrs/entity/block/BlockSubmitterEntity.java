@@ -17,7 +17,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 /** Submitter endorsement details for a block. */
 @Entity
-@Table(name = "block_submitter", schema = "hrs")
+@Table(name = "block_submitter", schema = "wasteplus")
 @EntityListeners(AuditingEntityListener.class)
 @Getter
 @Setter

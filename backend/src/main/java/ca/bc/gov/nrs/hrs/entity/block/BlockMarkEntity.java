@@ -17,7 +17,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 /** Typed mark associated with a submission block. */
 @Entity
-@Table(name = "block_mark", schema = "hrs")
+@Table(name = "block_mark", schema = "wasteplus")
 @EntityListeners(AuditingEntityListener.class)
 @Getter
 @Setter

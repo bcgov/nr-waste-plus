@@ -105,6 +105,11 @@ objects:
                   value: http://${NAME}-${ZONE}-legacy
                 - name: SELF_URI
                   value: https://${NAME}-${ZONE}-${COMPONENT}.${DOMAIN}
+                - name: SPRING_PROFILES_ACTIVE
+                  valueFrom:
+                    secretKeyRef:
+                      name: ${NAME}-${ZONE}
+                      key: spring-profiles-active
                 # The full PostgreSQL connection comes from the namespace
                 # Secret (host, port, database, user, password), so each
                 # environment points at its designated database server without

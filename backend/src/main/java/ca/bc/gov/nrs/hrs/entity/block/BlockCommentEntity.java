@@ -17,7 +17,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 /** Comment associated with a submission block. */
 @Entity
-@Table(name = "block_comment", schema = "hrs")
+@Table(name = "block_comment", schema = "wasteplus")
 @EntityListeners(AuditingEntityListener.class)
 @Getter
 @Setter

@@ -76,9 +76,6 @@ jobs:
       # bucket is computed in `vars` because `with:` cannot read secrets.
       object-storage-bucket: ${{ needs.vars.outputs.bucket }}
       configmap-backend: |-
-        spring:
-          profiles:
-            active: container,prod,cffaf3-dev
         info:
           app:
             component: backend

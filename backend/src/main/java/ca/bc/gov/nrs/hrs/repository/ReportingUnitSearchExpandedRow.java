@@ -19,7 +19,7 @@ import java.math.BigDecimal;
  */
 public interface ReportingUnitSearchExpandedRow {
 
-  /** Block id (the legacy WAA identity, 1:1 onto {@code hrs.block.block_id}). */
+  /** Block id (the legacy WAA identity, 1:1 onto {@code wasteplus.block.block_id}). */
   Long getId();
 
   /** Forest file id from the block's PRIMARY mark; NULL when absent. */

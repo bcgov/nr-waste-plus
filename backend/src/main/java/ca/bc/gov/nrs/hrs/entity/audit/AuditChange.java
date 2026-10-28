@@ -15,7 +15,7 @@ import org.hibernate.type.SqlTypes;
 
 /** Per-row audit change with JSONB snapshots. No foreign key on entity_id — polymorphic audit. */
 @Entity
-@Table(name = "audit_change", schema = "hrs")
+@Table(name = "audit_change", schema = "wasteplus")
 @Getter
 public class AuditChange {
 

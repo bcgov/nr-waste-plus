@@ -22,7 +22,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 /**
  * JPA entity that stores user preferences.
  *
- * <p>Maps to the database table {@code hrs.user_preferences} and persists a JSONB {@code
+ * <p>Maps to the database table {@code wasteplus.user_preferences} and persists a JSONB {@code
  * preferences} column containing arbitrary user preference key/value pairs. Preferences are
  * represented in the application as a {@link Map}&lt;String, Object&gt; to allow flexible
  * structured values.
@@ -31,7 +31,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
  * (via Spring Data auditing) and {@link #revision} is used for optimistic locking.
  */
 @Entity
-@Table(name = "user_preferences", schema = "hrs")
+@Table(name = "user_preferences", schema = "wasteplus")
 @Data
 @Builder
 @With
