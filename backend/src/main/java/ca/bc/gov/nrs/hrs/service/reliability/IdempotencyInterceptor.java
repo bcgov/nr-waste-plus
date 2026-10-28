@@ -119,13 +119,8 @@ public class IdempotencyInterceptor extends OncePerRequestFilter {
         JsonNode snapshot = parseJsonOrNull(wrappedResponse.getContentAsByteArray());
         idempotencyService.complete(trimmedKey, statusCode, snapshot);
         transactionManager.commit(txStatus);
-      } else {
-        transactionManager.rollback(txStatus);
       }
     } catch (Exception ex) {
-      if (!txStatus.isCompleted()) {
-        transactionManager.rollback(txStatus);
-      }
       log.error(
           "Failed to coordinate idempotency transaction for key '{}': {}",
           trimmedKey,
