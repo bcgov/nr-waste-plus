@@ -63,36 +63,34 @@ wait_for_job() {
   local job="$1"
   local timeout="$2"
   local deadline=$(( $(date +%s) + timeout ))
-  local remaining ok_pid fail_pid counts
+  local counts
+  local succeeded_count
+  local failed_count
+  local poll_interval=2
   succeeded=0
   failed=0
 
   while [ "$(date +%s)" -lt "${deadline}" ]; do
-    remaining=$(( deadline - $(date +%s) ))
-    oc wait --for=condition=complete "job/${job}" -n "${OC_NAMESPACE}" \
-      --timeout="${remaining}s" >/dev/null 2>&1 &
-    ok_pid=$!
-    oc wait --for=condition=failed "job/${job}" -n "${OC_NAMESPACE}" \
-      --timeout="${remaining}s" >/dev/null 2>&1 &
-    fail_pid=$!
-    while kill -0 "${ok_pid}" 2>/dev/null && kill -0 "${fail_pid}" 2>/dev/null; do
-      sleep 1
-    done
-    kill "${ok_pid}" "${fail_pid}" 2>/dev/null || true
-    wait "${ok_pid}" "${fail_pid}" 2>/dev/null || true
-
-    counts=$("${OC[@]}" get job "${job}" -n "${OC_NAMESPACE}" \
-      -o jsonpath='{.status.succeeded}/{.status.failed}' 2>/dev/null || true)
-    succeeded="${counts%%/*}"
-    failed="${counts##*/}"
-    succeeded="${succeeded:-0}"
-    failed="${failed:-0}"
-    if [ "${succeeded}" -ge 1 ] || [ "${failed}" -ge 1 ]; then
+    if ! counts=$(oc --request-timeout=15s get job "${job}" -n "${OC_NAMESPACE}" \
+      -o jsonpath='{.status.succeeded}/{.status.failed}' 2>/dev/null); then
+      echo "Could not read job ${job} status; retrying..."
+      sleep 2
+      continue
+    fi
+    succeeded_count="${counts%%/*}"
+    failed_count="${counts##*/}"
+    succeeded_count="${succeeded_count:-0}"
+    failed_count="${failed_count:-0}"
+    if [ "${succeeded_count}" -ge 1 ] || [ "${failed_count}" -ge 1 ]; then
+      succeeded="${succeeded_count}"
+      failed="${failed_count}"
       return 0
     fi
-    echo "Waiting for job ${job} (succeeded=${succeeded}, failed=${failed})..."
-    sleep 2
+    poll_interval=$(( poll_interval < 10 ? poll_interval * 2 : 10 ))
+    echo "Waiting for job ${job} (succeeded=${succeeded_count}, failed=${failed_count})..."
+    sleep "${poll_interval}"
   done
+  echo "::error::Timed out waiting for job ${job} after ${timeout}s."
 }
 
 main() {
