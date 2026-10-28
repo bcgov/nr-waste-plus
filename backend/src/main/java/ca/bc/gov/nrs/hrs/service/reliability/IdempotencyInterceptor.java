@@ -24,6 +24,10 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionDefinition;
+import org.springframework.transaction.TransactionStatus;
+import org.springframework.transaction.support.DefaultTransactionDefinition;
 import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.util.ContentCachingResponseWrapper;
@@ -46,6 +50,7 @@ public class IdempotencyInterceptor extends OncePerRequestFilter {
   private static final Set<String> MUTATING_METHODS = Set.of("POST", "PUT", "PATCH", "DELETE");
 
   private final IdempotencyService idempotencyService;
+  private final PlatformTransactionManager transactionManager;
   private final ObjectMapper objectMapper = new ObjectMapper();
 
   @Override
@@ -81,10 +86,14 @@ public class IdempotencyInterceptor extends OncePerRequestFilter {
     String fingerprint = IdempotencyFingerprinter.computeFingerprint(
         wrappedRequest, wrappedRequest.getCachedBody(), callerId);
 
+    TransactionDefinition txDef = new DefaultTransactionDefinition();
+    TransactionStatus txStatus = transactionManager.getTransaction(txDef);
+
     IdempotencyClaimResult claim;
     try {
       claim = idempotencyService.claim(trimmedKey, fingerprint, callerId);
     } catch (ResponseStatusException ex) {
+      transactionManager.rollback(txStatus);
       HttpStatus status = HttpStatus.valueOf(ex.getStatusCode().value());
       writeProblemDetail(
           response,
@@ -92,32 +101,45 @@ public class IdempotencyInterceptor extends OncePerRequestFilter {
           status,
           ex.getReason());
       return;
+    } catch (Exception ex) {
+      transactionManager.rollback(txStatus);
+      throw ex;
     }
 
     if (claim.isReplay()) {
+      transactionManager.rollback(txStatus);
       replayResponse(response, claim);
       return;
     }
 
-    boolean completedSuccessfully = false;
     try {
       filterChain.doFilter(wrappedRequest, wrappedResponse);
       int statusCode = wrappedResponse.getStatus();
       if (statusCode >= 200 && statusCode < 300) {
         JsonNode snapshot = parseJsonOrNull(wrappedResponse.getContentAsByteArray());
         idempotencyService.complete(trimmedKey, statusCode, snapshot);
-        completedSuccessfully = true;
+        transactionManager.commit(txStatus);
       } else {
-        idempotencyService.release(trimmedKey);
+        transactionManager.rollback(txStatus);
       }
     } catch (Exception ex) {
-      idempotencyService.release(trimmedKey);
-      wrappedResponse.copyBodyToResponse();
-      throw ex;
+      if (!txStatus.isCompleted()) {
+        transactionManager.rollback(txStatus);
+      }
+      log.error(
+          "Failed to coordinate idempotency transaction for key '{}': {}",
+          trimmedKey,
+          ex.getMessage(),
+          ex);
+      writeProblemDetail(
+          response,
+          request.getRequestURI(),
+          HttpStatus.INTERNAL_SERVER_ERROR,
+          "Failed to process idempotency transaction: " + ex.getMessage());
+      return;
     } finally {
-      if (!completedSuccessfully) {
-        // Ensure in-progress record is cleaned up if uncommitted or failed
-        idempotencyService.release(trimmedKey);
+      if (!txStatus.isCompleted()) {
+        transactionManager.rollback(txStatus);
       }
       wrappedResponse.copyBodyToResponse();
     }

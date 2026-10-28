@@ -72,15 +72,15 @@ The request fingerprint is an SHA-256 digest (64 hex characters) computed from:
 
 ### Middleware Lifecycle & Statuses
 The database tracks keys in `hrs.idempotency_record`:
-* **`IN_PROGRESS`**: Set upon initial claim.
-* **`COMPLETED`**: Set upon successful completion (HTTP 2xx) along with `response_status` and `response_snapshot` (JSONB).
+* **`IN_PROGRESS`**: Set upon initial claim within the shared database transaction.
+* **`COMPLETED`**: Set upon successful completion (HTTP 2xx) along with `response_status` and `response_snapshot` (JSONB), committing atomically with the business mutation.
 
 | Scenario | Condition | Backend Behavior |
 | --- | --- | --- |
-| **Initial Request** | Key not in DB | Atomically insert record as `IN_PROGRESS`, proceed to controller. On 2xx, record is updated to `COMPLETED` with status code and body snapshot. |
+| **Initial Request** | Key not in DB | Key is claimed (`IN_PROGRESS`) in a shared transaction with the business mutation. On 2xx, the claim is completed with status code and body snapshot, committing atomically. |
 | **Identical Retry** | Key in DB, `status = COMPLETED`, matching fingerprint and caller | Controller is skipped. The stored response status and JSON snapshot are replayed verbatim. |
 | **Cross-Caller Replay** | Key in DB, caller does not match `created_by` | Returns `403 Forbidden` (`application/problem+json`). Unauthorized access attempt is logged. |
 | **Mismatched Retry** | Key in DB, different fingerprint | Returns `409 Conflict` (`application/problem+json`). Client bug: key was reused for a different payload. |
 | **Concurrent Duplicate** | Key in DB, `status = IN_PROGRESS` | Returns `409 Conflict` (`application/problem+json`). Mutation is running concurrently; client should wait or retry later. |
-| **Failed Mutation** | Controller/service returns 4xx/5xx or throws exception | `IN_PROGRESS` record is released (deleted) so the client can fix request errors and retry with the same key. |
+| **Failed Mutation** | Controller/service returns 4xx/5xx or throws exception | Shared transaction is rolled back, atomically discarding both the `IN_PROGRESS` claim and any partial business writes so the client can fix request errors and safely retry with the same key. |
 
