@@ -1,4 +1,4 @@
-FROM node:26.11-bookworm-slim AS build
+FROM node:26.12-bookworm-slim AS build
 
 # Cache npm dependencies by copying package files first
 WORKDIR /app
