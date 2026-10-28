@@ -27,13 +27,16 @@ public final class IdempotencyFingerprinter {
   private static final ObjectMapper MAPPER = new ObjectMapper();
 
   /**
-   * Computes a canonical SHA-256 fingerprint for the given request and body bytes.
+   * Computes a canonical SHA-256 fingerprint for the given request, body bytes, and caller.
    *
    * @param request the HTTP request providing method, URI, and query string
    * @param bodyBytes the buffered request body bytes
+   * @param callerId optional authenticated caller identity to bind the fingerprint to
    * @return a 64-character lowercase hex digest
    */
-  public static String computeFingerprint(HttpServletRequest request, byte[] bodyBytes) {
+  public static String computeFingerprint(
+      HttpServletRequest request, byte[] bodyBytes, String callerId) {
+    String caller = callerId != null ? callerId : "";
     String method = request.getMethod() != null
         ? request.getMethod().toUpperCase(Locale.ROOT) : "";
     String uri = request.getRequestURI() != null ? request.getRequestURI() : "";
@@ -41,8 +44,19 @@ public final class IdempotencyFingerprinter {
     String path = (query != null && !query.isBlank()) ? uri + "?" + query : uri;
     String normalizedBody = normalizeBody(bodyBytes);
 
-    String canonicalInput = method + "\n" + path + "\n" + normalizedBody;
+    String canonicalInput = caller + "\n" + method + "\n" + path + "\n" + normalizedBody;
     return sha256Hex(canonicalInput);
+  }
+
+  /**
+   * Computes a canonical SHA-256 fingerprint for the given request and body bytes.
+   *
+   * @param request the HTTP request providing method, URI, and query string
+   * @param bodyBytes the buffered request body bytes
+   * @return a 64-character lowercase hex digest
+   */
+  public static String computeFingerprint(HttpServletRequest request, byte[] bodyBytes) {
+    return computeFingerprint(request, bodyBytes, null);
   }
 
   /**

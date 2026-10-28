@@ -1,6 +1,7 @@
 package ca.bc.gov.nrs.hrs.service.reliability;
 
 import ca.bc.gov.nrs.hrs.entity.reliability.IdempotencyRecordEntity;
+import ca.bc.gov.nrs.hrs.exception.ForbiddenException;
 import ca.bc.gov.nrs.hrs.exception.IdempotencyConflictException;
 import ca.bc.gov.nrs.hrs.repository.reliability.IdempotencyRecordRepository;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -38,9 +39,38 @@ public class IdempotencyService {
    */
   @Transactional
   public IdempotencyClaimResult claim(String key, String fingerprint) {
+    return claim(key, fingerprint, null);
+  }
+
+  /**
+   * Atomically claims an idempotency key bound to the authenticated caller, detects replay
+   * for completed records with matching fingerprints, or throws an exception if the caller
+   * is unauthorized, fingerprint differs, or request is in progress.
+   *
+   * @param key the idempotency key
+   * @param fingerprint the canonical request fingerprint
+   * @param callerId optional authenticated caller identity to bind the claim to
+   * @return IdempotencyClaimResult indicating whether this is a new claim or a replay
+   * @throws ForbiddenException if a different caller attempts to access the key
+   * @throws IdempotencyConflictException if fingerprint mismatches or request is in progress
+   */
+  @Transactional
+  public IdempotencyClaimResult claim(String key, String fingerprint, String callerId) {
     Optional<IdempotencyRecordEntity> existing = repository.findByIdempotencyKey(key);
     if (existing.isPresent()) {
       IdempotencyRecordEntity record = existing.get();
+      if (callerId != null
+          && record.getCreatedBy() != null
+          && !record.getCreatedBy().equals("SYSTEM")
+          && !record.getCreatedBy().equals(callerId)) {
+        log.warn(
+            "SECURITY: Caller '{}' attempted to claim/replay idempotency key '{}' owned by '{}'",
+            callerId,
+            key,
+            record.getCreatedBy());
+        throw new ForbiddenException(
+            "Caller is not authorized to replay or claim this idempotency key.");
+      }
       if (!record.getRequestFingerprint().equals(fingerprint)) {
         log.warn("Idempotency key '{}' conflict: payload fingerprint mismatch", key);
         throw IdempotencyConflictException.mismatchedFingerprint(key);
@@ -61,11 +91,12 @@ public class IdempotencyService {
       newRecord.setIdempotencyKey(key);
       newRecord.setRequestFingerprint(fingerprint);
       newRecord.setStatus(STATUS_IN_PROGRESS);
+      String auditor = callerId != null ? callerId : "SYSTEM";
       if (newRecord.getCreatedBy() == null) {
-        newRecord.setCreatedBy("SYSTEM");
+        newRecord.setCreatedBy(auditor);
       }
       if (newRecord.getUpdatedBy() == null) {
-        newRecord.setUpdatedBy("SYSTEM");
+        newRecord.setUpdatedBy(auditor);
       }
       if (newRecord.getCreatedAt() == null) {
         newRecord.setCreatedAt(Instant.now());

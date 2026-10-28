@@ -1,6 +1,6 @@
 package ca.bc.gov.nrs.hrs.service.reliability;
 
-import ca.bc.gov.nrs.hrs.exception.IdempotencyConflictException;
+import ca.bc.gov.nrs.hrs.util.JwtPrincipalUtil;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.FilterChain;
@@ -14,13 +14,18 @@ import java.util.Locale;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ProblemDetail;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.util.ContentCachingResponseWrapper;
 
 /**
@@ -72,17 +77,19 @@ public class IdempotencyInterceptor extends OncePerRequestFilter {
     CachedBodyHttpServletRequest wrappedRequest = new CachedBodyHttpServletRequest(request);
     ContentCachingResponseWrapper wrappedResponse = new ContentCachingResponseWrapper(response);
 
+    String callerId = resolveCallerId();
     String fingerprint = IdempotencyFingerprinter.computeFingerprint(
-        wrappedRequest, wrappedRequest.getCachedBody());
+        wrappedRequest, wrappedRequest.getCachedBody(), callerId);
 
     IdempotencyClaimResult claim;
     try {
-      claim = idempotencyService.claim(trimmedKey, fingerprint);
-    } catch (IdempotencyConflictException ex) {
+      claim = idempotencyService.claim(trimmedKey, fingerprint, callerId);
+    } catch (ResponseStatusException ex) {
+      HttpStatus status = HttpStatus.valueOf(ex.getStatusCode().value());
       writeProblemDetail(
           response,
           request.getRequestURI(),
-          HttpStatus.CONFLICT,
+          status,
           ex.getReason());
       return;
     }
@@ -140,6 +147,19 @@ public class IdempotencyInterceptor extends OncePerRequestFilter {
     }
   }
 
+  private String resolveCallerId() {
+    Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+    if (auth != null && auth.isAuthenticated()) {
+      if (auth.getPrincipal() instanceof Jwt jwt) {
+        String userId = JwtPrincipalUtil.getUserId(jwt);
+        return StringUtils.isNotBlank(userId) ? userId : jwt.getSubject();
+      }
+      String name = auth.getName();
+      return StringUtils.isNotBlank(name) ? name : null;
+    }
+    return null;
+  }
+
   private void writeProblemDetail(
       HttpServletResponse response,
       String instanceUri,
@@ -151,8 +171,13 @@ public class IdempotencyInterceptor extends OncePerRequestFilter {
     response.setCharacterEncoding(StandardCharsets.UTF_8.name());
 
     ProblemDetail problem = ProblemDetail.forStatus(status);
-    problem.setTitle(
-        status == HttpStatus.CONFLICT ? "Idempotency Conflict" : status.getReasonPhrase());
+    if (status == HttpStatus.CONFLICT) {
+      problem.setTitle("Idempotency Conflict");
+    } else if (status == HttpStatus.FORBIDDEN) {
+      problem.setTitle("Forbidden");
+    } else {
+      problem.setTitle(status.getReasonPhrase());
+    }
     problem.setDetail(detail);
     problem.setInstance(URI.create(instanceUri));
 

@@ -8,6 +8,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import ca.bc.gov.nrs.hrs.entity.reliability.IdempotencyRecordEntity;
+import ca.bc.gov.nrs.hrs.exception.ForbiddenException;
 import ca.bc.gov.nrs.hrs.exception.IdempotencyConflictException;
 import ca.bc.gov.nrs.hrs.repository.reliability.IdempotencyRecordRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -77,6 +78,24 @@ class IdempotencyServiceTest {
     assertThat(result.isReplay()).isTrue();
     assertThat(result.responseStatus()).isEqualTo(200);
     assertThat(result.responseSnapshot()).isEqualTo(snapshot);
+    verify(repository, never()).save(any());
+  }
+
+  @Test
+  @DisplayName("rejects key replay by different caller with 403 forbidden")
+  void shouldRejectReplayByDifferentCaller() {
+    IdempotencyRecordEntity record = new IdempotencyRecordEntity();
+    record.setIdempotencyKey("key-1");
+    record.setRequestFingerprint("fingerprint-1");
+    record.setStatus(IdempotencyService.STATUS_COMPLETED);
+    record.setCreatedBy("userA");
+
+    when(repository.findByIdempotencyKey("key-1")).thenReturn(Optional.of(record));
+
+    assertThatThrownBy(() -> service.claim("key-1", "fingerprint-1", "userB"))
+        .isInstanceOf(ForbiddenException.class)
+        .hasMessageContaining("Caller is not authorized");
+
     verify(repository, never()).save(any());
   }
 

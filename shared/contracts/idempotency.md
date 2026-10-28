@@ -56,14 +56,19 @@ When transport retries fail or an operation returns `202 Accepted` (pending conf
 * Maximum key length: 256 characters. Keys exceeding this length return `400 Bad Request`.
 * Non-mutating methods (`GET`, `HEAD`, `OPTIONS`) ignore the header and pass through without claim or caching.
 
-### Canonical Request Fingerprinting
+### Canonical Request Fingerprinting & Caller Binding
 The request fingerprint is an SHA-256 digest (64 hex characters) computed from:
-1. HTTP Method in uppercase (e.g., `POST`)
-2. Path and query string (e.g., `/api/reporting-units/123/lifecycle-events?stage=final`)
-3. Normalized request body:
+1. Authenticated caller identity (`userId`, or `sub`)
+2. HTTP Method in uppercase (e.g., `POST`)
+3. Path and query string (e.g., `/api/reporting-units/123/lifecycle-events?stage=final`)
+4. Normalized request body:
    * JSON payloads are canonicalized by recursively sorting object keys alphabetically and formatting compactly without whitespace.
    * Non-JSON payloads are trimmed UTF-8 strings.
    * Empty payloads normalize to empty string `""`.
+
+### Caller Authorization & Tenant Security
+* Every idempotency claim is strictly bound to the authenticated caller identity (`created_by`).
+* A replay request made by any caller other than the original claim owner is rejected with `403 Forbidden` (`application/problem+json`). Callers cannot observe or replay cached mutation snapshots belonging to other users or tenants.
 
 ### Middleware Lifecycle & Statuses
 The database tracks keys in `hrs.idempotency_record`:
@@ -73,7 +78,8 @@ The database tracks keys in `hrs.idempotency_record`:
 | Scenario | Condition | Backend Behavior |
 | --- | --- | --- |
 | **Initial Request** | Key not in DB | Atomically insert record as `IN_PROGRESS`, proceed to controller. On 2xx, record is updated to `COMPLETED` with status code and body snapshot. |
-| **Identical Retry** | Key in DB, `status = COMPLETED`, matching fingerprint | Controller is skipped. The stored response status and JSON snapshot are replayed verbatim. |
+| **Identical Retry** | Key in DB, `status = COMPLETED`, matching fingerprint and caller | Controller is skipped. The stored response status and JSON snapshot are replayed verbatim. |
+| **Cross-Caller Replay** | Key in DB, caller does not match `created_by` | Returns `403 Forbidden` (`application/problem+json`). Unauthorized access attempt is logged. |
 | **Mismatched Retry** | Key in DB, different fingerprint | Returns `409 Conflict` (`application/problem+json`). Client bug: key was reused for a different payload. |
 | **Concurrent Duplicate** | Key in DB, `status = IN_PROGRESS` | Returns `409 Conflict` (`application/problem+json`). Mutation is running concurrently; client should wait or retry later. |
 | **Failed Mutation** | Controller/service returns 4xx/5xx or throws exception | `IN_PROGRESS` record is released (deleted) so the client can fix request errors and retry with the same key. |

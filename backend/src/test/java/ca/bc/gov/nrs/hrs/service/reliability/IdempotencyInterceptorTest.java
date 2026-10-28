@@ -21,11 +21,14 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -45,6 +48,7 @@ class IdempotencyInterceptorTest {
 
   @BeforeEach
   void setUp() {
+    SecurityContextHolder.clearContext();
     repository = new TestIdempotencyRecordRepository();
     IdempotencyService service = new IdempotencyService(repository);
     IdempotencyInterceptor interceptor = new IdempotencyInterceptor(service);
@@ -54,6 +58,11 @@ class IdempotencyInterceptorTest {
         .addFilters(interceptor)
         .setControllerAdvice(new GlobalExceptionHandler())
         .build();
+  }
+
+  @AfterEach
+  void tearDown() {
+    SecurityContextHolder.clearContext();
   }
 
   @Test
@@ -106,6 +115,42 @@ class IdempotencyInterceptorTest {
         .andExpect(jsonPath("$.count").value(1));
 
     // Assert mutation count did NOT increase
+    assertThat(controller.mutationCount.get()).isEqualTo(1);
+  }
+
+  @Test
+  @DisplayName("rejects replay by a different authenticated caller with 403 forbidden")
+  void shouldRejectReplayByDifferentCaller() throws Exception {
+    String key = UUID.randomUUID().toString();
+    String body = "{\"name\": \"shared-action\"}";
+
+    // Caller A performs the mutation
+    SecurityContextHolder.getContext().setAuthentication(
+        new UsernamePasswordAuthenticationToken("caller-A", "n/a", List.of()));
+
+    mockMvc.perform(post("/api/test-mutation")
+            .header("Idempotency-Key", key)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(body))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.count").value(1));
+
+    assertThat(controller.mutationCount.get()).isEqualTo(1);
+
+    // Caller B attempts to replay Caller A's idempotency key
+    SecurityContextHolder.getContext().setAuthentication(
+        new UsernamePasswordAuthenticationToken("caller-B", "n/a", List.of()));
+
+    mockMvc.perform(post("/api/test-mutation")
+            .header("Idempotency-Key", key)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(body))
+        .andExpect(status().isForbidden())
+        .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
+        .andExpect(jsonPath("$.title").value("Forbidden"))
+        .andExpect(jsonPath("$.detail").value(
+            "Caller is not authorized to replay or claim this idempotency key."));
+
     assertThat(controller.mutationCount.get()).isEqualTo(1);
   }
 

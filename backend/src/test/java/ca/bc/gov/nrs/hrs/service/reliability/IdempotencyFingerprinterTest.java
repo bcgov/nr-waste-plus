@@ -95,6 +95,18 @@ class IdempotencyFingerprinterTest {
     assertThat(fp).hasSize(64);
   }
 
+  @Test
+  @DisplayName("produces different fingerprint for different authenticated callers")
+  void shouldDistinguishDifferentCallers() {
+    HttpServletRequest request = mockRequest("POST", "/api/test", null);
+    byte[] body = "{\"name\":\"item\"}".getBytes(StandardCharsets.UTF_8);
+
+    String fpUser1 = IdempotencyFingerprinter.computeFingerprint(request, body, "user1");
+    String fpUser2 = IdempotencyFingerprinter.computeFingerprint(request, body, "user2");
+
+    assertThat(fpUser1).isNotEqualTo(fpUser2);
+  }
+
   private HttpServletRequest mockRequest(String method, String uri, String query) {
     HttpServletRequest request = mock(HttpServletRequest.class);
     when(request.getMethod()).thenReturn(method);
