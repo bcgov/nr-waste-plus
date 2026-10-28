@@ -4,12 +4,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import ca.bc.gov.nrs.hrs.entity.reliability.IdempotencyRecordEntity;
 import ca.bc.gov.nrs.hrs.exception.GlobalExceptionHandler;
 import ca.bc.gov.nrs.hrs.repository.reliability.IdempotencyRecordRepository;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -123,6 +125,31 @@ class IdempotencyInterceptorTest {
         .andExpect(jsonPath("$.count").value(1));
 
     // Assert mutation count did NOT increase
+    assertThat(controller.mutationCount.get()).isEqualTo(1);
+  }
+
+  @Test
+  @DisplayName("replays 201 Created and restores original Location response header")
+  void shouldRestoreLocationHeaderOnCreatedResponseReplay() throws Exception {
+    String key = UUID.randomUUID().toString();
+
+    // First request creating resource
+    mockMvc.perform(post("/api/test-mutation/created")
+            .header("Idempotency-Key", key))
+        .andExpect(status().isCreated())
+        .andExpect(header().string("Location", "/api/test-resources/1"))
+        .andExpect(content().string(""));
+
+    assertThat(controller.mutationCount.get()).isEqualTo(1);
+
+    // Replay with identical key
+    mockMvc.perform(post("/api/test-mutation/created")
+            .header("Idempotency-Key", key))
+        .andExpect(status().isCreated())
+        .andExpect(header().string("Location", "/api/test-resources/1"))
+        .andExpect(content().string(""));
+
+    // Mutation should not execute again
     assertThat(controller.mutationCount.get()).isEqualTo(1);
   }
 
@@ -444,6 +471,16 @@ class IdempotencyInterceptorTest {
           "status", "MUTATED",
           "count", count,
           "payload", body));
+    }
+
+    @PostMapping("/created")
+    public ResponseEntity<Void> createResource() {
+      int count = mutationCount.incrementAndGet();
+      TxContext tx = CURRENT_TX.get();
+      if (tx != null) {
+        tx.mutated = true;
+      }
+      return ResponseEntity.created(URI.create("/api/test-resources/" + count)).build();
     }
 
     @GetMapping

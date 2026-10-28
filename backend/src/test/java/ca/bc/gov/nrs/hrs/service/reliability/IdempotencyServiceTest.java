@@ -13,6 +13,7 @@ import ca.bc.gov.nrs.hrs.exception.IdempotencyConflictException;
 import ca.bc.gov.nrs.hrs.repository.reliability.IdempotencyRecordRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import java.util.Map;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -162,6 +163,32 @@ class IdempotencyServiceTest {
     assertThat(record.getResponseStatus()).isEqualTo(201);
     assertThat(record.getResponseSnapshot()).isEqualTo(snapshot);
     verify(repository).save(record);
+  }
+
+  @Test
+  @DisplayName("completes record with endpoint headers and restores them on replay claim")
+  void shouldCompleteRecordWithHeadersAndRestoreOnClaim() {
+    IdempotencyRecordEntity record = new IdempotencyRecordEntity();
+    record.setIdempotencyKey("key-headers");
+    record.setRequestFingerprint("fp-headers");
+    record.setStatus(IdempotencyService.STATUS_IN_PROGRESS);
+
+    when(repository.findByIdempotencyKey("key-headers")).thenReturn(Optional.of(record));
+
+    service.complete("key-headers", 201, Map.of("Location", "/api/test-resources/42"), null);
+
+    assertThat(record.getStatus()).isEqualTo(IdempotencyService.STATUS_COMPLETED);
+    assertThat(record.getResponseStatus()).isEqualTo(201);
+    assertThat(record.getResponseSnapshot()).isNotNull();
+    assertThat(record.getResponseSnapshot().get("_envelope").asBoolean()).isTrue();
+    assertThat(record.getResponseSnapshot().get("headers").get("Location").asText())
+        .isEqualTo("/api/test-resources/42");
+
+    IdempotencyClaimResult claim = service.claim("key-headers", "fp-headers", null);
+    assertThat(claim.isReplay()).isTrue();
+    assertThat(claim.responseStatus()).isEqualTo(201);
+    assertThat(claim.responseHeaders()).containsEntry("Location", "/api/test-resources/42");
+    assertThat(claim.responseSnapshot()).isNull();
   }
 
   @Test

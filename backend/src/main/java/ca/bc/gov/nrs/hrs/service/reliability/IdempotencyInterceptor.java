@@ -10,13 +10,16 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
+import java.util.LinkedHashMap;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ProblemDetail;
@@ -48,6 +51,11 @@ public class IdempotencyInterceptor extends OncePerRequestFilter {
   public static final int MAX_KEY_LENGTH = 256;
 
   private static final Set<String> MUTATING_METHODS = Set.of("POST", "PUT", "PATCH", "DELETE");
+  private static final Set<String> PERSISTED_RESPONSE_HEADERS = Set.of(
+      HttpHeaders.LOCATION,
+      HttpHeaders.ETAG,
+      HttpHeaders.LAST_MODIFIED
+  );
 
   private final IdempotencyService idempotencyService;
   private final PlatformTransactionManager transactionManager;
@@ -117,7 +125,8 @@ public class IdempotencyInterceptor extends OncePerRequestFilter {
       int statusCode = wrappedResponse.getStatus();
       if (statusCode >= 200 && statusCode < 300) {
         JsonNode snapshot = parseJsonOrNull(wrappedResponse.getContentAsByteArray());
-        idempotencyService.complete(trimmedKey, statusCode, snapshot);
+        Map<String, String> responseHeaders = extractHeadersToPersist(wrappedResponse);
+        idempotencyService.complete(trimmedKey, statusCode, responseHeaders, snapshot);
         transactionManager.commit(txStatus);
       }
     } catch (Exception ex) {
@@ -144,12 +153,33 @@ public class IdempotencyInterceptor extends OncePerRequestFilter {
       HttpServletResponse response, IdempotencyClaimResult claim) throws IOException {
     int status = claim.responseStatus() != null ? claim.responseStatus() : HttpStatus.OK.value();
     response.setStatus(status);
+    if (claim.responseHeaders() != null) {
+      claim.responseHeaders().forEach(response::setHeader);
+    }
     if (claim.responseSnapshot() != null) {
       response.setContentType(MediaType.APPLICATION_JSON_VALUE);
       response.setCharacterEncoding(StandardCharsets.UTF_8.name());
       byte[] snapshotBytes = objectMapper.writeValueAsBytes(claim.responseSnapshot());
       response.getOutputStream().write(snapshotBytes);
     }
+  }
+
+  private Map<String, String> extractHeadersToPersist(HttpServletResponse response) {
+    Map<String, String> headers = new LinkedHashMap<>();
+    for (String headerName : response.getHeaderNames()) {
+      if (headerName == null) {
+        continue;
+      }
+      for (String persistedName : PERSISTED_RESPONSE_HEADERS) {
+        if (persistedName.equalsIgnoreCase(headerName)) {
+          String value = response.getHeader(headerName);
+          if (value != null) {
+            headers.put(persistedName, value);
+          }
+        }
+      }
+    }
+    return headers;
   }
 
   private JsonNode parseJsonOrNull(byte[] content) {

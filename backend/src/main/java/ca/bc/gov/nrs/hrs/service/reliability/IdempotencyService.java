@@ -5,7 +5,13 @@ import ca.bc.gov.nrs.hrs.exception.ForbiddenException;
 import ca.bc.gov.nrs.hrs.exception.IdempotencyConflictException;
 import ca.bc.gov.nrs.hrs.repository.reliability.IdempotencyRecordRepository;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.NullNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.time.Instant;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,6 +31,7 @@ public class IdempotencyService {
   public static final String STATUS_COMPLETED = "COMPLETED";
 
   private final IdempotencyRecordRepository repository;
+  private final ObjectMapper objectMapper = new ObjectMapper();
 
   /**
    * Atomically claims an idempotency key with the given fingerprint, detects replay for completed
@@ -82,7 +89,23 @@ public class IdempotencyService {
       if (STATUS_COMPLETED.equals(record.getStatus())) {
         log.info("Idempotency key '{}' matched completed record, replaying response", key);
         int status = record.getResponseStatus() != null ? record.getResponseStatus() : 200;
-        return IdempotencyClaimResult.replay(status, record.getResponseSnapshot());
+        JsonNode snapshot = record.getResponseSnapshot();
+        Map<String, String> headers = Collections.emptyMap();
+        JsonNode body = snapshot;
+        if (snapshot != null
+            && snapshot.isObject()
+            && snapshot.path("_envelope").asBoolean(false)) {
+          Map<String, String> extractedHeaders = new LinkedHashMap<>();
+          JsonNode headersNode = snapshot.get("headers");
+          if (headersNode != null && headersNode.isObject()) {
+            headersNode.fieldNames().forEachRemaining(name ->
+                extractedHeaders.put(name, headersNode.get(name).asText()));
+          }
+          headers = extractedHeaders;
+          JsonNode bodyNode = snapshot.get("body");
+          body = (bodyNode == null || bodyNode.isNull()) ? null : bodyNode;
+        }
+        return IdempotencyClaimResult.replay(status, headers, body);
       }
     }
 
@@ -115,6 +138,45 @@ public class IdempotencyService {
 
   /**
    * Completes an in-progress idempotency record by updating its status, response status code,
+   * endpoint response headers, and response snapshot body.
+   *
+   * @param key the idempotency key
+   * @param responseStatus the HTTP status code returned
+   * @param responseHeaders the HTTP response headers to persist (nullable)
+   * @param responseSnapshot the response payload snapshot (nullable)
+   */
+  @Transactional
+  public void complete(
+      String key,
+      int responseStatus,
+      Map<String, String> responseHeaders,
+      JsonNode responseSnapshot) {
+    IdempotencyRecordEntity record = repository.findByIdempotencyKey(key)
+        .orElseThrow(() -> new IllegalStateException(
+            "Idempotency record not found for key: " + key));
+    record.setStatus(STATUS_COMPLETED);
+    record.setResponseStatus(responseStatus);
+
+    if (responseHeaders != null && !responseHeaders.isEmpty()) {
+      ObjectNode envelope = objectMapper.createObjectNode();
+      envelope.put("_envelope", true);
+      ObjectNode headersNode = envelope.putObject("headers");
+      responseHeaders.forEach(headersNode::put);
+      if (responseSnapshot != null) {
+        envelope.set("body", responseSnapshot);
+      } else {
+        envelope.set("body", NullNode.getInstance());
+      }
+      record.setResponseSnapshot(envelope);
+    } else {
+      record.setResponseSnapshot(responseSnapshot);
+    }
+    repository.save(record);
+    log.info("Completed idempotency key '{}' with HTTP status {}", key, responseStatus);
+  }
+
+  /**
+   * Completes an in-progress idempotency record by updating its status, response status code,
    * and response snapshot body.
    *
    * @param key the idempotency key
@@ -123,14 +185,7 @@ public class IdempotencyService {
    */
   @Transactional
   public void complete(String key, int responseStatus, JsonNode responseSnapshot) {
-    IdempotencyRecordEntity record = repository.findByIdempotencyKey(key)
-        .orElseThrow(() -> new IllegalStateException(
-            "Idempotency record not found for key: " + key));
-    record.setStatus(STATUS_COMPLETED);
-    record.setResponseStatus(responseStatus);
-    record.setResponseSnapshot(responseSnapshot);
-    repository.save(record);
-    log.info("Completed idempotency key '{}' with HTTP status {}", key, responseStatus);
+    complete(key, responseStatus, Collections.emptyMap(), responseSnapshot);
   }
 
   /**

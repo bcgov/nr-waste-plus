@@ -73,12 +73,12 @@ The request fingerprint is an SHA-256 digest (64 hex characters) computed from:
 ### Middleware Lifecycle & Statuses
 The database tracks keys in `hrs.idempotency_record`:
 * **`IN_PROGRESS`**: Set upon initial claim within the shared database transaction.
-* **`COMPLETED`**: Set upon successful completion (HTTP 2xx) along with `response_status` and `response_snapshot` (JSONB), committing atomically with the business mutation.
+* **`COMPLETED`**: Set upon successful completion (HTTP 2xx) along with `response_status`, endpoint-required response headers (such as `Location`), and `response_snapshot` (JSONB), committing atomically with the business mutation.
 
 | Scenario | Condition | Backend Behavior |
 | --- | --- | --- |
-| **Initial Request** | Key not in DB | Key is claimed (`IN_PROGRESS`) in a shared transaction with the business mutation. On 2xx, the claim is completed with status code and body snapshot, committing atomically. |
-| **Identical Retry** | Key in DB, `status = COMPLETED`, matching fingerprint and caller | Controller is skipped. The stored response status and JSON snapshot are replayed verbatim. |
+| **Initial Request** | Key not in DB | Key is claimed (`IN_PROGRESS`) in a shared transaction with the business mutation. On 2xx, the claim is completed with status code, endpoint response headers (`Location`), and body snapshot, committing atomically. |
+| **Identical Retry** | Key in DB, `status = COMPLETED`, matching fingerprint and caller | Controller is skipped. The stored response status, endpoint response headers (`Location`), and JSON snapshot are replayed verbatim. |
 | **Cross-Caller Replay** | Key in DB, caller does not match `created_by` | Returns `403 Forbidden` (`application/problem+json`). Unauthorized access attempt is logged. |
 | **Mismatched Retry** | Key in DB, different fingerprint | Returns `409 Conflict` (`application/problem+json`). Client bug: key was reused for a different payload. |
 | **Concurrent Duplicate** | Key in DB, `status = IN_PROGRESS` | Returns `409 Conflict` (`application/problem+json`). Mutation is running concurrently; client should wait or retry later. |
