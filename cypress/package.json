@@ -40,7 +40,7 @@
     "@cypress/webpack-preprocessor": "^8.0.0",
     "@eslint/js": "^10.0.1",
     "@testing-library/cypress": "^10.1.0",
-    "@types/node": "^25.5.0",
+    "@types/node": "^26.0.0",
     "axe-core": "^4.11.0",
     "cypress": "^16.0.0",
     "cypress-real-events": "^1.14.0",

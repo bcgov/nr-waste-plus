@@ -81,7 +81,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v7
         with:
-          node-version: "24"
+          node-version: "26"
       - name: Run cve-lite-cli SARIF scan (${{ matrix.folder }})
         run: npx --yes cve-lite-cli@1.25.0 "${{ matrix.folder }}" --sarif --check-overrides
       - name: Locate SARIF file
@@ -139,7 +139,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v7
         with:
-          node-version: "24"
+          node-version: "26"
           cache: npm
           cache-dependency-path: ${{ matrix.folder }}/package-lock.json
       - name: Test audit allowlist script
@@ -170,6 +170,6 @@ jobs:
     runs-on: ubuntu-26.04
     timeout-minutes: 1
     steps:
-      - uses: bcgov/actions/workflow-results@122a9b1c6c082b1b1f18c300020fbdc417b6b0b2 # v0.10.0
+      - uses: bcgov/actions/workflow-results@091f1da89c669d36bf4899830381e5b12d2c889a # v0.11.0
         with:
           needs: ${{ toJson(needs) }}
