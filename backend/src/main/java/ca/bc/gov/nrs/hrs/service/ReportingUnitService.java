@@ -14,6 +14,7 @@ import io.micrometer.observation.annotation.Observed;
 import io.micrometer.tracing.annotation.NewSpan;
 import jakarta.validation.Valid;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -218,7 +219,9 @@ public class ReportingUnitService {
     if (existing != null && existing.getTotalElements() > 0) {
       ReportingUnitSearchResultDto first = existing.getContent().get(0);
       Long existingId = parseLongOrNull(first.id());
-      if (existingId != null && !reportingUnitRepository.existsById(existingId)) {
+      if (existingId != null
+          && !reportingUnitRepository.existsById(existingId)
+          && matchesRequestAttributes(first, request)) {
         log.warn(
             "Reconciling uncommitted legacy reporting unit {} for client {} and district {}",
             existingId, request.clientNumber(), request.districtCode());
@@ -271,6 +274,25 @@ public class ReportingUnitService {
     reportingUnitRepository.saveAndFlush(entity);
     log.info("Persisted local reporting unit {} in PostgreSQL", reportingUnitId);
     return reportingUnitId;
+  }
+
+  private boolean matchesRequestAttributes(
+      ReportingUnitSearchResultDto existingUnit, CreateReportingUnitRequestDto request) {
+    if (existingUnit == null || request == null) {
+      return false;
+    }
+
+    boolean clientMatches =
+        existingUnit.client() != null
+            && Objects.equals(existingUnit.client().code(), request.clientNumber());
+    boolean districtMatches =
+        existingUnit.district() != null
+            && Objects.equals(existingUnit.district().code(), request.districtCode());
+    boolean samplingMatches =
+        existingUnit.sampling() != null
+            && Objects.equals(existingUnit.sampling().code(), request.samplingCode());
+
+    return clientMatches && districtMatches && samplingMatches;
   }
 
   private static Long parseLongOrNull(String value) {

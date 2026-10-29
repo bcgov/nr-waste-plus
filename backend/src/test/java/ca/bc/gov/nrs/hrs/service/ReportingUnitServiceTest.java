@@ -612,6 +612,47 @@ class ReportingUnitServiceTest {
     when(legacyApiProvider.searchReportingUnit(
             org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any()))
         .thenReturn(new PageImpl<>(List.of(existingResult), PageRequest.of(0, 1), 1));
+    when(reportingUnitRepository.existsById(1L)).thenReturn(false);
+
+    // Act & Assert: existing S01 unit must NOT be adopted as AVG even if missing in PostgreSQL
+    assertThatThrownBy(() -> reportingUnitService.createReportingUnit(request))
+        .isInstanceOf(ResponseStatusException.class)
+        .satisfies(
+            e ->
+                assertThat(((ResponseStatusException) e).getStatusCode())
+                    .isEqualTo(org.springframework.http.HttpStatus.CONFLICT));
+    verify(reportingUnitRepository, never()).saveAndFlush(any());
+    verify(legacyApiProvider, never()).createReportingUnit(any());
+  }
+
+  @Test
+  @DisplayName("shouldThrowConflict_whenMatchingReportingUnitAlreadyExistsLocally")
+  void shouldThrowConflict_whenMatchingReportingUnitAlreadyExistsLocally() {
+    var request =
+        new ca.bc.gov.nrs.hrs.dto.reportingunit.CreateReportingUnitRequestDto(
+            CLIENT_NUMBER, "DND", "AVG", null);
+
+    var existingResult =
+        new ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchResultDto(
+            "1",
+            26L,
+            "",
+            36834L,
+            new ca.bc.gov.nrs.hrs.dto.base.CodeDescriptionDto(CLIENT_NUMBER, null),
+            null,
+            null,
+            null,
+            false,
+            false,
+            new ca.bc.gov.nrs.hrs.dto.base.CodeDescriptionDto("AVG", "District Average"),
+            new ca.bc.gov.nrs.hrs.dto.base.CodeDescriptionDto("DND", "Nadina"),
+            new ca.bc.gov.nrs.hrs.dto.base.CodeDescriptionDto("DFT", "Draft"),
+            LocalDateTime.now(),
+            false);
+
+    when(legacyApiProvider.searchReportingUnit(
+            org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any()))
+        .thenReturn(new PageImpl<>(List.of(existingResult), PageRequest.of(0, 1), 1));
     when(reportingUnitRepository.existsById(1L)).thenReturn(true);
 
     // Act & Assert
@@ -644,7 +685,7 @@ class ReportingUnitServiceTest {
             null,
             false,
             false,
-            new ca.bc.gov.nrs.hrs.dto.base.CodeDescriptionDto("S01", "Sample"),
+            new ca.bc.gov.nrs.hrs.dto.base.CodeDescriptionDto("AVG", "District Average"),
             new ca.bc.gov.nrs.hrs.dto.base.CodeDescriptionDto("DND", "Nadina"),
             new ca.bc.gov.nrs.hrs.dto.base.CodeDescriptionDto("DFT", "Draft"),
             LocalDateTime.now(),
