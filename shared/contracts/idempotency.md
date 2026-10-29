@@ -54,6 +54,7 @@ When transport retries fail or an operation returns `202 Accepted` (pending conf
 ### Header
 * Header name: `Idempotency-Key` (case-insensitive).
 * Maximum key length: 256 characters. Keys exceeding this length return `400 Bad Request`.
+* Maximum request body size: 2 MB. Requests exceeding this limit return `413 Payload Too Large` (`application/problem+json`).
 * Non-mutating methods (`GET`, `HEAD`, `OPTIONS`) ignore the header and pass through without claim or caching.
 
 ### Canonical Request Fingerprinting & Caller Binding

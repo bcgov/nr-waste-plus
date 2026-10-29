@@ -49,6 +49,8 @@ public class IdempotencyInterceptor extends OncePerRequestFilter {
 
   public static final String IDEMPOTENCY_KEY_HEADER = "Idempotency-Key";
   public static final int MAX_KEY_LENGTH = 256;
+  public static final int MAX_BODY_SIZE_BYTES =
+      CachedBodyHttpServletRequest.DEFAULT_MAX_BODY_SIZE_BYTES;
 
   private static final Set<String> MUTATING_METHODS = Set.of("POST", "PUT", "PATCH", "DELETE");
   private static final Set<String> PERSISTED_RESPONSE_HEADERS = Set.of(
@@ -87,7 +89,18 @@ public class IdempotencyInterceptor extends OncePerRequestFilter {
       return;
     }
 
-    CachedBodyHttpServletRequest wrappedRequest = new CachedBodyHttpServletRequest(request);
+    CachedBodyHttpServletRequest wrappedRequest;
+    try {
+      wrappedRequest = new CachedBodyHttpServletRequest(request, MAX_BODY_SIZE_BYTES);
+    } catch (ResponseStatusException ex) {
+      HttpStatus status = HttpStatus.valueOf(ex.getStatusCode().value());
+      writeProblemDetail(
+          response,
+          request.getRequestURI(),
+          status,
+          ex.getReason());
+      return;
+    }
     ContentCachingResponseWrapper wrappedResponse = new ContentCachingResponseWrapper(response);
 
     String callerId = resolveCallerId();

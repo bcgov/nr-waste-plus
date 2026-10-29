@@ -293,6 +293,29 @@ class IdempotencyInterceptorTest {
   }
 
   @Test
+  @DisplayName("rejects request whose Content-Length exceeds maximum body size with 413")
+  void shouldRejectPayloadExceedingContentLengthLimit() throws Exception {
+    String key = UUID.randomUUID().toString();
+
+    mockMvc.perform(post("/api/test-mutation")
+            .header("Idempotency-Key", key)
+            .header(
+                "Content-Length",
+                String.valueOf(IdempotencyInterceptor.MAX_BODY_SIZE_BYTES + 1))
+            .contentType(MediaType.APPLICATION_JSON)
+            .content("{}"))
+        .andExpect(status().isPayloadTooLarge())
+        .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
+        .andExpect(jsonPath("$.title").value("Content Too Large"))
+        .andExpect(jsonPath("$.detail").value(
+            "Request body exceeds maximum allowed size of "
+                + IdempotencyInterceptor.MAX_BODY_SIZE_BYTES + " bytes."));
+
+    assertThat(controller.mutationCount.get()).isEqualTo(0);
+    assertThat(repository.records).isEmpty();
+  }
+
+  @Test
   @DisplayName("releases key on downstream failure so subsequent retry can succeed")
   void shouldReleaseKeyOnDownstreamFailure() throws Exception {
     String key = UUID.randomUUID().toString();
