@@ -44,7 +44,14 @@ public class DefaultEndpointAuthorizationChecker implements EndpointAuthorizatio
 
     Matcher matcher = REPORTING_UNIT_PATH_PATTERN.matcher(path);
     if (matcher.matches()) {
-      Long reportingUnitId = Long.parseLong(matcher.group(1));
+      Long reportingUnitId;
+      try {
+        reportingUnitId = Long.parseLong(matcher.group(1));
+      } catch (NumberFormatException ex) {
+        log.warn("Invalid reporting unit identifier in request path: {}", matcher.group(1));
+        throw new ForbiddenException(
+            "Invalid reporting unit identifier: " + matcher.group(1));
+      }
       validateReportingUnitAccess(reportingUnitId, authentication);
     }
   }

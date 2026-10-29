@@ -134,5 +134,19 @@ class DefaultEndpointAuthorizationCheckerTest {
     assertThatCode(() -> checker.checkAuthorization(request, null)).doesNotThrowAnyException();
     verifyNoInteractions(reportingUnitRepository);
   }
+
+  @Test
+  @DisplayName("rejects replay with 403 Forbidden when reporting unit id is not a valid Long")
+  void shouldRejectReplayWhenReportingUnitIdCannotBeParsed() {
+    MockHttpServletRequest request =
+        new MockHttpServletRequest(
+            "POST", "/api/reporting-units/999999999999999999999999999999/finalize");
+
+    assertThatThrownBy(() -> checker.checkAuthorization(request, null))
+        .isInstanceOf(ForbiddenException.class)
+        .hasMessageContaining(
+            "Invalid reporting unit identifier: 999999999999999999999999999999");
+    verifyNoInteractions(reportingUnitRepository);
+  }
 }
 
