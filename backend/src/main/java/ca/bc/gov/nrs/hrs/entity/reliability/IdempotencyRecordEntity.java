@@ -20,7 +20,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 /** Request record used by a future idempotency-key workflow. */
 @Entity
-@Table(name = "idempotency_record", schema = "hrs")
+@Table(name = "idempotency_record", schema = "wasteplus")
 @EntityListeners(AuditingEntityListener.class)
 @Getter
 @Setter

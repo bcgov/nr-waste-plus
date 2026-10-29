@@ -18,7 +18,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 /** Independently versioned, date-effective formula configuration. */
 @Entity
-@Table(name = "formula_set", schema = "hrs")
+@Table(name = "formula_set", schema = "wasteplus")
 @EntityListeners(AuditingEntityListener.class)
 @Getter
 @Setter

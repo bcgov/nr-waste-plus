@@ -1,7 +1,7 @@
 {
   "caseId": "COAST-MATURE-HELI-01",
   "area": "COASTAL",
-  "workbookReference": "Coast Table Layout + Manual p37 Table 3-5 Helicopter Mature 35 + hrs.district_volume.heli_multiplier (Coast-only)",
+  "workbookReference": "Coast Table Layout + Manual p37 Table 3-5 Helicopter Mature 35 + wasteplus.district_volume.heli_multiplier (Coast-only)",
   "inputs": {
     "districtCode": "DKM",
     "netWasteAreaHa": 7.2,

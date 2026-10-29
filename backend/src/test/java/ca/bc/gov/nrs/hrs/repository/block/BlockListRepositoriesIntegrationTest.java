@@ -107,7 +107,7 @@ class BlockListRepositoriesIntegrationTest extends AbstractTestContainerIntegrat
 
           jdbcTemplate.update(
               """
-              INSERT INTO hrs.district_average_block
+              INSERT INTO wasteplus.district_average_block
                   (district_average_block_id, coast_ground_based_area_ha,
                    coast_helicopter_area_ha, cable_yarding_area_ha, skyline_logging_area_ha,
                    has_dispersed_retention, is_heli_logging,
@@ -119,7 +119,7 @@ class BlockListRepositoriesIntegrationTest extends AbstractTestContainerIntegrat
               actor);
           jdbcTemplate.update(
               """
-              INSERT INTO hrs.district_average_block
+              INSERT INTO wasteplus.district_average_block
                   (district_average_block_id, has_dispersed_retention, is_heli_logging,
                    is_deleted, created_by, updated_by)
               VALUES (?, FALSE, FALSE, TRUE, ?, ?)
@@ -203,7 +203,7 @@ class BlockListRepositoriesIntegrationTest extends AbstractTestContainerIntegrat
           // collapse to NULL when the coast ground/helicopter columns are empty.
           jdbcTemplate.update(
               """
-              INSERT INTO hrs.district_average_block
+              INSERT INTO wasteplus.district_average_block
                   (district_average_block_id, cable_yarding_area_ha, skyline_logging_area_ha,
                    has_dispersed_retention, is_heli_logging, created_by, updated_by)
               VALUES (?, 2.750, 5.000, FALSE, FALSE, ?, ?)
@@ -230,14 +230,14 @@ class BlockListRepositoriesIntegrationTest extends AbstractTestContainerIntegrat
 
   private void deleteFixtures(String actor, Long reportingUnitId) {
     jdbcTemplate.update(
-        "DELETE FROM hrs.status_event WHERE block_id IN "
-            + "(SELECT block_id FROM hrs.block WHERE created_by = ?)",
+        "DELETE FROM wasteplus.status_event WHERE block_id IN "
+            + "(SELECT block_id FROM wasteplus.block WHERE created_by = ?)",
         actor);
-    jdbcTemplate.update("DELETE FROM hrs.block_submitter WHERE created_by = ?", actor);
-    jdbcTemplate.update("DELETE FROM hrs.district_average_block WHERE created_by = ?", actor);
-    jdbcTemplate.update("DELETE FROM hrs.block_mark WHERE created_by = ?", actor);
-    jdbcTemplate.update("DELETE FROM hrs.block WHERE created_by = ?", actor);
-    jdbcTemplate.update("DELETE FROM hrs.reporting_unit WHERE reporting_unit_id = ?", reportingUnitId);
+    jdbcTemplate.update("DELETE FROM wasteplus.block_submitter WHERE created_by = ?", actor);
+    jdbcTemplate.update("DELETE FROM wasteplus.district_average_block WHERE created_by = ?", actor);
+    jdbcTemplate.update("DELETE FROM wasteplus.block_mark WHERE created_by = ?", actor);
+    jdbcTemplate.update("DELETE FROM wasteplus.block WHERE created_by = ?", actor);
+    jdbcTemplate.update("DELETE FROM wasteplus.reporting_unit WHERE reporting_unit_id = ?", reportingUnitId);
   }
 
   private static BlockEntity block(Long reportingUnitId, String actor, boolean districtAverage) {

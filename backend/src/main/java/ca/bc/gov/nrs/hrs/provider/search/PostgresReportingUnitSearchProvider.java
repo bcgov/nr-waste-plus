@@ -134,7 +134,7 @@ public class PostgresReportingUnitSearchProvider implements ReportingUnitSearchP
   /**
    * Execute the PostgreSQL expanded-search query for one {@code (reportingUnitId, blockId)} (issue
    * #1238, expanded search; DEC-018/DEC-019). The legacy WAA identity maps 1:1 onto {@code
-   * hrs.block.block_id}, so the path's {@code wasteAssessmentAreaId} is the block id on PostgreSQL
+   * wasteplus.block.block_id}, so the path's {@code wasteAssessmentAreaId} is the block id on PostgreSQL
    * rows.
    *
    * @param reportingUnitId the reporting unit id

@@ -1,7 +1,7 @@
 {
   "caseId": "INTERIOR-WET-BELT-01",
   "area": "INTERIOR",
-  "workbookReference": "Provincial v1.1 workbook, Waste Volume Generator (Interior) Wet belt Manual p38 Table 3-6 \u2014 with tableLevelFactor from hrs.district_volume",
+  "workbookReference": "Provincial v1.1 workbook, Waste Volume Generator (Interior) Wet belt Manual p38 Table 3-6 \u2014 with tableLevelFactor from wasteplus.district_volume",
   "inputs": {
     "districtCode": "DKM",
     "netWasteAreaHa": 8.0,

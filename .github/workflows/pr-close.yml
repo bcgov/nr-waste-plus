@@ -57,8 +57,8 @@ jobs:
     uses: bcgov/quickstart-openshift-helpers/.github/workflows/.schema-spy.yml@a11ad3d1b9288fb40757c4314a62eb86ff227931 # v1.2.1
     with:
       flyway_locations: 'filesystem:./backend/src/main/resources/db/migration'
-      flyway_schema: 'hrs'
-      schemaspy_schema: 'hrs'
+      flyway_schema: 'wasteplus'
+      schemaspy_schema: 'wasteplus'
 
   cleanup:
     name: Cleanup and Images

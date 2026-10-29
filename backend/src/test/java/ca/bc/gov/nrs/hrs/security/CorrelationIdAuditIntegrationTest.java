@@ -28,7 +28,7 @@ import org.springframework.security.oauth2.server.resource.authentication.JwtAut
  * Spike §6 integration coverage for B3 correlation propagation to the audit trigger.
  *
  * <p>Exercises the {@link CorrelationIdConnectionProvider} + Postgres GUC {@code
- * app.correlation_id} + {@code hrs.audit_district_volume_change()} trigger chain against the real
+ * app.correlation_id} + {@code wasteplus.audit_district_volume_change()} trigger chain against the real
  * Testcontainers PostgreSQL 17 database via {@link AbstractTestContainerIntegrationTest}.
  *
  * <p>All tests are intentionally <em>not</em> {@code @Transactional}: each mutation goes through
@@ -67,7 +67,7 @@ class CorrelationIdAuditIntegrationTest extends AbstractTestContainerIntegration
   void resetAuditFixture() {
     // The integration-test container database is shared by every test class in the suite, so
     // wipe only the audit tables these tests assert on — keeps max-id logic deterministic.
-    // hrs.district_volume must NOT be wiped here: it holds Flyway-seeded reference rows that
+    // wasteplus.district_volume must NOT be wiped here: it holds Flyway-seeded reference rows that
     // other test classes (e.g. ReportingUnitControllerIntegrationTest grade validation) rely on.
     // Duplicate-open-entry collisions are avoided instead by giving spike entities closed
     // date ranges (see newEntity).
@@ -75,7 +75,7 @@ class CorrelationIdAuditIntegrationTest extends AbstractTestContainerIntegration
     // application.yml), but fixture maintenance still runs inside an explicit committing
     // transaction for clarity and to match the test mutation pattern.
     transactionTemplate.executeWithoutResult(
-        status -> jdbcTemplate.update("TRUNCATE hrs.audit_change, hrs.audit_event"));
+        status -> jdbcTemplate.update("TRUNCATE wasteplus.audit_change, wasteplus.audit_event"));
     SecurityContextHolder.clearContext();
   }
 
@@ -157,7 +157,7 @@ class CorrelationIdAuditIntegrationTest extends AbstractTestContainerIntegration
     // deferred correlation binding never applies and the trigger must record a NULL correlation_id.
     Integer rows =
         jdbcTemplate.update(
-            "INSERT INTO hrs.district_volume (area, start_date, end_date, table_data,"
+            "INSERT INTO wasteplus.district_volume (area, start_date, end_date, table_data,"
                 + " table_level_factor, created_by, updated_by, config_type, is_deleted)"
                 + " VALUES (?, ?, ?, ?::jsonb, ?, ?, ?, ?, FALSE)",
             Area.INTERIOR.name(),
@@ -175,14 +175,14 @@ class CorrelationIdAuditIntegrationTest extends AbstractTestContainerIntegration
     assertThat(latestEventId).isGreaterThan(beforeMaxEventId);
     assertThat(
             jdbcTemplate.queryForObject(
-                "SELECT correlation_id FROM hrs.audit_event WHERE audit_event_id = ?",
+                "SELECT correlation_id FROM wasteplus.audit_event WHERE audit_event_id = ?",
                 String.class,
                 latestEventId))
         .as("raw JdbcTemplate write must bypass the Hibernate provider")
         .isNullOrEmpty();
     assertThat(
             jdbcTemplate.queryForObject(
-                "SELECT action FROM hrs.audit_event WHERE audit_event_id = ?",
+                "SELECT action FROM wasteplus.audit_event WHERE audit_event_id = ?",
                 String.class,
                 latestEventId))
         .isEqualTo("CREATE");
@@ -242,12 +242,12 @@ class CorrelationIdAuditIntegrationTest extends AbstractTestContainerIntegration
     // Prove each audit row captured its own correct id — no cross-contamination.
     String fetchedCorr1 =
         jdbcTemplate.queryForObject(
-            "SELECT correlation_id FROM hrs.audit_event WHERE audit_event_id = ?",
+            "SELECT correlation_id FROM wasteplus.audit_event WHERE audit_event_id = ?",
             String.class,
             eventId1);
     String fetchedCorr2 =
         jdbcTemplate.queryForObject(
-            "SELECT correlation_id FROM hrs.audit_event WHERE audit_event_id = ?",
+            "SELECT correlation_id FROM wasteplus.audit_event WHERE audit_event_id = ?",
             String.class,
             eventId2);
     assertThat(fetchedCorr1).isEqualTo(traceId1);
@@ -368,19 +368,19 @@ class CorrelationIdAuditIntegrationTest extends AbstractTestContainerIntegration
     // Final cross-check via direct id lookup to rule out LIMIT 1 ordering flakiness
     assertThat(
             jdbcTemplate.queryForObject(
-                "SELECT correlation_id FROM hrs.audit_event WHERE audit_event_id = ?",
+                "SELECT correlation_id FROM wasteplus.audit_event WHERE audit_event_id = ?",
                 String.class,
                 eventA))
         .isEqualTo(traceIdA);
     assertThat(
             jdbcTemplate.queryForObject(
-                "SELECT correlation_id FROM hrs.audit_event WHERE audit_event_id = ?",
+                "SELECT correlation_id FROM wasteplus.audit_event WHERE audit_event_id = ?",
                 String.class,
                 eventNull))
         .isNullOrEmpty();
     assertThat(
             jdbcTemplate.queryForObject(
-                "SELECT correlation_id FROM hrs.audit_event WHERE audit_event_id = ?",
+                "SELECT correlation_id FROM wasteplus.audit_event WHERE audit_event_id = ?",
                 String.class,
                 eventB))
         .isEqualTo(traceIdB);
@@ -403,7 +403,7 @@ class CorrelationIdAuditIntegrationTest extends AbstractTestContainerIntegration
     //    form — the literal acceptance criterion from issue #1257.
     String functionDef =
         jdbcTemplate.queryForObject(
-            "SELECT pg_get_functiondef('hrs.audit_district_volume_change'::regproc)", String.class);
+            "SELECT pg_get_functiondef('wasteplus.audit_district_volume_change'::regproc)", String.class);
     assertThat(functionDef)
         .as("trigger must read the GUC with missing_ok so an unset GUC does not throw")
         .contains("current_setting('app.correlation_id', true)");
@@ -427,7 +427,7 @@ class CorrelationIdAuditIntegrationTest extends AbstractTestContainerIntegration
     assertThat(latestEventId).isGreaterThan(beforeMaxEventId);
     assertThat(
             jdbcTemplate.queryForObject(
-                "SELECT correlation_id FROM hrs.audit_event WHERE audit_event_id = ?",
+                "SELECT correlation_id FROM wasteplus.audit_event WHERE audit_event_id = ?",
                 String.class,
                 latestEventId))
         .as("no-span write must record NULL correlation_id without throwing")
@@ -463,7 +463,7 @@ class CorrelationIdAuditIntegrationTest extends AbstractTestContainerIntegration
 
   private Long maxAuditEventId() {
     Long max =
-        jdbcTemplate.queryForObject("SELECT MAX(audit_event_id) FROM hrs.audit_event", Long.class);
+        jdbcTemplate.queryForObject("SELECT MAX(audit_event_id) FROM wasteplus.audit_event", Long.class);
     return max != null ? max : 0L;
   }
 
@@ -472,14 +472,14 @@ class CorrelationIdAuditIntegrationTest extends AbstractTestContainerIntegration
     // that).
     // Use a list query to distinguish "no rows" from "null value".
     return jdbcTemplate.queryForObject(
-        "SELECT correlation_id FROM hrs.audit_event ORDER BY audit_event_id DESC LIMIT 1",
+        "SELECT correlation_id FROM wasteplus.audit_event ORDER BY audit_event_id DESC LIMIT 1",
         String.class);
   }
 
   private void assertAuditChangeExistsForEvent(Long eventId) {
     Integer count =
         jdbcTemplate.queryForObject(
-            "SELECT COUNT(*) FROM hrs.audit_change WHERE event_id = ?", Integer.class, eventId);
+            "SELECT COUNT(*) FROM wasteplus.audit_change WHERE event_id = ?", Integer.class, eventId);
     assertThat(count)
         .as("audit_change row must exist for audit_event %d", eventId)
         .isNotNull()

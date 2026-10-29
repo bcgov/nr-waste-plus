@@ -62,6 +62,9 @@ jobs:
       oracledb-port: 1521
       oracledb-servicename: PR_${{ github.event.number }}
       oracledb-username: THE
+      # The per-PR database on the shared data-center PostgreSQL, provisioned and
+      # seeded by the tools workflow for this PR number.
+      postgres-database: wasteplus_pr_${{ github.event.number }}
       # The object storage endpoint is a secret, so it cannot be passed here:
       # reusable-workflow `with:` inputs cannot read the secrets context, and
       # the runner drops job outputs that may contain a secret. The deployment

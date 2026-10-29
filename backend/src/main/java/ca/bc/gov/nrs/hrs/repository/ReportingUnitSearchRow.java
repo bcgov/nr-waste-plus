@@ -19,7 +19,7 @@ public interface ReportingUnitSearchRow {
   Long getBlockId();
 
   /**
-   * The block id: the legacy WAA identity maps 1:1 to {@code hrs.block.block_id} (so this equals
+   * The block id: the legacy WAA identity maps 1:1 to {@code wasteplus.block.block_id} (so this equals
    * {@link #getBlockId()} on block rows); NULL on RU-only rows where the block is null-extended.
    */
   Long getWasteAssessmentAreaId();
@@ -66,7 +66,7 @@ public interface ReportingUnitSearchRow {
    */
   String getStatusCode();
 
-  /** The block's status description from {@code hrs.waa_status_code}; NULL on RU-only rows. */
+  /** The block's status description from {@code wasteplus.waa_status_code}; NULL on RU-only rows. */
   String getStatusName();
 
   /** RU {@code updated_at} (timestamptz); the provider pins the LocalDateTime conversion. */

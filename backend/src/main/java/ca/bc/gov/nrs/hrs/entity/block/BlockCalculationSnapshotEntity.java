@@ -21,7 +21,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 /** Immutable calculation result captured for a block. */
 @Entity
-@Table(name = "block_calculation_snapshot", schema = "hrs")
+@Table(name = "block_calculation_snapshot", schema = "wasteplus")
 @EntityListeners(AuditingEntityListener.class)
 @Getter
 @NoArgsConstructor

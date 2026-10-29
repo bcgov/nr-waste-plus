@@ -144,7 +144,7 @@ public class SearchService {
    * (reportingUnitId, blockId)} live block) — never by numeric id alone, because the legacy WAA id
    * space and the PostgreSQL block id space overlap. A match selects the PostgreSQL expanded query;
    * otherwise the request belongs to the legacy source. The legacy WAA identity maps 1:1 onto
-   * {@code hrs.block.block_id}, so the path's {@code wasteAssessmentAreaId} is the block id on
+   * {@code wasteplus.block.block_id}, so the path's {@code wasteAssessmentAreaId} is the block id on
    * PostgreSQL rows. Sources are never merged and never fall back across each other (DEC-004).
    *
    * @param ruId the reporting unit id
@@ -185,7 +185,7 @@ public class SearchService {
    * <p>Authorization must read the same source the expanded query will read, otherwise a
    * PostgreSQL-only reporting unit would be authorized against a legacy table that has no row. The
    * source is decided by the same block-id-scoped PostgreSQL existence test as the expanded query;
-   * a match reads the client number from {@code hrs.reporting_unit}, otherwise the legacy API is
+   * a match reads the client number from {@code wasteplus.reporting_unit}, otherwise the legacy API is
    * consulted. Never a cross-source merge (DEC-004).
    *
    * @param reportingUnitId the reporting unit id

@@ -635,7 +635,7 @@ class FormulaSetControllerIntegrationTest extends AbstractTestContainerIntegrati
   private void insertSpeciesComposition(String createdBy, String speciesRowsJson) {
     // Species composition is a single shared table: rows are always stored with area INTERIOR.
     jdbcTemplate.execute("""
-        INSERT INTO hrs.district_volume
+        INSERT INTO wasteplus.district_volume
             (area, start_date, end_date, table_data, table_level_factor, heli_multiplier,
              config_type, created_at, created_by, updated_at, updated_by)
         VALUES

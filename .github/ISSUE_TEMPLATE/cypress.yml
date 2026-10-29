@@ -1,25 +1,25 @@
-name: User provided automated tests
-description: Submit Gherkin scenarios to generate .feature files for our test suite.
-title: '[Test Case]: REPLACE WITH YOUR TEST CASE TITLE'
-labels: gherkin, automated test
+name: User provided automated test-case
+description: Propose a Gherkin scenario for the Cypress user-journey test suite.
+title: "[Test Case]: "
+labels: [gherkin]
 body:
   - type: markdown
     attributes:
       value: |
         ## 📝 Gherkin Scenario Submission
 
-        Thank you for contributing! Please provide your Gherkin scenario in the format below. 
+        Thank you for contributing! Please provide your Gherkin scenario in the format below.
 
         ### Gherkin/Cucumber Test Scenario
-        - ✍️ **Write or paste your Gherkin scenario in the first block**:  
+        - ✍️ **Write or paste your Gherkin scenario in the first field**:
           - Ensure the scenario follows the structure of **Given**, **When**, **Then**.
           - Ensure the scenario contains a **Feature** and **Scenario** instruction.
           - You can have multiple **Scenarios** in a single **Feature**.
           - Pay attention to the **indentation** and **keywords**, as misconfigured files will cause issues when executed.
-          - Pay attention to the data you're using in your scenario. Make sure it don't pose a security risk or exposes any **REAL** [personal identifiable information](https://www2.gov.bc.ca/gov/content/governments/services-for-government/information-management-technology/privacy/personal-information).
-          - If you're unsure how to format your scenario, [click here for a guide](https://github.com/bcgov/nr-forest-client/tree/main/cypress#readme).
-        - 🧩 **Additional instructions**:  
-          - Use the second block to provide any **non-default** steps or custom behavior that doesn’t fit into our predefined instructions. You can find a list of ready-made instructions in [our documentation](https://github.com/bcgov/nr-forest-client/tree/main/cypress#readme).
+          - Use fictional or anonymized data. Do not include real personal information or sensitive details. See the [B.C. guidance on personal information](https://www2.gov.bc.ca/gov/content/governments/services-for-government/information-management-technology/privacy/personal-information).
+          - See the [Cypress scenario guide](https://github.com/bcgov/nr-waste-plus/wiki/Writing-Cypress-Test-Scenarios) and [available step reference](https://github.com/bcgov/nr-waste-plus/wiki/Cypress-Step-Reference).
+        - 🧩 **Additional instructions**:
+          - Use the second field for custom behavior or instructions that do not fit the scenario. Check the [Cypress step reference](https://github.com/bcgov/nr-waste-plus/wiki/Cypress-Step-Reference) before requesting a new step.
 
         ### Example
 
@@ -41,9 +41,9 @@ body:
     id: gherkin_scenario
     attributes:
       label: Test Scenario
-      description: 'Please write or paste your Gherkin scenario here.'
+      description: Please write or paste your Gherkin scenario here.
       render: gherkin
-      placeholder: |        
+      placeholder: |
         Feature: [Feature Name]
           Scenario: [Scenario Name]
             Given [some initial context]
@@ -56,9 +56,8 @@ body:
     id: additional_instructions
     attributes:
       label: Additional Instructions
-      description: 'Please provide any additional instructions or custom behavior that doesn’t fit into our predefined instructions.'      
-      render: shell
-      placeholder: |        
+      description: Please provide any additional instructions or custom behavior that does not fit the scenario.
+      placeholder: |
         - [Instruction 1] - [Description]
         - [I can choose "rock" as the word] - User can provide a custom word to guess.
     validations:

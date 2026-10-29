@@ -50,8 +50,8 @@ spring:
       leakDetectionThreshold: 60000
       connection-test-query: SELECT 1
   flyway:
-    schemas: hrs
-    default-schema: hrs
+    schemas: wasteplus
+    default-schema: wasteplus
     baseline-on-migrate: true
   jpa:
     open-in-view: false
