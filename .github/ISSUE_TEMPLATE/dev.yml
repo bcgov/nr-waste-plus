@@ -1,7 +1,7 @@
 name: Developer Task
 description: Use this template to request a development task.
 title: "[DEV TASK]: "
-labels: [development, task]
+labels: [enhancement]
 body:
   - type: markdown
     attributes:
@@ -13,6 +13,8 @@ body:
     attributes:
       label: Task Summary
       placeholder: Provide a concise summary of the task.
+    validations:
+      required: true
 
   - type: textarea
     id: task_details
@@ -20,6 +22,8 @@ body:
       label: Task Details
       description: Describe the task requirements and technical details. Markdown formatting is supported.
       placeholder: Include any specifications, dependencies, or constraints.
+    validations:
+      required: true
 
   - type: checkboxes
     id: environment

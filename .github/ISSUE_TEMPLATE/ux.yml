@@ -1,12 +1,12 @@
 name: UX Designer Task
 description: Submit tasks for UX design, including Figma URLs, descriptions, and screenshots.
 title: "[UX TASK]: "
-labels: [ux, design]
+labels: [enhancement]
 body:
   - type: markdown
     attributes:
       value: |
-        **Please provide the necessary details for the UX design task.**  
+        **Please provide the necessary details for the UX design task.**
         Ensure all required fields are filled out to avoid delays.
 
   - type: input
@@ -22,6 +22,8 @@ body:
       label: Task Description
       description: Provide a detailed description of the task. Markdown formatting is supported.
       placeholder: Include goals, requirements, and key details.
+    validations:
+      required: true
 
   - type: textarea
     id: screenshots
@@ -29,7 +31,6 @@ body:
       label: Screenshots
       description: Paste URLs to relevant screenshots or attach image links. (Optional)
       placeholder: e.g., https://imgur.com/example
-      render: shell
 
   - type: textarea
     id: additional_info
