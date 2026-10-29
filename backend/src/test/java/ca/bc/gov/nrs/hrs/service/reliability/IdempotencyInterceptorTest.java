@@ -384,6 +384,12 @@ class IdempotencyInterceptorTest {
         .isEqualTo(IdempotencyService.STATUS_COMPLETED);
   }
 
+  /**
+   * Fast unit-level simulation of race condition using an in-memory repository double.
+   *
+   * <p>See {@link IdempotencyIntegrationTest} for the end-to-end integration test exercising
+   * PostgreSQL unique constraint races and transaction rollback under concurrency.
+   */
   @Test
   @DisplayName("race condition: concurrent duplicates execute mutation exactly once")
   void shouldHandleConcurrentRaceCondition() throws Exception {
@@ -429,6 +435,12 @@ class IdempotencyInterceptorTest {
     assertThat(successCount + conflictCount).isEqualTo(concurrency);
   }
 
+  /**
+   * Fast unit-level simulation of atomic rollback on snapshot persistence failure.
+   *
+   * <p>See {@link IdempotencyIntegrationTest} for the end-to-end integration test verifying
+   * real PostgreSQL transaction rollback.
+   */
   @Test
   @DisplayName("rolls back business mutation if snapshot persistence or completion fails")
   void shouldRollbackMutationWhenCompletionFails() throws Exception {
