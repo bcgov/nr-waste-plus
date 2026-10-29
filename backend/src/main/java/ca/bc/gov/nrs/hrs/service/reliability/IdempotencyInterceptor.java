@@ -39,7 +39,9 @@ import org.springframework.web.util.ContentCachingResponseWrapper;
  * Filter interceptor that wraps mutating HTTP endpoints and manages the Idempotency-Key protocol.
  *
  * <p>Key claim, response replay, conflict detection, and snapshot persistence are coordinated
- * atomically with the request lifecycle.
+ * atomically with the request lifecycle for local database transactions. Handlers that orchestrate
+ * external remote writes provide service-level reconciliation to maintain consistency across
+ * retries without distributed two-phase commit.
  */
 @Component
 @Order(Ordered.LOWEST_PRECEDENCE - 10)

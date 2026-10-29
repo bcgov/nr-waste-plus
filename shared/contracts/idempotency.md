@@ -77,6 +77,10 @@ The database tracks keys in `hrs.idempotency_record`:
 * **`IN_PROGRESS`**: Set upon initial claim within the shared database transaction.
 * **`COMPLETED`**: Set upon successful completion (HTTP 2xx) along with `response_status`, endpoint-required response headers (such as `Location`), and `response_snapshot` (JSONB), committing atomically with the business mutation.
 
+### Transactional Boundaries & Dual-Writes
+* **Local Transactions**: The middleware guarantees ACID atomicity across key claim, business mutation, and response snapshot persistence for mutations that operate within the local PostgreSQL database. If any step fails, the local transaction rolls back, releasing the key for a safe retry.
+* **Dual-Writes & Remote Calls**: When an operation orchestrates external I/O (such as `POST /api/reporting-units` creating an entity in the remote legacy API before persisting locally), local database rollbacks cannot undo external side effects. Such dual-write endpoints coordinate recovery through service-level reconciliation (e.g., detecting and linking uncommitted remote records on retry) to achieve eventual consistency across retries without distributed two-phase commit.
+
 | Scenario | Condition | Backend Behavior |
 | --- | --- | --- |
 | **Initial Request** | Key not in DB | Key is claimed (`IN_PROGRESS`) in a shared transaction with the business mutation. On 2xx, the claim is completed with status code, endpoint response headers (`Location`), and body snapshot, committing atomically. |

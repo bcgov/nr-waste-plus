@@ -612,6 +612,7 @@ class ReportingUnitServiceTest {
     when(legacyApiProvider.searchReportingUnit(
             org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any()))
         .thenReturn(new PageImpl<>(List.of(existingResult), PageRequest.of(0, 1), 1));
+    when(reportingUnitRepository.existsById(1L)).thenReturn(true);
 
     // Act & Assert
     assertThatThrownBy(() -> reportingUnitService.createReportingUnit(request))
@@ -621,6 +622,46 @@ class ReportingUnitServiceTest {
                 assertThat(((ResponseStatusException) e).getStatusCode())
                     .isEqualTo(org.springframework.http.HttpStatus.CONFLICT));
     verify(reportingUnitRepository, never()).saveAndFlush(any());
+    verify(legacyApiProvider, never()).createReportingUnit(any());
+  }
+
+  @Test
+  @DisplayName("shouldReconcileUncommittedLegacyReportingUnit_whenMissingLocally")
+  void shouldReconcileUncommittedLegacyReportingUnit_whenMissingLocally() {
+    var request =
+        new ca.bc.gov.nrs.hrs.dto.reportingunit.CreateReportingUnitRequestDto(
+            CLIENT_NUMBER, "DND", "AVG", null);
+
+    var existingResult =
+        new ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchResultDto(
+            "1",
+            26L,
+            "",
+            36834L,
+            new ca.bc.gov.nrs.hrs.dto.base.CodeDescriptionDto(CLIENT_NUMBER, null),
+            null,
+            null,
+            null,
+            false,
+            false,
+            new ca.bc.gov.nrs.hrs.dto.base.CodeDescriptionDto("S01", "Sample"),
+            new ca.bc.gov.nrs.hrs.dto.base.CodeDescriptionDto("DND", "Nadina"),
+            new ca.bc.gov.nrs.hrs.dto.base.CodeDescriptionDto("DFT", "Draft"),
+            LocalDateTime.now(),
+            false);
+
+    when(legacyApiProvider.searchReportingUnit(
+            org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any()))
+        .thenReturn(new PageImpl<>(List.of(existingResult), PageRequest.of(0, 1), 1));
+    when(reportingUnitRepository.existsById(1L)).thenReturn(false);
+    when(reportingUnitRepository.findById(1L)).thenReturn(Optional.empty());
+
+    // Act
+    Long resultId = reportingUnitService.createReportingUnit(request);
+
+    // Assert: reconciles locally without calling remote create again
+    assertThat(resultId).isEqualTo(1L);
+    verify(reportingUnitRepository).saveAndFlush(any());
     verify(legacyApiProvider, never()).createReportingUnit(any());
   }
 
