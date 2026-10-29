@@ -6,7 +6,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        **Need help or clarification?**  
+        **Need help or clarification?**
         Use this template to ask technical, general, or project-related questions.
 
   - type: input
@@ -15,6 +15,8 @@ body:
       label: Question Summary
       description: Provide a concise summary of your question.
       placeholder: e.g., How does the authentication flow work?
+    validations:
+      required: true
 
   - type: textarea
     id: question_details
@@ -22,7 +24,8 @@ body:
       label: Details
       description: Provide more details or context about your question.
       placeholder: e.g., Include related context, code snippets, or links to documentation if applicable.
-      render: shell
+    validations:
+      required: true
 
   - type: checkboxes
     id: question_type
@@ -41,4 +44,3 @@ body:
       label: Additional Context (Optional)
       description: Add any additional notes or relevant information.
       placeholder: e.g., links to related issues or features.
-      render: shell

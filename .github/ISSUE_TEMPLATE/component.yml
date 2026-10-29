@@ -4,7 +4,7 @@ description: >-
   page. Structured so an AI coding agent (or a human) has everything needed
   to implement, test, and open a PR without further clarification.
 title: "[FE]: "
-labels: [frontend, agent-task]
+labels: [frontend]
 body:
   - type: markdown
     attributes:
@@ -160,6 +160,5 @@ body:
     attributes:
       label: Additional Context
       description: Anything else — related tickets, screenshots, design notes.
-      render: shell
     validations:
       required: false
