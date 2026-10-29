@@ -6,7 +6,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        **Document a key decision.**  
+        **Document a key decision.**
         This template helps clarify changes in project direction or priorities.
 
   - type: input
@@ -15,6 +15,8 @@ body:
       label: Decision Summary
       description: Summarize the decision being made.
       placeholder: e.g., Switch to microservices architecture.
+    validations:
+      required: true
 
   - type: textarea
     id: decision_context
@@ -22,6 +24,8 @@ body:
       label: Context
       description: Explain why this decision is being made.
       placeholder: e.g., Include background information, alternatives considered, or constraints.
+    validations:
+      required: true
 
   - type: textarea
     id: impacted_areas
@@ -29,7 +33,6 @@ body:
       label: Impacted Areas
       description: Describe what parts of the project will be affected by this decision.
       placeholder: e.g., Deployment strategy, team workflow, specific components, etc.
-      render: shell
 
   - type: textarea
     id: decision_details
@@ -37,7 +40,8 @@ body:
       label: Details
       description: Provide specific details about the decision.
       placeholder: e.g., Implementation plan, timeline, or expected outcomes.
-      render: shell
+    validations:
+      required: true
 
   - type: textarea
     id: risks
@@ -45,7 +49,6 @@ body:
       label: Risks and Mitigation
       description: Outline any risks associated with this decision and how to address them.
       placeholder: e.g., Delayed timelines, increased costs, or technical challenges.
-      render: shell
 
   - type: textarea
     id: additional_context
@@ -53,4 +56,3 @@ body:
       label: Additional Context (Optional)
       description: Add any supplementary notes, related tickets, or links.
       placeholder: e.g., Links to relevant documentation or meeting notes.
-      render: shell
