@@ -1,0 +1,4 @@
+name: "CodeQL Legacy"
+
+paths:
+  - legacy

@@ -1,0 +1,5 @@
+name: "CodeQL Frontend"
+
+paths:
+  - frontend
+  - cypress
