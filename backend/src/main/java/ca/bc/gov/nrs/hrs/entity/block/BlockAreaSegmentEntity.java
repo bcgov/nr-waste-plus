@@ -18,7 +18,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 /** Area or road segment used by a submission block. */
 @Entity
-@Table(name = "block_area_segment", schema = "hrs")
+@Table(name = "block_area_segment", schema = "wasteplus")
 @EntityListeners(AuditingEntityListener.class)
 @Getter
 @Setter

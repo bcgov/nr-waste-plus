@@ -128,7 +128,7 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
           populatedBlockId = 987000003L;
           jdbcTemplate.update(
                   """
-                  INSERT INTO hrs.block
+                  INSERT INTO wasteplus.block
                       (block_id, reporting_unit_id, block_type, created_by, updated_by)
                   VALUES (987000003, ?, 'DISTRICT_AVERAGE', ?, ?)
                   """,
@@ -137,7 +137,7 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
                   fixtureActor);
           jdbcTemplate.update(
               """
-              INSERT INTO hrs.district_average_block
+              INSERT INTO wasteplus.district_average_block
                   (district_average_block_id, coast_ground_based_area_ha,
                    coast_helicopter_area_ha, has_dispersed_retention, is_heli_logging,
                    created_by, updated_by)
@@ -148,7 +148,7 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
               fixtureActor);
           jdbcTemplate.update(
               """
-              INSERT INTO hrs.block_mark
+              INSERT INTO wasteplus.block_mark
                   (block_id, mark_type, sequence_no, mark, forest_file_id,
                    timber_mark, cutting_permit_id, cut_block_id, created_by, updated_by)
               VALUES (?, 'PRIMARY', 0, 'TM-TEST', 'FILE-TEST', 'TM-TEST',
@@ -159,7 +159,7 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
               fixtureActor);
           jdbcTemplate.update(
               """
-              INSERT INTO hrs.block_submitter
+              INSERT INTO wasteplus.block_submitter
                   (block_id, submitter_id, submitter_name, first_name, last_name,
                    created_by, updated_by)
               VALUES (?, 'test-user', 'Block List Test Submitter', 'Test', 'Submitter', ?, ?)
@@ -169,7 +169,7 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
               fixtureActor);
           jdbcTemplate.update(
               """
-              INSERT INTO hrs.status_event
+              INSERT INTO wasteplus.status_event
                   (block_id, status, event_type, created_at, updated_at, created_by, updated_by)
               VALUES (?, 'APP', 'SUBMISSION', NOW() + INTERVAL '1 day',
                       NOW() + INTERVAL '1 day', ?, ?)
@@ -184,17 +184,17 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
   void removeBlockListDatabaseFixtures() {
     transactionTemplate.executeWithoutResult(
         transaction -> {
-          jdbcTemplate.update("DELETE FROM hrs.status_event WHERE created_by = ?", fixtureActor);
-          jdbcTemplate.update("DELETE FROM hrs.block_submitter WHERE created_by = ?", fixtureActor);
-          jdbcTemplate.update("DELETE FROM hrs.block_mark WHERE created_by = ?", fixtureActor);
+          jdbcTemplate.update("DELETE FROM wasteplus.status_event WHERE created_by = ?", fixtureActor);
+          jdbcTemplate.update("DELETE FROM wasteplus.block_submitter WHERE created_by = ?", fixtureActor);
+          jdbcTemplate.update("DELETE FROM wasteplus.block_mark WHERE created_by = ?", fixtureActor);
           jdbcTemplate.update(
-              "DELETE FROM hrs.district_average_block WHERE created_by = ?", fixtureActor);
-          jdbcTemplate.update("DELETE FROM hrs.block WHERE created_by = ?", fixtureActor);
-          jdbcTemplate.update("DELETE FROM hrs.reporting_unit WHERE created_by = ?", fixtureActor);
+              "DELETE FROM wasteplus.district_average_block WHERE created_by = ?", fixtureActor);
+          jdbcTemplate.update("DELETE FROM wasteplus.block WHERE created_by = ?", fixtureActor);
+          jdbcTemplate.update("DELETE FROM wasteplus.reporting_unit WHERE created_by = ?", fixtureActor);
           for (Long id : createdReportingUnitIds) {
-            jdbcTemplate.update("DELETE FROM hrs.status_event WHERE reporting_unit_id = ?", id);
-            jdbcTemplate.update("DELETE FROM hrs.block WHERE reporting_unit_id = ?", id);
-            jdbcTemplate.update("DELETE FROM hrs.reporting_unit WHERE reporting_unit_id = ?", id);
+            jdbcTemplate.update("DELETE FROM wasteplus.status_event WHERE reporting_unit_id = ?", id);
+            jdbcTemplate.update("DELETE FROM wasteplus.block WHERE reporting_unit_id = ?", id);
+            jdbcTemplate.update("DELETE FROM wasteplus.reporting_unit WHERE reporting_unit_id = ?", id);
           }
           createdReportingUnitIds.clear();
         });
@@ -203,7 +203,7 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
   private Long insertReportingUnit(Long reportingUnitId, String locationCode) {
     jdbcTemplate.update(
         """
-        INSERT INTO hrs.reporting_unit
+        INSERT INTO wasteplus.reporting_unit
             (reporting_unit_id, client_number, client_locn_code, geographic_code, created_by, updated_by)
         VALUES (?, '00012797', ?, 'DND', ?, ?)
         """,

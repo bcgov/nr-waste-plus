@@ -218,7 +218,7 @@ class SubmissionPersistenceIntegrationTest extends AbstractTestContainerIntegrat
 
   private Long districtVolumeId() {
     return jdbcTemplate.queryForObject(
-        "SELECT district_volume_id FROM hrs.district_volume ORDER BY district_volume_id LIMIT 1",
+        "SELECT district_volume_id FROM wasteplus.district_volume ORDER BY district_volume_id LIMIT 1",
         Long.class);
   }
 

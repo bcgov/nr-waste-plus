@@ -88,156 +88,21 @@ jobs:
           path: /usr/local/bin/oc
           key: oc-cli-stable-4.18-${{ runner.os }}-${{ runner.arch }}
 
+      - name: Checkout repository for MinIO verification script
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
       - name: Seed MinIO bucket and verify presigned PUT and GET
         env:
           OC_SERVER: ${{ secrets.oc_server }}
           OC_TOKEN: ${{ secrets.oc_token_tools }}
           OC_NAMESPACE: cffaf3-tools
           PR_NUMBER: ${{ github.event.number }}
+          GITHUB_RUN_ATTEMPT: ${{ github.run_attempt }}
           OC_CLI_VERSION: "4.18"
           OBJECT_STORAGE_BUCKET: ${{ secrets.OBJECT_STORAGE_BUCKET || 'nr-waste' }}-pr-${{ github.event.number }}
-        run: |
-          set -uo pipefail
-
-          # Every oc call carries a request timeout. The API endpoint
-          # occasionally drops connections, and without a timeout the client
-          # waits on the socket forever instead of failing over to the retry
-          # and poll logic below.
-          OC="oc --request-timeout=15s"
-
-          if ! command -v oc >/dev/null 2>&1; then
-            URL="https://mirror.openshift.com/pub/openshift-v4/clients/ocp/stable-${OC_CLI_VERSION}/openshift-client-linux.tar.gz"
-            echo "Downloading OpenShift CLI from ${URL}..."
-            wget --timeout=15 --tries=3 "${URL}" -qO oc.tar.gz || {
-              echo "::error::Failed to download the OpenShift CLI."
-              exit 1
-            }
-            tar -xzf oc.tar.gz oc || {
-              rm -f oc.tar.gz
-              echo "::error::Failed to extract the OpenShift CLI."
-              exit 1
-            }
-            rm -f oc.tar.gz
-            sudo mv oc /usr/local/bin/oc
-          fi
-
-          # Retry a command until it succeeds or the attempt budget is spent.
-          retry() {
-            local attempts="$1"; shift
-            local attempt=1
-            until "$@"; do
-              if [ "${attempt}" -ge "${attempts}" ]; then
-                echo "::error::Command failed after ${attempts} attempt(s): $*"
-                return 1
-              fi
-              echo "Attempt ${attempt}/${attempts} failed; retrying in $((attempt * 5))s..."
-              sleep $((attempt * 5))
-              attempt=$((attempt + 1))
-            done
-          }
-
-          JOB_TEMPLATE="nr-waste-plus-tools-minio-presign"
-          JOB_NAME="minio-presign-pr${PR_NUMBER}-${{ github.run_attempt }}-$(date +%s)"
-
-          login() {
-            ${OC} login --server="${OC_SERVER}" --token="${OC_TOKEN}"
-          }
-
-          create_job() {
-            local rendered patched
-            rendered=$(${OC} create job --from="cronjob/${JOB_TEMPLATE}" "${JOB_NAME}" -n "${OC_NAMESPACE}" --dry-run=client -o yaml) || return 1
-            patched=$(echo "${rendered}" | sed "/name: PR_NUMBER/{n;s/value: \"0\"/value: \"${PR_NUMBER}\"/;}")
-            echo "${patched}" | grep -q "value: \"${PR_NUMBER}\"" || {
-              echo "::error::PR_NUMBER was not patched into the ${JOB_NAME} job template."
-              return 1
-            }
-            echo "${patched}" | ${OC} apply -f -
-          }
-
-          echo "Logging in to ${OC_SERVER}..."
-          retry 8 login || exit 1
-
-          # Remove only this PR's bucket, leaving the shared MinIO server and
-          # the base bucket intact for other open PRs. This is best effort: the
-          # verification job below recreates the bucket, so an unreachable
-          # server must not stop it.
-          remove_bucket() {
-            local pod_name
-            pod_name=$(${OC} get pods -n "${OC_NAMESPACE}" -l app=nr-waste-plus-tools \
-              -l deployment=nr-waste-plus-tools-minio -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || true)
-            if [ -z "${pod_name}" ]; then
-              echo "MinIO pod not found; skipping bucket removal."
-              return 0
-            fi
-            # The inner script runs inside the container, where these
-            # variables exist, so single quotes are deliberate.
-            # shellcheck disable=SC2016
-            ${OC} exec "${pod_name}" -n "${OC_NAMESPACE}" -c minio-init -- sh -c '
-              mc --config-dir /tmp/.mc alias set local http://localhost:9000 "$MINIO_ROOT_USER" "$MINIO_ROOT_PASSWORD" >/dev/null 2>&1 || exit 0
-              mc --config-dir /tmp/.mc rm --recursive --force local/"$1" >/dev/null 2>&1 || true
-              mc --config-dir /tmp/.mc rb --force local/"$1" >/dev/null 2>&1 || true
-            ' _ "${OBJECT_STORAGE_BUCKET}" || true
-            echo "Removed bucket ${OBJECT_STORAGE_BUCKET} (if it existed)."
-          }
-          retry 2 remove_bucket || echo "::warning::Could not remove ${OBJECT_STORAGE_BUCKET}; continuing."
-
-          echo "Creating in-cluster verification job ${JOB_NAME}..."
-          retry 8 create_job || exit 1
-
-          # Block on the Job with watches instead of polling: oc wait returns the
-          # moment the Job reports a condition. Completion and failure are
-          # watched together, and the status is re-read afterwards so a dropped
-          # watch only costs another round, not a false result. The watches use
-          # plain oc because --request-timeout would cut them short.
-          wait_for_job() {
-            local job="$1" deadline remaining ok_pid fail_pid counts
-            deadline=$(( $(date +%s) + $2 ))
-            succeeded=0
-            failed=0
-            while [ "$(date +%s)" -lt "${deadline}" ]; do
-              remaining=$(( deadline - $(date +%s) ))
-              oc wait --for=condition=complete "job/${job}" -n "${OC_NAMESPACE}" --timeout="${remaining}s" >/dev/null 2>&1 &
-              ok_pid=$!
-              oc wait --for=condition=failed "job/${job}" -n "${OC_NAMESPACE}" --timeout="${remaining}s" >/dev/null 2>&1 &
-              fail_pid=$!
-              # Stop as soon as either watch has returned. Checking the local
-              # PIDs makes no API calls.
-              while kill -0 "${ok_pid}" 2>/dev/null && kill -0 "${fail_pid}" 2>/dev/null; do
-                sleep 1
-              done
-              kill "${ok_pid}" "${fail_pid}" 2>/dev/null || true
-              wait "${ok_pid}" "${fail_pid}" 2>/dev/null || true
-
-              counts=$(${OC} get job "${job}" -n "${OC_NAMESPACE}" \
-                -o jsonpath='{.status.succeeded}/{.status.failed}' 2>/dev/null || true)
-              succeeded="${counts%%/*}"
-              failed="${counts##*/}"
-              succeeded="${succeeded:-0}"
-              failed="${failed:-0}"
-              if [ "${succeeded}" -ge 1 ] || [ "${failed}" -ge 1 ]; then
-                return 0
-              fi
-              echo "Waiting for job ${job} (succeeded=${succeeded}, failed=${failed})..."
-              sleep 2
-            done
-          }
-
-          wait_for_job "${JOB_NAME}" 300
-
-          echo "--- job logs ---"
-          ${OC} logs "job/${JOB_NAME}" -n "${OC_NAMESPACE}" --tail=100 || true
-          if [ "${succeeded}" -lt 1 ]; then
-            echo "--- job description ---"
-            ${OC} describe "job/${JOB_NAME}" -n "${OC_NAMESPACE}" || true
-          fi
-          ${OC} delete "job/${JOB_NAME}" -n "${OC_NAMESPACE}" --ignore-not-found || true
-
-          if [ "${succeeded}" -lt 1 ]; then
-            echo "::error::Presigned PUT and GET verification failed for PR ${PR_NUMBER} (succeeded=${succeeded}, failed=${failed})."
-            exit 1
-          fi
-
-          echo "Presigned PUT and GET verified for PR ${PR_NUMBER}."
+        run: bash .github/scripts/seed-minio-bucket.sh
 
   deploy-postgres:
     name: Deploy PostgreSQL
@@ -306,99 +171,42 @@ jobs:
             -p POSTGRES_USERNAME="$POSTGRES_USERNAME"
             -p POSTGRES_PASSWORD="$POSTGRES_PASSWORD"
 
+      - name: Stop the backend service
+        uses: bcgov/action-oc-runner@111868d1fc50db0a40417ba321d865ef5c931bbd # v1.7.0
+        env:
+          STOP_NAMESPACE: ${{ secrets.OC_NAMESPACE }}
+          STOP_DEPLOYMENT: nr-waste-plus-${{ github.event.number }}-backend
+        with:
+          oc_namespace: ${{ secrets.oc_namespace }}
+          oc_server: ${{ secrets.oc_server }}
+          oc_token: ${{ secrets.oc_token }}
+          login_attempts: "8"
+          commands: bash .github/scripts/manage-deployment.sh stop "$STOP_NAMESPACE" "$STOP_DEPLOYMENT" --wait
+
       - name: Remove, create and migrate PR PostgreSQL database
         uses: bcgov/action-oc-runner@111868d1fc50db0a40417ba321d865ef5c931bbd # v1.7.0
+        env:
+          PR_NUMBER: ${{ github.event.number }}
+          PR_BRANCH: ${{ github.head_ref }}
+          RUN_ATTEMPT: ${{ github.run_attempt }}
         with:
           oc_namespace: cffaf3-tools
           oc_server: ${{ secrets.oc_server }}
           oc_token: ${{ secrets.oc_token_tools }}
           login_attempts: "8"
-          commands: |
-            set -uo pipefail
+          commands: bash .github/scripts/run-postgres-lifecycle.sh cffaf3-tools "$PR_NUMBER" "$PR_BRANCH" "$RUN_ATTEMPT"
 
-            NS="cffaf3-tools"
-            PR="${{ github.event.number }}"
-            BRANCH_NAME="${{ github.head_ref }}"
-            ESCAPED_BRANCH_NAME=$(echo "${BRANCH_NAME}" | sed 's/[\/&]/\\&/g')
-
-            # Block on the Job with watches instead of polling: oc wait returns the
-            # moment the Job reports a condition. Completion and failure are
-            # watched together, and the status is re-read once afterwards so a
-            # dropped watch only costs another round, not a false result.
-            wait_for_job() {
-              local job="$1" deadline remaining ok_pid fail_pid counts
-              deadline=$(( $(date +%s) + $2 ))
-              succeeded=0
-              failed=0
-              while [ "$(date +%s)" -lt "${deadline}" ]; do
-                remaining=$(( deadline - $(date +%s) ))
-                oc wait --for=condition=complete "job/${job}" -n "${NS}" --timeout="${remaining}s" >/dev/null 2>&1 &
-                ok_pid=$!
-                oc wait --for=condition=failed "job/${job}" -n "${NS}" --timeout="${remaining}s" >/dev/null 2>&1 &
-                fail_pid=$!
-                # Stop as soon as either watch has returned. Checking the local
-                # PIDs makes no API calls.
-                while kill -0 "${ok_pid}" 2>/dev/null && kill -0 "${fail_pid}" 2>/dev/null; do
-                  sleep 1
-                done
-                kill "${ok_pid}" "${fail_pid}" 2>/dev/null || true
-                wait "${ok_pid}" "${fail_pid}" 2>/dev/null || true
-
-                counts=$(oc get "job/${job}" -n "${NS}" -o jsonpath='{.status.succeeded}/{.status.failed}' 2>/dev/null || true)
-                succeeded="${counts%%/*}"
-                failed="${counts##*/}"
-                succeeded="${succeeded:-0}"
-                failed="${failed:-0}"
-                if [ "${succeeded}" -ge 1 ] || [ "${failed}" -ge 1 ]; then
-                  return 0
-                fi
-                echo "Waiting for job ${job} (succeeded=${succeeded}, failed=${failed})..."
-                sleep 2
-              done
-            }
-
-            # Run each lifecycle CronJob in order and stop before the next stage
-            # if the current Job fails.
-            run_job() {
-              CRONJOB="nr-waste-plus-pr${PR}-$1"
-              JOB="$1-pr${PR}-${{ github.run_attempt }}-$(date +%s)"
-
-              # The OpenShift API intermittently times out from GitHub runners,
-              # so creating the Job is retried. The Job name is fixed above, so
-              # a retry can never start a second copy.
-              created=0
-              for attempt in 1 2 3 4 5 6 7 8; do
-                if RENDERED=$(oc create job --from="cronjob/${CRONJOB}" "${JOB}" --dry-run=client -o yaml) \
-                  && printf '%s\n' "${RENDERED}" \
-                    | sed "s/value: \"0\"/value: \"${PR}\"/g" \
-                    | sed "s/value: main/value: ${ESCAPED_BRANCH_NAME}/g" \
-                    | oc apply -n "${NS}" -f -; then
-                  created=1
-                  break
-                fi
-                echo "Could not create job ${JOB} (attempt ${attempt}/8); retrying..."
-                sleep $(( attempt * 5 > 30 ? 30 : attempt * 5 ))
-              done
-              if [ "${created}" -ne 1 ]; then
-                echo "::error::Could not create job ${JOB}."
-                exit 1
-              fi
-
-              wait_for_job "${JOB}" 900
-
-              echo "--- logs for ${JOB} ---"
-              oc logs "job/${JOB}" -n "${NS}" --tail=200 || true
-              if [ "${succeeded}" -lt 1 ]; then
-                echo "--- description of ${JOB} ---"
-                oc describe "job/${JOB}" -n "${NS}" || true
-                echo "::error::Job ${JOB} failed (succeeded=${succeeded}, failed=${failed})."
-                exit 1
-              fi
-            }
-
-            run_job removepg
-            run_job createpg
-            run_job migratepg
+      - name: Start the Backend Service
+        uses: bcgov/action-oc-runner@111868d1fc50db0a40417ba321d865ef5c931bbd # v1.7.0
+        env:
+          START_NAMESPACE: ${{ secrets.OC_NAMESPACE }}
+          START_DEPLOYMENT: nr-waste-plus-${{ github.event.number }}-backend
+        with:
+          oc_namespace: ${{ secrets.oc_namespace }}
+          oc_token: ${{ secrets.oc_token }}
+          login_attempts: "8"
+          oc_server: ${{ secrets.oc_server }}
+          commands: bash .github/scripts/manage-deployment.sh start "$START_NAMESPACE" "$START_DEPLOYMENT"
 
   deploy-oracle:
     name: Deploy Oracle Database
@@ -434,279 +242,41 @@ jobs:
 
       - name: Stop the legacy service
         uses: bcgov/action-oc-runner@111868d1fc50db0a40417ba321d865ef5c931bbd # v1.7.0
+        env:
+          STOP_NAMESPACE: ${{ secrets.OC_NAMESPACE }}
+          STOP_DEPLOYMENT: nr-waste-plus-${{ github.event.number }}-legacy
         with:
           oc_namespace: ${{ secrets.oc_namespace }}
           oc_server: ${{ secrets.oc_server }}
           oc_token: ${{ secrets.oc_token }}
           login_attempts: "8"
-          commands: |
-            set -uo pipefail
-
-            NS="${{ secrets.OC_NAMESPACE }}"
-            LEGACY="nr-waste-plus-${{ github.event.number }}-legacy"
-
-            # Only "NotFound" means the PR app has never been deployed, so there
-            # is nothing holding the pluggable database. A refused or timed-out
-            # API connection says nothing about the app, so it is retried
-            # instead of being read as "absent" and skipping the stop.
-            exists=""
-            for attempt in 1 2 3 4 5 6; do
-              if out=$(oc get "deployment/${LEGACY}" -n "${NS}" -o name 2>&1); then
-                exists="yes"
-                break
-              fi
-              if printf '%s' "${out}" | grep -qi 'NotFound'; then
-                exists="no"
-                break
-              fi
-              echo "Could not check ${LEGACY} (attempt ${attempt}/6); retrying..."
-              sleep $((attempt * 5))
-            done
-            if [ -z "${exists}" ]; then
-              echo "::error::Could not reach the OpenShift API to check ${LEGACY}."
-              exit 1
-            fi
-            if [ "${exists}" = "no" ]; then
-              echo "Deployment ${LEGACY} does not exist yet; nothing to stop."
-              exit 0
-            fi
-
-            scaled=0
-            for attempt in 1 2 3 4 5 6; do
-              if oc scale "deployment/${LEGACY}" --replicas=0 -n "${NS}"; then
-                scaled=1
-                break
-              fi
-              echo "Could not scale ${LEGACY} (attempt ${attempt}/6); retrying..."
-              sleep $((attempt * 5))
-            done
-            if [ "${scaled}" -ne 1 ]; then
-              echo "::error::Could not scale ${LEGACY} down."
-              exit 1
-            fi
-
-            # A failed read is not "zero replicas": only a successful read that
-            # reports no available replicas means the app is stopped.
-            deadline=$(( $(date +%s) + 300 ))
-            while [ "$(date +%s)" -lt "${deadline}" ]; do
-              if available=$(oc get "deployment/${LEGACY}" -n "${NS}" -o jsonpath='{.status.availableReplicas}' 2>/dev/null); then
-                if [ "${available:-0}" -eq 0 ]; then
-                  echo "Deployment ${LEGACY} is stopped."
-                  exit 0
-                fi
-                echo "Waiting for ${LEGACY} to stop (${available} pod(s) still available)..."
-              else
-                echo "Could not read ${LEGACY}; retrying..."
-              fi
-              sleep 5
-            done
-
-            echo "::error::Deployment ${LEGACY} did not scale to zero within 5 minutes."
-            exit 1
+          commands: bash .github/scripts/manage-deployment.sh stop "$STOP_NAMESPACE" "$STOP_DEPLOYMENT" --wait
 
       - name: Reset and migrate the PR database
         uses: bcgov/action-oc-runner@111868d1fc50db0a40417ba321d865ef5c931bbd # v1.7.0
+        env:
+          PR_NUMBER: ${{ github.event.number }}
+          PR_BRANCH: ${{ github.head_ref }}
+          RUN_ATTEMPT: ${{ github.run_attempt }}
+          ORACLEDB_PASSWORD: ${{ secrets.ORACLEDB_PASSWORD }}
         with:
           oc_namespace: cffaf3-tools
           oc_server: ${{ secrets.oc_server }}
           oc_token: ${{ secrets.oc_token_tools }}
           login_attempts: "8"
-          commands: |
-            set -uo pipefail
-
-            NS="cffaf3-tools"
-            PR="${{ github.event.number }}"
-            BRANCH_NAME="${{ github.head_ref }}"
-            ESCAPED_BRANCH_NAME=$(echo "${BRANCH_NAME}" | sed 's/[\/&]/\\&/g')
-
-            # Only the legacy database pod can remove or create a pluggable
-            # database, so wait for it once here instead of repeating the loop
-            # before every command.
-            POD_NAME=""
-            for i in {1..10}; do
-              POD_NAME=$(oc get pods -n "${NS}" -l app=nr-waste-plus-tools -l deployment=nr-waste-plus-tools-legacydb \
-                -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || true)
-              if [ -n "${POD_NAME}" ]; then
-                echo "Legacy database pod found: ${POD_NAME}"
-                break
-              fi
-              echo "Legacy database pod not found, retrying in 10 seconds... (${i}/10)"
-              sleep 10
-            done
-            if [ -z "${POD_NAME}" ]; then
-              echo "::error::The legacy database pod never appeared, so PR_${PR} could not be reset."
-              exit 1
-            fi
-
-            # The OpenShift API intermittently refuses connections from GitHub
-            # runners. A refused connection must not be mistaken for the
-            # command's own answer (for example "it already exists"), so only
-            # connection errors are retried; any other failure is returned.
-            oc_exec_retry() {
-              local attempt out rc
-              for attempt in 1 2 3 4 5 6; do
-                out=$(oc exec "$@" 2>&1)
-                rc=$?
-                printf '%s\n' "${out}"
-                if [ "${rc}" -eq 0 ]; then
-                  return 0
-                fi
-                if printf '%s' "${out}" | grep -qiE 'connection to the server|connection refused|i/o timeout|unable to connect|TLS handshake|error dialing|request canceled'; then
-                  if [ "${attempt}" -lt 6 ]; then
-                    echo "API connection problem (attempt ${attempt}/6); retrying in $((attempt * 5))s..."
-                    sleep $((attempt * 5))
-                  fi
-                  continue
-                fi
-                return "${rc}"
-              done
-              echo "The OpenShift API stayed unreachable after 6 attempts."
-              return 1
-            }
-
-            # Prints 1 when the pluggable database exists, 0 when it does not,
-            # and nothing when the answer could not be read.
-            pdb_exists() {
-              oc_exec_retry "${POD_NAME}" -- bash -c "printf 'set heading off feedback off pagesize 0\nselect count(*) from dba_pdbs where pdb_name = '\''PR_${PR}'\'';\nexit;\n' | sqlplus -s / as sysdba" \
-                | grep -E '^[[:space:]]*[0-9]+[[:space:]]*$' | tail -1 | tr -d '[:space:]'
-            }
-
-            oc_exec_retry "${POD_NAME}" -- /opt/oracle/removeDatabase "THE" "PR_${PR}" \
-              || echo "::warning::Could not remove PR_${PR}; it may not exist yet."
-            oc_exec_retry "${POD_NAME}" -- /opt/oracle/createDatabase "PR_${PR}" \
-              || echo "::warning::createDatabase reported a failure for PR_${PR}; checking whether it exists."
-
-            # The migration cannot work without the pluggable database, so its
-            # presence is verified instead of being assumed.
-            if [ "$(pdb_exists)" != "1" ]; then
-              echo "::error::The pluggable database PR_${PR} does not exist after the create step."
-              exit 1
-            fi
-            echo "Pluggable database PR_${PR} exists."
-
-            oc_exec_retry "${POD_NAME}" -- /opt/oracle/createAppUser "THE" "${{ secrets.ORACLEDB_PASSWORD }}" "PR_${PR}" \
-              || echo "::warning::createAppUser reported a failure for PR_${PR}; the migration will fail if the user is missing."
-
-            JOB_NAME="migrate-pr${PR}-${{ github.run_attempt }}-$(date +%s)"
-
-            # The OpenShift API intermittently times out from GitHub runners, so
-            # creating the Job is retried. The Job name is fixed above, so a
-            # retry can never start a second copy.
-            created=0
-            for attempt in 1 2 3 4 5 6 7 8; do
-              if oc create job --from=cronjob/nr-waste-plus-tools-migratedb "${JOB_NAME}" --dry-run=client -o yaml \
-                | sed "s/value: main/value: ${ESCAPED_BRANCH_NAME}/" \
-                | sed "s/value: \"0\"/value: \"${PR}\"/" \
-                | oc apply -n "${NS}" -f -; then
-                created=1
-                break
-              fi
-              echo "Could not create job ${JOB_NAME} (attempt ${attempt}/8); retrying..."
-              sleep $(( attempt * 5 > 30 ? 30 : attempt * 5 ))
-            done
-            if [ "${created}" -ne 1 ]; then
-              echo "::error::Could not create the Oracle migration job ${JOB_NAME}."
-              exit 1
-            fi
-
-            # Block on the Job with watches instead of polling: oc wait returns the
-            # moment the Job reports a condition. Completion and failure are
-            # watched together, and the status is re-read afterwards so a dropped
-            # watch only costs another round, not a false result.
-            wait_for_job() {
-              local job="$1" deadline remaining ok_pid fail_pid counts
-              deadline=$(( $(date +%s) + $2 ))
-              succeeded=0
-              failed=0
-              while [ "$(date +%s)" -lt "${deadline}" ]; do
-                remaining=$(( deadline - $(date +%s) ))
-                oc wait --for=condition=complete "job/${job}" -n "${NS}" --timeout="${remaining}s" >/dev/null 2>&1 &
-                ok_pid=$!
-                oc wait --for=condition=failed "job/${job}" -n "${NS}" --timeout="${remaining}s" >/dev/null 2>&1 &
-                fail_pid=$!
-                # Stop as soon as either watch has returned. Checking the local
-                # PIDs makes no API calls.
-                while kill -0 "${ok_pid}" 2>/dev/null && kill -0 "${fail_pid}" 2>/dev/null; do
-                  sleep 1
-                done
-                kill "${ok_pid}" "${fail_pid}" 2>/dev/null || true
-                wait "${ok_pid}" "${fail_pid}" 2>/dev/null || true
-
-                counts=$(oc get "job/${job}" -n "${NS}" -o jsonpath='{.status.succeeded}/{.status.failed}' 2>/dev/null || true)
-                succeeded="${counts%%/*}"
-                failed="${counts##*/}"
-                succeeded="${succeeded:-0}"
-                failed="${failed:-0}"
-                if [ "${succeeded}" -ge 1 ] || [ "${failed}" -ge 1 ]; then
-                  return 0
-                fi
-                echo "Waiting for job ${job} (succeeded=${succeeded}, failed=${failed})..."
-                sleep 2
-              done
-            }
-
-            # The job downloads the branch archive from GitHub before running
-            # Flyway, so allow more time than a pure in-cluster run needs.
-            wait_for_job "${JOB_NAME}" 900
-
-            echo "--- logs for ${JOB_NAME} ---"
-            oc logs "job/${JOB_NAME}" -n "${NS}" --tail=200 || true
-            if [ "${succeeded}" -lt 1 ]; then
-              echo "--- description of ${JOB_NAME} ---"
-              oc describe "job/${JOB_NAME}" -n "${NS}" || true
-              echo "::error::The Oracle migration failed for PR ${PR} (succeeded=${succeeded}, failed=${failed})."
-              exit 1
-            fi
+          commands: bash .github/scripts/migrate-oracle-pr.sh cffaf3-tools "$PR_NUMBER" "$PR_BRANCH" "$RUN_ATTEMPT"
 
       - name: Start the Legacy Service
         uses: bcgov/action-oc-runner@111868d1fc50db0a40417ba321d865ef5c931bbd # v1.7.0
+        env:
+          START_NAMESPACE: ${{ secrets.OC_NAMESPACE }}
+          START_DEPLOYMENT: nr-waste-plus-${{ github.event.number }}-legacy
         with:
           oc_namespace: ${{ secrets.oc_namespace }}
           oc_token: ${{ secrets.oc_token }}
           login_attempts: "8"
           oc_server: ${{ secrets.oc_server }}
-          commands: |
-            set -uo pipefail
-
-            NS="${{ secrets.OC_NAMESPACE }}"
-            LEGACY="nr-waste-plus-${{ github.event.number }}-legacy"
-
-            # The PR application is deployed by the PR Open workflow. It may not
-            # exist yet on the first push, and that workflow starts it itself,
-            # so a missing deployment is not an error here. Only "NotFound"
-            # counts as missing: a refused API connection is retried instead of
-            # leaving the app stopped.
-            exists=""
-            for attempt in 1 2 3 4 5 6; do
-              if out=$(oc get "deployment/${LEGACY}" -n "${NS}" -o name 2>&1); then
-                exists="yes"
-                break
-              fi
-              if printf '%s' "${out}" | grep -qi 'NotFound'; then
-                exists="no"
-                break
-              fi
-              echo "Could not check ${LEGACY} (attempt ${attempt}/6); retrying..."
-              sleep $((attempt * 5))
-            done
-            if [ -z "${exists}" ]; then
-              echo "::error::Could not reach the OpenShift API to check ${LEGACY}."
-              exit 1
-            fi
-            if [ "${exists}" = "no" ]; then
-              echo "Deployment ${LEGACY} does not exist yet; the PR workflow will start it."
-              exit 0
-            fi
-
-            for attempt in 1 2 3 4 5 6; do
-              if oc scale "deployment/${LEGACY}" --replicas=1 -n "${NS}"; then
-                exit 0
-              fi
-              echo "Could not scale ${LEGACY} (attempt ${attempt}/6); retrying..."
-              sleep $((attempt * 5))
-            done
-            echo "::error::Could not scale ${LEGACY} back up."
-            exit 1
+          commands: bash .github/scripts/manage-deployment.sh start "$START_NAMESPACE" "$START_DEPLOYMENT"
 
   results:
     name: PR Results

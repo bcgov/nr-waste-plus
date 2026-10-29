@@ -1,12 +1,12 @@
 name: Bugfix Task
 description: Use this template to report and address bugs.
 title: "[BUGFIX]: "
-labels: [bug, needs-triage]
+labels: [bug]
 body:
   - type: markdown
     attributes:
       value: |
-        **Please provide details about the bug to help us resolve it efficiently.**  
+        **Please provide details about the bug to help us resolve it efficiently.**
         Fill out all required fields to ensure we have the necessary context.
 
   - type: input
@@ -14,6 +14,8 @@ body:
     attributes:
       label: Bug Summary
       placeholder: Provide a concise summary of the bug.
+    validations:
+      required: true
 
   - type: textarea
     id: bug_description
@@ -21,6 +23,8 @@ body:
       label: Describe the Bug
       description: A clear and concise description of what the bug is.
       placeholder: e.g., The feature breaks when X happens.
+    validations:
+      required: true
 
   - type: textarea
     id: steps_to_reproduce
@@ -28,10 +32,11 @@ body:
       label: Steps to Reproduce
       description: Outline the steps to reproduce the behavior.
       placeholder: |
-        1. Go to '...'
-        2. Click on '...'
-        3. Scroll down to '...'
-        4. See error
+        1. Open the page or feature where the problem occurs.
+        2. Take the action that triggers the problem.
+        3. Describe what happens.
+    validations:
+      required: true
 
   - type: textarea
     id: expected_behavior
@@ -52,8 +57,7 @@ body:
     attributes:
       label: Screenshots
       description: Attach screenshots to help explain the problem. (Optional)
-      placeholder: Paste image URLs or describe where to find visuals.
-      render: shell
+      placeholder: Attach images or paste links if they help explain the problem.
 
   - type: checkboxes
     id: environment
@@ -62,18 +66,18 @@ body:
       description: Select the environments where this bug occurs.
       options:
         - label: Development
-        - label: Staging
+        - label: Test
         - label: Production
 
-  - type: input
+  - type: textarea
     id: desktop_info
     attributes:
-      label: Desktop Information
-      description: Provide details about the desktop environment where the bug was encountered.
+      label: Browser and Device Information
+      description: Provide the browser, device, and operating system where the bug occurred, if known.
       placeholder: |
-        OS: [e.g., iOS, Windows]  
-        Browser: [e.g., Chrome, Safari]  
-        Version: [e.g., 22]  
+        Operating system:
+        Device (optional):
+        Browser and version:
 
   - type: textarea
     id: additional_context

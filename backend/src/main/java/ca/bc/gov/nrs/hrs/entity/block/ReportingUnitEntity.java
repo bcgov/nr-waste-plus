@@ -22,7 +22,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 /** Locally owned reporting unit for a district-average submission. */
 @Entity
-@Table(name = "reporting_unit", schema = "hrs")
+@Table(name = "reporting_unit", schema = "wasteplus")
 @EntityListeners(AuditingEntityListener.class)
 @Getter
 @Setter
@@ -40,7 +40,7 @@ public class ReportingUnitEntity extends SoftDeletableAuditableEntity implements
       parameters = {
         @org.hibernate.annotations.Parameter(
             name = "sequence_name",
-            value = "hrs.reporting_unit_id_seq"),
+            value = "wasteplus.reporting_unit_id_seq"),
         @org.hibernate.annotations.Parameter(
             name = "increment_size",
             value = "1")

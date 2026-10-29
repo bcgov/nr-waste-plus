@@ -17,7 +17,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 /** Evidence attachment metadata for a block. */
 @Entity
-@Table(name = "block_attachment", schema = "hrs")
+@Table(name = "block_attachment", schema = "wasteplus")
 @EntityListeners(AuditingEntityListener.class)
 @Getter
 @Setter

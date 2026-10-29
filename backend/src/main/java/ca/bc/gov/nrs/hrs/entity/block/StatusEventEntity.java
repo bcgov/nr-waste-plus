@@ -20,7 +20,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 /** Append-only lifecycle event for a reporting unit or block. */
 @Entity
-@Table(name = "status_event", schema = "hrs")
+@Table(name = "status_event", schema = "wasteplus")
 @EntityListeners(AuditingEntityListener.class)
 @Getter
 @Setter

@@ -88,7 +88,7 @@ class PostgresReportingUnitSearchIntegrationTest extends AbstractTestContainerIn
 
   private static final AtomicLong DISTRICT_SEQ = new AtomicLong();
   private static final AtomicLong CLIENT_SEQ = new AtomicLong();
-  /** Synthetic {@code hrs.geographic_code} ids; starts above the migration seed range. */
+  /** Synthetic {@code wasteplus.geographic_code} ids; starts above the migration seed range. */
   private static final AtomicLong GEO_CODE_ID_SEQ = new AtomicLong(990_000);
 
   @Autowired
@@ -811,10 +811,10 @@ class PostgresReportingUnitSearchIntegrationTest extends AbstractTestContainerIn
 
   private ReportingUnitEntity seedUnit(String clientNumber, String district, Instant updatedAt) {
     // fk_reporting_unit_geographic_code (#1432) requires the district code to exist in
-    // hrs.geographic_code; synthetic per-test districts must be seeded first.
+    // wasteplus.geographic_code; synthetic per-test districts must be seeded first.
     jdbcTemplate.update(
         """
-        INSERT INTO hrs.geographic_code
+        INSERT INTO wasteplus.geographic_code
             (id, code, description, geo_type, effective_date, expiry_date)
         VALUES (?, ?, ?, 'DISTRICT',
                 TIMESTAMP '2003-04-01 00:00:00', TIMESTAMP '9999-12-31 00:00:00')
@@ -836,7 +836,7 @@ class PostgresReportingUnitSearchIntegrationTest extends AbstractTestContainerIn
     // JPA auditing (@LastModifiedDate) overwrites updated_at on persist; pin the value back
     // through JDBC so the default lastUpdated-DESC sort is deterministic.
     jdbcTemplate.update(
-        "UPDATE hrs.reporting_unit SET updated_at = ? WHERE reporting_unit_id = ?",
+        "UPDATE wasteplus.reporting_unit SET updated_at = ? WHERE reporting_unit_id = ?",
         java.sql.Timestamp.from(updatedAt),
         saved.getId());
     return saved;

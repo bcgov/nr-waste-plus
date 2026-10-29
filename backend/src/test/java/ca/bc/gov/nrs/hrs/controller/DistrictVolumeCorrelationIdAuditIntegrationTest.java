@@ -56,14 +56,14 @@ class DistrictVolumeCorrelationIdAuditIntegrationTest extends AbstractTestContai
   @BeforeEach
   @AfterEach
   void resetAuditFixture() {
-    // Wipe only the audit tables this test asserts on. hrs.district_volume must NOT be wiped:
+    // Wipe only the audit tables this test asserts on. wasteplus.district_volume must NOT be wiped:
     // it holds Flyway-seeded reference rows other test classes rely on, and the POST below is
     // kept collision-free because spike entities in CorrelationIdAuditIntegrationTest use
     // closed date ranges. Auto-commit is enabled (Hikari's default after removing
     // auto-commit: false from application.yml), but fixture maintenance still runs inside an
     // explicit committing transaction for clarity and to match the test mutation pattern.
     transactionTemplate.executeWithoutResult(
-        status -> jdbcTemplate.update("TRUNCATE hrs.audit_change, hrs.audit_event"));
+        status -> jdbcTemplate.update("TRUNCATE wasteplus.audit_change, wasteplus.audit_event"));
   }
 
   @Test
@@ -146,7 +146,7 @@ class DistrictVolumeCorrelationIdAuditIntegrationTest extends AbstractTestContai
         jdbcTemplate.queryForObject(
             """
         SELECT audit_event_id
-        FROM hrs.audit_event
+        FROM wasteplus.audit_event
         WHERE audit_event_id > ? AND action = 'CREATE'
         ORDER BY audit_event_id DESC
         LIMIT 1
@@ -157,19 +157,19 @@ class DistrictVolumeCorrelationIdAuditIntegrationTest extends AbstractTestContai
     assertThat(eventId).isNotNull();
     assertThat(
             jdbcTemplate.queryForObject(
-                "SELECT correlation_id FROM hrs.audit_event WHERE audit_event_id = ?",
+                "SELECT correlation_id FROM wasteplus.audit_event WHERE audit_event_id = ?",
                 String.class,
                 eventId))
         .isEqualTo(TRACE_ID);
     assertThat(
             jdbcTemplate.queryForObject(
-                "SELECT COUNT(*) FROM hrs.audit_change WHERE event_id = ?", Integer.class, eventId))
+                "SELECT COUNT(*) FROM wasteplus.audit_change WHERE event_id = ?", Integer.class, eventId))
         .isPositive();
   }
 
   private long maxAuditEventId() {
     Long maxId =
-        jdbcTemplate.queryForObject("SELECT MAX(audit_event_id) FROM hrs.audit_event", Long.class);
+        jdbcTemplate.queryForObject("SELECT MAX(audit_event_id) FROM wasteplus.audit_event", Long.class);
     return maxId == null ? 0L : maxId;
   }
 }

@@ -1,12 +1,11 @@
 name: Security Vulnerability Report
 description: Report a security vulnerability or security-related issue.
 title: "[SECURITY]: "
-labels: [security]
 body:
   - type: markdown
     attributes:
       value: |
-        **⚠️ Responsible Disclosure Notice**  
+        **⚠️ Responsible Disclosure Notice**
         Please do **not** include exploit code, proof-of-concept payloads, or
         personally identifiable information (PII) in this issue. This template
         creates a **public** issue. For sensitive vulnerabilities that must not
@@ -18,7 +17,9 @@ body:
     attributes:
       label: Vulnerability Summary
       description: Provide a concise summary of the vulnerability.
-      placeholder: e.g., SQL injection in the search endpoint allows data exfiltration.
+      placeholder: Describe the security concern without including exploit payloads or sensitive details.
+    validations:
+      required: true
 
   - type: textarea
     id: affected_components
@@ -26,7 +27,8 @@ body:
       label: Affected Component(s)
       description: Which components, endpoints, or modules are affected?
       placeholder: e.g., /api/v2/search endpoint, UserService.java, login form
-      render: shell
+    validations:
+      required: true
 
   - type: checkboxes
     id: vulnerability_type
@@ -53,10 +55,9 @@ body:
         Describe how to reproduce the issue. Avoid including
         active exploit payloads; describe the pattern instead.
       placeholder: |
-        1. Navigate to ...
-        2. Submit request with ...
-        3. Observe ...
-      render: shell
+        1. Navigate to the affected feature.
+        2. Perform the action that reveals the issue.
+        3. Describe the observed behavior without including sensitive payloads.
 
   - type: textarea
     id: potential_impact
@@ -64,6 +65,8 @@ body:
       label: Potential Impact
       description: What is the worst-case impact if this is exploited?
       placeholder: e.g., Unauthorized access to user data, remote code execution, data loss.
+    validations:
+      required: true
 
   - type: input
     id: cvss_score
@@ -88,18 +91,15 @@ body:
       label: Suggested Fix / Mitigation (Optional)
       description: Any ideas on how to address this vulnerability.
       placeholder: e.g., Sanitize input on line 42, add rate limiting, rotate API keys.
-      render: shell
 
-  - type: dropdown
-    id: disclosure_preference
+  - type: checkboxes
+    id: public_disclosure_confirmation
     attributes:
-      label: Disclosure Preference
-      description: How would you like to proceed?
+      label: Public Disclosure Confirmation
+      description: If this report contains sensitive details, stop and use the repository's private vulnerability reporting instead.
       options:
-        - "I confirm this is a public issue with no sensitive details included"
-        - "I have used GitHub's private vulnerability reporting for sensitive details"
-      validations:
-        required: true
+        - label: I confirm this issue is safe to disclose publicly and contains no sensitive details
+          required: true
 
   - type: textarea
     id: additional_context
@@ -107,4 +107,3 @@ body:
       label: Additional Context
       description: Add any other relevant information, references, or links.
       placeholder: e.g., Related CVEs, security advisories, or internal ticket IDs.
-      render: shell
