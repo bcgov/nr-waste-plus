@@ -25,7 +25,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 /** Persistence entity for district average volume configurations. */
 @Entity
-@Table(name = "district_volume", schema = "hrs")
+@Table(name = "district_volume", schema = "wasteplus")
 @EntityListeners(AuditingEntityListener.class)
 @Getter
 @Setter

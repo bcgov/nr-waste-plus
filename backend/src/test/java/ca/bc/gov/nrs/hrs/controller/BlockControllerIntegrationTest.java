@@ -206,16 +206,16 @@ class BlockControllerIntegrationTest extends AbstractTestContainerIntegrationTes
 
     districtVolumeId =
         jdbcTemplate.queryForObject(
-            "SELECT district_volume_id FROM hrs.district_volume ORDER BY district_volume_id LIMIT"
+            "SELECT district_volume_id FROM wasteplus.district_volume ORDER BY district_volume_id LIMIT"
                 + " 1",
             Long.class);
   }
 
   @AfterEach
   void cleanUpSnapshots() {
-    jdbcTemplate.update("DELETE FROM hrs.block_calculation_snapshot WHERE block_id = ?", blockId);
+    jdbcTemplate.update("DELETE FROM wasteplus.block_calculation_snapshot WHERE block_id = ?", blockId);
     jdbcTemplate.update(
-        "DELETE FROM hrs.block_calculation_snapshot WHERE block_id = ?", foreignBlockId);
+        "DELETE FROM wasteplus.block_calculation_snapshot WHERE block_id = ?", foreignBlockId);
   }
 
   // ---------------------------------------------------------------------

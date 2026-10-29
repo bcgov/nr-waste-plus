@@ -15,7 +15,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 /** Formula expression belonging to an independently versioned formula set. */
 @Entity
-@Table(name = "formula_set_row", schema = "hrs")
+@Table(name = "formula_set_row", schema = "wasteplus")
 @EntityListeners(AuditingEntityListener.class)
 @Getter
 @Setter

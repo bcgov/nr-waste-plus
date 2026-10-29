@@ -38,34 +38,34 @@ public interface BlockRepository extends JpaRepository<BlockEntity, Long> {
                  latest_status.status AS "rawStatus",
                  b.updated_at AS "updatedAt",
                  b.block_type AS "blockType"
-          FROM hrs.block b
+          FROM wasteplus.block b
           LEFT JOIN LATERAL (
             SELECT bm.forest_file_id,
                    bm.cutting_permit_id,
                    bm.cut_block_id,
                    bm.timber_mark
-            FROM hrs.block_mark bm
+            FROM wasteplus.block_mark bm
             WHERE bm.block_id = b.block_id
               AND bm.mark_type = 'PRIMARY'
               AND bm.is_deleted = FALSE
             ORDER BY bm.sequence_no, bm.block_mark_id
             LIMIT 1
           ) primary_mark ON TRUE
-          LEFT JOIN hrs.block_submitter selected_submitter
+          LEFT JOIN wasteplus.block_submitter selected_submitter
             ON selected_submitter.block_submitter_id = (
               SELECT bs.block_submitter_id
-              FROM hrs.block_submitter bs
+              FROM wasteplus.block_submitter bs
               WHERE bs.block_id = b.block_id
                 AND bs.is_deleted = FALSE
               ORDER BY bs.block_submitter_id
               LIMIT 1
             )
-          LEFT JOIN hrs.district_average_block da
+          LEFT JOIN wasteplus.district_average_block da
             ON da.district_average_block_id = b.block_id
            AND da.is_deleted = FALSE
           LEFT JOIN LATERAL (
             SELECT se.status
-            FROM hrs.status_event se
+            FROM wasteplus.status_event se
             WHERE se.block_id = b.block_id
             ORDER BY se.created_at DESC, se.status_event_id DESC
             LIMIT 1

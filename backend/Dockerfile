@@ -24,7 +24,7 @@ USER 1001
 EXPOSE ${PORT}
 HEALTHCHECK CMD curl -f http://localhost:${PORT}/actuator/health | grep '"status":"UP"'
 
-ENV SPRING_PROFILES_ACTIVE=container,prod
+ENV SPRING_PROFILES_ACTIVE=container
 
 # Startup
 ENTRYPOINT ["/app/nr-waste-plus-backend"]

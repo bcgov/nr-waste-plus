@@ -19,7 +19,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 /** Submission block belonging to a reporting unit. */
 @Entity
-@Table(name = "block", schema = "hrs")
+@Table(name = "block", schema = "wasteplus")
 @EntityListeners(AuditingEntityListener.class)
 @Getter
 @Setter
