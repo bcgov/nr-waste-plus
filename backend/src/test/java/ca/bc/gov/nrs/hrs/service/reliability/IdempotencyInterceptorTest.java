@@ -9,6 +9,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import ca.bc.gov.nrs.hrs.entity.reliability.IdempotencyRecordEntity;
+import ca.bc.gov.nrs.hrs.exception.ForbiddenException;
 import ca.bc.gov.nrs.hrs.exception.GlobalExceptionHandler;
 import ca.bc.gov.nrs.hrs.repository.reliability.IdempotencyRecordRepository;
 import java.net.URI;
@@ -52,6 +53,7 @@ class IdempotencyInterceptorTest {
   private MockMvc mockMvc;
   private TestIdempotencyRecordRepository repository;
   private TestMutationController controller;
+  private EndpointAuthorizationChecker authChecker;
 
   @BeforeEach
   void setUp() {
@@ -59,9 +61,12 @@ class IdempotencyInterceptorTest {
     CURRENT_TX.remove();
     repository = new TestIdempotencyRecordRepository();
     controller = new TestMutationController();
+    authChecker = (req, auth) -> {};
     TestTransactionManager txManager = new TestTransactionManager(repository, controller);
     IdempotencyService service = new IdempotencyService(repository);
-    IdempotencyInterceptor interceptor = new IdempotencyInterceptor(service, txManager);
+    IdempotencyInterceptor interceptor =
+        new IdempotencyInterceptor(
+            service, txManager, (req, auth) -> authChecker.checkAuthorization(req, auth));
 
     mockMvc = MockMvcBuilders.standaloneSetup(controller)
         .addFilters(interceptor)
@@ -186,6 +191,41 @@ class IdempotencyInterceptorTest {
         .andExpect(jsonPath("$.detail").value(
             "Caller is not authorized to replay or claim this idempotency key."));
 
+    assertThat(controller.mutationCount.get()).isEqualTo(1);
+  }
+
+  @Test
+  @DisplayName("rejects replay with 403 Forbidden when endpoint authorization fails")
+  void shouldRejectReplayWhenEndpointAuthorizationFails() throws Exception {
+    String key = UUID.randomUUID().toString();
+    String body = "{\"name\": \"alpha\"}";
+
+    // First request succeeds
+    mockMvc.perform(post("/api/test-mutation")
+            .header("Idempotency-Key", key)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(body))
+        .andExpect(status().isOk());
+
+    assertThat(controller.mutationCount.get()).isEqualTo(1);
+
+    // Caller access to the target resource is revoked before replay
+    authChecker = (req, auth) -> {
+      throw new ForbiddenException("Caller access to this resource has been revoked");
+    };
+
+    // Replay attempt fails with 403 Forbidden
+    mockMvc.perform(post("/api/test-mutation")
+            .header("Idempotency-Key", key)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(body))
+        .andExpect(status().isForbidden())
+        .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
+        .andExpect(jsonPath("$.title").value("Forbidden"))
+        .andExpect(jsonPath("$.detail").value(
+            "Caller access to this resource has been revoked"));
+
+    // Mutation should not execute again
     assertThat(controller.mutationCount.get()).isEqualTo(1);
   }
 

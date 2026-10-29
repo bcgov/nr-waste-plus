@@ -70,6 +70,7 @@ The request fingerprint is an SHA-256 digest (64 hex characters) computed from:
 ### Caller Authorization & Tenant Security
 * Every idempotency claim is strictly bound to the authenticated caller identity (`created_by`).
 * A replay request made by any caller other than the original claim owner is rejected with `403 Forbidden` (`application/problem+json`). Callers cannot observe or replay cached mutation snapshots belonging to other users or tenants.
+* Replay requests re-verify endpoint and resource-level authorization before serving cached responses. For resource-scoped endpoints (e.g., reporting units), if the caller's permissions or client-number roles have been revoked since the original mutation, the replay is rejected with `403 Forbidden` (`application/problem+json`) to prevent data leakage.
 
 ### Middleware Lifecycle & Statuses
 The database tracks keys in `hrs.idempotency_record`:

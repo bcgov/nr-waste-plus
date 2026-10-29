@@ -61,6 +61,7 @@ public class IdempotencyInterceptor extends OncePerRequestFilter {
 
   private final IdempotencyService idempotencyService;
   private final PlatformTransactionManager transactionManager;
+  private final EndpointAuthorizationChecker authorizationChecker;
   private final ObjectMapper objectMapper = new ObjectMapper();
 
   @Override
@@ -129,6 +130,18 @@ public class IdempotencyInterceptor extends OncePerRequestFilter {
 
     if (claim.isReplay()) {
       transactionManager.rollback(txStatus);
+      Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+      try {
+        authorizationChecker.checkAuthorization(request, auth);
+      } catch (ResponseStatusException ex) {
+        HttpStatus status = HttpStatus.valueOf(ex.getStatusCode().value());
+        writeProblemDetail(
+            response,
+            request.getRequestURI(),
+            status,
+            ex.getReason());
+        return;
+      }
       replayResponse(response, claim);
       return;
     }
