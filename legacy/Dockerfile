@@ -14,8 +14,11 @@ COPY src ./src
 COPY .mvn/ ./.mvn
 
 # Build
+# Commit SHA of the source revision; the build context has no .git, so the
+# pipeline passes it in and it is baked into info.app.commit.
+ARG GIT_COMMIT=unknown
 RUN microdnf install -y unzip && microdnf clean all
-RUN sed -i 's/\r$//' ./mvnw && ./mvnw -Pnative package -DskipTests -Dskip.unit.tests=true -Dspring-boot.run.profiles=prod
+RUN sed -i 's/\r$//' ./mvnw && ./mvnw -Pnative package -DskipTests -Dskip.unit.tests=true -Dspring-boot.run.profiles=prod -Dgit.commit.id=${GIT_COMMIT}
 
 ### Deployer
 FROM gcr.io/distroless/java21-debian12:nonroot
