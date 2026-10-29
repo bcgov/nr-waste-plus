@@ -148,5 +148,108 @@ class DefaultEndpointAuthorizationCheckerTest {
             "Invalid reporting unit identifier: 999999999999999999999999999999");
     verifyNoInteractions(reportingUnitRepository);
   }
+
+  @Test
+  @DisplayName("allows replay creation when caller retains submitter role for client")
+  void shouldAllowReplayCreationWhenCallerHasMatchingSubmitterRole() throws Exception {
+    Jwt jwt = WithMockJwtSecurityContextFactory.createJwt(
+        "submitter-user",
+        List.of("WASTE_PLUS_SUBMITTER_00012797"),
+        "bceidbusiness",
+        "Submitter User",
+        "submitter@example.com");
+    Authentication auth = new UsernamePasswordAuthenticationToken(jwt, "n/a", List.of());
+
+    MockHttpServletRequest rawRequest =
+        new MockHttpServletRequest("POST", "/api/reporting-units");
+    rawRequest.setContent("{\"clientNumber\": \"00012797\"}".getBytes());
+    CachedBodyHttpServletRequest request =
+        new CachedBodyHttpServletRequest(rawRequest, 1024 * 1024);
+
+    assertThatCode(() -> checker.checkAuthorization(request, auth)).doesNotThrowAnyException();
+    verifyNoInteractions(reportingUnitRepository);
+  }
+
+  @Test
+  @DisplayName("allows replay creation when caller has privileged role")
+  void shouldAllowReplayCreationWhenCallerHasPrivilegedRole() throws Exception {
+    Jwt jwt = WithMockJwtSecurityContextFactory.createJwt(
+        "admin-user",
+        List.of("WASTE_PLUS_ADMIN"),
+        "idir",
+        "Admin User",
+        "admin@example.com");
+    Authentication auth = new UsernamePasswordAuthenticationToken(jwt, "n/a", List.of());
+
+    MockHttpServletRequest rawRequest =
+        new MockHttpServletRequest("POST", "/api/reporting-units");
+    rawRequest.setContent("{\"clientNumber\": \"00012797\"}".getBytes());
+    CachedBodyHttpServletRequest request =
+        new CachedBodyHttpServletRequest(rawRequest, 1024 * 1024);
+
+    assertThatCode(() -> checker.checkAuthorization(request, auth)).doesNotThrowAnyException();
+    verifyNoInteractions(reportingUnitRepository);
+  }
+
+  @Test
+  @DisplayName("rejects replay creation with 403 Forbidden when caller lacks role for client")
+  void shouldRejectReplayCreationWhenCallerLacksRoleForClient() throws Exception {
+    Jwt jwt = WithMockJwtSecurityContextFactory.createJwt(
+        "revoked-user",
+        List.of("WASTE_PLUS_SUBMITTER_99999999"),
+        "bceidbusiness",
+        "Revoked User",
+        "revoked@example.com");
+    Authentication auth = new UsernamePasswordAuthenticationToken(jwt, "n/a", List.of());
+
+    MockHttpServletRequest rawRequest =
+        new MockHttpServletRequest("POST", "/api/reporting-units");
+    rawRequest.setContent("{\"clientNumber\": \"00012797\"}".getBytes());
+    CachedBodyHttpServletRequest request =
+        new CachedBodyHttpServletRequest(rawRequest, 1024 * 1024);
+
+    assertThatThrownBy(() -> checker.checkAuthorization(request, auth))
+        .isInstanceOf(ForbiddenException.class)
+        .hasMessageContaining("User is not authorized to create a reporting unit for client 00012797");
+    verifyNoInteractions(reportingUnitRepository);
+  }
+
+  @Test
+  @DisplayName("rejects replay creation when caller is unauthenticated")
+  void shouldRejectReplayCreationWhenCallerIsUnauthenticated() throws Exception {
+    MockHttpServletRequest rawRequest =
+        new MockHttpServletRequest("POST", "/api/reporting-units");
+    rawRequest.setContent("{\"clientNumber\": \"00012797\"}".getBytes());
+    CachedBodyHttpServletRequest request =
+        new CachedBodyHttpServletRequest(rawRequest, 1024 * 1024);
+
+    assertThatThrownBy(() -> checker.checkAuthorization(request, null))
+        .isInstanceOf(ForbiddenException.class)
+        .hasMessageContaining("Unauthenticated caller is not authorized to create a reporting unit");
+    verifyNoInteractions(reportingUnitRepository);
+  }
+
+  @Test
+  @DisplayName("rejects replay creation when request body has missing or blank clientNumber")
+  void shouldRejectReplayCreationWhenBodyIsMissingClientNumber() throws Exception {
+    Jwt jwt = WithMockJwtSecurityContextFactory.createJwt(
+        "admin-user",
+        List.of("WASTE_PLUS_ADMIN"),
+        "idir",
+        "Admin User",
+        "admin@example.com");
+    Authentication auth = new UsernamePasswordAuthenticationToken(jwt, "n/a", List.of());
+
+    MockHttpServletRequest rawRequest =
+        new MockHttpServletRequest("POST", "/api/reporting-units");
+    rawRequest.setContent("{}".getBytes());
+    CachedBodyHttpServletRequest request =
+        new CachedBodyHttpServletRequest(rawRequest, 1024 * 1024);
+
+    assertThatThrownBy(() -> checker.checkAuthorization(request, auth))
+        .isInstanceOf(ForbiddenException.class)
+        .hasMessageContaining("Missing or invalid client number in reporting unit creation request");
+    verifyNoInteractions(reportingUnitRepository);
+  }
 }
 

@@ -134,7 +134,7 @@ public class IdempotencyInterceptor extends OncePerRequestFilter {
       transactionManager.rollback(txStatus);
       Authentication auth = SecurityContextHolder.getContext().getAuthentication();
       try {
-        authorizationChecker.checkAuthorization(request, auth);
+        authorizationChecker.checkAuthorization(wrappedRequest, auth);
       } catch (ResponseStatusException ex) {
         HttpStatus status = HttpStatus.valueOf(ex.getStatusCode().value());
         writeProblemDetail(
