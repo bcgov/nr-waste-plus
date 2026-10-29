@@ -256,7 +256,9 @@ info:
   app:
     name: ${spring.application.name}
     zone: ${APP_ZONE:local}
-    version: ${APP_VERSION:0.0.1-SNAPSHOT}
+    # info.app.version and info.app.build come from application.properties, which
+    # Maven filters at build time. Spring loads application.properties ahead of
+    # application.yml for the same key, so a version here is silently ignored.
 
 # Feature flags — disabled by default; override per environment in profile-specific YAML files
 features:
