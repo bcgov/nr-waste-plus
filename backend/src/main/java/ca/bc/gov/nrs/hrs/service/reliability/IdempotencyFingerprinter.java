@@ -12,7 +12,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Comparator;
 import java.util.HexFormat;
 import java.util.List;
 import java.util.Locale;
@@ -96,7 +96,7 @@ public final class IdempotencyFingerprinter {
       ObjectNode sorted = JsonNodeFactory.instance.objectNode();
       List<String> fieldNames = new ArrayList<>();
       objectNode.fieldNames().forEachRemaining(fieldNames::add);
-      Collections.sort(fieldNames);
+      fieldNames.sort(Comparator.naturalOrder());
       for (String fieldName : fieldNames) {
         sorted.set(fieldName, canonicalize(objectNode.get(fieldName)));
       }

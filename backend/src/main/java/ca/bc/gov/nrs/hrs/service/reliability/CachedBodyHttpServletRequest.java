@@ -64,9 +64,7 @@ public class CachedBodyHttpServletRequest extends HttpServletRequestWrapper {
     }
 
     ByteArrayOutputStream outputStream = new ByteArrayOutputStream(
-        contentLength > 0 && contentLength <= maxBodySizeBytes
-            ? (int) contentLength
-            : BUFFER_SIZE);
+        contentLength > 0 ? (int) contentLength : BUFFER_SIZE);
 
     byte[] buffer = new byte[BUFFER_SIZE];
     int bytesRead;
