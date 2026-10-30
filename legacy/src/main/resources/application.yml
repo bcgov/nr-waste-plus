@@ -79,6 +79,8 @@ management:
       version: ${info.app.version}
       app: ${info.app.name}
       zone: ${info.app.zone}
+      build: ${info.app.build}
+      commit: ${info.app.commit}
     # Distribution statistics for every timer, applied via the `all` key:
     # published percentiles plus SLO histogram boundaries — the same values
     # the removed Java MeterFilter configured.
