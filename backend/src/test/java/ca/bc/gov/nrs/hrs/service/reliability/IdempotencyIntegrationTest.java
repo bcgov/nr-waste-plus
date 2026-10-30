@@ -143,8 +143,11 @@ class IdempotencyIntegrationTest extends AbstractTestContainerIntegrationTest {
 
     executor.shutdown();
 
-    assertThat(successCount).isEqualTo(1);
-    assertThat(conflictCount).isEqualTo(concurrency - 1);
+    // The winning thread produces a 202; contenders arriving before commit receive a 409 conflict,
+    // while contenders delayed past commit legitimately receive a replayed 202.
+    assertThat(successCount).isGreaterThanOrEqualTo(1);
+    assertThat(conflictCount).isGreaterThanOrEqualTo(1);
+    assertThat(successCount + conflictCount).isEqualTo(concurrency);
 
     // Business mutation must have executed exactly once
     verify(userService, times(1)).saveUserPreferences(any(), any());
