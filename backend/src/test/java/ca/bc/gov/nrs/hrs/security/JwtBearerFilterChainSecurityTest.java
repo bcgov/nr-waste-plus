@@ -136,6 +136,20 @@ class JwtBearerFilterChainSecurityTest {
   }
 
   @Test
+  void anonymousInfoIsRejected() throws Exception {
+    mockMvc.perform(get("/actuator/info")).andExpect(status().isUnauthorized());
+  }
+
+  @Test
+  void authenticatedInfoReturnsBuildMetadata() throws Exception {
+    mockMvc
+        .perform(
+            get("/actuator/info").header("Authorization", "Bearer " + token("client-good", ISSUER, null)))
+        .andExpect(status().isOk())
+        .andExpect(result -> assertThat(result.getResponse().getContentAsString()).contains("commit"));
+  }
+
+  @Test
   void authenticatedInsufficientRoleReturnsForbiddenWithoutControllerInvocation() throws Exception {
     PROVIDER_INVOCATIONS.set(0);
 
@@ -235,6 +249,12 @@ class JwtBearerFilterChainSecurityTest {
     @ResponseBody
     String health() {
       return "{\"status\":\"UP\"}";
+    }
+
+    @GetMapping("/actuator/info")
+    @ResponseBody
+    String info() {
+      return "{\"app\":{\"version\":\"0.0.1-SNAPSHOT\",\"commit\":\"9e835c764c8672d36dbaddd2e10e131fd92777ec\"}}";
     }
   }
 
