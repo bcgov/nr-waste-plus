@@ -80,6 +80,7 @@ The database tracks keys in `hrs.idempotency_record`:
 ### Transactional Boundaries & Dual-Writes
 * **Local Transactions**: The middleware guarantees ACID atomicity across key claim, business mutation, and response snapshot persistence for mutations that operate within the local PostgreSQL database. If any step fails, the local transaction rolls back, releasing the key for a safe retry.
 * **Dual-Writes & Remote Calls**: When an operation orchestrates external I/O (such as `POST /api/reporting-units` creating an entity in the remote legacy API before persisting locally), local database rollbacks cannot undo external side effects. Such dual-write endpoints coordinate recovery through service-level reconciliation (e.g., detecting and linking uncommitted remote records on retry) to achieve eventual consistency across retries without distributed two-phase commit.
+* **Isolation Level Preservation**: When establishing the shared database transaction, the middleware preserves the endpoint's declared isolation level (such as `SERIALIZABLE` for configuration timeline endpoints in `DistrictVolumeService`, `SpeciesCompositionService`, and `FormulaSetService`) to prevent silent isolation downgrade and protect timeline consistency across concurrent requests.
 
 | Scenario | Condition | Backend Behavior |
 | --- | --- | --- |

@@ -53,6 +53,8 @@ class IdempotencyInterceptorTest {
   private MockMvc mockMvc;
   private TestIdempotencyRecordRepository repository;
   private TestMutationController controller;
+  private TestConfigController configController;
+  private TestTransactionManager txManager;
   private EndpointAuthorizationChecker authChecker;
 
   @BeforeEach
@@ -61,14 +63,15 @@ class IdempotencyInterceptorTest {
     CURRENT_TX.remove();
     repository = new TestIdempotencyRecordRepository();
     controller = new TestMutationController();
+    configController = new TestConfigController();
     authChecker = (req, auth) -> {};
-    TestTransactionManager txManager = new TestTransactionManager(repository, controller);
+    txManager = new TestTransactionManager(repository, controller);
     IdempotencyService service = new IdempotencyService(repository);
     IdempotencyInterceptor interceptor =
         new IdempotencyInterceptor(
             service, txManager, (req, auth) -> authChecker.checkAuthorization(req, auth));
 
-    mockMvc = MockMvcBuilders.standaloneSetup(controller)
+    mockMvc = MockMvcBuilders.standaloneSetup(controller, configController)
         .addFilters(interceptor)
         .setControllerAdvice(new GlobalExceptionHandler())
         .build();
@@ -460,6 +463,38 @@ class IdempotencyInterceptorTest {
     assertThat(repository.findByIdempotencyKey(key)).isEmpty();
   }
 
+  @Test
+  @DisplayName("opens SERIALIZABLE transaction for configuration timeline endpoints")
+  void shouldUseSerializableIsolationForConfigurationEndpoints() throws Exception {
+    String key = UUID.randomUUID().toString();
+
+    mockMvc.perform(post("/api/configuration/district-average-volumes")
+            .header("Idempotency-Key", key)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content("{}"))
+        .andExpect(status().isOk());
+
+    assertThat(txManager.lastDefinition).isNotNull();
+    assertThat(txManager.lastDefinition.getIsolationLevel())
+        .isEqualTo(TransactionDefinition.ISOLATION_SERIALIZABLE);
+  }
+
+  @Test
+  @DisplayName("opens default isolation transaction for standard endpoints")
+  void shouldUseDefaultIsolationForStandardEndpoints() throws Exception {
+    String key = UUID.randomUUID().toString();
+
+    mockMvc.perform(post("/api/test-mutation")
+            .header("Idempotency-Key", key)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content("{\"name\": \"test\"}"))
+        .andExpect(status().isOk());
+
+    assertThat(txManager.lastDefinition).isNotNull();
+    assertThat(txManager.lastDefinition.getIsolationLevel())
+        .isEqualTo(TransactionDefinition.ISOLATION_DEFAULT);
+  }
+
   static class TxContext {
     final List<String> insertedKeys = new ArrayList<>();
     final Map<String, IdempotencyRecordEntity> previousStates = new HashMap<>();
@@ -489,8 +524,11 @@ class IdempotencyInterceptorTest {
       return context;
     }
 
+    volatile TransactionDefinition lastDefinition;
+
     @Override
     protected void doBegin(Object transaction, TransactionDefinition definition) {
+      this.lastDefinition = definition;
       CURRENT_TX.set((TxContext) transaction);
     }
 
@@ -561,6 +599,15 @@ class IdempotencyInterceptorTest {
     @GetMapping
     public ResponseEntity<Map<String, String>> getMethod() {
       return ResponseEntity.ok(Map.of("method", "GET"));
+    }
+  }
+
+  @RestController
+  @RequestMapping("/api/configuration/district-average-volumes")
+  static class TestConfigController {
+    @PostMapping
+    public ResponseEntity<Void> createConfig() {
+      return ResponseEntity.ok().build();
     }
   }
 

@@ -60,6 +60,11 @@ public class IdempotencyInterceptor extends OncePerRequestFilter {
       HttpHeaders.ETAG,
       HttpHeaders.LAST_MODIFIED
   );
+  private static final Set<String> SERIALIZABLE_PATH_PREFIXES = Set.of(
+      "/api/configuration/district-average-volumes",
+      "/api/configuration/species-compositions",
+      "/api/configuration/formulas"
+  );
 
   private final IdempotencyService idempotencyService;
   private final PlatformTransactionManager transactionManager;
@@ -110,7 +115,8 @@ public class IdempotencyInterceptor extends OncePerRequestFilter {
     String fingerprint = IdempotencyFingerprinter.computeFingerprint(
         wrappedRequest, wrappedRequest.getCachedBody(), callerId);
 
-    TransactionDefinition txDef = new DefaultTransactionDefinition();
+    DefaultTransactionDefinition txDef = new DefaultTransactionDefinition();
+    txDef.setIsolationLevel(resolveIsolationLevel(request));
     TransactionStatus txStatus = transactionManager.getTransaction(txDef);
 
     IdempotencyClaimResult claim;
@@ -257,6 +263,18 @@ public class IdempotencyInterceptor extends OncePerRequestFilter {
     problem.setInstance(URI.create(instanceUri));
 
     objectMapper.writeValue(response.getOutputStream(), problem);
+  }
+
+  private int resolveIsolationLevel(HttpServletRequest request) {
+    String path = request.getRequestURI();
+    if (path != null) {
+      for (String prefix : SERIALIZABLE_PATH_PREFIXES) {
+        if (path.startsWith(prefix)) {
+          return TransactionDefinition.ISOLATION_SERIALIZABLE;
+        }
+      }
+    }
+    return TransactionDefinition.ISOLATION_DEFAULT;
   }
 }
 
