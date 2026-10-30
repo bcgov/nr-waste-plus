@@ -39,6 +39,7 @@ import ca.bc.gov.nrs.hrs.exception.BlockNotFoundException;
 import ca.bc.gov.nrs.hrs.exception.ForbiddenException;
 import ca.bc.gov.nrs.hrs.exception.ForestClientNotFoundException;
 import ca.bc.gov.nrs.hrs.exception.GlobalExceptionHandler;
+import ca.bc.gov.nrs.hrs.exception.IdempotencyConflictException;
 import ca.bc.gov.nrs.hrs.exception.InvalidDocumentTypeException;
 import ca.bc.gov.nrs.hrs.exception.InvalidFileNameException;
 import ca.bc.gov.nrs.hrs.exception.NotFoundGenericException;
@@ -95,6 +96,7 @@ import tools.jackson.databind.json.JsonMapper.Builder;
   BlockNotFoundException.class,
   ForbiddenException.class,
   ForestClientNotFoundException.class,
+  IdempotencyConflictException.class,
   InvalidDocumentTypeException.class,
   InvalidFileNameException.class,
   NotFoundGenericException.class,

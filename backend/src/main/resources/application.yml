@@ -242,6 +242,9 @@ ca:
               - X-B3-SpanId
               - x-b3-spanid
               - X-B3-SPANID
+              - Idempotency-Key
+              - idempotency-key
+              - IDEMPOTENCY-KEY
             methods:
               - OPTIONS
               - GET

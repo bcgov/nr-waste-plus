@@ -183,6 +183,28 @@ public class GlobalExceptionHandler {
   }
 
   /**
+   * Handles idempotency key conflicts (concurrent duplicate or payload fingerprint mismatch).
+   *
+   * @param ex the idempotency conflict failure
+   * @param request the current HTTP servlet request
+   * @return a 409 RFC 9457 response
+   */
+  @ExceptionHandler(IdempotencyConflictException.class)
+  public ResponseEntity<ProblemDetail> handleIdempotencyConflictException(
+      IdempotencyConflictException ex, HttpServletRequest request) {
+    log.warn("Idempotency conflict: {}", ex.getReason());
+
+    ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.CONFLICT);
+    problem.setTitle("Idempotency Conflict");
+    problem.setDetail(ex.getReason());
+    problem.setInstance(URI.create(request.getRequestURI()));
+
+    return ResponseEntity.status(HttpStatus.CONFLICT)
+        .contentType(MediaType.APPLICATION_PROBLEM_JSON)
+        .body(problem);
+  }
+
+  /**
    * Handles an unexpected exception without exposing implementation details.
    *
    * @param ex the unexpected exception

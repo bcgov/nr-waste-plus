@@ -4,7 +4,8 @@ import java.math.BigDecimal;
 
 /**
  * Scalar fields selected for one PostgreSQL reporting-unit EXPANDED row (issue #1238, expanded
- * search) — the projection of {@link ReportingUnitSearchQueryConstants#SEARCH_REPORTING_UNIT_EXPANDED_QUERY}.
+ * search) — the projection of
+ * {@link ReportingUnitSearchQueryConstants#SEARCH_REPORTING_UNIT_EXPANDED_QUERY}.
  *
  * <p>Getter contract for the {@code Tuple} row produced by the native query: the quoted SELECT
  * aliases map 1:1 to these getters. Field names mirror the legacy {@code
