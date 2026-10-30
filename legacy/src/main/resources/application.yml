@@ -79,6 +79,8 @@ management:
       version: ${info.app.version}
       app: ${info.app.name}
       zone: ${info.app.zone}
+      build: ${info.app.build}
+      commit: ${info.app.commit}
     # Distribution statistics for every timer, applied via the `all` key:
     # published percentiles plus SLO histogram boundaries — the same values
     # the removed Java MeterFilter configured.
@@ -141,7 +143,9 @@ info:
   app:
     name: ${spring.application.name}
     zone: ${APP_ZONE:local}
-    version: ${APP_VERSION:0.0.1-SNAPSHOT}
+    # info.app.version and info.app.build come from application.properties, which
+    # Maven filters at build time. Spring loads application.properties ahead of
+    # application.yml for the same key, so a version here is silently ignored.
 
 logging:
   level:

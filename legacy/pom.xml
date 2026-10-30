@@ -81,6 +81,10 @@
         <sonar.organization>bcgov-sonarcloud</sonar.organization>
         <sonar.host.url>https://sonarcloud.io</sonar.host.url>
         <oci.revision>${project.version}</oci.revision>
+        <!-- Fallback commit SHA. The git-commit-id-maven-plugin overrides this with the real
+             SHA when the build runs inside a git checkout. Container builds have no .git in
+             the build context and supply the SHA with -Dgit.commit.id=<sha> instead. -->
+        <git.commit.id>unknown</git.commit.id>
         <mapstruct.version>1.6.3</mapstruct.version>
         <jackson-bom.version>3.1.4</jackson-bom.version>
         <spring-security.version>7.0.5</spring-security.version>
@@ -326,6 +330,20 @@
                             <artifactId>mapstruct-processor</artifactId>
                         </exclude>
                     </excludes>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>io.github.git-commit-id</groupId>
+                <artifactId>git-commit-id-maven-plugin</artifactId>
+                <configuration>
+                    <!-- Container builds have no .git directory in the build context, so the
+                         plugin must not fail the build when it cannot find one; the pipeline
+                         supplies the SHA with -Dgit.commit.id=<sha> instead. -->
+                    <failOnNoGitDirectory>false</failOnNoGitDirectory>
+                    <!-- The generated git.properties embeds the build host and the developer's
+                         name and email. The SHA is published through info.app.commit instead,
+                         so the file is not written into the shipped artifact. -->
+                    <generateGitPropertiesFile>false</generateGitPropertiesFile>
                 </configuration>
             </plugin>
             <plugin>

@@ -276,6 +276,12 @@ objects:
         app: ${NAME}-${ZONE}
       name: ${NAME}-${ZONE}-${COMPONENT}-config
     data:
+      # This application.yml replaces the one packaged in the image for every
+      # key it defines: an external file:./application.yml outranks the
+      # packaged classpath:/application.properties. The build metadata —
+      # info.app.version, info.app.build and info.app.commit — is baked into
+      # the packaged application.properties at build time, so this ConfigMap
+      # must not define those keys or it will shadow the baked values.
       application.yml: |
         ${CONFIG_MAP}
   - apiVersion: autoscaling/v2
