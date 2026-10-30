@@ -173,7 +173,7 @@ public class IdempotencyInterceptor extends OncePerRequestFilter {
           response,
           request.getRequestURI(),
           HttpStatus.INTERNAL_SERVER_ERROR,
-          "Failed to process idempotency transaction: " + ex.getMessage());
+          "An unexpected error occurred. Please contact support if this persists.");
       return;
     } finally {
       if (!txStatus.isCompleted()) {
