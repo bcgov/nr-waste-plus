@@ -23,6 +23,11 @@ RUN sed -i 's/\r$//' ./mvnw && ./mvnw -Pnative package -DskipTests -Dskip.unit.t
 ### Deployer
 FROM gcr.io/distroless/java21-debian12:nonroot
 ARG PORT=9090
+# Source revision of the image. The build stage has no .git in its context, so
+# the pipeline passes the SHA in and it is baked into the artifact's build
+# metadata as well.
+ARG GIT_COMMIT=unknown
+LABEL org.opencontainers.image.revision="${GIT_COMMIT}"
 
 # Copy
 WORKDIR /app
