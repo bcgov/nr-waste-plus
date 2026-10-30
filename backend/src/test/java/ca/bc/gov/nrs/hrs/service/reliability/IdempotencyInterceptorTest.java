@@ -452,11 +452,18 @@ class IdempotencyInterceptorTest {
 
     repository.failOnComplete = true;
 
-    mockMvc.perform(post("/api/test-mutation")
+    var result = mockMvc.perform(post("/api/test-mutation")
             .header("Idempotency-Key", key)
             .contentType(MediaType.APPLICATION_JSON)
             .content(body))
-        .andExpect(status().isInternalServerError());
+        .andExpect(status().isInternalServerError())
+        .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
+        .andReturn();
+
+    // Verify response contains only the ProblemDetail without concatenated success body
+    String responseContent = result.getResponse().getContentAsString();
+    assertThat(responseContent).contains("\"title\":\"Internal Server Error\"");
+    assertThat(responseContent).doesNotContain("\"status\":\"CREATED\"");
 
     // Both the business mutation AND the idempotency claim must be rolled back atomically
     assertThat(controller.mutationCount.get()).isEqualTo(0);

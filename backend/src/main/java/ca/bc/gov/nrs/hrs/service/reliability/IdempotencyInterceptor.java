@@ -169,8 +169,9 @@ public class IdempotencyInterceptor extends OncePerRequestFilter {
           trimmedKey,
           ex.getMessage(),
           ex);
+      wrappedResponse.reset();
       writeProblemDetail(
-          response,
+          wrappedResponse,
           request.getRequestURI(),
           HttpStatus.INTERNAL_SERVER_ERROR,
           "An unexpected error occurred. Please contact support if this persists.");
