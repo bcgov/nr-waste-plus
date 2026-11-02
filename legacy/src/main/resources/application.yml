@@ -143,7 +143,7 @@ info:
   app:
     name: ${spring.application.name}
     zone: ${APP_ZONE:local}
-    # info.app.version and info.app.build come from application.properties, which
+    # info.app.version, info.app.build and info.app.commit come from application.properties, which
     # Maven filters at build time. Spring loads application.properties ahead of
     # application.yml for the same key, so a version here is silently ignored.
 
