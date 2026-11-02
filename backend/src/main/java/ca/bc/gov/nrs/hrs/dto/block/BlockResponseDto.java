@@ -13,3 +13,4 @@ public record BlockResponseDto(
     Long revision,
     Instant createdAt,
     Instant updatedAt) {}
+
