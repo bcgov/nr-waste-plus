@@ -16,7 +16,7 @@
     <description>Report logging waste and residue data for billing and cut
         control - Legacy
     </description>
-    <url>https://github.com/bcgov/nr-hrs</url>
+    <url>https://github.com/bcgov/nr-waste-plus</url>
     <licenses>
         <license>
             <name>Apache License, Version 2.0</name>
@@ -56,9 +56,9 @@
         </developer>
     </developers>
     <scm>
-        <connection>scm:git:https://github.com/bcgov/nr-hrs.git</connection>
-        <developerConnection>scm:git:ssh://git@github.com:bcgov/nr-hrs.git</developerConnection>
-        <url>https://github.com/bcgov/nr-hrs</url>
+        <connection>scm:git:https://github.com/bcgov/nr-waste-plus.git</connection>
+        <developerConnection>scm:git:ssh://git@github.com:bcgov/nr-waste-plus.git</developerConnection>
+        <url>https://github.com/bcgov/nr-waste-plus</url>
         <tag>HEAD</tag>
     </scm>
     <properties>
@@ -81,6 +81,10 @@
         <sonar.organization>bcgov-sonarcloud</sonar.organization>
         <sonar.host.url>https://sonarcloud.io</sonar.host.url>
         <oci.revision>${project.version}</oci.revision>
+        <!-- Fallback commit SHA. The git-commit-id-maven-plugin overrides this with the real
+             SHA when the build runs inside a git checkout. Container builds have no .git in
+             the build context and supply the SHA with -Dgit.commit.id=<sha> instead. -->
+        <git.commit.id>unknown</git.commit.id>
         <mapstruct.version>1.6.3</mapstruct.version>
         <jackson-bom.version>3.1.4</jackson-bom.version>
         <spring-security.version>7.0.5</spring-security.version>
@@ -329,6 +333,20 @@
                 </configuration>
             </plugin>
             <plugin>
+                <groupId>io.github.git-commit-id</groupId>
+                <artifactId>git-commit-id-maven-plugin</artifactId>
+                <configuration>
+                    <!-- Container builds have no .git directory in the build context, so the
+                         plugin must not fail the build when it cannot find one; the pipeline
+                         supplies the SHA with -Dgit.commit.id=<sha> instead. -->
+                    <failOnNoGitDirectory>false</failOnNoGitDirectory>
+                    <!-- The generated git.properties embeds the build host and the developer's
+                         name and email. The SHA is published through info.app.commit instead,
+                         so the file is not written into the shipped artifact. -->
+                    <generateGitPropertiesFile>false</generateGitPropertiesFile>
+                </configuration>
+            </plugin>
+            <plugin>
                 <groupId>org.hibernate.orm</groupId>
                 <artifactId>hibernate-maven-plugin</artifactId>
                 <version>${hibernate.version}</version>
@@ -385,7 +403,7 @@
             <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
-                <version>0.8.15</version>
+                <version>0.8.16</version>
                 <configuration>
                     <skip>${jacoco.skip}</skip>
                     <excludes>

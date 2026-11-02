@@ -40,6 +40,8 @@ public class ApiAuthorizationCustomizer
    * order:
    * <ul>
    *   <li>Public health endpoint ({@code GET /actuator/health}) — permitted to all</li>
+   *   <li>Build metadata endpoint ({@code GET /actuator/info}) — requires
+   *       authentication</li>
    *   <li>Metrics endpoint — requires authentication</li>
    *   <li>OPTIONS requests — requires authentication</li>
    *   <li>User endpoints ({@code /api/users/**}) — requires authentication</li>
@@ -66,6 +68,11 @@ public class ApiAuthorizationCustomizer
         .requestMatchers(HttpMethod.GET, "/actuator/health")
         .permitAll()
 
+        // Build metadata endpoint. It reports the application version, build
+        // timestamp and source revision, so it is kept behind authentication
+        // rather than disclosed anonymously.
+        .requestMatchers(HttpMethod.GET, "/actuator/info")
+        .authenticated()
         // Metrics endpoint should be protected
         .requestMatchers("/metrics")
         .authenticated()
