@@ -141,7 +141,7 @@ class JwtBearerFilterChainSecurityTest {
   }
 
   @Test
-  void authenticatedInfoReturnsBuildMetadata() throws Exception {
+  void authenticatedInfoRouteAllowsAuthenticatedCaller() throws Exception {
     mockMvc
         .perform(
             get("/actuator/info").header("Authorization", "Bearer " + token("client-good", ISSUER, null)))
@@ -254,7 +254,7 @@ class JwtBearerFilterChainSecurityTest {
     @GetMapping("/actuator/info")
     @ResponseBody
     String info() {
-      return "{\"app\":{\"version\":\"0.0.1-SNAPSHOT\",\"commit\":\"9e835c764c8672d36dbaddd2e10e131fd92777ec\"}}";
+      return "{\"app\":{\"commit\":\"probe-commit\"}}";
     }
   }
 
