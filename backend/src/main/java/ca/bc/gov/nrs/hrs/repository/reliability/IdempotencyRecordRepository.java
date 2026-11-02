@@ -13,4 +13,8 @@ public interface IdempotencyRecordRepository extends Repository<IdempotencyRecor
   Optional<IdempotencyRecordEntity> findById(Long id);
 
   Optional<IdempotencyRecordEntity> findByIdempotencyKey(String idempotencyKey);
+
+  void delete(IdempotencyRecordEntity entity);
+
+  void deleteByIdempotencyKey(String idempotencyKey);
 }

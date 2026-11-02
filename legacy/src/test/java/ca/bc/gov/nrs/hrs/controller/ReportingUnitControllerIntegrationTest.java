@@ -117,9 +117,11 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
   @Test
   @DisplayName("should create a reporting unit and return its persisted ID")
   void shouldCreateReportingUnit_whenRequestIsValid() throws Exception {
+    String idempotencyKey = "legacy-create-retry-" + System.nanoTime();
     MvcResult response = mockMvc
         .perform(
             post("/api/reporting-units")
+                .header("Idempotency-Key", idempotencyKey)
                 .with(SecurityMockMvcRequestPostProcessors.csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .accept(MediaType.APPLICATION_JSON)
@@ -146,6 +148,26 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
     assertThat(createdReportingUnit.orElseThrow().getCreatedBy()).isEqualTo("IDIR\\test");
     assertThat(createdReportingUnit.orElseThrow().getUpdatedBy()).isEqualTo("IDIR\\test");
     assertThat(createdReportingUnit.orElseThrow().getRevision()).isEqualTo(1L);
+
+    MvcResult retryResponse = mockMvc
+        .perform(
+            post("/api/reporting-units")
+                .header("Idempotency-Key", idempotencyKey)
+                .with(SecurityMockMvcRequestPostProcessors.csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON)
+                .content("""
+                    {
+                      "clientNumber": "00001271",
+                      "districtCode": "DKM",
+                      "samplingCode": "AGR"
+                    }
+                    """))
+        .andExpect(status().isCreated())
+        .andReturn();
+
+    assertThat(retryResponse.getResponse().getContentAsString())
+        .isEqualTo(createdReportingUnitId.toString());
   }
 
   // -----------------------------------------------------------------------

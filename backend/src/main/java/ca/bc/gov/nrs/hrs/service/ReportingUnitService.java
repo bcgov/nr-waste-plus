@@ -4,6 +4,7 @@ import ca.bc.gov.nrs.hrs.dto.base.CodeDescriptionDto;
 import ca.bc.gov.nrs.hrs.dto.reportingunit.CreateReportingUnitRequestDto;
 import ca.bc.gov.nrs.hrs.dto.reportingunit.ReportingUnitDetailsDto;
 import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchParametersDto;
+import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchResultDto;
 import ca.bc.gov.nrs.hrs.entity.block.ReportingUnitEntity;
 import ca.bc.gov.nrs.hrs.exception.ForestClientNotFoundException;
 import ca.bc.gov.nrs.hrs.provider.forestclient.ForestClientApiProvider;
@@ -13,6 +14,7 @@ import io.micrometer.observation.annotation.Observed;
 import io.micrometer.tracing.annotation.NewSpan;
 import jakarta.validation.Valid;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -196,6 +198,19 @@ public class ReportingUnitService {
    */
   @NewSpan
   public Long createReportingUnit(@Valid CreateReportingUnitRequestDto request) {
+    return createReportingUnit(request, null);
+  }
+
+  /**
+   * Creates or reconciles a reporting unit using the idempotency key to correlate a remote create.
+   *
+   * @param request the validated create request
+   * @param idempotencyKey the retry-correlation key, or null when the request is not idempotent
+   * @return the persisted reporting unit identifier
+   */
+  @NewSpan
+  public Long createReportingUnit(
+      @Valid CreateReportingUnitRequestDto request, String idempotencyKey) {
 
     log.info("Creating reporting unit for client {}", request.clientNumber());
 
@@ -215,6 +230,16 @@ public class ReportingUnitService {
     var existing = legacyApiProvider.searchReportingUnit(searchFilters, PageRequest.of(0, 1));
 
     if (existing != null && existing.getTotalElements() > 0) {
+      ReportingUnitSearchResultDto first = existing.getContent().get(0);
+      Long existingId = parseLongOrNull(first.id());
+      if (existingId != null
+          && !reportingUnitRepository.existsById(existingId)
+          && matchesRequestAttributes(first, request)) {
+        log.warn(
+            "Reconciling uncommitted legacy reporting unit {} for client {} and district {}",
+            existingId, request.clientNumber(), request.districtCode());
+        return persistLocalReportingUnit(existingId, request);
+      }
       throw new ResponseStatusException(
           HttpStatus.CONFLICT,
           String.format(
@@ -236,7 +261,9 @@ public class ReportingUnitService {
         .orElseThrow(() -> new ForestClientNotFoundException(request.clientNumber()));
 
     // Create reporting unit via legacy API
-    Long createdId = legacyApiProvider.createReportingUnit(request);
+    Long createdId = idempotencyKey == null || idempotencyKey.isBlank()
+        ? legacyApiProvider.createReportingUnit(request)
+        : legacyApiProvider.createReportingUnit(request, idempotencyKey);
 
     // Persist reporting unit in PostgreSQL
     return persistLocalReportingUnit(createdId, request);
@@ -262,5 +289,35 @@ public class ReportingUnitService {
     reportingUnitRepository.saveAndFlush(entity);
     log.info("Persisted local reporting unit {} in PostgreSQL", reportingUnitId);
     return reportingUnitId;
+  }
+
+  private boolean matchesRequestAttributes(
+      ReportingUnitSearchResultDto existingUnit, CreateReportingUnitRequestDto request) {
+    if (existingUnit == null || request == null) {
+      return false;
+    }
+
+    boolean clientMatches =
+        existingUnit.client() != null
+            && Objects.equals(existingUnit.client().code(), request.clientNumber());
+    boolean districtMatches =
+        existingUnit.district() != null
+            && Objects.equals(existingUnit.district().code(), request.districtCode());
+    boolean samplingMatches =
+        existingUnit.sampling() != null
+            && Objects.equals(existingUnit.sampling().code(), request.samplingCode());
+
+    return clientMatches && districtMatches && samplingMatches;
+  }
+
+  private static Long parseLongOrNull(String value) {
+    if (value == null || value.isBlank()) {
+      return null;
+    }
+    try {
+      return Long.parseLong(value.trim());
+    } catch (NumberFormatException e) {
+      return null;
+    }
   }
 }
