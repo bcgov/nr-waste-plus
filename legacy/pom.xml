@@ -16,7 +16,7 @@
     <description>Report logging waste and residue data for billing and cut
         control - Legacy
     </description>
-    <url>https://github.com/bcgov/nr-hrs</url>
+    <url>https://github.com/bcgov/nr-waste-plus</url>
     <licenses>
         <license>
             <name>Apache License, Version 2.0</name>
@@ -56,9 +56,9 @@
         </developer>
     </developers>
     <scm>
-        <connection>scm:git:https://github.com/bcgov/nr-hrs.git</connection>
-        <developerConnection>scm:git:ssh://git@github.com:bcgov/nr-hrs.git</developerConnection>
-        <url>https://github.com/bcgov/nr-hrs</url>
+        <connection>scm:git:https://github.com/bcgov/nr-waste-plus.git</connection>
+        <developerConnection>scm:git:ssh://git@github.com:bcgov/nr-waste-plus.git</developerConnection>
+        <url>https://github.com/bcgov/nr-waste-plus</url>
         <tag>HEAD</tag>
     </scm>
     <properties>
