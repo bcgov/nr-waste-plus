@@ -12,12 +12,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import ca.bc.gov.nrs.hrs.configuration.FeatureFlagsConfiguration;
 import ca.bc.gov.nrs.hrs.dto.base.FeatureFlag;
+import ca.bc.gov.nrs.hrs.dto.block.BlockCalculationDto;
 import ca.bc.gov.nrs.hrs.dto.block.BlockDetailDto;
 import ca.bc.gov.nrs.hrs.dto.block.BlockListItemDto;
 import ca.bc.gov.nrs.hrs.dto.block.BlockResponseDto;
 import ca.bc.gov.nrs.hrs.dto.block.BlockType;
 import ca.bc.gov.nrs.hrs.entity.block.BlockEntity;
-import ca.bc.gov.nrs.hrs.exception.BlockNotFoundException;
 import ca.bc.gov.nrs.hrs.exception.DuplicateBlockException;
 import ca.bc.gov.nrs.hrs.exception.GlobalExceptionHandler;
 import ca.bc.gov.nrs.hrs.exception.NotFoundGenericException;
@@ -30,6 +30,7 @@ import ca.bc.gov.nrs.hrs.service.block.BlockService;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -38,6 +39,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.json.JacksonJsonHttpMessageConverter;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -183,13 +185,26 @@ class BlockControllerTest {
   void list_returnsOkWithBlockList() throws Exception {
     BlockListItemDto itemDto =
         new BlockListItemDto(
-            BLOCK_ID, "LIC1", "CP1", "CB1", "TM1", null, "Sub", null, null, "DISTRICT_AVERAGE");
+            BLOCK_ID,
+            "LIC1",
+            "CP1",
+            "CB1",
+            "TM1",
+            null,
+            null,
+            "Sub",
+            new BlockListItemDto.Status("DFT", "Draft"),
+            null,
+            "DISTRICT_AVERAGE");
 
+    PageRequest pageRequest = PageRequest.of(0, 10);
     when(reportingUnitBlockService.getBlockList(eq(RU_ID), nullable(Jwt.class)))
-        .thenReturn(new PageImpl<>(List.of(itemDto)));
+        .thenReturn(new PageImpl<>(List.of(itemDto), pageRequest, 1));
 
     mockMvc
-        .perform(get("/api/reporting-units/{reportingUnitId}/blocks", RU_ID))
+        .perform(
+            get("/api/reporting-units/{reportingUnitId}/blocks", RU_ID)
+                .contentType(MediaType.APPLICATION_JSON))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.content[0].id").value(BLOCK_ID))
         .andExpect(jsonPath("$.content[0].blockType").value("DISTRICT_AVERAGE"));
@@ -273,6 +288,71 @@ class BlockControllerTest {
 
     mockMvc
         .perform(get("/api/reporting-units/{reportingUnitId}/{blockId}", RU_ID, BLOCK_ID))
+        .andExpect(status().isNotFound());
+  }
+
+  @Test
+  @DisplayName("GET /blocks/{blockId}/calculation returns 200 OK with calculation snapshot")
+  void getLatest_returnsOkWithCalculationSnapshot() throws Exception {
+    BlockCalculationDto dto =
+        new BlockCalculationDto(
+            BLOCK_ID,
+            1L,
+            Instant.parse("2026-08-24T12:00:00Z"),
+            "NEAREST_TENTH",
+            null,
+            List.of());
+
+    when(blockCalculationService.findLatest(eq(RU_ID), eq(BLOCK_ID), nullable(Jwt.class)))
+        .thenReturn(Optional.of(dto));
+
+    mockMvc
+        .perform(
+            get(
+                "/api/reporting-units/{reportingUnitId}/blocks/{blockId}/calculation",
+                RU_ID,
+                BLOCK_ID))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.blockId").value(BLOCK_ID))
+        .andExpect(jsonPath("$.districtVolumeId").value(1))
+        .andExpect(jsonPath("$.roundingPolicy").value("NEAREST_TENTH"));
+  }
+
+  @Test
+  @DisplayName("GET /{blockId}/calculation returns 200 OK via alternate path")
+  void getLatest_alternatePath_returnsOkWithCalculationSnapshot() throws Exception {
+    BlockCalculationDto dto =
+        new BlockCalculationDto(
+            BLOCK_ID,
+            1L,
+            Instant.parse("2026-08-24T12:00:00Z"),
+            "NEAREST_TENTH",
+            null,
+            List.of());
+
+    when(blockCalculationService.findLatest(eq(RU_ID), eq(BLOCK_ID), nullable(Jwt.class)))
+        .thenReturn(Optional.of(dto));
+
+    mockMvc
+        .perform(get("/api/reporting-units/{reportingUnitId}/{blockId}/calculation", RU_ID, BLOCK_ID))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.blockId").value(BLOCK_ID))
+        .andExpect(jsonPath("$.districtVolumeId").value(1))
+        .andExpect(jsonPath("$.roundingPolicy").value("NEAREST_TENTH"));
+  }
+
+  @Test
+  @DisplayName("GET /blocks/{blockId}/calculation returns 404 when no snapshot exists")
+  void getLatest_whenNotFound_returnsNotFound() throws Exception {
+    when(blockCalculationService.findLatest(eq(RU_ID), eq(BLOCK_ID), nullable(Jwt.class)))
+        .thenReturn(Optional.empty());
+
+    mockMvc
+        .perform(
+            get(
+                "/api/reporting-units/{reportingUnitId}/blocks/{blockId}/calculation",
+                RU_ID,
+                BLOCK_ID))
         .andExpect(status().isNotFound());
   }
 }

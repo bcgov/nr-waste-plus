@@ -10,7 +10,6 @@ import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMoc
 import static org.mockito.Mockito.doReturn;
 import static org.springframework.boot.webmvc.test.autoconfigure.MockMvcPrint.SYSTEM_OUT;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
@@ -57,7 +56,6 @@ import org.springframework.transaction.support.TransactionTemplate;
 @DisplayName("Integrated Test | Block Controller")
 class BlockControllerIntegrationTest extends AbstractTestContainerIntegrationTest {
 
-<<<<<<< HEAD
   private static final String ACTOR = "ctrl-test";
   private static final ObjectMapper MAPPER = new ObjectMapper();
 
@@ -246,122 +244,10 @@ class BlockControllerIntegrationTest extends AbstractTestContainerIntegrationTes
   void returnsPostgresBlockDetailsWithIsLegacyFalse() throws Exception {
     mockMvc
         .perform(MockMvcRequestBuilders.get(detailsUrl(reportingUnitId, blockId)))
-=======
-  private static final String CLIENT_NUMBER = "00012797";
-  private static final String ACTOR = "test-actor";
-
-  @Autowired
-  private MockMvc mockMvc;
-
-  @Autowired
-  private ReportingUnitRepository reportingUnitRepository;
-
-  @Autowired
-  private BlockRepository blockRepository;
-
-  private Long reportingUnitId;
-
-  @BeforeEach
-  void setUp() {
-    String unique = UUID.randomUUID().toString().substring(0, 8);
-
-    ReportingUnitEntity ru = new ReportingUnitEntity();
-    ru.setClientNumber(CLIENT_NUMBER);
-    ru.setClientLocnCode("LOC-" + unique);
-    ru.setOrgUnitNo("DCK");
-    audit(ru);
-    ReportingUnitEntity savedRu = reportingUnitRepository.saveAndFlush(ru);
-    reportingUnitId = savedRu.getId();
-  }
-
-  @Test
-  @DisplayName("POST /blocks returns 401 when unauthenticated")
-  void create_whenUnauthenticated_returns401() throws Exception {
-    mockMvc
-        .perform(
-            post("/api/reporting-units/{reportingUnitId}/blocks", reportingUnitId)
-                .with(csrf())
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"blockType\":\"DISTRICT_AVERAGE\"}"))
-        .andExpect(status().isUnauthorized());
-  }
-
-  @Test
-  @DisplayName("POST /blocks returns 403 when role is VIEWER")
-  @WithMockJwt(cognitoGroups = {"WASTE_PLUS_VIEWER_" + CLIENT_NUMBER})
-  void create_whenViewer_returns403() throws Exception {
-    mockMvc
-        .perform(
-            post("/api/reporting-units/{reportingUnitId}/blocks", reportingUnitId)
-                .with(csrf())
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"blockType\":\"DISTRICT_AVERAGE\"}"))
-        .andExpect(status().isForbidden());
-  }
-
-  @Test
-  @DisplayName("GET /blocks returns 401 when unauthenticated")
-  void list_whenUnauthenticated_returns401() throws Exception {
-    mockMvc
-        .perform(get("/api/reporting-units/{reportingUnitId}/blocks", reportingUnitId))
-        .andExpect(status().isUnauthorized());
-  }
-
-  @Test
-  @DisplayName("End-to-end lifecycle: create DA block, reject duplicate, list, and get owned")
-  @WithMockJwt(
-      cognitoGroups = {"WASTE_PLUS_SUBMITTER_" + CLIENT_NUMBER},
-      idp = "bceidbusiness")
-  void fullLifecycle_createAndQueryBlocks() throws Exception {
-    // 1. Create District Average block
-    mockMvc
-        .perform(
-            post("/api/reporting-units/{reportingUnitId}/blocks", reportingUnitId)
-                .with(csrf())
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"blockType\":\"DISTRICT_AVERAGE\"}"))
-        .andExpect(status().isCreated())
-        .andExpect(header().exists("Location"))
-        .andExpect(jsonPath("$.id").isNumber())
-        .andExpect(jsonPath("$.reportingUnitId").value(reportingUnitId))
-        .andExpect(jsonPath("$.blockType").value("DISTRICT_AVERAGE"))
-        .andExpect(jsonPath("$.draft").value(true));
-
-    // 2. Creating another District Average block on same RU fails with 409 Conflict
-    mockMvc
-        .perform(
-            post("/api/reporting-units/{reportingUnitId}/blocks", reportingUnitId)
-                .with(csrf())
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"blockType\":\"DISTRICT_AVERAGE\"}"))
-        .andExpect(status().isConflict());
-
-    // 3. List blocks returns the created block
-    mockMvc
-        .perform(get("/api/reporting-units/{reportingUnitId}/blocks", reportingUnitId))
-        .andExpect(status().isOk())
-        .andExpect(jsonPath("$.length()").value(1))
-        .andExpect(jsonPath("$[0].blockType").value("DISTRICT_AVERAGE"));
-
-    // 4. Get owned block by id
-    Long blockId =
-        blockRepository
-            .findAllByReportingUnitIdAndDeletedFalseOrderByIdAsc(reportingUnitId)
-            .getFirst()
-            .getId();
-
-    mockMvc
-        .perform(
-            get(
-                "/api/reporting-units/{reportingUnitId}/blocks/{blockId}",
-                reportingUnitId,
-                blockId))
->>>>>>> 19dbae14 (feat(#1228): implement core block resources and submission endpoints)
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.id").value(blockId))
         .andExpect(jsonPath("$.reportingUnitId").value(reportingUnitId))
         .andExpect(jsonPath("$.blockType").value("DISTRICT_AVERAGE"))
-<<<<<<< HEAD
         .andExpect(jsonPath("$.draft").value(true))
         .andExpect(jsonPath("$.plcDate").value("2026-01-15"))
         .andExpect(jsonPath("$.revision").value(0))
