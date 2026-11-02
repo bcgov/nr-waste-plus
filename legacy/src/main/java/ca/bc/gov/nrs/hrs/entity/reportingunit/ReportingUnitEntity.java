@@ -50,6 +50,12 @@ public class ReportingUnitEntity {
   private Long orgUnitNo;
 
   /**
+   * Idempotency key supplied by the modern reporting-unit create endpoint, when present.
+   */
+  @Column(name = "IDEMPOTENCY_KEY", length = 256, unique = true)
+  private String idempotencyKey;
+
+  /**
    * Client location code (2 chars).
    */
   @Column(name = "CLIENT_LOCN_CODE", length = 2, nullable = false)

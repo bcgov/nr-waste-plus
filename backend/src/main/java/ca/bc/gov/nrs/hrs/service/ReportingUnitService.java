@@ -198,6 +198,19 @@ public class ReportingUnitService {
    */
   @NewSpan
   public Long createReportingUnit(@Valid CreateReportingUnitRequestDto request) {
+    return createReportingUnit(request, null);
+  }
+
+  /**
+   * Creates or reconciles a reporting unit using the idempotency key to correlate a remote create.
+   *
+   * @param request the validated create request
+   * @param idempotencyKey the retry-correlation key, or null when the request is not idempotent
+   * @return the persisted reporting unit identifier
+   */
+  @NewSpan
+  public Long createReportingUnit(
+      @Valid CreateReportingUnitRequestDto request, String idempotencyKey) {
 
     log.info("Creating reporting unit for client {}", request.clientNumber());
 
@@ -248,7 +261,9 @@ public class ReportingUnitService {
         .orElseThrow(() -> new ForestClientNotFoundException(request.clientNumber()));
 
     // Create reporting unit via legacy API
-    Long createdId = legacyApiProvider.createReportingUnit(request);
+    Long createdId = idempotencyKey == null || idempotencyKey.isBlank()
+        ? legacyApiProvider.createReportingUnit(request)
+        : legacyApiProvider.createReportingUnit(request, idempotencyKey);
 
     // Persist reporting unit in PostgreSQL
     return persistLocalReportingUnit(createdId, request);

@@ -130,10 +130,12 @@ class IdempotencyIntegrationTest extends AbstractTestContainerIntegrationTest {
 
     int successCount = 0;
     int conflictCount = 0;
+    List<Integer> responseStatuses = new ArrayList<>();
 
     for (Future<MvcResult> future : futures) {
       MvcResult result = future.get(10, TimeUnit.SECONDS);
       int status = result.getResponse().getStatus();
+      responseStatuses.add(status);
       if (status == 202) {
         successCount++;
       } else if (status == 409) {
@@ -145,6 +147,7 @@ class IdempotencyIntegrationTest extends AbstractTestContainerIntegrationTest {
 
     // The winning thread produces a 202; contenders arriving before commit receive a 409 conflict,
     // while contenders delayed past commit legitimately receive a replayed 202.
+    assertThat(responseStatuses).containsOnly(202, 409);
     assertThat(successCount).isGreaterThanOrEqualTo(1);
     assertThat(conflictCount).isGreaterThanOrEqualTo(1);
     assertThat(successCount + conflictCount).isEqualTo(concurrency);
@@ -214,4 +217,3 @@ class IdempotencyIntegrationTest extends AbstractTestContainerIntegrationTest {
     assertThat(completed.get().getStatus()).isEqualTo(IdempotencyService.STATUS_COMPLETED);
   }
 }
-

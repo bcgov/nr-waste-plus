@@ -84,8 +84,10 @@ public class DefaultEndpointAuthorizationChecker implements EndpointAuthorizatio
 
     Object principal = authentication.getPrincipal();
     if (principal instanceof Jwt jwt) {
-      if (!JwtPrincipalUtil.hasPrivilegedCreateRole(jwt)
-          && !JwtPrincipalUtil.hasAbstractRole(jwt, Role.SUBMITTER, clientNumber)) {
+      boolean hasCreateRole =
+          JwtPrincipalUtil.hasPrivilegedCreateRole(jwt)
+              || JwtPrincipalUtil.hasAbstractRole(jwt, Role.SUBMITTER, clientNumber);
+      if (!hasCreateRole) {
         log.warn(
             "SECURITY: Caller {} attempted unauthorized replay creation for client {}",
             JwtPrincipalUtil.getUserId(jwt),
@@ -93,6 +95,9 @@ public class DefaultEndpointAuthorizationChecker implements EndpointAuthorizatio
         throw new ForbiddenException(
             "User is not authorized to create a reporting unit for client " + clientNumber);
       }
+    } else {
+      throw new ForbiddenException(
+          "Authenticated caller is not authorized to create a reporting unit");
     }
   }
 

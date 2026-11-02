@@ -215,6 +215,40 @@ class DefaultEndpointAuthorizationCheckerTest {
   }
 
   @Test
+  @DisplayName("allows replay creation when caller has an authorized elevated role")
+  void shouldAllowReplayCreationWhenCallerHasAuthorizedElevatedRole() throws Exception {
+    Jwt jwt = WithMockJwtSecurityContextFactory.createJwt(
+        "admin-user",
+        List.of("WASTE_PLUS_ADMIN"),
+        "idir",
+        "Admin User",
+        "admin@example.com");
+    Authentication auth = new UsernamePasswordAuthenticationToken(jwt, "n/a", List.of());
+    MockHttpServletRequest rawRequest =
+        new MockHttpServletRequest("POST", "/api/reporting-units");
+    rawRequest.setContent("{\"clientNumber\": \"00012797\"}".getBytes());
+    CachedBodyHttpServletRequest request = new CachedBodyHttpServletRequest(rawRequest, 1024 * 1024);
+
+    assertThatCode(() -> checker.checkAuthorization(request, auth)).doesNotThrowAnyException();
+    verifyNoInteractions(reportingUnitRepository);
+  }
+
+  @Test
+  @DisplayName("rejects replay creation when authenticated principal is not a JWT")
+  void shouldRejectReplayCreationForNonJwtPrincipal() throws Exception {
+    Authentication auth = new UsernamePasswordAuthenticationToken("user", "n/a", List.of());
+    MockHttpServletRequest rawRequest =
+        new MockHttpServletRequest("POST", "/api/reporting-units");
+    rawRequest.setContent("{\"clientNumber\": \"00012797\"}".getBytes());
+    CachedBodyHttpServletRequest request = new CachedBodyHttpServletRequest(rawRequest, 1024 * 1024);
+
+    assertThatThrownBy(() -> checker.checkAuthorization(request, auth))
+        .isInstanceOf(ForbiddenException.class)
+        .hasMessageContaining("Authenticated caller is not authorized");
+    verifyNoInteractions(reportingUnitRepository);
+  }
+
+  @Test
   @DisplayName("rejects replay creation when caller is unauthenticated")
   void shouldRejectReplayCreationWhenCallerIsUnauthenticated() throws Exception {
     MockHttpServletRequest rawRequest =
@@ -252,4 +286,3 @@ class DefaultEndpointAuthorizationCheckerTest {
     verifyNoInteractions(reportingUnitRepository);
   }
 }
-
