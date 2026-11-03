@@ -13,6 +13,7 @@ import ca.bc.gov.nrs.hrs.entity.block.ReportingUnitEntity;
 import ca.bc.gov.nrs.hrs.exception.BlockNotFoundException;
 import ca.bc.gov.nrs.hrs.exception.DuplicateBlockException;
 import ca.bc.gov.nrs.hrs.exception.ReportingUnitNotFoundException;
+import ca.bc.gov.nrs.hrs.exception.ReportingUnitStateConflictException;
 import ca.bc.gov.nrs.hrs.extensions.WithMockJwtSecurityContextFactory;
 import ca.bc.gov.nrs.hrs.repository.block.BlockRepository;
 import ca.bc.gov.nrs.hrs.repository.block.ReportingUnitRepository;
@@ -142,6 +143,36 @@ class BlockServiceTest {
     assertThat(persisted.getBlockType()).isEqualTo("DISTRICT_AVERAGE");
     assertThat(persisted.isDraft()).isTrue();
     assertThat(persisted.getRevision()).isNull();
+  }
+
+  @Test
+  @DisplayName("create successfully creates block when expectedReportingUnitState matches SUBMISSION")
+  void create_whenExpectedReportingUnitStateMatches_createsBlock() {
+    when(reportingUnitRepository.findByIdAndDeletedFalse(RU_ID))
+        .thenReturn(Optional.of(reportingUnit));
+
+    BlockEntity saved = new BlockEntity();
+    saved.setId(BLOCK_ID);
+    when(blockRepository.saveAndFlush(any(BlockEntity.class))).thenReturn(saved);
+
+    BlockEntity result =
+        blockService.create(idirJwt, RU_ID, BlockType.DISTRICT_AVERAGE, "SUBMISSION");
+
+    assertThat(result).isSameAs(saved);
+  }
+
+  @Test
+  @DisplayName("create throws ReportingUnitStateConflictException when expected state does not match")
+  void create_whenExpectedReportingUnitStateMismatch_throwsReportingUnitStateConflictException() {
+    when(reportingUnitRepository.findByIdAndDeletedFalse(RU_ID))
+        .thenReturn(Optional.of(reportingUnit));
+
+    assertThatThrownBy(
+            () -> blockService.create(idirJwt, RU_ID, BlockType.DISTRICT_AVERAGE, "APPROVED"))
+        .isInstanceOf(ReportingUnitStateConflictException.class)
+        .hasMessageContaining("Reporting unit state conflict: expected 'APPROVED' but was 'SUBMISSION'");
+
+    verify(blockRepository, never()).saveAndFlush(any());
   }
 
   @Test

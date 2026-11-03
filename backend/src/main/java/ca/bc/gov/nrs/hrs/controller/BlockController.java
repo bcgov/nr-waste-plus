@@ -72,7 +72,9 @@ public class BlockController {
       @Valid @RequestBody BlockCreateRequestDto request) {
     log.info("Creating block under reporting unit {}", reportingUnitId);
 
-    BlockEntity created = blockService.create(jwt, reportingUnitId, request.blockType());
+    BlockEntity created =
+        blockService.create(
+            jwt, reportingUnitId, request.blockType(), request.expectedReportingUnitState());
     URI location =
         URI.create(
             String.format("/api/reporting-units/%d/blocks/%d", reportingUnitId, created.getId()));

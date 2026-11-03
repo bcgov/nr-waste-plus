@@ -11,6 +11,7 @@ import ca.bc.gov.nrs.hrs.exception.BlockNotFoundException;
 import ca.bc.gov.nrs.hrs.exception.DuplicateBlockException;
 import ca.bc.gov.nrs.hrs.exception.NotFoundGenericException;
 import ca.bc.gov.nrs.hrs.exception.ReportingUnitNotFoundException;
+import ca.bc.gov.nrs.hrs.exception.ReportingUnitStateConflictException;
 import ca.bc.gov.nrs.hrs.mapper.block.BlockMapper;
 import ca.bc.gov.nrs.hrs.provider.legacy.LegacyApiProvider;
 import ca.bc.gov.nrs.hrs.repository.block.BlockRepository;
@@ -37,6 +38,7 @@ import org.springframework.web.server.ResponseStatusException;
 @Observed
 public class BlockService {
 
+  public static final String REQUIRED_REPORTING_UNIT_STATE = "SUBMISSION";
   private static final String DRAFT_STATUS_CODE = "DFT";
   private static final String ONE_DA_PER_RU_CONSTRAINT = "uq_block_one_da_per_ru";
 
@@ -46,24 +48,29 @@ public class BlockService {
   private final BlockMapper blockMapper;
 
   /**
-   * Creates a new submission block under the specified reporting unit.
+   * Creates a new submission block under the specified reporting unit, validating the expected
+   * reporting unit state precondition if supplied.
    *
    * @param jwt caller JWT for tenant authorization
    * @param reportingUnitId target reporting unit
    * @param blockType block subtype to create
+   * @param expectedReportingUnitState expected lifecycle state precondition (e.g. "SUBMISSION")
    * @return newly created and persisted block entity
    * @throws ReportingUnitNotFoundException if reporting unit is unknown or outside caller scope
+   * @throws ReportingUnitStateConflictException if expected state does not match actual state
    * @throws DuplicateBlockException if creating a duplicate DA block for the reporting unit
    */
   @NewSpan
   @Transactional
-  public BlockEntity create(Jwt jwt, Long reportingUnitId, BlockType blockType) {
+  public BlockEntity create(
+      Jwt jwt, Long reportingUnitId, BlockType blockType, String expectedReportingUnitState) {
     ReportingUnitEntity reportingUnit =
         reportingUnitRepository
             .findByIdAndDeletedFalse(reportingUnitId)
             .orElseThrow(() -> new ReportingUnitNotFoundException(reportingUnitId));
 
     validateTenantAccess(jwt, reportingUnit);
+    validateReportingUnitState(reportingUnit, expectedReportingUnitState);
 
     BlockEntity entity = new BlockEntity();
     entity.setReportingUnitId(reportingUnitId);
@@ -85,6 +92,18 @@ public class BlockService {
   }
 
   /**
+   * Creates a new submission block under the specified reporting unit.
+   *
+   * @param jwt caller JWT for tenant authorization
+   * @param reportingUnitId target reporting unit
+   * @param blockType block subtype to create
+   * @return newly created and persisted block entity
+   */
+  public BlockEntity create(Jwt jwt, Long reportingUnitId, BlockType blockType) {
+    return create(jwt, reportingUnitId, blockType, null);
+  }
+
+  /**
    * Creates a new submission block without JWT tenant scoping.
    *
    * @param reportingUnitId target reporting unit
@@ -92,7 +111,7 @@ public class BlockService {
    * @return newly created and persisted block entity
    */
   public BlockEntity create(Long reportingUnitId, BlockType blockType) {
-    return create(null, reportingUnitId, blockType);
+    return create(null, reportingUnitId, blockType, null);
   }
 
   /**
@@ -260,6 +279,20 @@ public class BlockService {
             reportingUnit.getId());
         throw new ReportingUnitNotFoundException(reportingUnit.getId());
       }
+    }
+  }
+
+  private void validateReportingUnitState(
+      ReportingUnitEntity reportingUnit, String expectedReportingUnitState) {
+    if (expectedReportingUnitState != null
+        && !REQUIRED_REPORTING_UNIT_STATE.equalsIgnoreCase(expectedReportingUnitState.trim())) {
+      log.warn(
+          "Conflict: Reporting unit {} expected state '{}' does not match actual state '{}'",
+          reportingUnit.getId(),
+          expectedReportingUnitState,
+          REQUIRED_REPORTING_UNIT_STATE);
+      throw new ReportingUnitStateConflictException(
+          expectedReportingUnitState, REQUIRED_REPORTING_UNIT_STATE);
     }
   }
 

@@ -49,6 +49,7 @@ import ca.bc.gov.nrs.hrs.exception.InvalidDocumentTypeException;
 import ca.bc.gov.nrs.hrs.exception.InvalidFileNameException;
 import ca.bc.gov.nrs.hrs.exception.NotFoundGenericException;
 import ca.bc.gov.nrs.hrs.exception.ReportingUnitNotFoundException;
+import ca.bc.gov.nrs.hrs.exception.ReportingUnitStateConflictException;
 import ca.bc.gov.nrs.hrs.exception.RequestException;
 import ca.bc.gov.nrs.hrs.exception.RetriableException;
 import ca.bc.gov.nrs.hrs.exception.TooManyRequestsException;
@@ -142,7 +143,8 @@ import tools.jackson.databind.json.JsonMapper.Builder;
   BlockDetailDto.class,
   BlockResponseDto.class,
   BlockType.class,
-  DuplicateBlockException.class
+  DuplicateBlockException.class,
+  ReportingUnitStateConflictException.class
 })
 @EnableJpaAuditing(auditorAwareRef = "databaseAuditor")
 public class GlobalConfiguration {

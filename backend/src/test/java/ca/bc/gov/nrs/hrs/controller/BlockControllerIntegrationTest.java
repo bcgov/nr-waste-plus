@@ -785,6 +785,25 @@ class BlockControllerIntegrationTest extends AbstractTestContainerIntegrationTes
   }
 
   @Test
+  @DisplayName("POST /blocks returns 409 Conflict when expectedReportingUnitState does not match")
+  @WithMockJwt(
+      cognitoGroups = {"WASTE_PLUS_SUBMITTER_00000000"},
+      idp = "bceidbusiness")
+  void create_whenExpectedReportingUnitStateMismatch_returns409Conflict() throws Exception {
+    mockMvc
+        .perform(
+            post("/api/reporting-units/{reportingUnitId}/blocks", otherReportingUnitId)
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(
+                    "{\"blockType\":\"DISTRICT_AVERAGE\",\"expectedReportingUnitState\":\"APPROVED\"}"))
+        .andExpect(status().isConflict())
+        .andExpect(
+            jsonPath("$.detail")
+                .value("Reporting unit state conflict: expected 'APPROVED' but was 'SUBMISSION'"));
+  }
+
+  @Test
   @DisplayName("POST /blocks returns 409 Conflict when duplicate DA block exists")
   @WithMockJwt(
       cognitoGroups = {"WASTE_PLUS_SUBMITTER_00000000"},

@@ -1,6 +1,7 @@
 package ca.bc.gov.nrs.hrs.controller;
 
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -22,6 +23,7 @@ import ca.bc.gov.nrs.hrs.exception.DuplicateBlockException;
 import ca.bc.gov.nrs.hrs.exception.GlobalExceptionHandler;
 import ca.bc.gov.nrs.hrs.exception.NotFoundGenericException;
 import ca.bc.gov.nrs.hrs.exception.ReportingUnitNotFoundException;
+import ca.bc.gov.nrs.hrs.exception.ReportingUnitStateConflictException;
 import ca.bc.gov.nrs.hrs.exception.ValidationProblemDetailsExceptionHandler;
 import ca.bc.gov.nrs.hrs.mapper.block.BlockMapper;
 import ca.bc.gov.nrs.hrs.service.ReportingUnitBlockService;
@@ -115,7 +117,7 @@ class BlockControllerTest {
             Instant.parse("2026-08-24T12:00:00Z"),
             Instant.parse("2026-08-24T12:00:00Z"));
 
-    when(blockService.create(nullable(Jwt.class), eq(RU_ID), eq(BlockType.DISTRICT_AVERAGE)))
+    when(blockService.create(nullable(Jwt.class), eq(RU_ID), eq(BlockType.DISTRICT_AVERAGE), isNull()))
         .thenReturn(entity);
     when(blockMapper.toResponseDto(entity)).thenReturn(responseDto);
 
@@ -138,7 +140,7 @@ class BlockControllerTest {
         .andExpect(jsonPath("$.draft").value(true))
         .andExpect(jsonPath("$.version").value(1));
 
-    verify(blockService).create(nullable(Jwt.class), eq(RU_ID), eq(BlockType.DISTRICT_AVERAGE));
+    verify(blockService).create(nullable(Jwt.class), eq(RU_ID), eq(BlockType.DISTRICT_AVERAGE), isNull());
   }
 
   @Test
@@ -155,7 +157,7 @@ class BlockControllerTest {
   @Test
   @DisplayName("POST /blocks returns 409 Conflict when duplicate DA block exists")
   void create_whenDuplicateDaBlock_returnsConflict() throws Exception {
-    when(blockService.create(nullable(Jwt.class), eq(RU_ID), eq(BlockType.DISTRICT_AVERAGE)))
+    when(blockService.create(nullable(Jwt.class), eq(RU_ID), eq(BlockType.DISTRICT_AVERAGE), isNull()))
         .thenThrow(new DuplicateBlockException());
 
     mockMvc
@@ -169,7 +171,7 @@ class BlockControllerTest {
   @Test
   @DisplayName("POST /blocks returns 404 Not Found when reporting unit is missing")
   void create_whenReportingUnitNotFound_returnsNotFound() throws Exception {
-    when(blockService.create(nullable(Jwt.class), eq(RU_ID), eq(BlockType.DISTRICT_AVERAGE)))
+    when(blockService.create(nullable(Jwt.class), eq(RU_ID), eq(BlockType.DISTRICT_AVERAGE), isNull()))
         .thenThrow(new ReportingUnitNotFoundException(RU_ID));
 
     mockMvc
@@ -178,6 +180,25 @@ class BlockControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"blockType\":\"DISTRICT_AVERAGE\"}"))
         .andExpect(status().isNotFound());
+  }
+
+  @Test
+  @DisplayName("POST /blocks returns 409 Conflict when expected reporting unit state does not match")
+  void create_whenReportingUnitStateConflict_returnsConflict() throws Exception {
+    when(blockService.create(
+            nullable(Jwt.class), eq(RU_ID), eq(BlockType.DISTRICT_AVERAGE), eq("APPROVED")))
+        .thenThrow(new ReportingUnitStateConflictException("APPROVED", "SUBMISSION"));
+
+    mockMvc
+        .perform(
+            post("/api/reporting-units/{reportingUnitId}/blocks", RU_ID)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(
+                    "{\"blockType\":\"DISTRICT_AVERAGE\",\"expectedReportingUnitState\":\"APPROVED\"}"))
+        .andExpect(status().isConflict())
+        .andExpect(
+            jsonPath("$.detail")
+                .value("Reporting unit state conflict: expected 'APPROVED' but was 'SUBMISSION'"));
   }
 
   @Test
