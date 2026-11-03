@@ -215,12 +215,12 @@ public class BlockService {
 
   private BlockDetailDto getPostgresBlockDetails(
       Long reportingUnitId, Long blockId, Jwt jwt, String clientNumber) {
-    enforceClientScope(jwt, reportingUnitId, clientNumber);
-
     BlockEntity block =
         blockRepository
             .findByIdAndReportingUnitIdAndDeletedFalse(blockId, reportingUnitId)
             .orElseThrow(() -> new NotFoundGenericException("Block", String.valueOf(blockId)));
+
+    enforceClientScope(jwt, reportingUnitId, clientNumber);
 
     return blockMapper.toDetailDto(block);
   }
@@ -228,13 +228,13 @@ public class BlockService {
   private BlockDetailDto getLegacyBlockDetails(Long reportingUnitId, Long blockId, Jwt jwt) {
     var legacyReportingUnit = legacyApiProvider.getReportingUnitDetails(reportingUnitId);
 
-    enforceClientScope(jwt, reportingUnitId, legacyReportingUnit.clientNumber());
-
     BlockListItemDto legacyRow =
         legacyApiProvider.getReportingUnitBlocksStrict(reportingUnitId).stream()
             .filter(row -> row.id() != null && row.id().equals(blockId))
             .findFirst()
             .orElseThrow(() -> new NotFoundGenericException("Block", String.valueOf(blockId)));
+
+    enforceClientScope(jwt, reportingUnitId, legacyReportingUnit.clientNumber());
 
     return toLegacyDetailDto(reportingUnitId, legacyRow);
   }

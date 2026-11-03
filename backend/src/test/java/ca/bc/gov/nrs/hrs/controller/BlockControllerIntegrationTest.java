@@ -398,6 +398,26 @@ class BlockControllerIntegrationTest extends AbstractTestContainerIntegrationTes
   }
 
   @Test
+  @DisplayName("Returns 404 for BCeID caller requesting own block under another client's reporting unit (wrong parent)")
+  @WithMockJwt(idp = "bceidbusiness", cognitoGroups = {"WASTE_PLUS_VIEWER_00000000"})
+  void returns404ForCrossClientWrongParentBlockDetails() throws Exception {
+    mockMvc
+        .perform(MockMvcRequestBuilders.get(detailsUrl(foreignReportingUnitId, blockId)))
+        .andExpect(status().isNotFound());
+  }
+
+  @Test
+  @DisplayName("Returns 404 for BCeID caller requesting own block under foreign RU on alias path")
+  @WithMockJwt(idp = "bceidbusiness", cognitoGroups = {"WASTE_PLUS_VIEWER_00000000"})
+  void returns404ForCrossClientWrongParentBlockDetailsOnAliasPath() throws Exception {
+    mockMvc
+        .perform(
+            MockMvcRequestBuilders.get(
+                "/api/reporting-units/" + foreignReportingUnitId + "/blocks/" + blockId))
+        .andExpect(status().isNotFound());
+  }
+
+  @Test
   @DisplayName("Allows a BCeID caller with the matching client role")
   @WithMockJwt(idp = "bceidbusiness", cognitoGroups = {"WASTE_PLUS_VIEWER_00000000"})
   void allowsBceidSameClientBlockDetails() throws Exception {
@@ -898,5 +918,16 @@ class BlockControllerIntegrationTest extends AbstractTestContainerIntegrationTes
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.id").value(blockId))
         .andExpect(jsonPath("$.reportingUnitId").value(reportingUnitId));
+  }
+
+  @Test
+  @DisplayName("Denies a BCeID caller reading another client's block details via alias path")
+  @WithMockJwt(idp = "bceidbusiness", cognitoGroups = {"WASTE_PLUS_VIEWER_00000000"})
+  void deniesBceidCrossClientBlockDetailsViaAliasPath() throws Exception {
+    mockMvc
+        .perform(
+            MockMvcRequestBuilders.get(
+                "/api/reporting-units/" + foreignReportingUnitId + "/blocks/" + foreignBlockId))
+        .andExpect(status().isForbidden());
   }
 }

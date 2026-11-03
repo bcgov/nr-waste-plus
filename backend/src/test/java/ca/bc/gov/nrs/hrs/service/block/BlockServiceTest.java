@@ -14,6 +14,7 @@ import ca.bc.gov.nrs.hrs.entity.block.StatusEventEntity;
 import ca.bc.gov.nrs.hrs.exception.BlockNotFoundException;
 import ca.bc.gov.nrs.hrs.exception.DuplicateBlockException;
 import ca.bc.gov.nrs.hrs.exception.ForbiddenException;
+import ca.bc.gov.nrs.hrs.exception.NotFoundGenericException;
 import ca.bc.gov.nrs.hrs.exception.ReportingUnitNotFoundException;
 import ca.bc.gov.nrs.hrs.exception.ReportingUnitStateConflictException;
 import ca.bc.gov.nrs.hrs.extensions.WithMockJwtSecurityContextFactory;
@@ -33,6 +34,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.security.oauth2.jwt.Jwt;
 
 @ExtendWith(MockitoExtension.class)
@@ -414,6 +416,51 @@ class BlockServiceTest {
     List<BlockEntity> result = blockService.findAllByReportingUnitId(idirJwt, RU_ID);
 
     assertThat(result).containsExactly(b1, b2);
+  }
+
+  @Test
+  @DisplayName("getBlockDetails throws NotFoundGenericException when block not found in postgres even for cross-client caller")
+  void getBlockDetails_whenBlockNotFoundInPostgres_throwsNotFoundGenericException() {
+    Jwt crossClientBceidJwt =
+        WithMockJwtSecurityContextFactory.createJwt(
+            "other-user",
+            List.of("WASTE_PLUS_VIEWER_99999999"),
+            "bceidbusiness",
+            "Other User",
+            "other@example.com");
+
+    when(reportingUnitRepository.findByIdAndDeletedFalse(RU_ID))
+        .thenReturn(Optional.of(reportingUnit));
+    when(blockRepository.findByIdAndReportingUnitIdAndDeletedFalse(BLOCK_ID, RU_ID))
+        .thenReturn(Optional.empty());
+
+    assertThatThrownBy(() -> blockService.getBlockDetails(RU_ID, BLOCK_ID, crossClientBceidJwt))
+        .isInstanceOf(NotFoundGenericException.class);
+  }
+
+  @Test
+  @DisplayName("getBlockDetails throws ResponseStatusException 403 when block found in postgres but caller lacks client scope")
+  void getBlockDetails_whenBlockFoundInPostgresButUnauthorized_throws403() {
+    Jwt crossClientBceidJwt =
+        WithMockJwtSecurityContextFactory.createJwt(
+            "other-user",
+            List.of("WASTE_PLUS_VIEWER_99999999"),
+            "bceidbusiness",
+            "Other User",
+            "other@example.com");
+
+    when(reportingUnitRepository.findByIdAndDeletedFalse(RU_ID))
+        .thenReturn(Optional.of(reportingUnit));
+
+    BlockEntity block = new BlockEntity();
+    block.setId(BLOCK_ID);
+    block.setReportingUnitId(RU_ID);
+    when(blockRepository.findByIdAndReportingUnitIdAndDeletedFalse(BLOCK_ID, RU_ID))
+        .thenReturn(Optional.of(block));
+
+    assertThatThrownBy(() -> blockService.getBlockDetails(RU_ID, BLOCK_ID, crossClientBceidJwt))
+        .isInstanceOf(ResponseStatusException.class)
+        .matches(ex -> ((ResponseStatusException) ex).getStatusCode().value() == 403);
   }
 }
 
