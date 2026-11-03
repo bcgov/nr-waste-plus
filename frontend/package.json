@@ -110,6 +110,9 @@
     "node": ">=22.19.0"
   },
   "overrides": {
+    "exceljs": {
+      "unzipper": "0.12.5"
+    },
     "flatted": "^3.4.2",
     "glob": "^14.0.0",
     "immutable": "^5.1.5",
