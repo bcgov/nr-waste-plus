@@ -1,0 +1,73 @@
+@use '@carbon/react/scss/spacing' as *;
+@use '@carbon/react/scss/breakpoint' as *;
+@use '@carbon/styles/scss/border-radius' as *;
+@use '@carbon/type' as *;
+@use '../../../../styles/page-shell' as shell;
+
+.interior-submission-details {
+  display: flex;
+  flex-direction: column;
+  padding: $spacing-07;
+  border: 1px solid var(--cds-border-subtle-01);
+  border-radius: $border-radius-08;
+  background-color: var(--cds-background);
+
+  h2 {
+    @include type-style('heading-01');
+    color: var(--cds-text-primary);
+    font-style: var(--cds-heading-03-font-style);
+    font-weight: 700;
+    line-height: var(--cds-productive-heading-03-font-size);
+    letter-spacing: 0.01rem;
+  }
+
+  p {
+    @include type-style('label-01');
+    color: var(--cds-text-secondary);
+  }
+
+  form {
+    padding: 0rem !important;
+  }
+
+  &__details-grid {
+    --cds-grid-gutter-start: 0;
+
+    .cds--css-grid-column {
+      padding-top: $spacing-06;
+    }
+  }
+
+  .cds--date-picker {
+    height: 100%;
+    width: 100%;
+
+    .cds--date-picker-container {
+      width: 100%;
+
+      .cds--date-picker-input__wrapper {
+        width: 100%;
+
+        span {
+          width: 100%;
+        }
+
+        input {
+          inline-size: 100%;
+          width: 100%;
+        }
+      }
+    }
+  }
+
+  hr {
+    background: var(--light-theme-border-border-subtle-02, #dfdfe1);
+    height: 0.0625rem;
+    flex-shrink: 0;
+    align-self: stretch;
+  }
+
+  button.cds--btn--ghost {
+    padding-inline: 0;
+  }
+}
