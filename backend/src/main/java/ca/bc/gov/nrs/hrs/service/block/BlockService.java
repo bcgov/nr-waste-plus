@@ -9,6 +9,7 @@ import ca.bc.gov.nrs.hrs.entity.block.BlockEntity;
 import ca.bc.gov.nrs.hrs.entity.block.ReportingUnitEntity;
 import ca.bc.gov.nrs.hrs.exception.BlockNotFoundException;
 import ca.bc.gov.nrs.hrs.exception.DuplicateBlockException;
+import ca.bc.gov.nrs.hrs.exception.ForbiddenException;
 import ca.bc.gov.nrs.hrs.exception.NotFoundGenericException;
 import ca.bc.gov.nrs.hrs.exception.ReportingUnitNotFoundException;
 import ca.bc.gov.nrs.hrs.exception.ReportingUnitStateConflictException;
@@ -57,6 +58,7 @@ public class BlockService {
    * @param expectedReportingUnitState expected lifecycle state precondition (e.g. "SUBMISSION")
    * @return newly created and persisted block entity
    * @throws ReportingUnitNotFoundException if reporting unit is unknown or outside caller scope
+   * @throws ForbiddenException if caller lacks submitter permissions for the reporting unit's client
    * @throws ReportingUnitStateConflictException if expected state does not match actual state
    * @throws DuplicateBlockException if creating a duplicate DA block for the reporting unit
    */
@@ -69,7 +71,7 @@ public class BlockService {
             .findByIdAndDeletedFalse(reportingUnitId)
             .orElseThrow(() -> new ReportingUnitNotFoundException(reportingUnitId));
 
-    validateTenantAccess(jwt, reportingUnit);
+    validateTenantCreateAccess(jwt, reportingUnit);
     validateReportingUnitState(reportingUnit, expectedReportingUnitState);
 
     BlockEntity entity = new BlockEntity();
@@ -278,6 +280,32 @@ public class BlockService {
             JwtPrincipalUtil.getUserId(jwt),
             reportingUnit.getId());
         throw new ReportingUnitNotFoundException(reportingUnit.getId());
+      }
+    }
+  }
+
+  private void validateTenantCreateAccess(Jwt jwt, ReportingUnitEntity reportingUnit) {
+    if (jwt == null) {
+      return;
+    }
+    IdentityProvider idp = JwtPrincipalUtil.getIdentityProvider(jwt);
+    if (IdentityProvider.BUSINESS_BCEID == idp) {
+      List<String> userClientNumbers = JwtPrincipalUtil.getClientFromRoles(jwt);
+      if (!userClientNumbers.contains(reportingUnit.getClientNumber())) {
+        log.warn(
+            "SECURITY: BCeID user {} attempted unauthorized access to reporting unit {}",
+            JwtPrincipalUtil.getUserId(jwt),
+            reportingUnit.getId());
+        throw new ReportingUnitNotFoundException(reportingUnit.getId());
+      }
+      if (!JwtPrincipalUtil.hasAbstractRole(jwt, Role.SUBMITTER, reportingUnit.getClientNumber())) {
+        log.warn(
+            "SECURITY: BCeID user {} lacks SUBMITTER role for reporting unit {} client {}",
+            JwtPrincipalUtil.getUserId(jwt),
+            reportingUnit.getId(),
+            reportingUnit.getClientNumber());
+        throw new ForbiddenException(
+            "User lacks submitter role for client " + reportingUnit.getClientNumber());
       }
     }
   }

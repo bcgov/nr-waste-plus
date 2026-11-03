@@ -12,6 +12,7 @@ import ca.bc.gov.nrs.hrs.entity.block.BlockEntity;
 import ca.bc.gov.nrs.hrs.entity.block.ReportingUnitEntity;
 import ca.bc.gov.nrs.hrs.exception.BlockNotFoundException;
 import ca.bc.gov.nrs.hrs.exception.DuplicateBlockException;
+import ca.bc.gov.nrs.hrs.exception.ForbiddenException;
 import ca.bc.gov.nrs.hrs.exception.ReportingUnitNotFoundException;
 import ca.bc.gov.nrs.hrs.exception.ReportingUnitStateConflictException;
 import ca.bc.gov.nrs.hrs.extensions.WithMockJwtSecurityContextFactory;
@@ -110,6 +111,28 @@ class BlockServiceTest {
     assertThatThrownBy(
             () -> blockService.create(unauthorizedBceidJwt, RU_ID, BlockType.DISTRICT_AVERAGE))
         .isInstanceOf(ReportingUnitNotFoundException.class);
+
+    verify(blockRepository, never()).saveAndFlush(any());
+  }
+
+  @Test
+  @DisplayName("create throws ForbiddenException when BCeID user only has VIEWER role for target client")
+  void create_whenBceidUserOnlyHasViewerRoleForTargetClient_throwsForbiddenException() {
+    Jwt viewerOnlyBceidJwt =
+        WithMockJwtSecurityContextFactory.createJwt(
+            "viewer-user",
+            List.of("WASTE_PLUS_SUBMITTER_99999999", "WASTE_PLUS_VIEWER_" + CLIENT_NUMBER),
+            "bceidbusiness",
+            "Viewer User",
+            "viewer@example.com");
+
+    when(reportingUnitRepository.findByIdAndDeletedFalse(RU_ID))
+        .thenReturn(Optional.of(reportingUnit));
+
+    assertThatThrownBy(
+            () -> blockService.create(viewerOnlyBceidJwt, RU_ID, BlockType.DISTRICT_AVERAGE))
+        .isInstanceOf(ForbiddenException.class)
+        .hasMessageContaining("User lacks submitter role for client " + CLIENT_NUMBER);
 
     verify(blockRepository, never()).saveAndFlush(any());
   }

@@ -763,6 +763,21 @@ class BlockControllerIntegrationTest extends AbstractTestContainerIntegrationTes
   }
 
   @Test
+  @DisplayName("POST /blocks returns 403 when BCeID user has SUBMITTER on another client but only VIEWER on target")
+  @WithMockJwt(
+      cognitoGroups = {"WASTE_PLUS_SUBMITTER_99999999", "WASTE_PLUS_VIEWER_00000000"},
+      idp = "bceidbusiness")
+  void create_whenBceidUserHasSubmitterOnOtherClientButViewerOnTarget_returns403() throws Exception {
+    mockMvc
+        .perform(
+            post("/api/reporting-units/{reportingUnitId}/blocks", otherReportingUnitId)
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"blockType\":\"DISTRICT_AVERAGE\"}"))
+        .andExpect(status().isForbidden());
+  }
+
+  @Test
   @DisplayName("POST /blocks successfully creates DA block and returns 201 with Location and ETag")
   @WithMockJwt(
       cognitoGroups = {"WASTE_PLUS_SUBMITTER_00000000"},

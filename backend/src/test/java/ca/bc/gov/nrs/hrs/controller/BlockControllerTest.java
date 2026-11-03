@@ -20,6 +20,7 @@ import ca.bc.gov.nrs.hrs.dto.block.BlockResponseDto;
 import ca.bc.gov.nrs.hrs.dto.block.BlockType;
 import ca.bc.gov.nrs.hrs.entity.block.BlockEntity;
 import ca.bc.gov.nrs.hrs.exception.DuplicateBlockException;
+import ca.bc.gov.nrs.hrs.exception.ForbiddenException;
 import ca.bc.gov.nrs.hrs.exception.GlobalExceptionHandler;
 import ca.bc.gov.nrs.hrs.exception.NotFoundGenericException;
 import ca.bc.gov.nrs.hrs.exception.ReportingUnitNotFoundException;
@@ -180,6 +181,20 @@ class BlockControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"blockType\":\"DISTRICT_AVERAGE\"}"))
         .andExpect(status().isNotFound());
+  }
+
+  @Test
+  @DisplayName("POST /blocks returns 403 Forbidden when caller lacks submitter permissions")
+  void create_whenForbidden_returns403() throws Exception {
+    when(blockService.create(nullable(Jwt.class), eq(RU_ID), eq(BlockType.DISTRICT_AVERAGE), isNull()))
+        .thenThrow(new ForbiddenException("User lacks submitter role for client 00012797"));
+
+    mockMvc
+        .perform(
+            post("/api/reporting-units/{reportingUnitId}/blocks", RU_ID)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"blockType\":\"DISTRICT_AVERAGE\"}"))
+        .andExpect(status().isForbidden());
   }
 
   @Test
