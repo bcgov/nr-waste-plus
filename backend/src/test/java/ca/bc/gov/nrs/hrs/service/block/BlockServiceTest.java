@@ -10,6 +10,7 @@ import static org.mockito.Mockito.when;
 import ca.bc.gov.nrs.hrs.dto.block.BlockType;
 import ca.bc.gov.nrs.hrs.entity.block.BlockEntity;
 import ca.bc.gov.nrs.hrs.entity.block.ReportingUnitEntity;
+import ca.bc.gov.nrs.hrs.entity.block.StatusEventEntity;
 import ca.bc.gov.nrs.hrs.exception.BlockNotFoundException;
 import ca.bc.gov.nrs.hrs.exception.DuplicateBlockException;
 import ca.bc.gov.nrs.hrs.exception.ForbiddenException;
@@ -18,6 +19,7 @@ import ca.bc.gov.nrs.hrs.exception.ReportingUnitStateConflictException;
 import ca.bc.gov.nrs.hrs.extensions.WithMockJwtSecurityContextFactory;
 import ca.bc.gov.nrs.hrs.repository.block.BlockRepository;
 import ca.bc.gov.nrs.hrs.repository.block.ReportingUnitRepository;
+import ca.bc.gov.nrs.hrs.repository.block.StatusEventRepository;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Optional;
@@ -46,6 +48,9 @@ class BlockServiceTest {
 
   @Mock
   private ReportingUnitRepository reportingUnitRepository;
+
+  @Mock
+  private StatusEventRepository statusEventRepository;
 
   @Mock
   private ca.bc.gov.nrs.hrs.provider.legacy.LegacyApiProvider legacyApiProvider;
@@ -194,6 +199,48 @@ class BlockServiceTest {
             () -> blockService.create(idirJwt, RU_ID, BlockType.DISTRICT_AVERAGE, "APPROVED"))
         .isInstanceOf(ReportingUnitStateConflictException.class)
         .hasMessageContaining("Reporting unit state conflict: expected 'APPROVED' but was 'SUBMISSION'");
+
+    verify(blockRepository, never()).saveAndFlush(any());
+  }
+
+  @Test
+  @DisplayName("create successfully creates block when expectedReportingUnitState matches persisted status event")
+  void create_whenReportingUnitHasPersistedStatusEvent_matchesExpectedState() {
+    when(reportingUnitRepository.findByIdAndDeletedFalse(RU_ID))
+        .thenReturn(Optional.of(reportingUnit));
+
+    StatusEventEntity statusEvent = new StatusEventEntity();
+    statusEvent.setReportingUnitId(RU_ID);
+    statusEvent.setStatus("HOLD");
+    when(statusEventRepository.findFirstByReportingUnitIdOrderByCreatedAtDescIdDesc(RU_ID))
+        .thenReturn(Optional.of(statusEvent));
+
+    BlockEntity saved = new BlockEntity();
+    saved.setId(BLOCK_ID);
+    when(blockRepository.saveAndFlush(any(BlockEntity.class))).thenReturn(saved);
+
+    BlockEntity result =
+        blockService.create(idirJwt, RU_ID, BlockType.DISTRICT_AVERAGE, "HOLD");
+
+    assertThat(result).isSameAs(saved);
+  }
+
+  @Test
+  @DisplayName("create throws conflict when reporting unit has persisted HOLD status but expected SUBMISSION")
+  void create_whenReportingUnitHasPersistedStatusEvent_conflictsWithDefaultSubmissionState() {
+    when(reportingUnitRepository.findByIdAndDeletedFalse(RU_ID))
+        .thenReturn(Optional.of(reportingUnit));
+
+    StatusEventEntity statusEvent = new StatusEventEntity();
+    statusEvent.setReportingUnitId(RU_ID);
+    statusEvent.setStatus("HOLD");
+    when(statusEventRepository.findFirstByReportingUnitIdOrderByCreatedAtDescIdDesc(RU_ID))
+        .thenReturn(Optional.of(statusEvent));
+
+    assertThatThrownBy(
+            () -> blockService.create(idirJwt, RU_ID, BlockType.DISTRICT_AVERAGE, "SUBMISSION"))
+        .isInstanceOf(ReportingUnitStateConflictException.class)
+        .hasMessageContaining("Reporting unit state conflict: expected 'SUBMISSION' but was 'HOLD'");
 
     verify(blockRepository, never()).saveAndFlush(any());
   }

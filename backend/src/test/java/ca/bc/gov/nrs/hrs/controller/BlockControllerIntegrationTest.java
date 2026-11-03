@@ -21,12 +21,14 @@ import ca.bc.gov.nrs.hrs.dto.base.FeatureFlag;
 import ca.bc.gov.nrs.hrs.entity.block.BlockCalculationSnapshotEntity;
 import ca.bc.gov.nrs.hrs.entity.block.BlockEntity;
 import ca.bc.gov.nrs.hrs.entity.block.ReportingUnitEntity;
+import ca.bc.gov.nrs.hrs.entity.block.StatusEventEntity;
 import ca.bc.gov.nrs.hrs.extensions.AbstractTestContainerIntegrationTest;
 import ca.bc.gov.nrs.hrs.extensions.WiremockLogNotifier;
 import ca.bc.gov.nrs.hrs.extensions.WithMockJwt;
 import ca.bc.gov.nrs.hrs.repository.block.BlockCalculationSnapshotRepository;
 import ca.bc.gov.nrs.hrs.repository.block.BlockRepository;
 import ca.bc.gov.nrs.hrs.repository.block.ReportingUnitRepository;
+import ca.bc.gov.nrs.hrs.repository.block.StatusEventRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
@@ -134,6 +136,8 @@ class BlockControllerIntegrationTest extends AbstractTestContainerIntegrationTes
   @Autowired
   private BlockRepository blockRepository;
   @Autowired
+  private StatusEventRepository statusEventRepository;
+  @Autowired
   private BlockCalculationSnapshotRepository snapshotRepository;
   @Autowired
   private JdbcTemplate jdbcTemplate;
@@ -219,6 +223,9 @@ class BlockControllerIntegrationTest extends AbstractTestContainerIntegrationTes
     jdbcTemplate.update("DELETE FROM wasteplus.block_calculation_snapshot WHERE block_id = ?", blockId);
     jdbcTemplate.update(
         "DELETE FROM wasteplus.block_calculation_snapshot WHERE block_id = ?", foreignBlockId);
+    jdbcTemplate.update(
+        "DELETE FROM wasteplus.status_event WHERE reporting_unit_id IN (?, ?)",
+        reportingUnitId, otherReportingUnitId);
   }
 
   // ---------------------------------------------------------------------
@@ -733,6 +740,13 @@ class BlockControllerIntegrationTest extends AbstractTestContainerIntegrationTes
     entity.setCreatedAt(Instant.parse("2025-07-01T00:00:00Z"));
     entity.setUpdatedAt(Instant.parse("2025-07-01T00:00:00Z"));
   }
+
+  private void audit(StatusEventEntity entity) {
+    entity.setCreatedBy(ACTOR);
+    entity.setUpdatedBy(ACTOR);
+    entity.setCreatedAt(Instant.parse("2025-07-01T00:00:00Z"));
+    entity.setUpdatedAt(Instant.parse("2025-07-01T00:00:00Z"));
+  }
   // ---------------------------------------------------------------------
   // POST /{reportingUnitId}/blocks — block creation
   // ---------------------------------------------------------------------
@@ -816,6 +830,32 @@ class BlockControllerIntegrationTest extends AbstractTestContainerIntegrationTes
         .andExpect(
             jsonPath("$.detail")
                 .value("Reporting unit state conflict: expected 'APPROVED' but was 'SUBMISSION'"));
+  }
+
+  @Test
+  @DisplayName("POST /blocks returns 409 Conflict when RU has persisted status event differing from expected")
+  @WithMockJwt(
+      cognitoGroups = {"WASTE_PLUS_SUBMITTER_00000000"},
+      idp = "bceidbusiness")
+  void create_whenPersistedStatusDiffersFromExpected_returns409Conflict() throws Exception {
+    StatusEventEntity event = new StatusEventEntity();
+    event.setReportingUnitId(otherReportingUnitId);
+    event.setStatus("HOLD");
+    event.setEventType("STATUS_CHANGE");
+    audit(event);
+    statusEventRepository.save(event);
+
+    mockMvc
+        .perform(
+            post("/api/reporting-units/{reportingUnitId}/blocks", otherReportingUnitId)
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(
+                    "{\"blockType\":\"DISTRICT_AVERAGE\",\"expectedReportingUnitState\":\"SUBMISSION\"}"))
+        .andExpect(status().isConflict())
+        .andExpect(
+            jsonPath("$.detail")
+                .value("Reporting unit state conflict: expected 'SUBMISSION' but was 'HOLD'"));
   }
 
   @Test

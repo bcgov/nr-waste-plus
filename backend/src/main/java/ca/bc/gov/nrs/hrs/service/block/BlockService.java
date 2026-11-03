@@ -7,6 +7,7 @@ import ca.bc.gov.nrs.hrs.dto.block.BlockListItemDto;
 import ca.bc.gov.nrs.hrs.dto.block.BlockType;
 import ca.bc.gov.nrs.hrs.entity.block.BlockEntity;
 import ca.bc.gov.nrs.hrs.entity.block.ReportingUnitEntity;
+import ca.bc.gov.nrs.hrs.entity.block.StatusEventEntity;
 import ca.bc.gov.nrs.hrs.exception.BlockNotFoundException;
 import ca.bc.gov.nrs.hrs.exception.DuplicateBlockException;
 import ca.bc.gov.nrs.hrs.exception.ForbiddenException;
@@ -17,6 +18,7 @@ import ca.bc.gov.nrs.hrs.mapper.block.BlockMapper;
 import ca.bc.gov.nrs.hrs.provider.legacy.LegacyApiProvider;
 import ca.bc.gov.nrs.hrs.repository.block.BlockRepository;
 import ca.bc.gov.nrs.hrs.repository.block.ReportingUnitRepository;
+import ca.bc.gov.nrs.hrs.repository.block.StatusEventRepository;
 import ca.bc.gov.nrs.hrs.util.JwtPrincipalUtil;
 import io.micrometer.observation.annotation.Observed;
 import io.micrometer.tracing.annotation.NewSpan;
@@ -39,12 +41,13 @@ import org.springframework.web.server.ResponseStatusException;
 @Observed
 public class BlockService {
 
-  public static final String REQUIRED_REPORTING_UNIT_STATE = "SUBMISSION";
+  public static final String DEFAULT_INITIAL_STATE = "SUBMISSION";
   private static final String DRAFT_STATUS_CODE = "DFT";
   private static final String ONE_DA_PER_RU_CONSTRAINT = "uq_block_one_da_per_ru";
 
   private final ReportingUnitRepository reportingUnitRepository;
   private final BlockRepository blockRepository;
+  private final StatusEventRepository statusEventRepository;
   private final LegacyApiProvider legacyApiProvider;
   private final BlockMapper blockMapper;
 
@@ -310,17 +313,25 @@ public class BlockService {
     }
   }
 
+  private String resolveReportingUnitState(Long reportingUnitId) {
+    return statusEventRepository
+        .findFirstByReportingUnitIdOrderByCreatedAtDescIdDesc(reportingUnitId)
+        .map(StatusEventEntity::getStatus)
+        .orElse(DEFAULT_INITIAL_STATE);
+  }
+
   private void validateReportingUnitState(
       ReportingUnitEntity reportingUnit, String expectedReportingUnitState) {
-    if (expectedReportingUnitState != null
-        && !REQUIRED_REPORTING_UNIT_STATE.equalsIgnoreCase(expectedReportingUnitState.trim())) {
-      log.warn(
-          "Conflict: Reporting unit {} expected state '{}' does not match actual state '{}'",
-          reportingUnit.getId(),
-          expectedReportingUnitState,
-          REQUIRED_REPORTING_UNIT_STATE);
-      throw new ReportingUnitStateConflictException(
-          expectedReportingUnitState, REQUIRED_REPORTING_UNIT_STATE);
+    if (expectedReportingUnitState != null) {
+      String actualState = resolveReportingUnitState(reportingUnit.getId());
+      if (!actualState.equalsIgnoreCase(expectedReportingUnitState.trim())) {
+        log.warn(
+            "Conflict: Reporting unit {} expected state '{}' does not match actual state '{}'",
+            reportingUnit.getId(),
+            expectedReportingUnitState,
+            actualState);
+        throw new ReportingUnitStateConflictException(expectedReportingUnitState, actualState);
+      }
     }
   }
 
