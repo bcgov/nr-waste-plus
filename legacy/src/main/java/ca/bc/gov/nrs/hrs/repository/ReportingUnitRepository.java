@@ -25,6 +25,8 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface ReportingUnitRepository extends JpaRepository<ReportingUnitEntity, Long> {
 
+  Optional<ReportingUnitEntity> findByIdempotencyKey(String idempotencyKey);
+
   /**
    * Execute a paged, parameterized native search for reporting units.
    *

@@ -299,6 +299,31 @@ class ReportingUnitServiceTest {
     }
 
     @Test
+    @DisplayName("returns the original reporting unit for a retry with the same idempotency key")
+    void shouldReturnPreviouslyCreatedReportingUnit_whenIdempotencyKeyExists() {
+      OrgUnitEntity orgUnit = OrgUnitEntity.builder().orgUnitNo(123L).orgUnitCode("DKM").build();
+      when(orgUnitRepository.findByOrgUnitCode("DKM"))
+          .thenReturn(java.util.Optional.of(orgUnit));
+      CreateReportingUnitRequestDto request =
+          new CreateReportingUnitRequestDto("00001271", "DKM", "AGR", null);
+      ReportingUnitEntity existing = ReportingUnitEntity.builder()
+          .id(555L)
+          .orgUnitNo(123L)
+          .clientNumber("00001271")
+          .wasteSamplingOptionCode("AGR")
+          .createdBy("IDIR\\user")
+          .idempotencyKey("retry-key")
+          .build();
+      when(ruRepository.findByIdempotencyKey("retry-key"))
+          .thenReturn(java.util.Optional.of(existing));
+
+      Long result = service.createReportingUnit(request, "IDIR\\user", "retry-key");
+
+      assertThat(result).isEqualTo(555L);
+      verify(ruRepository, never()).save(ArgumentMatchers.any());
+    }
+
+    @Test
     @DisplayName("should throw IllegalArgumentException when district code does not resolve")
     void shouldThrow_whenDistrictNotFound() {
       // Arrange
