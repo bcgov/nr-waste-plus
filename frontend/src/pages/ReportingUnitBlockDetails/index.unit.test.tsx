@@ -178,7 +178,8 @@ describe('ReportingUnitBlockDetailsPage', () => {
     it('shouldRenderNoEditableInputs', async () => {
       await renderPage();
 
-      expect(screen.queryAllByRole('textbox')).toHaveLength(0);
+      expect(screen.queryByRole('textbox', { name: 'Client name' })).toBeNull();
+      expect(screen.queryByRole('textbox', { name: 'Client ID' })).toBeNull();
       expect(screen.queryByRole('button', { name: /edit/i })).toBeNull();
       expect(screen.queryByRole('button', { name: /delete/i })).toBeNull();
     });
@@ -346,7 +347,7 @@ describe('ReportingUnitBlockDetailsPage', () => {
       expect(screen.getByRole('tab', { name: 'Waste volumes' })).toBeTruthy();
       expect(screen.getByRole('tab', { name: 'Attachments' })).toBeTruthy();
       expect(screen.getByRole('tab', { name: 'Endorsement' })).toBeTruthy();
-      expect(screen.getByText('Block details content')).toBeTruthy();
+      expect(screen.getByRole('heading', { name: 'Submission details' })).toBeTruthy();
     });
   });
 

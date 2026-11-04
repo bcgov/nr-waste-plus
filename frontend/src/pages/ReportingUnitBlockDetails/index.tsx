@@ -22,6 +22,7 @@ import TagWrapper from '@/components/core/Tags/TagWrapper';
 import UnderConstructionTag from '@/components/core/Tags/UnderConstructionTag';
 import BlockDetailsSkeleton from '@/components/waste/ReportingUnits/BlockDetailsSkeleton';
 import BlockDetailsSummary from '@/components/waste/ReportingUnits/BlockDetailsSummary';
+import InteriorSubmissionDetailsForm from '@/components/waste/ReportingUnits/InteriorSubmissionDetailsForm';
 import { useBlockDetailsQuery, useReportingUnitDetailsQuery } from '@/config/react-query/hooks';
 import useDelayedFlag from '@/hooks/useDelayedFlag';
 
@@ -234,7 +235,18 @@ const ReportingUnitBlockDetailsPage: FC = () => {
             <Tab>Endorsement</Tab>
           </TabList>
           <TabPanels>
-            <TabPanel>Block details content</TabPanel>
+            <TabPanel>
+              <InteriorSubmissionDetailsForm
+                mode={blockData.isLegacy ? 'read-only' : 'form'}
+                initialValues={{
+                  primaryLoggingCompleteDate: blockData.plcDate ?? '',
+                }}
+                harvestStatuses={[]}
+                becZones={[]}
+                becSubzoneVariants={[]}
+                districtAverageCriteria={[]}
+              />
+            </TabPanel>
             <TabPanel>Area calculator content</TabPanel>
             <TabPanel>Waste volumes content</TabPanel>
             <TabPanel>Attachments content</TabPanel>
