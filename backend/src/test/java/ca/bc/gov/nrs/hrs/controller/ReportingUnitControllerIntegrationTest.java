@@ -1,12 +1,10 @@
 package ca.bc.gov.nrs.hrs.controller;
 
 import static ca.bc.gov.nrs.hrs.TestConstants.LEGACY_RU_DETAILS;
-import static com.github.tomakehurst.wiremock.client.WireMock.containing;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.notFound;
 import static com.github.tomakehurst.wiremock.client.WireMock.okJson;
-import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
@@ -40,6 +38,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
@@ -204,8 +204,9 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
     jdbcTemplate.update(
         """
         INSERT INTO wasteplus.reporting_unit
-            (reporting_unit_id, client_number, client_locn_code, geographic_code, created_by, updated_by)
-        VALUES (?, '00012797', ?, 'DND', ?, ?)
+            (reporting_unit_id, client_number, client_locn_code, geographic_code,
+             sampling_code, grade_code, created_by, updated_by)
+        VALUES (?, '00012797', ?, 'DKM', 'AVG', 'COASTAL', ?, ?)
         """,
         reportingUnitId,
         locationCode,
@@ -214,33 +215,52 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
     return reportingUnitId;
   }
 
-  @DisplayName("Should Return 201 when Create Succeeds")
-  @Test
+  @DisplayName("Should persist and return the selected grade on create")
+  @ParameterizedTest
+  @CsvSource({"COASTAL, Coast", "INTERIOR, Interior"})
   @WithMockJwt(cognitoGroups = {"WASTE_PLUS_ADMIN"})
-  void shouldReturn201_whenCreateSucceeds() throws Exception {
-    Long testRuId = stubCreateDependencies();
+  void shouldPersistAndReturnSelectedGrade_whenCreateSucceeds(
+      String gradeCode, String gradeDescription) throws Exception {
+    stubCreateDependencies();
 
     var requestJson =
         """
-        {"clientNumber":"00012797","districtCode":"DND","samplingCode":"AVG","gradeCode":null}
-        """;
+        {"clientNumber":"00012797","districtCode":"DKM","samplingCode":"AVG","gradeCode":"%s"}
+        """.formatted(gradeCode);
 
-    mockMvc
-        .perform(
-            MockMvcRequestBuilders.post("/api/reporting-units")
-                .with(SecurityMockMvcRequestPostProcessors.csrf())
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(requestJson))
-        .andExpect(status().isCreated());
+    var response =
+        mockMvc
+            .perform(
+                MockMvcRequestBuilders.post("/api/reporting-units")
+                    .with(SecurityMockMvcRequestPostProcessors.csrf())
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(requestJson))
+            .andExpect(status().isCreated())
+            .andExpect(header().exists("Location"))
+            .andReturn();
+
+    String location = response.getResponse().getHeader("Location");
+    Long testRuId = trackCreatedReportingUnitFromLocation(location);
+    assertThat(testRuId).isGreaterThan(1_000_000_000L);
 
     var savedEntity = reportingUnitRepository.findById(testRuId);
     assertThat(savedEntity).isPresent();
     assertThat(savedEntity.get().getClientNumber()).isEqualTo("00012797");
     assertThat(savedEntity.get().getClientLocnCode()).isEqualTo("00");
-    assertThat(savedEntity.get().getGeographicCode()).isEqualTo("DND");
+    assertThat(savedEntity.get().getGeographicCode()).isEqualTo("DKM");
     assertThat(savedEntity.get().getSamplingCode()).isEqualTo("AVG");
+    assertThat(savedEntity.get().getGradeCode()).isEqualTo(gradeCode);
     assertThat(savedEntity.get().getRevision()).isEqualTo(0L);
     assertThat(savedEntity.get().isDeleted()).isFalse();
+
+    mockMvc
+        .perform(
+            MockMvcRequestBuilders.get("/api/reporting-units/{id}", testRuId)
+                .accept(MediaType.APPLICATION_JSON))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.grade.code").value(gradeCode))
+        .andExpect(jsonPath("$.grade.description").value(gradeDescription));
+    verifyLegacyDuplicateSearchWithoutCreate();
   }
 
   @Test
@@ -274,31 +294,28 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
     String foreignClient = "00099999";
     stubCreateDependencies(foreignClient);
 
-    mockMvc
-        .perform(createReportingUnitRequest(foreignClient))
-        .andExpect(status().isCreated())
-        .andExpect(header().exists("Location"));
+    var response =
+        mockMvc
+            .perform(createReportingUnitRequest(foreignClient))
+            .andExpect(status().isCreated())
+            .andExpect(header().exists("Location"))
+            .andReturn();
+    trackCreatedReportingUnitFromLocation(response.getResponse().getHeader("Location"));
 
-    legacyApiStub.verify(
-        1,
-        postRequestedFor(urlPathEqualTo("/api/reporting-units"))
-            .withRequestBody(containing(foreignClient)));
+    verifyLegacyDuplicateSearchWithoutCreate();
   }
 
   private void assertSuccessfulCreate() throws Exception {
-    mockMvc
-        .perform(createReportingUnitRequest())
-        .andExpect(status().isCreated())
-        .andExpect(header().exists("Location"));
+    var response =
+        mockMvc
+            .perform(createReportingUnitRequest())
+            .andExpect(status().isCreated())
+            .andExpect(header().exists("Location"))
+            .andReturn();
+    trackCreatedReportingUnitFromLocation(response.getResponse().getHeader("Location"));
 
-    legacyApiStub.verify(
-        1,
-        postRequestedFor(urlPathEqualTo("/api/reporting-units"))
-            .withRequestBody(containing("00012797")));
+    verifyLegacyDuplicateSearchWithoutCreate();
   }
-
-  private static final java.util.concurrent.atomic.AtomicLong TEST_RU_ID =
-      new java.util.concurrent.atomic.AtomicLong(333L);
 
   private final Set<Long> createdReportingUnitIds = new HashSet<>();
 
@@ -307,16 +324,22 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
     return id;
   }
 
-  private Long stubCreateDependencies() {
-    return stubCreateDependencies("00012797", TEST_RU_ID.incrementAndGet());
+  private Long trackCreatedReportingUnitFromLocation(String location) {
+    assertThat(location).matches("/reporting-units/\\d+");
+    String idPart = location.substring("/reporting-units/".length());
+    try {
+      return trackCreatedReportingUnit(Long.valueOf(idPart));
+    } catch (NumberFormatException e) {
+      throw new AssertionError(
+          "Location header matched the pattern but the id was not a number: " + location, e);
+    }
   }
 
-  private Long stubCreateDependencies(String clientNumber) {
-    return stubCreateDependencies(clientNumber, TEST_RU_ID.incrementAndGet());
+  private void stubCreateDependencies() {
+    stubCreateDependencies("00012797");
   }
 
-  private Long stubCreateDependencies(String clientNumber, Long id) {
-    trackCreatedReportingUnit(id);
+  private void stubCreateDependencies(String clientNumber) {
     legacyApiStub.stubFor(
         get(urlPathEqualTo("/api/search/reporting-units"))
             .willReturn(
@@ -327,8 +350,16 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
         get(urlPathEqualTo("/clients/findByClientNumber/" + clientNumber))
             .willReturn(okJson(ForestClientApiProviderTestConstants.CLIENTNUMBER_RESPONSE)));
     legacyApiStub.stubFor(
-        post(urlPathEqualTo("/api/reporting-units")).willReturn(okJson(String.valueOf(id))));
-    return id;
+        get(urlPathEqualTo("/api/codes/districts"))
+            .willReturn(
+                okJson(
+                    "[{\"code\":\"DND\",\"description\":\"Nadina Natural Resource District\"},"
+                        + "{\"code\":\"DKM\",\"description\":\"Coast Mountains Natural Resource District\"}]")));
+  }
+
+  private void verifyLegacyDuplicateSearchWithoutCreate() {
+    legacyApiStub.verify(1, getRequestedFor(urlPathEqualTo("/api/search/reporting-units")));
+    legacyApiStub.verify(0, postRequestedFor(urlPathEqualTo("/api/reporting-units")));
   }
 
   private MockHttpServletRequestBuilder createReportingUnitRequest() {
@@ -340,8 +371,8 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
         .with(SecurityMockMvcRequestPostProcessors.csrf())
         .contentType(MediaType.APPLICATION_JSON)
         .content(
-            "{\"clientNumber\":\"" + clientNumber + "\",\"districtCode\":\"DND\","
-                + "\"samplingCode\":\"AVG\",\"gradeCode\":null}");
+            "{\"clientNumber\":\"" + clientNumber + "\",\"districtCode\":\"DKM\","
+                + "\"samplingCode\":\"AVG\",\"gradeCode\":\"COASTAL\"}");
   }
 
   @DisplayName("Should Return 400 when Grade Missing For DKM")
@@ -381,7 +412,7 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
 
     var requestJson =
         """
-        {"clientNumber":"00012797","districtCode":"DND","samplingCode":"AVG","gradeCode":null}
+        {"clientNumber":"00012797","districtCode":"DKM","samplingCode":"AVG","gradeCode":"COASTAL"}
         """;
 
     mockMvc
@@ -558,8 +589,9 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
     ru.setId(55555L);
     ru.setClientNumber("00012797");
     ru.setClientLocnCode("00");
-    ru.setGeographicCode("DND");
+    ru.setGeographicCode("DKM");
     ru.setSamplingCode("AVG");
+    ru.setGradeCode("COASTAL");
     ru.setDeleted(false);
     ru.setCreatedBy(fixtureActor);
     ru.setUpdatedBy(fixtureActor);
@@ -571,7 +603,7 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
               .willReturn(
                   okJson(
                       """
-                      [{"code": "DND", "description": "Nadina Natural Resource District"}]
+                      [{"code": "DKM", "description": "Coast Mountains Natural Resource District"}]
                       """)));
 
       clientApiStub.stubFor(
@@ -589,7 +621,9 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
           .andExpect(jsonPath("$.client.code").value("00012797"))
           .andExpect(jsonPath("$.sampling.code").value("AVG"))
           .andExpect(jsonPath("$.sampling.description").value("District Average"))
-          .andExpect(jsonPath("$.district.code").value("DND"))
+          .andExpect(jsonPath("$.district.code").value("DKM"))
+          .andExpect(jsonPath("$.grade.code").value("COASTAL"))
+          .andExpect(jsonPath("$.grade.description").value("Coast"))
           .andExpect(jsonPath("$.blockRule.maxBlocks").value(1))
           .andExpect(jsonPath("$.blockRule.blockType").value("DISTRICT_AVERAGE"))
           .andExpect(jsonPath("$.isLegacy").value(false));
