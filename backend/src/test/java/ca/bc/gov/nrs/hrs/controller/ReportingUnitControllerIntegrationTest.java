@@ -326,8 +326,13 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
 
   private Long trackCreatedReportingUnitFromLocation(String location) {
     assertThat(location).matches("/reporting-units/\\d+");
-    return trackCreatedReportingUnit(
-        Long.valueOf(location.substring("/reporting-units/".length())));
+    String idPart = location.substring("/reporting-units/".length());
+    try {
+      return trackCreatedReportingUnit(Long.valueOf(idPart));
+    } catch (NumberFormatException e) {
+      throw new AssertionError(
+          "Location header matched the pattern but the id was not a number: " + location, e);
+    }
   }
 
   private void stubCreateDependencies() {
