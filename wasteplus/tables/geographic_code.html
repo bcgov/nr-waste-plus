@@ -148,6 +148,11 @@
                                     <td>
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                             <tr>
+                                                <td title="district_grade_support.geographic_code references geographic_code.code via fk_district_grade_support_geographic_code"><a href='district_grade_support.html'>district_grade_support</a><span class='relatedKey'>.geographic_code</span></td>
+                                                <td class="constraint detail">fk_district_grade_support_geographic_code</td>
+                                                <td class="constraint detail"><span title='Restrict delete:&#10;Parent cannot be deleted if children exist'>R</span></td>
+                                            </tr>
+                                            <tr>
                                                 <td title="reporting_unit.geographic_code references geographic_code.code via fk_reporting_unit_geographic_code"><a href='reporting_unit.html'>reporting_unit</a><span class='relatedKey'>.geographic_code</span></td>
                                                 <td class="constraint detail">fk_reporting_unit_geographic_code</td>
                                                 <td class="constraint detail"><span title='Restrict delete:&#10;Parent cannot be deleted if children exist'>R</span></td>
@@ -342,18 +347,20 @@
                                 <div class="tab-content no-padding">
                                     <div class="chart tab-pane active" id="oneDegreeImg-chart" style="position: relative; overflow-x:auto;">
                                         <map id="oneDegreeRelationshipsDiagram" name="oneDegreeRelationshipsDiagram">
-<area shape="rect" id="node1" href="reporting_unit.html" target="_top" title="reporting_unit" alt="" coords="380,5,575,240">
-<area shape="rect" id="node2" href="geographic_code.html" target="_top" title="geographic_code" alt="" coords="5,61,336,336">
+<area shape="rect" id="node1" href="district_grade_support.html" target="_top" title="district_grade_support" alt="" coords="380,123,639,245">
+<area shape="rect" id="node2" href="geographic_code.html" target="_top" title="geographic_code" alt="" coords="5,52,336,327">
+<area shape="rect" id="node3" href="reporting_unit.html" target="_top" title="reporting_unit" alt="" coords="683,5,877,269">
 </map>
                                         <a name='diagram'><img id="oneDegreeImg" src="../diagrams/tables/geographic_code.1degree.png" usemap="#oneDegreeRelationshipsDiagram" class="diagram" border="0" align="left"></a>
                                     </div>
                                     <div class="chart tab-pane " id="twodegreesDegreeImg-chart" style="position: relative; overflow-x:auto;">
                                         <map id="twoDegreesRelationshipsDiagram" name="twoDegreesRelationshipsDiagram">
-<area shape="rect" id="node1" href="block.html" target="_top" title="block" alt="" coords="619,33,741,121">
-<area shape="rect" id="node2" href="reporting_unit.html" target="_top" title="reporting_unit" alt="" coords="380,64,575,299">
-<area shape="rect" id="node3" href="geographic_code.html" target="_top" title="geographic_code" alt="" coords="5,5,336,280">
-<area shape="rect" id="node4" href="sampling_option_code.html" target="_top" title="sampling_option_code" alt="" coords="43,297,298,385">
-<area shape="rect" id="node5" href="status_event.html" target="_top" title="status_event" alt="" coords="785,68,967,156">
+<area shape="rect" id="node1" href="block.html" target="_top" title="block" alt="" coords="921,5,1044,93">
+<area shape="rect" id="node2" href="reporting_unit.html" target="_top" title="reporting_unit" alt="" coords="683,43,877,131">
+<area shape="rect" id="node3" href="district_grade_support.html" target="_top" title="district_grade_support" alt="" coords="380,7,639,95">
+<area shape="rect" id="node4" href="geographic_code.html" target="_top" title="geographic_code" alt="" coords="5,5,336,280">
+<area shape="rect" id="node5" href="sampling_option_code.html" target="_top" title="sampling_option_code" alt="" coords="382,148,637,236">
+<area shape="rect" id="node6" href="status_event.html" target="_top" title="status_event" alt="" coords="1088,40,1269,128">
 </map>
                                         <a name='diagram'><img id="twodegreesDegreeImg" src="../diagrams/tables/geographic_code.2degrees.png" usemap="#twoDegreesRelationshipsDiagram" class="diagram" border="0" align="left"></a>
                                     </div>

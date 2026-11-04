@@ -379,6 +379,22 @@
             <column ascending="true" name="district_average_block_id"/>
          </index>
       </table>
+      <table name="district_grade_support" remarks="Historical district/grade pairs from stored DISTRICT_VOLUME configurations. Soft-deleted configurations are included; the service checks current support." schema="wasteplus" type="TABLE">
+         <column autoUpdated="false" defaultValue="null" digits="0" id="0" name="geographic_code" nullable="false" remarks="District code that has appeared in a District Volume configuration." size="3" type="varchar" typeCode="12">
+            <child column="geographic_code" foreignKey="fk_reporting_unit_district_grade_support" implied="false" onDeleteCascade="false" schema="wasteplus" table="reporting_unit"/>
+            <parent column="code" foreignKey="fk_district_grade_support_geographic_code" implied="false" onDeleteCascade="false" schema="wasteplus" table="geographic_code"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="grade_code" nullable="false" remarks="Supported grade code: COASTAL or INTERIOR." size="8" type="varchar" typeCode="12">
+            <child column="grade_code" foreignKey="fk_reporting_unit_district_grade_support" implied="false" onDeleteCascade="false" schema="wasteplus" table="reporting_unit"/>
+         </column>
+         <primaryKey column="geographic_code" sequenceNumberInPK="1"/>
+         <primaryKey column="grade_code" sequenceNumberInPK="2"/>
+         <index name="pk_district_grade_support" unique="true">
+            <column ascending="true" name="geographic_code"/>
+            <column ascending="true" name="grade_code"/>
+         </index>
+         <checkConstraint constraint="((grade_code)::text = ANY ((ARRAY['COASTAL'::character varying, 'INTERIOR'::character varying])::text[]))" name="ck_district_grade_support_grade_code"/>
+      </table>
       <table name="district_volume" remarks="Stores district waste volume and species composition data used to estimate waste volume on blocks." schema="wasteplus" type="TABLE">
          <column autoUpdated="true" defaultValue="nextval('wasteplus.district_volume_id_seq'::regclass)" digits="0" id="0" name="district_volume_id" nullable="false" remarks="Unique identifier for the district volume configuration record." size="19" type="bigserial" typeCode="-5">
             <child column="district_volume_id" foreignKey="fk_block_calculation_snapshot_district_volume" implied="false" onDeleteCascade="false" schema="wasteplus" table="block_calculation_snapshot"/>
@@ -492,6 +508,7 @@
       <table name="geographic_code" remarks="Typed geographic codes for HRS; the historical seed contains districts only, not a current authoritative extract." schema="wasteplus" type="TABLE">
          <column autoUpdated="false" defaultValue="null" digits="0" id="0" name="id" nullable="false" remarks="Stable source identifier retained from ORG_UNIT_NO for seeded districts." size="10" type="numeric" typeCode="2"/>
          <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="code" nullable="false" remarks="Geographic business code stored by wasteplus.reporting_unit.geographic_code." size="2147483647" type="text" typeCode="12">
+            <child column="geographic_code" foreignKey="fk_district_grade_support_geographic_code" implied="false" onDeleteCascade="false" schema="wasteplus" table="district_grade_support"/>
             <child column="geographic_code" foreignKey="fk_reporting_unit_geographic_code" implied="false" onDeleteCascade="false" schema="wasteplus" table="reporting_unit"/>
          </column>
          <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="description" nullable="false" remarks="Human-readable geographic description." size="2147483647" type="text" typeCode="12"/>
@@ -553,6 +570,7 @@
          <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="client_locn_code" nullable="false" remarks="Forest client location code." size="32" type="varchar" typeCode="12"/>
          <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="geographic_code" nullable="false" remarks="Three-character district code; references geographic_code.code." size="3" type="varchar" typeCode="12">
             <parent column="code" foreignKey="fk_reporting_unit_geographic_code" implied="false" onDeleteCascade="false" schema="wasteplus" table="geographic_code"/>
+            <parent column="geographic_code" foreignKey="fk_reporting_unit_district_grade_support" implied="false" onDeleteCascade="false" schema="wasteplus" table="district_grade_support"/>
          </column>
          <column autoUpdated="false" defaultValue="1" digits="0" id="4" name="revision" nullable="false" remarks="Optimistic locking revision counter." size="19" type="int8" typeCode="-5"/>
          <column autoUpdated="false" defaultValue="null" digits="0" id="5" name="created_by" nullable="false" remarks="Audit actor that created this reporting unit." size="128" type="varchar" typeCode="12"/>
@@ -563,12 +581,19 @@
          <column autoUpdated="false" defaultValue="'AVG'::text" digits="0" id="10" name="sampling_code" nullable="false" remarks="Waste sampling option code, e.g. AVG." size="2147483647" type="text" typeCode="12">
             <parent column="code" foreignKey="fk_reporting_unit_sampling_code" implied="false" onDeleteCascade="false" schema="wasteplus" table="sampling_option_code"/>
          </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="11" name="grade_code" nullable="true" remarks="Grade code: COASTAL or INTERIOR. Required when sampling_code is AVG. Must be historically supported for the selected geographic_code by wasteplus.district_grade_support. The service separately checks the currently effective District Volume configuration when creating a reporting unit." size="8" type="varchar" typeCode="12">
+            <parent column="grade_code" foreignKey="fk_reporting_unit_district_grade_support" implied="false" onDeleteCascade="false" schema="wasteplus" table="district_grade_support"/>
+         </column>
          <primaryKey column="reporting_unit_id" sequenceNumberInPK="1"/>
          <index name="reporting_unit_pk" unique="true">
             <column ascending="true" name="reporting_unit_id"/>
          </index>
          <index name="idx_reporting_unit_geographic_code" unique="false">
             <column ascending="true" name="geographic_code"/>
+         </index>
+         <index name="idx_reporting_unit_geographic_grade_code" unique="false">
+            <column ascending="true" name="geographic_code"/>
+            <column ascending="true" name="grade_code"/>
          </index>
          <index name="idx_reporting_unit_sampling_code" unique="false">
             <column ascending="true" name="sampling_code"/>
@@ -578,6 +603,8 @@
             <column ascending="true" name="client_locn_code"/>
             <column ascending="true" name="geographic_code"/>
          </index>
+         <checkConstraint constraint="((sampling_code &lt;&gt; 'AVG'::text) OR (grade_code IS NOT NULL))" name="ck_reporting_unit_avg_requires_grade"/>
+         <checkConstraint constraint="((grade_code IS NULL) OR ((grade_code)::text = ANY ((ARRAY['COASTAL'::character varying, 'INTERIOR'::character varying])::text[])))" name="ck_reporting_unit_grade_code_allowed"/>
       </table>
       <table name="sampling_option_code" remarks="Historical Oracle sampling options plus HRS District Average." schema="wasteplus" type="TABLE">
          <column autoUpdated="false" defaultValue="null" digits="0" id="0" name="code" nullable="false" remarks="Sampling option business code." size="2147483647" type="text" typeCode="12">

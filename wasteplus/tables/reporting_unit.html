@@ -200,6 +200,11 @@
                                                 <td class="constraint detail">fk_reporting_unit_geographic_code</td>
                                                 <td class="constraint detail"><span title='Restrict delete:&#10;Parent cannot be deleted if children exist'>R</span></td>
                                             </tr>
+                                            <tr>
+                                                <td title="reporting_unit.[geographic_code, grade_code] references district_grade_support.[geographic_code, grade_code] via fk_reporting_unit_district_grade_support"><a href='district_grade_support.html'>district_grade_support</a><span class='relatedKey'>.geographic_code</span></td>
+                                                <td class="constraint detail">fk_reporting_unit_district_grade_support</td>
+                                                <td class="constraint detail"><span title='Restrict delete:&#10;Parent cannot be deleted if children exist'>R</span></td>
+                                            </tr>
                                         </table>
                                     </td>
                                     <td><p>Three-character district code; references geographic_code.code.</p></td>
@@ -328,6 +333,28 @@
                                     </td>
                                     <td><p>Waste sampling option code, e.g. AVG.</p></td>
                                 </tr>
+                                <tr>
+                                    <td class='foreignKey' title='Foreign Key'><i class='icon ion-key iconkey' style='padding-left: 5px;'></i><span id="grade_code">grade_code</span></td>
+                                    <td>varchar</td>
+                                    <td>8</td>
+                                    <td title='nullable'>√</td>
+                                    <td title=''></td>
+                                    <td>null</td>
+                                    <td>
+                                        <table border='0' cellspacing='0' cellpadding='0'>
+                                        </table>
+                                    </td>
+                                    <td>
+                                        <table border='0' cellspacing='0' cellpadding='0'>
+                                            <tr>
+                                                <td title="reporting_unit.[geographic_code, grade_code] references district_grade_support.[geographic_code, grade_code] via fk_reporting_unit_district_grade_support"><a href='district_grade_support.html'>district_grade_support</a><span class='relatedKey'>.grade_code</span></td>
+                                                <td class="constraint detail">fk_reporting_unit_district_grade_support</td>
+                                                <td class="constraint detail"><span title='Restrict delete:&#10;Parent cannot be deleted if children exist'>R</span></td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                    <td><p>Grade code: COASTAL or INTERIOR. Required when sampling_code is AVG. Must be historically supported for the selected geographic_code by wasteplus.district_grade_support. The service separately checks the currently effective District Volume configuration when creating a reporting unit.</p></td>
+                                </tr>
                                 </tbody>
                             </table>
                         </div>
@@ -371,6 +398,12 @@
                                     <td>geographic_code</td>
                                 </tr>
                                 <tr>
+                                    <td title='Indexed'>idx_reporting_unit_geographic_grade_code</td>
+                                    <td>Performance</td>
+                                    <td><span title='Ascending'>Asc</span>/<span title='Ascending'>Asc</span></td>
+                                    <td>geographic_code + grade_code</td>
+                                </tr>
+                                <tr>
                                     <td title='Indexed'>idx_reporting_unit_sampling_code</td>
                                     <td>Performance</td>
                                     <td><span title='Ascending'>Asc</span></td>
@@ -385,6 +418,42 @@
                                 </tbody>
                             </table>
                         </div><!-- /.box-body -->
+                    </div>
+                    <div class="box box-primary">
+                        <div class="box-header with-border">
+                            <i class="fa fa-sitemap"></i>
+                            <h3 class="box-title">Check Constraints</h3>
+                            <div class="box-tools pull-right">
+                                <button type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-minus"></i></button>
+                                <button type="button" class="btn btn-box-tool" data-widget="remove"><i class="fa fa-times"></i></button>
+                            </div>
+                        </div>
+                        <div class="box-body">
+                            <table
+                                    id="check_table"
+                                    class="table table-bordered table-striped dataTable"
+                                    role="grid"
+                                    data-paging="true"
+                                    data-page-length="10"
+                                    data-length-change="false">
+                                <thead align='left'>
+                                <tr>
+                                    <th>Constraint Name</th>
+                                    <th>Constraint</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr>
+                                    <td>ck_reporting_unit_avg_requires_grade</td>
+                                    <td>((sampling_code &lt;&gt; &#39;AVG&#39;::text) OR (grade_code IS NOT NULL))</td>
+                                </tr>
+                                <tr>
+                                    <td>ck_reporting_unit_grade_code_allowed</td>
+                                    <td>((grade_code IS NULL) OR ((grade_code)::text &#61; ANY ((ARRAY[&#39;COASTAL&#39;::character varying, &#39;INTERIOR&#39;::character varying])::text[])))</td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                     <div class="box box-primary">
                         <div class="box-header with-border">
@@ -405,31 +474,33 @@
                                 <div class="tab-content no-padding">
                                     <div class="chart tab-pane active" id="oneDegreeImg-chart" style="position: relative; overflow-x:auto;">
                                         <map id="oneDegreeRelationshipsDiagram" name="oneDegreeRelationshipsDiagram">
-<area shape="rect" id="node1" href="block.html" target="_top" title="block" alt="" coords="672,87,857,263">
-<area shape="rect" id="node2" href="reporting_unit.html" target="_top" title="reporting_unit" alt="" coords="304,60,628,452">
-<area shape="rect" id="node3" href="geographic_code.html" target="_top" title="geographic_code" alt="" coords="27,121,239,268">
-<area shape="rect" id="node4" href="sampling_option_code.html" target="_top" title="sampling_option_code" alt="" coords="5,356,260,473">
-<area shape="rect" id="node5" href="status_event.html" target="_top" title="status_event" alt="" coords="901,5,1087,211">
+<area shape="rect" id="node1" href="block.html" target="_top" title="block" alt="" coords="932,87,1117,263">
+<area shape="rect" id="node2" href="reporting_unit.html" target="_top" title="reporting_unit" alt="" coords="564,60,888,481">
+<area shape="rect" id="node3" href="district_grade_support.html" target="_top" title="district_grade_support" alt="" coords="261,221,520,344">
+<area shape="rect" id="node4" href="geographic_code.html" target="_top" title="geographic_code" alt="" coords="5,155,217,301">
+<area shape="rect" id="node5" href="sampling_option_code.html" target="_top" title="sampling_option_code" alt="" coords="263,361,518,479">
+<area shape="rect" id="node6" href="status_event.html" target="_top" title="status_event" alt="" coords="1161,5,1347,211">
 </map>
                                         <a name='diagram'><img id="oneDegreeImg" src="../diagrams/tables/reporting_unit.1degree.png" usemap="#oneDegreeRelationshipsDiagram" class="diagram" border="0" align="left"></a>
                                     </div>
                                     <div class="chart tab-pane " id="twodegreesDegreeImg-chart" style="position: relative; overflow-x:auto;">
                                         <map id="twoDegreesRelationshipsDiagram" name="twoDegreesRelationshipsDiagram">
-<area shape="rect" id="node1" href="block.html" target="_top" title="block" alt="" coords="672,299,795,387">
-<area shape="rect" id="node2" href="reporting_unit.html" target="_top" title="reporting_unit" alt="" coords="304,5,628,397">
-<area shape="rect" id="node3" href="waa_status_code.html" target="_top" title="waa_status_code" alt="" coords="359,415,573,503">
-<area shape="rect" id="node14" href="geographic_code.html" target="_top" title="geographic_code" alt="" coords="27,67,239,213">
-<area shape="rect" id="node15" href="sampling_option_code.html" target="_top" title="sampling_option_code" alt="" coords="5,301,260,419">
-<area shape="rect" id="node4" href="block_area_segment.html" target="_top" title="block_area_segment" alt="" coords="1180,161,1421,249">
-<area shape="rect" id="node5" href="block_mark.html" target="_top" title="block_mark" alt="" coords="901,191,1073,279">
-<area shape="rect" id="node6" href="block_attachment.html" target="_top" title="block_attachment" alt="" coords="875,332,1099,420">
-<area shape="rect" id="node7" href="block_calculation_snapshot.html" target="_top" title="block_calculation_snapshot" alt="" coords="839,437,1136,525">
-<area shape="rect" id="node8" href="block_comment.html" target="_top" title="block_comment" alt="" coords="1198,55,1403,143">
-<area shape="rect" id="node9" href="status_event.html" target="_top" title="status_event" alt="" coords="897,13,1078,101">
-<area shape="rect" id="node10" href="block_requirement.html" target="_top" title="block_requirement" alt="" coords="1185,287,1416,375">
-<area shape="rect" id="node11" href="block_sponsor.html" target="_top" title="block_sponsor" alt="" coords="891,543,1083,631">
-<area shape="rect" id="node12" href="block_submitter.html" target="_top" title="block_submitter" alt="" coords="883,648,1092,736">
-<area shape="rect" id="node13" href="district_average_block.html" target="_top" title="district_average_block" alt="" coords="859,753,1115,841">
+<area shape="rect" id="node1" href="block.html" target="_top" title="block" alt="" coords="932,465,1055,553">
+<area shape="rect" id="node2" href="reporting_unit.html" target="_top" title="reporting_unit" alt="" coords="564,652,888,1073">
+<area shape="rect" id="node3" href="waa_status_code.html" target="_top" title="waa_status_code" alt="" coords="619,463,833,551">
+<area shape="rect" id="node14" href="district_grade_support.html" target="_top" title="district_grade_support" alt="" coords="261,819,520,907">
+<area shape="rect" id="node15" href="geographic_code.html" target="_top" title="geographic_code" alt="" coords="5,784,217,872">
+<area shape="rect" id="node16" href="sampling_option_code.html" target="_top" title="sampling_option_code" alt="" coords="263,948,518,1065">
+<area shape="rect" id="node4" href="block_area_segment.html" target="_top" title="block_area_segment" alt="" coords="1440,321,1681,409">
+<area shape="rect" id="node5" href="block_mark.html" target="_top" title="block_mark" alt="" coords="1161,357,1333,445">
+<area shape="rect" id="node6" href="block_attachment.html" target="_top" title="block_attachment" alt="" coords="1135,463,1359,551">
+<area shape="rect" id="node7" href="block_calculation_snapshot.html" target="_top" title="block_calculation_snapshot" alt="" coords="1099,568,1396,656">
+<area shape="rect" id="node8" href="block_comment.html" target="_top" title="block_comment" alt="" coords="1458,707,1663,795">
+<area shape="rect" id="node9" href="status_event.html" target="_top" title="status_event" alt="" coords="1157,745,1338,833">
+<area shape="rect" id="node10" href="block_requirement.html" target="_top" title="block_requirement" alt="" coords="1445,601,1676,689">
+<area shape="rect" id="node11" href="block_sponsor.html" target="_top" title="block_sponsor" alt="" coords="1151,5,1343,93">
+<area shape="rect" id="node12" href="block_submitter.html" target="_top" title="block_submitter" alt="" coords="1143,111,1352,199">
+<area shape="rect" id="node13" href="district_average_block.html" target="_top" title="district_average_block" alt="" coords="1119,216,1375,304">
 </map>
                                         <a name='diagram'><img id="twodegreesDegreeImg" src="../diagrams/tables/reporting_unit.2degrees.png" usemap="#twoDegreesRelationshipsDiagram" class="diagram" border="0" align="left"></a>
                                     </div>
