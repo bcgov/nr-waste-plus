@@ -339,7 +339,8 @@ public class DistrictVolumeService {
    * Checks if the provided table data contains a district with the specified code.
    *
    * <p>Searches through zones or sections (depending on the table data structure) to find a
-   * matching district code. Comparison is case-insensitive.
+   * matching district code. Both sides are trimmed and compared case-insensitively so codes stored
+   * before normalization still match.
    *
    * @param tableData the table data structure to search (may be null)
    * @param districtCode the district code to search for
@@ -351,7 +352,7 @@ public class DistrictVolumeService {
       return false;
     }
 
-    String normalizedCode = districtCode.toUpperCase();
+    String normalizedCode = districtCode.trim().toUpperCase(Locale.ROOT);
 
     if (tableData.sections() != null) {
       boolean match =
@@ -359,7 +360,12 @@ public class DistrictVolumeService {
               .flatMap(
                   section ->
                       section.districts() != null ? section.districts().stream() : Stream.empty())
-              .anyMatch(d -> normalizedCode.equals(d.district().code().toUpperCase()));
+              .anyMatch(
+                  d ->
+                      d.district() != null
+                          && d.district().code() != null
+                          && normalizedCode.equals(
+                              d.district().code().trim().toUpperCase(Locale.ROOT)));
       if (match) {
         return true;
       }
@@ -368,7 +374,12 @@ public class DistrictVolumeService {
     if (tableData.zones() != null) {
       return tableData.zones().stream()
           .flatMap(zone -> zone.districts() != null ? zone.districts().stream() : Stream.empty())
-          .anyMatch(d -> normalizedCode.equals(d.district().code().toUpperCase()));
+          .anyMatch(
+              d ->
+                  d.district() != null
+                      && d.district().code() != null
+                      && normalizedCode.equals(
+                          d.district().code().trim().toUpperCase(Locale.ROOT)));
     }
 
     return false;

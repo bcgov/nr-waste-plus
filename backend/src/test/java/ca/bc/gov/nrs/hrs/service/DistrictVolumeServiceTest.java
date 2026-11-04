@@ -315,6 +315,17 @@ class DistrictVolumeServiceTest {
     assertThat(result.tableLevelFactor()).isEqualTo(new BigDecimal("1.150"));
     verify(districtGradeSupportRepository)
         .insertSupportedPairs(Area.INTERIOR, List.of("DCC", "DCS"));
+
+    // Persisted district codes are normalized so active-configuration lookups
+    // and support-pair registration compare equal values.
+    ArgumentCaptor<DistrictVolumeEntity> entityCaptor =
+        ArgumentCaptor.forClass(DistrictVolumeEntity.class);
+    verify(districtVolumeRepository).save(entityCaptor.capture());
+    assertThat(
+            entityCaptor.getValue().getTableData().zones().stream()
+                .flatMap(zone -> zone.districts().stream())
+                .map(row -> row.district().code()))
+        .containsExactly("DCC", "DCS", "DCC");
   }
 
   @Test
@@ -834,6 +845,27 @@ class DistrictVolumeServiceTest {
     var result = districtVolumeService.getAreasForDistrictCode("DND");
 
     assertThat(result).containsExactly("COASTAL");
+  }
+
+  @Test
+  @DisplayName(
+      "getAreasForDistrictCode — should match district codes stored with "
+          + "surrounding whitespace")
+  void getAreasForDistrictCode_matchesPaddedStoredCodes() {
+
+    DistrictVolumeEntity paddedInteriorEntity = buildEntityWithDistricts(Area.INTERIOR, " DND ");
+    DistrictVolumeEntity paddedCoastalEntity = buildEntityWithDistricts(Area.COASTAL, " DND ");
+
+    when(districtVolumeRepository.findActiveByConfigTypeAndArea(
+            eq(ConfigType.DISTRICT_VOLUME), eq(Area.INTERIOR), any()))
+        .thenReturn(Optional.of(paddedInteriorEntity));
+    when(districtVolumeRepository.findActiveByConfigTypeAndArea(
+            eq(ConfigType.DISTRICT_VOLUME), eq(Area.COASTAL), any()))
+        .thenReturn(Optional.of(paddedCoastalEntity));
+
+    var result = districtVolumeService.getAreasForDistrictCode("DND");
+
+    assertThat(result).containsExactlyInAnyOrder("INTERIOR", "COASTAL");
   }
 
   @Test

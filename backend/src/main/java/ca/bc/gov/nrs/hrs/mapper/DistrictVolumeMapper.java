@@ -22,6 +22,7 @@ import ca.bc.gov.nrs.hrs.entity.districtaveragevolume.Zone;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.ZoneOffset;
+import java.util.Locale;
 import java.util.List;
 import java.util.Map;
 
@@ -203,7 +204,7 @@ public final class DistrictVolumeMapper {
                   z.name(),
                   z.districts().stream()
                       .map(r -> new DistrictRow(
-                          new CodeDescriptionDto(r.code(), null),
+                          new CodeDescriptionDto(normalizedDistrictCode(r.code()), null),
                           scale(r.avoidableSawlog()),
                           scale(r.avoidableGrade4()),
                           scale(r.unavoidableGrade4()),
@@ -227,7 +228,7 @@ public final class DistrictVolumeMapper {
                   s.name(),
                   s.districts().stream()
                       .map(r -> new DistrictRow(
-                          new CodeDescriptionDto(r.code(), null),
+                          new CodeDescriptionDto(normalizedDistrictCode(r.code()), null),
                           scale(r.avoidableSawlog()),
                           null,
                           null,
@@ -247,6 +248,17 @@ public final class DistrictVolumeMapper {
           new SpeciesCompositionDataDto(rows)
       );
     };
+  }
+
+  /**
+   * Normalizes a district code for persistence: trimmed and uppercased so stored configurations,
+   * support-pair registration, and active-configuration lookups compare equal values.
+   *
+   * @param code the district code from the uploaded payload; may be null
+   * @return the normalized code, or null when the input is null
+   */
+  private static String normalizedDistrictCode(String code) {
+    return code == null ? null : code.strip().toUpperCase(Locale.ROOT);
   }
 
   private static BigDecimal scale(BigDecimal value) {
