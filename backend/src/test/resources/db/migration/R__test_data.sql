@@ -98,14 +98,22 @@ VALUES
         'test-seed:reporting-unit-dkm-v1'
     );
 
+-- Keep the FK support relation aligned with this fixture's District Volume data.
+INSERT INTO wasteplus.district_grade_support (geographic_code, grade_code)
+VALUES
+    ('DKM', 'INTERIOR'),
+    ('DKM', 'COASTAL')
+ON CONFLICT (geographic_code, grade_code) DO NOTHING;
+
 -- Reporting-unit block-list test data. For this test path, PostgreSQL reporting
 -- units are treated as District Average; the fixture persists the corresponding
--- sampling code as well as the district code required by the current schema.
+-- sampling and grade codes as well as the district required by the current schema.
 -- Soft-delete prior rows owned by this fixture so repeatable migration reruns do
 -- not violate the live reporting-unit/block uniqueness constraints. Preserve rows
 -- rather than deleting them because audit and other test data may reference them.
--- The test-data-1254 predicate also retires rows created by the initial manual seed.
--- Legacy values are remapped while retiring them to satisfy the geographic FK.
+-- Retire only DKM/T02 rows: they have a matching District Volume support pair.
+-- Older TEST-1254-A/T01/DND rows are left untouched; this fixture has no DND volume
+-- configuration to justify a grade, and no test references that legacy location.
 UPDATE wasteplus.district_average_block dab
 SET is_deleted = TRUE,
     updated_at = NOW(),
@@ -134,28 +142,25 @@ WHERE ru.reporting_unit_id = b.reporting_unit_id
   AND NOT b.is_deleted;
 
 UPDATE wasteplus.reporting_unit
-SET geographic_code = CASE geographic_code
-        WHEN 'T01' THEN 'DND'
-        WHEN 'T02' THEN 'DKM'
-        ELSE geographic_code
-    END,
+SET geographic_code = 'DKM',
     sampling_code = 'AVG',
+    grade_code = CASE
+        WHEN grade_code IN ('COASTAL', 'INTERIOR') THEN grade_code
+        ELSE 'COASTAL'
+    END,
     is_deleted = TRUE,
     updated_at = NOW(),
     updated_by = 'test-seed:reporting-unit-block-list-v1'
 WHERE client_number = '00001271'
-  AND (client_locn_code, geographic_code) IN (
-        ('TEST-1254-A', 'T01'), ('TEST-1254-A', 'DND'),
-        ('TEST-1254-B', 'T02'), ('TEST-1254-B', 'DKM')
-  )
+  AND client_locn_code = 'TEST-1254-B'
+  AND geographic_code IN ('T02', 'DKM')
   AND created_by IN ('test-seed:reporting-unit-block-list-v1', 'test-data-1254')
   AND NOT is_deleted;
 
 INSERT INTO wasteplus.reporting_unit (
-    client_number, client_locn_code, geographic_code, sampling_code, created_by, updated_by)
+    client_number, client_locn_code, geographic_code, sampling_code, grade_code, created_by, updated_by)
 VALUES
-    ('00001271', 'TEST-1254-A', 'DND', 'AVG', 'test-seed:reporting-unit-block-list-v1', 'test-seed:reporting-unit-block-list-v1'),
-    ('00001271', 'TEST-1254-B', 'DKM', 'AVG', 'test-seed:reporting-unit-block-list-v1', 'test-seed:reporting-unit-block-list-v1');
+    ('00001271', 'TEST-1254-B', 'DKM', 'AVG', 'COASTAL', 'test-seed:reporting-unit-block-list-v1', 'test-seed:reporting-unit-block-list-v1');
 
 INSERT INTO wasteplus.block
     (reporting_unit_id, block_type, is_draft, created_by, updated_by)

@@ -187,4 +187,15 @@ public class LegacyApiProvider implements ReportingUnitSearchProvider {
   public Long createReportingUnit(CreateReportingUnitRequestDto request) {
     return reportingUnitClient.createReportingUnit(request);
   }
+
+  /**
+   * Create a reporting unit in the legacy API with an optional retry-correlation key.
+   *
+   * @param request the create request DTO
+   * @param idempotencyKey the idempotency key for correlating retries, or null
+   * @return the created or previously correlated reporting unit id
+   */
+  public Long createReportingUnit(CreateReportingUnitRequestDto request, String idempotencyKey) {
+    return reportingUnitClient.createReportingUnit(request, idempotencyKey);
+  }
 }

@@ -25,6 +25,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -342,6 +344,28 @@ class ReportingUnitServiceTest {
     verify(legacyApiProvider, never()).getReportingUnitDetails(RU_ID);
   }
 
+  @ParameterizedTest
+  @CsvSource({"COASTAL, Coast", "INTERIOR, Interior"})
+  @DisplayName("shouldReturnPersistedGrade_whenPostgresEntityHasSelectedGrade")
+  void shouldReturnPersistedGrade_whenPostgresEntityHasSelectedGrade(
+      String gradeCode, String gradeDescription) {
+    var reportingUnit = postgresReportingUnit();
+    reportingUnit.setGradeCode(gradeCode);
+
+    when(reportingUnitRepository.findByIdAndDeletedFalse(RU_ID))
+        .thenReturn(Optional.of(reportingUnit));
+    when(codesService.getDistrictCodes())
+        .thenReturn(List.of(new CodeDescriptionDto("DND", "Nadina Natural Resource District")));
+    when(forestClientApiProvider.fetchClientByNumber(CLIENT_NUMBER))
+        .thenReturn(Optional.of(buildClientDto(CLIENT_NUMBER)));
+    when(districtVolumeService.getAreasForDistrictCode("DND"))
+        .thenReturn(List.of("COASTAL", "INTERIOR"));
+
+    var result = reportingUnitService.getReportingUnitDetails(RU_ID);
+
+    assertThat(result.grade()).isEqualTo(new CodeDescriptionDto(gradeCode, gradeDescription));
+  }
+
   @Test
   @DisplayName("shouldFallbackToDefaultSampling_whenCodesServiceThrowsRestClientException")
   void shouldFallbackToDefaultSampling_whenCodesServiceThrowsRestClientException() {
@@ -477,7 +501,7 @@ class ReportingUnitServiceTest {
     // Arrange
     var request =
         new ca.bc.gov.nrs.hrs.dto.reportingunit.CreateReportingUnitRequestDto(
-            CLIENT_NUMBER, "DND", "AVG", null);
+            CLIENT_NUMBER, "DND", "AVG", "COASTAL");
 
     when(legacyApiProvider.searchReportingUnit(
             org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any()))
@@ -485,9 +509,9 @@ class ReportingUnitServiceTest {
 
     when(forestClientApiProvider.fetchClientByNumber(CLIENT_NUMBER))
         .thenReturn(Optional.of(buildClientDto(CLIENT_NUMBER)));
-    when(districtVolumeService.getAreasForDistrictCode("DND")).thenReturn(List.of());
+    when(districtVolumeService.getAreasForDistrictCode("DND")).thenReturn(List.of("COASTAL"));
 
-    when(legacyApiProvider.createReportingUnit(request)).thenReturn(333L);
+    stubGeneratedIdOnSave(333L);
 
     // Act
     var response = reportingUnitService.createReportingUnit(request);
@@ -504,7 +528,10 @@ class ReportingUnitServiceTest {
     assertThat(savedEntity.getClientLocnCode()).isEqualTo("00");
     assertThat(savedEntity.getGeographicCode()).isEqualTo("DND");
     assertThat(savedEntity.getSamplingCode()).isEqualTo("AVG");
+    assertThat(savedEntity.getGradeCode()).isEqualTo("COASTAL");
     assertThat(savedEntity.isDeleted()).isFalse();
+    verify(legacyApiProvider).searchReportingUnit(any(), any());
+    verify(legacyApiProvider, never()).createReportingUnit(any());
   }
 
   @Test
@@ -513,7 +540,7 @@ class ReportingUnitServiceTest {
     // Arrange
     var request =
         new ca.bc.gov.nrs.hrs.dto.reportingunit.CreateReportingUnitRequestDto(
-            CLIENT_NUMBER, "DND", "AVG", null);
+            CLIENT_NUMBER, "DND", "AVG", "COASTAL");
 
     when(legacyApiProvider.searchReportingUnit(
             org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any()))
@@ -521,9 +548,8 @@ class ReportingUnitServiceTest {
 
     when(forestClientApiProvider.fetchClientByNumber(CLIENT_NUMBER))
         .thenReturn(Optional.of(buildClientDto(CLIENT_NUMBER)));
-    when(districtVolumeService.getAreasForDistrictCode("DND")).thenReturn(List.of());
+    when(districtVolumeService.getAreasForDistrictCode("DND")).thenReturn(List.of("COASTAL"));
 
-    when(legacyApiProvider.createReportingUnit(request)).thenReturn(333L);
     when(reportingUnitRepository.saveAndFlush(any(ReportingUnitEntity.class)))
         .thenThrow(new RuntimeException("Database error"));
 
@@ -534,16 +560,12 @@ class ReportingUnitServiceTest {
   }
 
   @Test
-  @DisplayName("shouldThrowBadRequest_whenGradeMissingForDKM")
-  void shouldThrowBadRequest_whenGradeMissingForDkm() {
+  @DisplayName("shouldThrowBadRequest_whenGradeMissingForDualAreaDistrict")
+  void shouldThrowBadRequest_whenGradeMissingForDualAreaDistrict() {
     // Arrange
     var request =
         new ca.bc.gov.nrs.hrs.dto.reportingunit.CreateReportingUnitRequestDto(
             CLIENT_NUMBER, "DKM", "AVG", null);
-
-    when(legacyApiProvider.searchReportingUnit(
-            org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any()))
-        .thenReturn(new PageImpl<>(List.of(), PageRequest.of(0, 1), 0));
 
     when(districtVolumeService.getAreasForDistrictCode("DKM"))
         .thenReturn(List.of("COASTAL", "INTERIOR"));
@@ -552,9 +574,15 @@ class ReportingUnitServiceTest {
     assertThatThrownBy(() -> reportingUnitService.createReportingUnit(request))
         .isInstanceOf(ResponseStatusException.class)
         .satisfies(
-            e ->
-                assertThat(((ResponseStatusException) e).getStatusCode())
-                    .isEqualTo(org.springframework.http.HttpStatus.BAD_REQUEST));
+            exception -> {
+              var statusException = (ResponseStatusException) exception;
+              assertThat(statusException.getStatusCode())
+                  .isEqualTo(org.springframework.http.HttpStatus.BAD_REQUEST);
+              assertThat(statusException.getReason()).contains("Grade code is required", "DKM");
+            });
+    verify(reportingUnitRepository, never()).saveAndFlush(any());
+    verify(legacyApiProvider, never()).createReportingUnit(any());
+    verify(legacyApiProvider, never()).searchReportingUnit(any(), any());
   }
 
   @Test
@@ -563,7 +591,7 @@ class ReportingUnitServiceTest {
     // Arrange
     var request =
         new ca.bc.gov.nrs.hrs.dto.reportingunit.CreateReportingUnitRequestDto(
-            CLIENT_NUMBER, "DND", "AVG", null);
+            CLIENT_NUMBER, "DND", "AVG", "COASTAL");
 
     when(legacyApiProvider.searchReportingUnit(
             org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any()))
@@ -573,7 +601,7 @@ class ReportingUnitServiceTest {
         .thenReturn(Optional.of(buildClientDto(CLIENT_NUMBER)));
     when(districtVolumeService.getAreasForDistrictCode("DND")).thenReturn(List.of("COASTAL"));
 
-    when(legacyApiProvider.createReportingUnit(request)).thenReturn(333L);
+    stubGeneratedIdOnSave(333L);
 
     // Act
     var response = reportingUnitService.createReportingUnit(request);
@@ -589,7 +617,7 @@ class ReportingUnitServiceTest {
     // Arrange
     var request =
         new ca.bc.gov.nrs.hrs.dto.reportingunit.CreateReportingUnitRequestDto(
-            CLIENT_NUMBER, "DND", "AVG", null);
+            CLIENT_NUMBER, "DND", "AVG", "COASTAL");
 
     var existingResult =
         new ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchResultDto(
@@ -612,6 +640,51 @@ class ReportingUnitServiceTest {
     when(legacyApiProvider.searchReportingUnit(
             org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any()))
         .thenReturn(new PageImpl<>(List.of(existingResult), PageRequest.of(0, 1), 1));
+    when(districtVolumeService.getAreasForDistrictCode("DND")).thenReturn(List.of("COASTAL"));
+    when(reportingUnitRepository.existsById(1L)).thenReturn(false);
+
+    // Act & Assert: existing S01 unit must NOT be adopted as AVG even if missing in PostgreSQL
+    assertThatThrownBy(() -> reportingUnitService.createReportingUnit(request))
+        .isInstanceOf(ResponseStatusException.class)
+        .satisfies(
+            e ->
+                assertThat(((ResponseStatusException) e).getStatusCode())
+                    .isEqualTo(org.springframework.http.HttpStatus.CONFLICT));
+    verify(reportingUnitRepository, never()).saveAndFlush(any());
+    verify(legacyApiProvider, never()).createReportingUnit(any());
+    verify(legacyApiProvider, never()).createReportingUnit(any(), any());
+  }
+
+  @Test
+  @DisplayName("shouldThrowConflict_whenMatchingReportingUnitAlreadyExistsLocally")
+  void shouldThrowConflict_whenMatchingReportingUnitAlreadyExistsLocally() {
+    var request =
+        new ca.bc.gov.nrs.hrs.dto.reportingunit.CreateReportingUnitRequestDto(
+            CLIENT_NUMBER, "DND", "AVG", "COASTAL");
+
+    var existingResult =
+        new ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchResultDto(
+            "1",
+            26L,
+            "",
+            36834L,
+            new ca.bc.gov.nrs.hrs.dto.base.CodeDescriptionDto(CLIENT_NUMBER, null),
+            null,
+            null,
+            null,
+            false,
+            false,
+            new ca.bc.gov.nrs.hrs.dto.base.CodeDescriptionDto("AVG", "District Average"),
+            new ca.bc.gov.nrs.hrs.dto.base.CodeDescriptionDto("DND", "Nadina"),
+            new ca.bc.gov.nrs.hrs.dto.base.CodeDescriptionDto("DFT", "Draft"),
+            LocalDateTime.now(),
+            false);
+
+    when(legacyApiProvider.searchReportingUnit(
+            org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any()))
+        .thenReturn(new PageImpl<>(List.of(existingResult), PageRequest.of(0, 1), 1));
+    when(reportingUnitRepository.existsById(1L)).thenReturn(true);
+    when(districtVolumeService.getAreasForDistrictCode("DND")).thenReturn(List.of("COASTAL"));
 
     // Act & Assert
     assertThatThrownBy(() -> reportingUnitService.createReportingUnit(request))
@@ -625,21 +698,64 @@ class ReportingUnitServiceTest {
   }
 
   @Test
+  @DisplayName("shouldReconcileUncommittedLegacyReportingUnit_whenMissingLocally")
+  void shouldReconcileUncommittedLegacyReportingUnit_whenMissingLocally() {
+    var request =
+        new ca.bc.gov.nrs.hrs.dto.reportingunit.CreateReportingUnitRequestDto(
+            CLIENT_NUMBER, "DND", "AVG", "COASTAL");
+
+    var existingResult =
+        new ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchResultDto(
+            "1",
+            26L,
+            "",
+            36834L,
+            new ca.bc.gov.nrs.hrs.dto.base.CodeDescriptionDto(CLIENT_NUMBER, null),
+            null,
+            null,
+            null,
+            false,
+            false,
+            new ca.bc.gov.nrs.hrs.dto.base.CodeDescriptionDto("AVG", "District Average"),
+            new ca.bc.gov.nrs.hrs.dto.base.CodeDescriptionDto("DND", "Nadina"),
+            new ca.bc.gov.nrs.hrs.dto.base.CodeDescriptionDto("DFT", "Draft"),
+            LocalDateTime.now(),
+            false);
+
+    when(legacyApiProvider.searchReportingUnit(
+            org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any()))
+        .thenReturn(new PageImpl<>(List.of(existingResult), PageRequest.of(0, 1), 1));
+    when(reportingUnitRepository.existsById(1L)).thenReturn(false);
+    when(reportingUnitRepository.findById(1L)).thenReturn(Optional.empty());
+    when(districtVolumeService.getAreasForDistrictCode("DND")).thenReturn(List.of("COASTAL"));
+
+    // Act
+    Long resultId = reportingUnitService.createReportingUnit(request);
+
+    // Assert: reconciles locally without calling remote create again
+    assertThat(resultId).isEqualTo(1L);
+    verify(reportingUnitRepository).saveAndFlush(any());
+    verify(legacyApiProvider, never()).createReportingUnit(any());
+    verify(legacyApiProvider, never()).createReportingUnit(any(), any());
+  }
+
+  @Test
   @DisplayName("shouldCreateReportingUnit_whenLegacySearchReturnsNull")
   void shouldCreateReportingUnit_whenLegacySearchReturnsNull() {
     var request =
         new ca.bc.gov.nrs.hrs.dto.reportingunit.CreateReportingUnitRequestDto(
-            CLIENT_NUMBER, "DND", "AVG", null);
+            CLIENT_NUMBER, "DND", "AVG", "COASTAL");
     when(legacyApiProvider.searchReportingUnit(
             org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any()))
         .thenReturn(null);
-    when(districtVolumeService.getAreasForDistrictCode("DND")).thenReturn(List.of());
+    when(districtVolumeService.getAreasForDistrictCode("DND")).thenReturn(List.of("COASTAL"));
     when(forestClientApiProvider.fetchClientByNumber(CLIENT_NUMBER))
         .thenReturn(Optional.of(buildClientDto(CLIENT_NUMBER)));
-    when(legacyApiProvider.createReportingUnit(request)).thenReturn(444L);
+    stubGeneratedIdOnSave(444L);
 
     assertThat(reportingUnitService.createReportingUnit(request)).isEqualTo(444L);
-    verify(legacyApiProvider).createReportingUnit(request);
+    verify(legacyApiProvider).searchReportingUnit(any(), any());
+    verify(legacyApiProvider, never()).createReportingUnit(any());
   }
 
   @Test
@@ -648,9 +764,6 @@ class ReportingUnitServiceTest {
     var request =
         new ca.bc.gov.nrs.hrs.dto.reportingunit.CreateReportingUnitRequestDto(
             CLIENT_NUMBER, "DKM", "AVG", "  ");
-    when(legacyApiProvider.searchReportingUnit(
-            org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any()))
-        .thenReturn(new PageImpl<>(List.of(), PageRequest.of(0, 1), 0));
     when(districtVolumeService.getAreasForDistrictCode("DKM"))
         .thenReturn(List.of("COASTAL", "INTERIOR"));
 
@@ -664,6 +777,80 @@ class ReportingUnitServiceTest {
               assertThat(statusException.getReason()).contains("Grade code is required");
             });
     verify(forestClientApiProvider, never()).fetchClientByNumber(CLIENT_NUMBER);
+    verify(reportingUnitRepository, never()).saveAndFlush(any());
+    verify(legacyApiProvider, never()).createReportingUnit(any());
+    verify(legacyApiProvider, never()).searchReportingUnit(any(), any());
+  }
+
+  @Test
+  @DisplayName("shouldThrowBadRequest_whenGradeMissingForSingleAreaDistrict")
+  void shouldThrowBadRequest_whenGradeMissingForSingleAreaDistrict() {
+    var request =
+        new ca.bc.gov.nrs.hrs.dto.reportingunit.CreateReportingUnitRequestDto(
+            CLIENT_NUMBER, "DND", "AVG", null);
+    when(districtVolumeService.getAreasForDistrictCode("DND")).thenReturn(List.of("COASTAL"));
+
+    assertThatThrownBy(() -> reportingUnitService.createReportingUnit(request))
+        .isInstanceOf(ResponseStatusException.class)
+        .satisfies(
+            exception -> {
+              var statusException = (ResponseStatusException) exception;
+              assertThat(statusException.getStatusCode())
+                  .isEqualTo(org.springframework.http.HttpStatus.BAD_REQUEST);
+              assertThat(statusException.getReason()).contains("Grade code is required", "DND");
+            });
+    verify(forestClientApiProvider, never()).fetchClientByNumber(CLIENT_NUMBER);
+    verify(reportingUnitRepository, never()).saveAndFlush(any());
+    verify(legacyApiProvider, never()).createReportingUnit(any());
+    verify(legacyApiProvider, never()).searchReportingUnit(any(), any());
+  }
+
+  @Test
+  @DisplayName("shouldThrowBadRequest_whenGradeIsNotConfiguredForDistrict")
+  void shouldThrowBadRequest_whenGradeIsNotConfiguredForDistrict() {
+    var request =
+        new ca.bc.gov.nrs.hrs.dto.reportingunit.CreateReportingUnitRequestDto(
+            CLIENT_NUMBER, "DND", "AVG", "INTERIOR");
+    when(districtVolumeService.getAreasForDistrictCode("DND")).thenReturn(List.of("COASTAL"));
+
+    assertThatThrownBy(() -> reportingUnitService.createReportingUnit(request))
+        .isInstanceOf(ResponseStatusException.class)
+        .satisfies(
+            exception -> {
+              var statusException = (ResponseStatusException) exception;
+              assertThat(statusException.getStatusCode())
+                  .isEqualTo(org.springframework.http.HttpStatus.BAD_REQUEST);
+              assertThat(statusException.getReason())
+                  .contains("not supported", "INTERIOR", "DND", "COASTAL");
+            });
+    verify(forestClientApiProvider, never()).fetchClientByNumber(CLIENT_NUMBER);
+    verify(reportingUnitRepository, never()).saveAndFlush(any());
+    verify(legacyApiProvider, never()).createReportingUnit(any());
+    verify(legacyApiProvider, never()).searchReportingUnit(any(), any());
+  }
+
+  @Test
+  @DisplayName("shouldThrowBadRequest_whenDistrictHasNoConfiguredAreas")
+  void shouldThrowBadRequest_whenDistrictHasNoConfiguredAreas() {
+    var request =
+        new ca.bc.gov.nrs.hrs.dto.reportingunit.CreateReportingUnitRequestDto(
+            CLIENT_NUMBER, "DND", "AVG", "COASTAL");
+    when(districtVolumeService.getAreasForDistrictCode("DND")).thenReturn(List.of());
+
+    assertThatThrownBy(() -> reportingUnitService.createReportingUnit(request))
+        .isInstanceOf(ResponseStatusException.class)
+        .satisfies(
+            exception -> {
+              var statusException = (ResponseStatusException) exception;
+              assertThat(statusException.getStatusCode())
+                  .isEqualTo(org.springframework.http.HttpStatus.BAD_REQUEST);
+              assertThat(statusException.getReason())
+                  .contains("not supported", "COASTAL", "DND", "none configured");
+            });
+    verify(forestClientApiProvider, never()).fetchClientByNumber(CLIENT_NUMBER);
+    verify(reportingUnitRepository, never()).saveAndFlush(any());
+    verify(legacyApiProvider, never()).createReportingUnit(any());
+    verify(legacyApiProvider, never()).searchReportingUnit(any(), any());
   }
 
   @Test
@@ -671,7 +858,7 @@ class ReportingUnitServiceTest {
   void shouldCreateReportingUnit_whenGradeIsProvidedForMultiAreaDistrict() {
     var request =
         new ca.bc.gov.nrs.hrs.dto.reportingunit.CreateReportingUnitRequestDto(
-            CLIENT_NUMBER, "DKM", "AVG", "COASTAL");
+            CLIENT_NUMBER, "DKM", "AVG", "INTERIOR");
     when(legacyApiProvider.searchReportingUnit(
             org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any()))
         .thenReturn(new PageImpl<>(List.of(), PageRequest.of(0, 1), 0));
@@ -679,10 +866,13 @@ class ReportingUnitServiceTest {
         .thenReturn(List.of("COASTAL", "INTERIOR"));
     when(forestClientApiProvider.fetchClientByNumber(CLIENT_NUMBER))
         .thenReturn(Optional.of(buildClientDto(CLIENT_NUMBER)));
-    when(legacyApiProvider.createReportingUnit(request)).thenReturn(445L);
+    stubGeneratedIdOnSave(445L);
 
     assertThat(reportingUnitService.createReportingUnit(request)).isEqualTo(445L);
-    verify(legacyApiProvider).createReportingUnit(request);
+    verify(legacyApiProvider, never()).createReportingUnit(any());
+    ArgumentCaptor<ReportingUnitEntity> captor = ArgumentCaptor.forClass(ReportingUnitEntity.class);
+    verify(reportingUnitRepository).saveAndFlush(captor.capture());
+    assertThat(captor.getValue().getGradeCode()).isEqualTo("INTERIOR");
   }
 
   @Test
@@ -690,11 +880,11 @@ class ReportingUnitServiceTest {
   void shouldThrowForestClientNotFound_whenCreatingForUnknownClient() {
     var request =
         new ca.bc.gov.nrs.hrs.dto.reportingunit.CreateReportingUnitRequestDto(
-            CLIENT_NUMBER, "DND", "AVG", null);
+            CLIENT_NUMBER, "DND", "AVG", "COASTAL");
     when(legacyApiProvider.searchReportingUnit(
             org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any()))
         .thenReturn(new PageImpl<>(List.of(), PageRequest.of(0, 1), 0));
-    when(districtVolumeService.getAreasForDistrictCode("DND")).thenReturn(List.of());
+    when(districtVolumeService.getAreasForDistrictCode("DND")).thenReturn(List.of("COASTAL"));
     when(forestClientApiProvider.fetchClientByNumber(CLIENT_NUMBER)).thenReturn(Optional.empty());
 
     assertThatThrownBy(() -> reportingUnitService.createReportingUnit(request))
@@ -728,5 +918,16 @@ class ReportingUnitServiceTest {
     reportingUnit.setClientLocnCode("01");
     reportingUnit.setGeographicCode("DND");
     return reportingUnit;
+  }
+
+  private void stubGeneratedIdOnSave(Long generatedId) {
+    when(reportingUnitRepository.saveAndFlush(any(ReportingUnitEntity.class)))
+        .thenAnswer(
+            invocation -> {
+              ReportingUnitEntity entity = invocation.getArgument(0);
+              assertThat(entity.getId()).isNull();
+              entity.setId(generatedId);
+              return entity;
+            });
   }
 }

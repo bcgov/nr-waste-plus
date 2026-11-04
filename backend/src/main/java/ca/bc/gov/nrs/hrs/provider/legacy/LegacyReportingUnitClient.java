@@ -326,15 +326,32 @@ public class LegacyReportingUnitClient {
    */
   @NewSpan
   public Long createReportingUnit(CreateReportingUnitRequestDto request) {
+    return createReportingUnit(request, null);
+  }
+
+  /**
+   * Creates a reporting unit in the legacy API with an optional idempotency key.
+   *
+   * @param request the create request DTO
+   * @param idempotencyKey the key to correlate a retry across the legacy transaction, or null
+   * @return the id of the newly created or previously correlated reporting unit
+   */
+  @NewSpan
+  public Long createReportingUnit(CreateReportingUnitRequestDto request, String idempotencyKey) {
 
     log.info(
         "Posting create reporting unit request to legacy API " + "for client {}",
         request.clientNumber());
 
-    return restClient
+    var requestSpec = restClient
         .post()
         .uri("/api/reporting-units")
-        .body(request)
+        .body(request);
+    if (idempotencyKey != null && !idempotencyKey.isBlank()) {
+      requestSpec.header("Idempotency-Key", idempotencyKey);
+    }
+
+    return requestSpec
         .retrieve()
         .onStatus(
             HttpStatusCode::isError,

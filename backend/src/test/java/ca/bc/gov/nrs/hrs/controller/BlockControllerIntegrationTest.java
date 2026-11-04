@@ -9,7 +9,10 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static org.mockito.Mockito.doReturn;
 import static org.springframework.boot.webmvc.test.autoconfigure.MockMvcPrint.SYSTEM_OUT;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -18,12 +21,14 @@ import ca.bc.gov.nrs.hrs.dto.base.FeatureFlag;
 import ca.bc.gov.nrs.hrs.entity.block.BlockCalculationSnapshotEntity;
 import ca.bc.gov.nrs.hrs.entity.block.BlockEntity;
 import ca.bc.gov.nrs.hrs.entity.block.ReportingUnitEntity;
+import ca.bc.gov.nrs.hrs.entity.block.StatusEventEntity;
 import ca.bc.gov.nrs.hrs.extensions.AbstractTestContainerIntegrationTest;
 import ca.bc.gov.nrs.hrs.extensions.WiremockLogNotifier;
 import ca.bc.gov.nrs.hrs.extensions.WithMockJwt;
 import ca.bc.gov.nrs.hrs.repository.block.BlockCalculationSnapshotRepository;
 import ca.bc.gov.nrs.hrs.repository.block.BlockRepository;
 import ca.bc.gov.nrs.hrs.repository.block.ReportingUnitRepository;
+import ca.bc.gov.nrs.hrs.repository.block.StatusEventRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
@@ -131,6 +136,8 @@ class BlockControllerIntegrationTest extends AbstractTestContainerIntegrationTes
   @Autowired
   private BlockRepository blockRepository;
   @Autowired
+  private StatusEventRepository statusEventRepository;
+  @Autowired
   private BlockCalculationSnapshotRepository snapshotRepository;
   @Autowired
   private JdbcTemplate jdbcTemplate;
@@ -166,7 +173,8 @@ class BlockControllerIntegrationTest extends AbstractTestContainerIntegrationTes
     ReportingUnitEntity ru = new ReportingUnitEntity();
     ru.setClientNumber("00000000");
     ru.setClientLocnCode("CTRL-" + unique);
-    ru.setGeographicCode("DCC");
+    ru.setGeographicCode("DKM");
+    ru.setGradeCode("COASTAL");
     audit(ru);
     ReportingUnitEntity savedRu = reportingUnitRepository.saveAndFlush(ru);
     reportingUnitId = savedRu.getId();
@@ -174,7 +182,8 @@ class BlockControllerIntegrationTest extends AbstractTestContainerIntegrationTes
     ReportingUnitEntity otherRu = new ReportingUnitEntity();
     otherRu.setClientNumber("00000000");
     otherRu.setClientLocnCode("OTHER-" + unique);
-    otherRu.setGeographicCode("DCC");
+    otherRu.setGeographicCode("DKM");
+    otherRu.setGradeCode("COASTAL");
     audit(otherRu);
     otherReportingUnitId = reportingUnitRepository.saveAndFlush(otherRu).getId();
 
@@ -191,7 +200,8 @@ class BlockControllerIntegrationTest extends AbstractTestContainerIntegrationTes
     ReportingUnitEntity foreignRu = new ReportingUnitEntity();
     foreignRu.setClientNumber("99999999");
     foreignRu.setClientLocnCode("FOREIGN-" + unique);
-    foreignRu.setGeographicCode("DCC");
+    foreignRu.setGeographicCode("DKM");
+    foreignRu.setGradeCode("COASTAL");
     audit(foreignRu);
     ReportingUnitEntity savedForeignRu = reportingUnitRepository.saveAndFlush(foreignRu);
     foreignReportingUnitId = savedForeignRu.getId();
@@ -216,6 +226,9 @@ class BlockControllerIntegrationTest extends AbstractTestContainerIntegrationTes
     jdbcTemplate.update("DELETE FROM wasteplus.block_calculation_snapshot WHERE block_id = ?", blockId);
     jdbcTemplate.update(
         "DELETE FROM wasteplus.block_calculation_snapshot WHERE block_id = ?", foreignBlockId);
+    jdbcTemplate.update(
+        "DELETE FROM wasteplus.status_event WHERE reporting_unit_id IN (?, ?)",
+        reportingUnitId, otherReportingUnitId);
   }
 
   // ---------------------------------------------------------------------
@@ -252,7 +265,7 @@ class BlockControllerIntegrationTest extends AbstractTestContainerIntegrationTes
   }
 
   @Test
-  @DisplayName("Returns legacy block details with isLegacy true")
+  @DisplayName("Returns legacy block details with isLegacy true and unknown blockType")
   @WithMockJwt
   void returnsLegacyBlockDetailsWithIsLegacyTrue() throws Exception {
     long legacyReportingUnitId = 555L;
@@ -385,6 +398,26 @@ class BlockControllerIntegrationTest extends AbstractTestContainerIntegrationTes
         .perform(MockMvcRequestBuilders.get(detailsUrl(foreignReportingUnitId, foreignBlockId)))
         .andExpect(status().isForbidden())
         .andExpect(content().string(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("DISTRICT_AVERAGE"))));
+  }
+
+  @Test
+  @DisplayName("Returns 404 for BCeID caller requesting own block under another client's reporting unit (wrong parent)")
+  @WithMockJwt(idp = "bceidbusiness", cognitoGroups = {"WASTE_PLUS_VIEWER_00000000"})
+  void returns404ForCrossClientWrongParentBlockDetails() throws Exception {
+    mockMvc
+        .perform(MockMvcRequestBuilders.get(detailsUrl(foreignReportingUnitId, blockId)))
+        .andExpect(status().isNotFound());
+  }
+
+  @Test
+  @DisplayName("Returns 404 for BCeID caller requesting own block under foreign RU on alias path")
+  @WithMockJwt(idp = "bceidbusiness", cognitoGroups = {"WASTE_PLUS_VIEWER_00000000"})
+  void returns404ForCrossClientWrongParentBlockDetailsOnAliasPath() throws Exception {
+    mockMvc
+        .perform(
+            MockMvcRequestBuilders.get(
+                "/api/reporting-units/" + foreignReportingUnitId + "/blocks/" + blockId))
+        .andExpect(status().isNotFound());
   }
 
   @Test
@@ -729,5 +762,245 @@ class BlockControllerIntegrationTest extends AbstractTestContainerIntegrationTes
     entity.setUpdatedBy(ACTOR);
     entity.setCreatedAt(Instant.parse("2025-07-01T00:00:00Z"));
     entity.setUpdatedAt(Instant.parse("2025-07-01T00:00:00Z"));
+  }
+
+  private void audit(StatusEventEntity entity) {
+    entity.setCreatedBy(ACTOR);
+    entity.setUpdatedBy(ACTOR);
+    entity.setCreatedAt(Instant.parse("2025-07-01T00:00:00Z"));
+    entity.setUpdatedAt(Instant.parse("2025-07-01T00:00:00Z"));
+  }
+  // ---------------------------------------------------------------------
+  // POST /{reportingUnitId}/blocks — block creation
+  // ---------------------------------------------------------------------
+
+  @Test
+  @DisplayName("POST /blocks returns 401 when unauthenticated")
+  void create_whenUnauthenticated_returns401() throws Exception {
+    mockMvc
+        .perform(
+            post("/api/reporting-units/{reportingUnitId}/blocks", reportingUnitId)
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"blockType\":\"DISTRICT_AVERAGE\"}"))
+        .andExpect(status().isUnauthorized());
+  }
+
+  @Test
+  @DisplayName("POST /blocks returns 403 when role is VIEWER")
+  @WithMockJwt(cognitoGroups = {"WASTE_PLUS_VIEWER_00000000"})
+  void create_whenViewer_returns403() throws Exception {
+    mockMvc
+        .perform(
+            post("/api/reporting-units/{reportingUnitId}/blocks", reportingUnitId)
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"blockType\":\"DISTRICT_AVERAGE\"}"))
+        .andExpect(status().isForbidden());
+  }
+
+  @Test
+  @DisplayName("POST /blocks returns 403 when BCeID user has SUBMITTER on another client but only VIEWER on target")
+  @WithMockJwt(
+      cognitoGroups = {"WASTE_PLUS_SUBMITTER_99999999", "WASTE_PLUS_VIEWER_00000000"},
+      idp = "bceidbusiness")
+  void create_whenBceidUserHasSubmitterOnOtherClientButViewerOnTarget_returns403() throws Exception {
+    mockMvc
+        .perform(
+            post("/api/reporting-units/{reportingUnitId}/blocks", otherReportingUnitId)
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"blockType\":\"DISTRICT_AVERAGE\"}"))
+        .andExpect(status().isForbidden());
+  }
+
+  @Test
+  @DisplayName("POST /blocks successfully creates DA block and returns 201 with Location and ETag")
+  @WithMockJwt(
+      cognitoGroups = {"WASTE_PLUS_SUBMITTER_00000000"},
+      idp = "bceidbusiness")
+  void create_whenValid_returns201() throws Exception {
+    mockMvc
+        .perform(
+            post("/api/reporting-units/{reportingUnitId}/blocks", otherReportingUnitId)
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"blockType\":\"DISTRICT_AVERAGE\",\"expectedReportingUnitState\":\"SUBMISSION\"}"))
+        .andExpect(status().isCreated())
+        .andExpect(header().exists("Location"))
+        .andExpect(header().exists("ETag"))
+        .andExpect(jsonPath("$.id").isNumber())
+        .andExpect(jsonPath("$.reportingUnitId").value(otherReportingUnitId))
+        .andExpect(jsonPath("$.blockType").value("DISTRICT_AVERAGE"))
+        .andExpect(jsonPath("$.state").value("DRAFT"))
+        .andExpect(jsonPath("$.draft").value(true));
+  }
+
+  @Test
+  @DisplayName("POST /blocks returns 400 Bad Request when blockType is null or missing")
+  @WithMockJwt(
+      cognitoGroups = {"WASTE_PLUS_SUBMITTER_00000000"},
+      idp = "bceidbusiness")
+  void create_whenBlockTypeMissing_returns400() throws Exception {
+    mockMvc
+        .perform(
+            post("/api/reporting-units/{reportingUnitId}/blocks", otherReportingUnitId)
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{}"))
+        .andExpect(status().isBadRequest());
+  }
+
+  @Test
+  @DisplayName("POST /blocks returns 400 Bad Request when blockType is invalid enum value")
+  @WithMockJwt(
+      cognitoGroups = {"WASTE_PLUS_SUBMITTER_00000000"},
+      idp = "bceidbusiness")
+  void create_whenBlockTypeInvalid_returns400() throws Exception {
+    mockMvc
+        .perform(
+            post("/api/reporting-units/{reportingUnitId}/blocks", otherReportingUnitId)
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"blockType\":\"INVALID\"}"))
+        .andExpect(status().isBadRequest());
+  }
+
+  @Test
+  @DisplayName("POST /blocks returns 409 Conflict when expectedReportingUnitState does not match")
+  @WithMockJwt(
+      cognitoGroups = {"WASTE_PLUS_SUBMITTER_00000000"},
+      idp = "bceidbusiness")
+  void create_whenExpectedReportingUnitStateMismatch_returns409Conflict() throws Exception {
+    mockMvc
+        .perform(
+            post("/api/reporting-units/{reportingUnitId}/blocks", otherReportingUnitId)
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(
+                    "{\"blockType\":\"DISTRICT_AVERAGE\",\"expectedReportingUnitState\":\"APPROVED\"}"))
+        .andExpect(status().isConflict())
+        .andExpect(
+            jsonPath("$.detail")
+                .value("Reporting unit state conflict: expected 'APPROVED' but was 'SUBMISSION'"));
+  }
+
+  @Test
+  @DisplayName("POST /blocks returns 409 Conflict when RU has persisted status event differing from expected")
+  @WithMockJwt(
+      cognitoGroups = {"WASTE_PLUS_SUBMITTER_00000000"},
+      idp = "bceidbusiness")
+  void create_whenPersistedStatusDiffersFromExpected_returns409Conflict() throws Exception {
+    StatusEventEntity event = new StatusEventEntity();
+    event.setReportingUnitId(otherReportingUnitId);
+    event.setStatus("HOLD");
+    event.setEventType("STATUS_CHANGE");
+    audit(event);
+    statusEventRepository.save(event);
+
+    mockMvc
+        .perform(
+            post("/api/reporting-units/{reportingUnitId}/blocks", otherReportingUnitId)
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(
+                    "{\"blockType\":\"DISTRICT_AVERAGE\",\"expectedReportingUnitState\":\"SUBMISSION\"}"))
+        .andExpect(status().isConflict())
+        .andExpect(
+            jsonPath("$.detail")
+                .value("Reporting unit state conflict: expected 'SUBMISSION' but was 'HOLD'"));
+  }
+
+  @Test
+  @DisplayName("POST /blocks returns 409 Conflict when duplicate DA block exists")
+  @WithMockJwt(
+      cognitoGroups = {"WASTE_PLUS_SUBMITTER_00000000"},
+      idp = "bceidbusiness")
+  void create_whenDuplicateDaBlock_returns409() throws Exception {
+    mockMvc
+        .perform(
+            post("/api/reporting-units/{reportingUnitId}/blocks", reportingUnitId)
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"blockType\":\"DISTRICT_AVERAGE\"}"))
+        .andExpect(status().isConflict())
+        .andExpect(jsonPath("$.detail").value("A District Average block already exists for this Reporting Unit"));
+  }
+
+  @Test
+  @DisplayName("POST /blocks returns 404 for unauthorized BCeID user from different client")
+  @WithMockJwt(
+      cognitoGroups = {"WASTE_PLUS_SUBMITTER_99999999"},
+      idp = "bceidbusiness")
+  void create_whenOtherClientBceid_returns404() throws Exception {
+    mockMvc
+        .perform(
+            post("/api/reporting-units/{reportingUnitId}/blocks", reportingUnitId)
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"blockType\":\"DISTRICT_AVERAGE\"}"))
+        .andExpect(status().isNotFound());
+  }
+
+  @Test
+  @DisplayName("GET /blocks/{blockId} returns block details via alias path")
+  @WithMockJwt
+  void returnsBlockDetailsViaBlocksAliasPath() throws Exception {
+    mockMvc
+        .perform(MockMvcRequestBuilders.get("/api/reporting-units/" + reportingUnitId + "/blocks/" + blockId))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.id").value(blockId))
+        .andExpect(jsonPath("$.reportingUnitId").value(reportingUnitId))
+        .andExpect(jsonPath("$.state").value("DRAFT"))
+        .andExpect(jsonPath("$.draft").value(true))
+        .andExpect(jsonPath("$.version").isNumber())
+        .andExpect(jsonPath("$.revision").isNumber())
+        .andExpect(jsonPath("$.isLegacy").value(false))
+        .andExpect(jsonPath("$.createdAt").isNotEmpty())
+        .andExpect(jsonPath("$.updatedAt").isNotEmpty());
+  }
+
+  @Test
+  @DisplayName("Following POST response Location returns block resource envelope with state, version, and timestamps")
+  @WithMockJwt(
+      cognitoGroups = {"WASTE_PLUS_SUBMITTER_00000000"},
+      idp = "bceidbusiness")
+  void create_thenFollowLocation_returnsResourceEnvelope() throws Exception {
+    var result =
+        mockMvc
+            .perform(
+                post("/api/reporting-units/{reportingUnitId}/blocks", otherReportingUnitId)
+                    .with(csrf())
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("{\"blockType\":\"DISTRICT_AVERAGE\",\"expectedReportingUnitState\":\"SUBMISSION\"}"))
+            .andExpect(status().isCreated())
+            .andExpect(header().exists("Location"))
+            .andReturn();
+
+    String location = result.getResponse().getHeader("Location");
+
+    mockMvc
+        .perform(MockMvcRequestBuilders.get(location))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.reportingUnitId").value(otherReportingUnitId))
+        .andExpect(jsonPath("$.blockType").value("DISTRICT_AVERAGE"))
+        .andExpect(jsonPath("$.state").value("DRAFT"))
+        .andExpect(jsonPath("$.draft").value(true))
+        .andExpect(jsonPath("$.version").value(0))
+        .andExpect(jsonPath("$.revision").value(0))
+        .andExpect(jsonPath("$.isLegacy").value(false))
+        .andExpect(jsonPath("$.createdAt").isNotEmpty())
+        .andExpect(jsonPath("$.updatedAt").isNotEmpty());
+  }
+
+  @Test
+  @DisplayName("Denies a BCeID caller reading another client's block details via alias path")
+  @WithMockJwt(idp = "bceidbusiness", cognitoGroups = {"WASTE_PLUS_VIEWER_00000000"})
+  void deniesBceidCrossClientBlockDetailsViaAliasPath() throws Exception {
+    mockMvc
+        .perform(
+            MockMvcRequestBuilders.get(
+                "/api/reporting-units/" + foreignReportingUnitId + "/blocks/" + foreignBlockId))
+        .andExpect(status().isForbidden());
   }
 }

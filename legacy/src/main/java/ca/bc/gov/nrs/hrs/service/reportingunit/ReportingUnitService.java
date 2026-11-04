@@ -15,6 +15,7 @@ import ca.bc.gov.nrs.hrs.repository.codes.SamplingOptionRepository;
 import io.micrometer.observation.annotation.Observed;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -147,17 +148,41 @@ public class ReportingUnitService {
    */
   @Transactional
   public Long createReportingUnit(CreateReportingUnitRequestDto request, String userId) {
+    return createReportingUnit(request, userId, null);
+  }
 
-    Long orgUnitNo =
-        orgUnitRepository
-            .findByOrgUnitCode(request.districtCode())
-            .orElseThrow(
-                () ->
-                    new IllegalArgumentException(
-                        "No district found for code: " + request.districtCode()))
-            .getOrgUnitNo();
-
+  /**
+   * Creates or returns the reporting unit correlated with an idempotency key.
+   *
+   * <p>The correlation key is stored on the reporting-unit row in the same Oracle transaction as
+   * the create, so a retry after the remote commit returns the original identifier.
+   *
+   * @param request the DTO containing the values for the reporting unit
+   * @param userId the authenticated user performing the create
+   * @param idempotencyKey the retry-correlation key, or null when absent
+   * @return the newly created or previously correlated reporting unit id
+   */
+  @Transactional
+  public Long createReportingUnit(
+      CreateReportingUnitRequestDto request, String userId, String idempotencyKey) {
+    Long orgUnitNo = resolveOrgUnitNo(request);
     String samplingCode = request.samplingCode();
+
+    if (idempotencyKey != null && !idempotencyKey.isBlank()) {
+      var existing = ruRepository.findByIdempotencyKey(idempotencyKey.trim());
+      if (existing.isPresent()) {
+        ReportingUnitEntity entity = existing.orElseThrow();
+        if (!Objects.equals(entity.getCreatedBy(), userId)
+            || !entity.getClientNumber().equals(request.clientNumber())
+            || !Objects.equals(entity.getOrgUnitNo(), orgUnitNo)
+            || !entity.getWasteSamplingOptionCode().equals(request.samplingCode())) {
+          throw new ResponseStatusException(
+              HttpStatus.CONFLICT, "Idempotency key was already used for a different request");
+        }
+        return entity.getId();
+      }
+    }
+
     boolean isValidSamplingCode =
         samplingOptionRepository.findAllValid().stream()
             .anyMatch(s -> s.getId().equals(samplingCode));
@@ -183,6 +208,10 @@ public class ReportingUnitService {
             .updatedBy(userId)
             .updatedAt(now)
             .revision(1L)
+            .idempotencyKey(
+                idempotencyKey != null && !idempotencyKey.isBlank()
+                    ? idempotencyKey.trim()
+                    : null)
             .build();
 
     ReportingUnitEntity savedEntity = ruRepository.save(entity);
@@ -193,5 +222,14 @@ public class ReportingUnitService {
         request.clientNumber());
 
     return savedEntity.getId();
+  }
+
+  private Long resolveOrgUnitNo(CreateReportingUnitRequestDto request) {
+    return orgUnitRepository
+        .findByOrgUnitCode(request.districtCode())
+        .orElseThrow(
+            () -> new IllegalArgumentException(
+                "No district found for code: " + request.districtCode()))
+        .getOrgUnitNo();
   }
 }

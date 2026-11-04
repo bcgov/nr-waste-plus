@@ -5,9 +5,11 @@ import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.notFound;
 import static com.github.tomakehurst.wiremock.client.WireMock.okJson;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
+import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.serviceUnavailable;
 import static com.github.tomakehurst.wiremock.client.WireMock.unauthorized;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
+import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -96,6 +98,26 @@ class LegacyReportingUnitClientIntegrationTest extends AbstractTestContainerInte
     Long id = legacyReportingUnitClient.createReportingUnit(request);
     assertNotNull(id);
     assertEquals(333L, id.longValue());
+  }
+
+  @Test
+  @DisplayName("shouldForwardIdempotencyKey_whenCreatingReportingUnit")
+  void shouldForwardIdempotencyKey_whenCreatingReportingUnit() {
+    CreateReportingUnitRequestDto request =
+        new CreateReportingUnitRequestDto("00012797", "DND", "S01", null);
+    String key = "retry-key-1";
+    clientApiStub.stubFor(
+        post(urlPathEqualTo("/api/reporting-units"))
+            .withHeader("Idempotency-Key", equalTo(key))
+            .willReturn(okJson("333")));
+
+    Long id = legacyReportingUnitClient.createReportingUnit(request, key);
+
+    assertEquals(333L, id.longValue());
+    clientApiStub.verify(
+        1,
+        postRequestedFor(urlPathEqualTo("/api/reporting-units"))
+            .withHeader("Idempotency-Key", equalTo(key)));
   }
 
   @Test

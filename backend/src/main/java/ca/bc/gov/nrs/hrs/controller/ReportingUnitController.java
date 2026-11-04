@@ -24,6 +24,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
@@ -106,7 +107,7 @@ public class ReportingUnitController {
   /**
    * Create a new Reporting Unit.
    *
-   * <p>Creates a reporting unit in the legacy system and returns HTTP 201 (Created) with a Location
+   * <p>Creates a reporting unit in PostgreSQL and returns HTTP 201 (Created) with a Location
    * header pointing to the frontend resource (/reporting-units/{id}). Per API contract, this
    * endpoint does not return a response body.
    *
@@ -116,7 +117,9 @@ public class ReportingUnitController {
   @PostMapping
   @Observed
   public ResponseEntity<Void> createReportingUnit(
-      @AuthenticationPrincipal Jwt jwt, @Valid @RequestBody CreateReportingUnitRequestDto request) {
+      @AuthenticationPrincipal Jwt jwt,
+      @RequestHeader(name = "Idempotency-Key", required = false) String idempotencyKey,
+      @Valid @RequestBody CreateReportingUnitRequestDto request) {
     if (!JwtPrincipalUtil.hasPrivilegedCreateRole(jwt)
         && !JwtPrincipalUtil.hasAbstractRole(jwt, Role.SUBMITTER, request.clientNumber())) {
       throw new ResponseStatusException(
@@ -124,7 +127,7 @@ public class ReportingUnitController {
           "User is not authorized to create a reporting unit for client " + request.clientNumber());
     }
 
-    Long createdId = reportingUnitService.createReportingUnit(request);
+    Long createdId = reportingUnitService.createReportingUnit(request, idempotencyKey);
 
     URI location = URI.create("/reporting-units/" + createdId);
 

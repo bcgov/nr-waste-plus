@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
@@ -95,9 +96,10 @@ public class ReportingUnitController {
   @ResponseStatus(HttpStatus.CREATED)
   public Long createReportingUnit(
       @Valid @RequestBody CreateReportingUnitRequestDto request,
+      @RequestHeader(name = "Idempotency-Key", required = false) String idempotencyKey,
       @AuthenticationPrincipal Jwt jwt) {
     log.info("Creating new reporting unit for client {}", request.clientNumber());
-    return service.createReportingUnit(request, JwtPrincipalUtil.getUserId(jwt));
+    return service.createReportingUnit(request, JwtPrincipalUtil.getUserId(jwt), idempotencyKey);
   }
 
 }
