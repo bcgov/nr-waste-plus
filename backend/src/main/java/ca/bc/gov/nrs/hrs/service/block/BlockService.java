@@ -69,6 +69,18 @@ public class BlockService {
   @Transactional
   public BlockEntity create(
       Jwt jwt, Long reportingUnitId, BlockType blockType, String expectedReportingUnitState) {
+    return doCreate(jwt, reportingUnitId, blockType, expectedReportingUnitState);
+  }
+
+  /**
+   * Shared block-creation implementation behind the public {@code create} entry points.
+   *
+   * <p>Callers must reach this logic through a public, {@code @Transactional} method so the
+   * Spring proxy applies the service-level transaction; calling it directly would bypass
+   * proxy-based instrumentation.
+   */
+  private BlockEntity doCreate(
+      Jwt jwt, Long reportingUnitId, BlockType blockType, String expectedReportingUnitState) {
     ReportingUnitEntity reportingUnit =
         reportingUnitRepository
             .findByIdAndDeletedFalse(reportingUnitId)
@@ -104,8 +116,10 @@ public class BlockService {
    * @param blockType block subtype to create
    * @return newly created and persisted block entity
    */
+  @NewSpan
+  @Transactional
   public BlockEntity create(Jwt jwt, Long reportingUnitId, BlockType blockType) {
-    return create(jwt, reportingUnitId, blockType, null);
+    return doCreate(jwt, reportingUnitId, blockType, null);
   }
 
   /**
@@ -115,8 +129,10 @@ public class BlockService {
    * @param blockType block subtype to create
    * @return newly created and persisted block entity
    */
+  @NewSpan
+  @Transactional
   public BlockEntity create(Long reportingUnitId, BlockType blockType) {
-    return create(null, reportingUnitId, blockType, null);
+    return doCreate(null, reportingUnitId, blockType, null);
   }
 
   /**
@@ -132,6 +148,23 @@ public class BlockService {
   @NewSpan
   @Transactional(readOnly = true)
   public BlockEntity getOwned(Jwt jwt, Long reportingUnitId, Long blockId) {
+    return doGetOwned(jwt, reportingUnitId, blockId);
+  }
+
+  /**
+   * Retrieves a non-deleted block that belongs to the specified reporting unit without JWT tenant scoping.
+   *
+   * @param reportingUnitId owning reporting unit
+   * @param blockId target block identifier
+   * @return the owned block entity
+   */
+  @NewSpan
+  @Transactional(readOnly = true)
+  public BlockEntity getOwned(Long reportingUnitId, Long blockId) {
+    return doGetOwned(null, reportingUnitId, blockId);
+  }
+
+  private BlockEntity doGetOwned(Jwt jwt, Long reportingUnitId, Long blockId) {
     ReportingUnitEntity reportingUnit =
         reportingUnitRepository
             .findByIdAndDeletedFalse(reportingUnitId)
@@ -145,17 +178,6 @@ public class BlockService {
   }
 
   /**
-   * Retrieves a non-deleted block that belongs to the specified reporting unit without JWT tenant scoping.
-   *
-   * @param reportingUnitId owning reporting unit
-   * @param blockId target block identifier
-   * @return the owned block entity
-   */
-  public BlockEntity getOwned(Long reportingUnitId, Long blockId) {
-    return getOwned(null, reportingUnitId, blockId);
-  }
-
-  /**
    * Retrieves all non-deleted blocks for a reporting unit ordered by ID ascending.
    *
    * @param jwt caller JWT for tenant authorization
@@ -166,14 +188,7 @@ public class BlockService {
   @NewSpan
   @Transactional(readOnly = true)
   public List<BlockEntity> findAllByReportingUnitId(Jwt jwt, Long reportingUnitId) {
-    ReportingUnitEntity reportingUnit =
-        reportingUnitRepository
-            .findByIdAndDeletedFalse(reportingUnitId)
-            .orElseThrow(() -> new ReportingUnitNotFoundException(reportingUnitId));
-
-    validateTenantAccess(jwt, reportingUnit);
-
-    return blockRepository.findAllByReportingUnitIdAndDeletedFalseOrderByIdAsc(reportingUnitId);
+    return doFindAllByReportingUnitId(jwt, reportingUnitId);
   }
 
   /**
@@ -182,8 +197,21 @@ public class BlockService {
    * @param reportingUnitId target reporting unit
    * @return list of non-deleted blocks
    */
+  @NewSpan
+  @Transactional(readOnly = true)
   public List<BlockEntity> findAllByReportingUnitId(Long reportingUnitId) {
-    return findAllByReportingUnitId(null, reportingUnitId);
+    return doFindAllByReportingUnitId(null, reportingUnitId);
+  }
+
+  private List<BlockEntity> doFindAllByReportingUnitId(Jwt jwt, Long reportingUnitId) {
+    ReportingUnitEntity reportingUnit =
+        reportingUnitRepository
+            .findByIdAndDeletedFalse(reportingUnitId)
+            .orElseThrow(() -> new ReportingUnitNotFoundException(reportingUnitId));
+
+    validateTenantAccess(jwt, reportingUnit);
+
+    return blockRepository.findAllByReportingUnitIdAndDeletedFalseOrderByIdAsc(reportingUnitId);
   }
 
   /**
