@@ -14,12 +14,12 @@ import ca.bc.gov.nrs.hrs.service.block.BlockCalculationService;
 import ca.bc.gov.nrs.hrs.service.block.BlockService;
 import ca.bc.gov.nrs.hrs.util.ConditionalRequestSupport;
 import io.micrometer.observation.annotation.Observed;
-import jakarta.validation.Valid;
 import java.net.URI;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -68,7 +68,11 @@ public class BlockController {
   public ResponseEntity<BlockResponseDto> create(
       @AuthenticationPrincipal Jwt jwt,
       @PathVariable Long reportingUnitId,
-      @Valid @RequestBody BlockCreateRequestDto request) {
+      @RequestBody BlockCreateRequestDto request) {
+    if (request == null || request.blockType() == null) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Block type is required");
+    }
+
     log.info("Creating block under reporting unit {}", reportingUnitId);
 
     BlockEntity created =

@@ -146,14 +146,25 @@ class BlockControllerTest {
   }
 
   @Test
-  @DisplayName("POST /blocks returns 422 when blockType is null")
-  void create_whenBlockTypeNull_returns422() throws Exception {
+  @DisplayName("POST /blocks returns 400 when blockType is null")
+  void create_whenBlockTypeNull_returns400() throws Exception {
     mockMvc
         .perform(
             post("/api/reporting-units/{reportingUnitId}/blocks", RU_ID)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{}"))
-        .andExpect(status().isUnprocessableEntity());
+        .andExpect(status().isBadRequest());
+  }
+
+  @Test
+  @DisplayName("POST /blocks returns 400 when blockType is invalid enum value")
+  void create_whenBlockTypeInvalid_returns400() throws Exception {
+    mockMvc
+        .perform(
+            post("/api/reporting-units/{reportingUnitId}/blocks", RU_ID)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"blockType\":\"INVALID\"}"))
+        .andExpect(status().isBadRequest());
   }
 
   @Test

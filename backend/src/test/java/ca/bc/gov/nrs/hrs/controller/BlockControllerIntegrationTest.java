@@ -834,6 +834,36 @@ class BlockControllerIntegrationTest extends AbstractTestContainerIntegrationTes
   }
 
   @Test
+  @DisplayName("POST /blocks returns 400 Bad Request when blockType is null or missing")
+  @WithMockJwt(
+      cognitoGroups = {"WASTE_PLUS_SUBMITTER_00000000"},
+      idp = "bceidbusiness")
+  void create_whenBlockTypeMissing_returns400() throws Exception {
+    mockMvc
+        .perform(
+            post("/api/reporting-units/{reportingUnitId}/blocks", otherReportingUnitId)
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{}"))
+        .andExpect(status().isBadRequest());
+  }
+
+  @Test
+  @DisplayName("POST /blocks returns 400 Bad Request when blockType is invalid enum value")
+  @WithMockJwt(
+      cognitoGroups = {"WASTE_PLUS_SUBMITTER_00000000"},
+      idp = "bceidbusiness")
+  void create_whenBlockTypeInvalid_returns400() throws Exception {
+    mockMvc
+        .perform(
+            post("/api/reporting-units/{reportingUnitId}/blocks", otherReportingUnitId)
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"blockType\":\"INVALID\"}"))
+        .andExpect(status().isBadRequest());
+  }
+
+  @Test
   @DisplayName("POST /blocks returns 409 Conflict when expectedReportingUnitState does not match")
   @WithMockJwt(
       cognitoGroups = {"WASTE_PLUS_SUBMITTER_00000000"},
