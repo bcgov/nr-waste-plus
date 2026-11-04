@@ -5,18 +5,22 @@ import ca.bc.gov.nrs.hrs.dto.districtaveragevolume.DistrictVolumeCreateDto;
 import ca.bc.gov.nrs.hrs.dto.districtaveragevolume.DistrictVolumeDetailDto;
 import ca.bc.gov.nrs.hrs.dto.districtaveragevolume.DistrictVolumeListItemDto;
 import ca.bc.gov.nrs.hrs.dto.districtaveragevolume.InteriorDataDto;
+import ca.bc.gov.nrs.hrs.dto.districtaveragevolume.TableDataDto;
 import ca.bc.gov.nrs.hrs.entity.districtaveragevolume.Area;
 import ca.bc.gov.nrs.hrs.entity.districtaveragevolume.ConfigType;
 import ca.bc.gov.nrs.hrs.entity.districtaveragevolume.DistrictVolumeEntity;
 import ca.bc.gov.nrs.hrs.entity.districtaveragevolume.TableData;
 import ca.bc.gov.nrs.hrs.mapper.DistrictVolumeMapper;
+import ca.bc.gov.nrs.hrs.repository.DistrictGradeSupportRepository;
 import ca.bc.gov.nrs.hrs.repository.DistrictVolumeRepository;
 import io.micrometer.tracing.annotation.NewSpan;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
@@ -45,6 +49,7 @@ import org.springframework.web.server.ResponseStatusException;
 public class DistrictVolumeService {
 
   private final DistrictVolumeRepository districtVolumeRepository;
+  private final DistrictGradeSupportRepository districtGradeSupportRepository;
 
   /**
    * Retrieves a paginated list of district volume records.
@@ -283,8 +288,51 @@ public class DistrictVolumeService {
     entity.setTableData(DistrictVolumeMapper.toEntityTableData(createDto.tableData()));
 
     DistrictVolumeEntity savedEntity = districtVolumeRepository.save(entity);
+    List<String> districtCodes = extractDistrictCodes(createDto.tableData());
+    districtGradeSupportRepository.insertSupportedPairs(areaEnum, districtCodes);
 
     return DistrictVolumeMapper.toDetailDto(savedEntity);
+  }
+
+  private List<String> extractDistrictCodes(TableDataDto tableData) {
+    Stream<String> districtCodes;
+    if (tableData instanceof InteriorDataDto interiorData) {
+      districtCodes =
+          interiorData.zones() == null
+              ? Stream.empty()
+              : interiorData.zones().stream()
+                  .filter(Objects::nonNull)
+                  .flatMap(
+                      zone ->
+                          zone.districts() == null
+                              ? Stream.empty()
+                              : zone.districts().stream())
+                  .filter(Objects::nonNull)
+                  .map(row -> row.code());
+    } else if (tableData instanceof CoastDataDto coastData) {
+      districtCodes =
+          coastData.sections() == null
+              ? Stream.empty()
+              : coastData.sections().stream()
+                  .filter(Objects::nonNull)
+                  .flatMap(
+                      section ->
+                          section.districts() == null
+                              ? Stream.empty()
+                              : section.districts().stream())
+                  .filter(Objects::nonNull)
+                  .map(row -> row.code());
+    } else {
+      throw new IllegalStateException(
+          "District Volume support pairs require InteriorDataDto or CoastDataDto");
+    }
+
+    return districtCodes
+        .map(StringUtils::trimToNull)
+        .filter(Objects::nonNull)
+        .map(code -> code.toUpperCase(Locale.ROOT))
+        .distinct()
+        .toList();
   }
 
   /**

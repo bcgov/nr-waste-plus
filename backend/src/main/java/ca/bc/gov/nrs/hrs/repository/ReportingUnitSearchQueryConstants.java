@@ -135,8 +135,10 @@ public final class ReportingUnitSearchQueryConstants {
    * LIST query: one row per live block; a null-extended RU-only row when the RU has no live
    * blocks (DEC-014). {@code wasteAssessmentAreaId} is the legacy WAA identity, which maps 1:1 to
    * the exploded {@code wasteplus.block.block_id} — so it equals {@code blockId} on block rows and is
-   * NULL on RU-only rows (the faithful analog of the legacy no-WAA left-join row). Sampling is the
-   * fixed {@code AVG/Average} constant; {@code multiMark} AND {@code secondaryEntry} are DERIVED
+   * NULL on RU-only rows (the faithful analog of the legacy no-WAA left-join row). Sampling code
+   * is the persisted {@code ru.sampling_code} (supersedes the DEC-016 fixed-constant source); the
+   * description stays the fixed {@code 'Average'} literal (the details route's 'District Average'
+   * does not apply to search rows); {@code multiMark} AND {@code secondaryEntry} are DERIVED
    * the same way (existence of a live {@code SECONDARY} mark — HRS has no stored multi-mark flag
    * and no parent/child block hierarchy, so the product decision redefined HRS {@code
    * secondaryEntry} as a {@code SECONDARY} mark; both flags therefore carry the same value on
@@ -172,7 +174,7 @@ public final class ReportingUnitSearchQueryConstants {
                         and bm.mark_type = 'SECONDARY'
                         and bm.is_deleted = false
                   )                                         as "secondaryEntry",
-              'AVG'                                         as "samplingCode",
+              ru.sampling_code                              as "samplingCode",
               'Average'                                     as "samplingName",
               ru.geographic_code                            as "districtCode",
               cast(null as text)                            as "districtName",
@@ -399,9 +401,10 @@ public final class ReportingUnitSearchQueryConstants {
    *
    * <p>{@code wasteAssessmentAreaId} now projects the same column as {@code blockId} (legacy WAA
    * → {@code block_id}) but stays ABSENT here so PG sort behaviour is unchanged (still rejected,
-   * HTTP 428). The constant-valued {@code sampling} / {@code sampling.code} / {@code
-   * sampling.description} keys map to their stable selected constants; RU/block tie-breakers keep
-   * the ordering deterministic. Unknown keys are rejected the same way (legacy reject parity).
+   * HTTP 428). The {@code sampling} / {@code sampling.code} keys sort on the persisted {@code
+   * ru.sampling_code}; {@code sampling.description} sorts on the fixed {@code 'Average'} output
+   * literal. RU/block tie-breakers keep the ordering deterministic. Unknown keys are rejected the
+   * same way (legacy reject parity).
    */
   public static final Map<String, String> SORT_EXPRESSIONS =
       Map.ofEntries(
@@ -418,7 +421,7 @@ public final class ReportingUnitSearchQueryConstants {
           Map.entry("licenseNumber", "pm.forest_file_id"),
           Map.entry("cuttingPermit", "nullif(btrim(pm.cutting_permit_id), '')"),
           Map.entry("timberMark", "pm.timber_mark"),
-          Map.entry("sampling", "upper('AVG')"),
-          Map.entry("sampling.code", "upper('AVG')"),
-          Map.entry("sampling.description", "upper('Average')"));
+          Map.entry("sampling", "ru.sampling_code"),
+          Map.entry("sampling.code", "ru.sampling_code"),
+          Map.entry("sampling.description", "'Average'"));
 }

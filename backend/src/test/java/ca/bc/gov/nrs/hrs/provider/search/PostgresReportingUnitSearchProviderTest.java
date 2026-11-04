@@ -314,7 +314,7 @@ class PostgresReportingUnitSearchProviderTest {
   }
 
   @Test
-  @DisplayName("resolveSort: unsupported WAA id is rejected; sampling uses safe constants")
+  @DisplayName("resolveSort: unsupported WAA id is rejected; sampling sorts on persisted data")
   void resolveSort_degenerateKeys_shouldRejectAndSamplingShouldResolve() {
     for (String key : List.of("wasteAssessmentAreaId")) {
       assertThatThrownBy(() -> provider.resolveSort(Sort.by(key)))
@@ -326,7 +326,7 @@ class PostgresReportingUnitSearchProviderTest {
       assertThat(provider.resolveSort(Sort.by(Sort.Direction.ASC, key)))
           .extracting(order -> order.getProperty() + " " + order.getDirection())
           .containsExactly(
-              key.equals("sampling.description") ? "(upper('Average')) ASC" : "(upper('AVG')) ASC",
+              key.equals("sampling.description") ? "('Average') ASC" : "(ru.sampling_code) ASC",
               "(ru.reporting_unit_id) ASC",
               "(b.block_id) ASC");
     }

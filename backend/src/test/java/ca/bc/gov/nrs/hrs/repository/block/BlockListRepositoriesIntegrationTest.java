@@ -47,7 +47,8 @@ class BlockListRepositoriesIntegrationTest extends AbstractTestContainerIntegrat
           reportingUnitToSave.setClientNumber("00012797");
           reportingUnitToSave.setClientLocnCode(
               "TEST-" + UUID.randomUUID().toString().substring(0, 8));
-          reportingUnitToSave.setGeographicCode("DND");
+          reportingUnitToSave.setGeographicCode("DKM");
+          reportingUnitToSave.setGradeCode("COASTAL");
           reportingUnitToSave.setCreatedBy(actor);
           reportingUnitToSave.setUpdatedBy(actor);
           ReportingUnitEntity reportingUnit =
@@ -189,7 +190,8 @@ class BlockListRepositoriesIntegrationTest extends AbstractTestContainerIntegrat
           reportingUnitToSave.setClientNumber("00012797");
           reportingUnitToSave.setClientLocnCode(
               "TEST-" + UUID.randomUUID().toString().substring(0, 8));
-          reportingUnitToSave.setGeographicCode("DND");
+          reportingUnitToSave.setGeographicCode("DKM");
+          reportingUnitToSave.setGradeCode("COASTAL");
           reportingUnitToSave.setCreatedBy(actor);
           reportingUnitToSave.setUpdatedBy(actor);
           ReportingUnitEntity reportingUnit =

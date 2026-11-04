@@ -42,16 +42,19 @@ public interface ReportingUnitSearchRow {
   /** Timber mark from the PRIMARY mark; NULL on RU-only rows. */
   String getTimberMark();
 
-  /** No-source placeholder, always {@code false} (DEC-016). */
+  /**
+   * Derived: whether the block has a live {@code SECONDARY} mark (supersedes the DEC-016
+   * no-source placeholder).
+   */
   Boolean getMultiMark();
 
-  /** No-source placeholder, always {@code false} (DEC-016). */
+  /** Derived the same way as {@link #getMultiMark()} (no stored multi-mark flag). */
   Boolean getSecondaryEntry();
 
-  /** Fixed {@code AVG} sampling code (no sampling data in HRS search scope). */
+  /** Sampling code read from the persisted {@code reporting_unit.sampling_code}. */
   String getSamplingCode();
 
-  /** Fixed {@code Average} sampling description. */
+  /** Fixed {@code Average} description (the shared search-row literal, not 'District Average'). */
   String getSamplingName();
 
   /** District code ({@code geographic_code}); description is NULL until D5 lookup. */

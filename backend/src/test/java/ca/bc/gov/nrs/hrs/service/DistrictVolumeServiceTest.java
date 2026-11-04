@@ -12,9 +12,13 @@ import static org.mockito.Mockito.when;
 
 import ca.bc.gov.nrs.hrs.dto.base.CodeDescriptionDto;
 import ca.bc.gov.nrs.hrs.dto.districtaveragevolume.CoastDataDto;
+import ca.bc.gov.nrs.hrs.dto.districtaveragevolume.CoastDistrictRowDto;
+import ca.bc.gov.nrs.hrs.dto.districtaveragevolume.CoastSectionDto;
 import ca.bc.gov.nrs.hrs.dto.districtaveragevolume.DistrictVolumeCreateDto;
 import ca.bc.gov.nrs.hrs.dto.districtaveragevolume.DistrictVolumeDetailDto;
 import ca.bc.gov.nrs.hrs.dto.districtaveragevolume.InteriorDataDto;
+import ca.bc.gov.nrs.hrs.dto.districtaveragevolume.InteriorDistrictRowDto;
+import ca.bc.gov.nrs.hrs.dto.districtaveragevolume.InteriorZoneDto;
 import ca.bc.gov.nrs.hrs.entity.districtaveragevolume.Area;
 import ca.bc.gov.nrs.hrs.entity.districtaveragevolume.ConfigType;
 import ca.bc.gov.nrs.hrs.entity.districtaveragevolume.DistrictRow;
@@ -22,6 +26,7 @@ import ca.bc.gov.nrs.hrs.entity.districtaveragevolume.DistrictVolumeEntity;
 import ca.bc.gov.nrs.hrs.entity.districtaveragevolume.Section;
 import ca.bc.gov.nrs.hrs.entity.districtaveragevolume.TableData;
 import ca.bc.gov.nrs.hrs.entity.districtaveragevolume.Zone;
+import ca.bc.gov.nrs.hrs.repository.DistrictGradeSupportRepository;
 import ca.bc.gov.nrs.hrs.repository.DistrictVolumeRepository;
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -54,6 +59,9 @@ class DistrictVolumeServiceTest {
 
   @Mock
   private DistrictVolumeRepository districtVolumeRepository;
+
+  @Mock
+  private DistrictGradeSupportRepository districtGradeSupportRepository;
 
   @InjectMocks
   private DistrictVolumeService districtVolumeService;
@@ -272,7 +280,16 @@ class DistrictVolumeServiceTest {
   void createDistrictVolume_returnsMappedDto_whenInteriorIsValid() {
 
     InteriorDataDto interiorData =
-        new InteriorDataDto(Collections.emptyList(), Collections.emptyMap());
+        new InteriorDataDto(
+            List.of(
+                new InteriorZoneDto(
+                    "Dry belt",
+                    List.of(
+                        new InteriorDistrictRowDto(" dcc ", null, null, null, null),
+                        new InteriorDistrictRowDto("DCS", null, null, null, null))),
+                new InteriorZoneDto(
+                    "Wet belt", List.of(new InteriorDistrictRowDto("DCC", null, null, null, null)))),
+            Collections.emptyMap());
 
     final DistrictVolumeCreateDto createDto =
         new DistrictVolumeCreateDto(
@@ -296,6 +313,8 @@ class DistrictVolumeServiceTest {
     assertThat(result).isNotNull();
     assertThat(result.area()).isEqualTo("INTERIOR");
     assertThat(result.tableLevelFactor()).isEqualTo(new BigDecimal("1.150"));
+    verify(districtGradeSupportRepository)
+        .insertSupportedPairs(Area.INTERIOR, List.of("DCC", "DCS"));
   }
 
   @Test
@@ -422,7 +441,18 @@ class DistrictVolumeServiceTest {
   @DisplayName("createDistrictVolume — should save and return mapped DTO for valid COASTAL payload")
   void createDistrictVolume_returnsMappedDto_whenCoastalIsValid() {
 
-    CoastDataDto coastData = new CoastDataDto(Collections.emptyList(), Collections.emptyMap());
+    CoastDataDto coastData =
+        new CoastDataDto(
+            List.of(
+                new CoastSectionDto(
+                    "Mature",
+                    List.of(
+                        new CoastDistrictRowDto("dck", null, null, null, null, null),
+                        new CoastDistrictRowDto("DCR", null, null, null, null, null))),
+                new CoastSectionDto(
+                    "Immature",
+                    List.of(new CoastDistrictRowDto(" DCK ", null, null, null, null, null)))),
+            Collections.emptyMap());
 
     final DistrictVolumeCreateDto createDto =
         new DistrictVolumeCreateDto(
@@ -448,6 +478,8 @@ class DistrictVolumeServiceTest {
     assertThat(result.area()).isEqualTo("COASTAL");
     assertThat(result.tableLevelFactor()).isEqualTo(new BigDecimal("1.200"));
     assertThat(result.heliMultiplier()).isEqualTo(new BigDecimal("1.500"));
+    verify(districtGradeSupportRepository)
+        .insertSupportedPairs(Area.COASTAL, List.of("DCK", "DCR"));
   }
 
   @Test

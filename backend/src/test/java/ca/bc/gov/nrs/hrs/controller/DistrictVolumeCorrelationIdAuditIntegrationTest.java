@@ -130,6 +130,10 @@ class DistrictVolumeCorrelationIdAuditIntegrationTest extends AbstractTestContai
                     """))
         .andExpect(MockMvcResultMatchers.status().isCreated());
 
+    assertThat(supportPairCount("DCK", "COASTAL")).isEqualTo(1);
+    assertThat(supportPairCount("DCR", "COASTAL")).isEqualTo(1);
+    assertThat(supportPairCount("DNI", "COASTAL")).isEqualTo(1);
+
     try (Connection connection = dataSource.getConnection()) {
       assertThat(connection.getAutoCommit())
           .as("the shared Hikari pool must use its default auto-commit mode")
@@ -165,6 +169,57 @@ class DistrictVolumeCorrelationIdAuditIntegrationTest extends AbstractTestContai
             jdbcTemplate.queryForObject(
                 "SELECT COUNT(*) FROM wasteplus.audit_change WHERE event_id = ?", Integer.class, eventId))
         .isPositive();
+
+    mockMvc
+        .perform(
+            MockMvcRequestBuilders.post("/api/configuration/district-average-volumes")
+                .with(SecurityMockMvcRequestPostProcessors.csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(
+                    """
+                    {
+                      "area": "COASTAL",
+                      "startDate": "2100-01-01",
+                      "tableLevelFactor": 0.400,
+                      "heliMultiplier": 3.470,
+                      "tableData": {
+                        "type": "COASTAL",
+                        "sections": [
+                          {
+                            "name": "Mature",
+                            "districts": [
+                              {
+                                "code": "DCK",
+                                "avoidableSawlog": 2.345,
+                                "avoidableHembalGradeU": 1.234,
+                                "avoidableGradeY": 0.567,
+                                "unavoidable": 0.123,
+                                "total": 4.269
+                              }
+                            ]
+                          }
+                        ],
+                        "formulas": {}
+                      }
+                    }
+                    """))
+        .andExpect(MockMvcResultMatchers.status().isCreated());
+
+    assertThat(supportPairCount("DCK", "COASTAL")).isEqualTo(1);
+    assertThat(supportPairCount("DCR", "COASTAL")).isEqualTo(1);
+    assertThat(supportPairCount("DNI", "COASTAL")).isEqualTo(1);
+  }
+
+  private int supportPairCount(String districtCode, String gradeCode) {
+    return jdbcTemplate.queryForObject(
+        """
+        SELECT COUNT(*)
+        FROM wasteplus.district_grade_support
+        WHERE geographic_code = ? AND grade_code = ?
+        """,
+        Integer.class,
+        districtCode,
+        gradeCode);
   }
 
   private long maxAuditEventId() {
