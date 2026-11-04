@@ -917,7 +917,47 @@ class BlockControllerIntegrationTest extends AbstractTestContainerIntegrationTes
         .perform(MockMvcRequestBuilders.get("/api/reporting-units/" + reportingUnitId + "/blocks/" + blockId))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.id").value(blockId))
-        .andExpect(jsonPath("$.reportingUnitId").value(reportingUnitId));
+        .andExpect(jsonPath("$.reportingUnitId").value(reportingUnitId))
+        .andExpect(jsonPath("$.state").value("DRAFT"))
+        .andExpect(jsonPath("$.draft").value(true))
+        .andExpect(jsonPath("$.version").isNumber())
+        .andExpect(jsonPath("$.revision").isNumber())
+        .andExpect(jsonPath("$.isLegacy").value(false))
+        .andExpect(jsonPath("$.createdAt").isNotEmpty())
+        .andExpect(jsonPath("$.updatedAt").isNotEmpty());
+  }
+
+  @Test
+  @DisplayName("Following POST response Location returns block resource envelope with state, version, and timestamps")
+  @WithMockJwt(
+      cognitoGroups = {"WASTE_PLUS_SUBMITTER_00000000"},
+      idp = "bceidbusiness")
+  void create_thenFollowLocation_returnsResourceEnvelope() throws Exception {
+    var result =
+        mockMvc
+            .perform(
+                post("/api/reporting-units/{reportingUnitId}/blocks", otherReportingUnitId)
+                    .with(csrf())
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("{\"blockType\":\"DISTRICT_AVERAGE\",\"expectedReportingUnitState\":\"SUBMISSION\"}"))
+            .andExpect(status().isCreated())
+            .andExpect(header().exists("Location"))
+            .andReturn();
+
+    String location = result.getResponse().getHeader("Location");
+
+    mockMvc
+        .perform(MockMvcRequestBuilders.get(location))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.reportingUnitId").value(otherReportingUnitId))
+        .andExpect(jsonPath("$.blockType").value("DISTRICT_AVERAGE"))
+        .andExpect(jsonPath("$.state").value("DRAFT"))
+        .andExpect(jsonPath("$.draft").value(true))
+        .andExpect(jsonPath("$.version").value(0))
+        .andExpect(jsonPath("$.revision").value(0))
+        .andExpect(jsonPath("$.isLegacy").value(false))
+        .andExpect(jsonPath("$.createdAt").isNotEmpty())
+        .andExpect(jsonPath("$.updatedAt").isNotEmpty());
   }
 
   @Test

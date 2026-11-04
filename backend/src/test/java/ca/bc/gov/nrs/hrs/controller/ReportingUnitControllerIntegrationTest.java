@@ -470,7 +470,7 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
 
   @Test
   @WithMockJwt
-  @DisplayName("Golden | Block details pins the BlockDetailDto shape")
+  @DisplayName("Golden | Block details pins the BlockResponseDto shape")
   void golden_blockDetails_pinsBlockDetailShape() throws Exception {
     String body =
         mockMvc
@@ -485,7 +485,12 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
             .getResponse()
             .getContentAsString();
 
-    GoldenFiles.assertMatches("reporting-units/block-details.json", body);
+    var tree = (tools.jackson.databind.node.ObjectNode) jsonMapper.readTree(body);
+    tree.putNull("createdAt");
+    tree.putNull("updatedAt");
+
+    GoldenFiles.assertMatches(
+        "reporting-units/block-details.json", jsonMapper.writeValueAsString(tree));
   }
 
   @Test

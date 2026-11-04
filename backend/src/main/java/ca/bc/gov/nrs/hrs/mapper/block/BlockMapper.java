@@ -23,9 +23,14 @@ public interface BlockMapper {
   @Mapping(target = "isLegacy", constant = "false")
   BlockDetailDto toDetailDto(BlockEntity entity);
 
-  /** Maps a persisted block to its creation response representation. */
+  /**
+   * Maps a persisted block to its resource response representation.
+   *
+   * <p>Persisted blocks are always postgres-owned, so the legacy marker is fixed to {@code false}.
+   */
   @Mapping(target = "state", expression = "java(entity.isDraft() ? \"DRAFT\" : \"ACTIVE\")")
   @Mapping(target = "version", source = "revision")
+  @Mapping(target = "isLegacy", constant = "false")
   BlockResponseDto toResponseDto(BlockEntity entity);
 
   /** Maps a create payload to a new entity. */

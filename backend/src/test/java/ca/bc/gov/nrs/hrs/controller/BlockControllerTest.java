@@ -14,7 +14,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import ca.bc.gov.nrs.hrs.configuration.FeatureFlagsConfiguration;
 import ca.bc.gov.nrs.hrs.dto.base.FeatureFlag;
 import ca.bc.gov.nrs.hrs.dto.block.BlockCalculationDto;
-import ca.bc.gov.nrs.hrs.dto.block.BlockDetailDto;
 import ca.bc.gov.nrs.hrs.dto.block.BlockListItemDto;
 import ca.bc.gov.nrs.hrs.dto.block.BlockResponseDto;
 import ca.bc.gov.nrs.hrs.dto.block.BlockType;
@@ -113,8 +112,10 @@ class BlockControllerTest {
             "DISTRICT_AVERAGE",
             "DRAFT",
             true,
+            null,
             1L,
             1L,
+            false,
             Instant.parse("2026-08-24T12:00:00Z"),
             Instant.parse("2026-08-24T12:00:00Z"));
 
@@ -263,12 +264,22 @@ class BlockControllerTest {
     when(featureFlagsConfiguration.isEnabled(FeatureFlag.REPORTING_UNIT_BLOCK_DETAILS_ENABLED))
         .thenReturn(true);
 
-    BlockDetailDto detailDto =
-        new BlockDetailDto(
-            BLOCK_ID, RU_ID, "DISTRICT_AVERAGE", false, LocalDate.of(2026, 3, 15), 2L, false);
+    BlockResponseDto responseDto =
+        new BlockResponseDto(
+            BLOCK_ID,
+            RU_ID,
+            "DISTRICT_AVERAGE",
+            "ACTIVE",
+            false,
+            LocalDate.of(2026, 3, 15),
+            2L,
+            2L,
+            false,
+            Instant.parse("2026-08-24T12:00:00Z"),
+            Instant.parse("2026-08-24T12:00:00Z"));
 
     when(blockService.getBlockDetails(eq(RU_ID), eq(BLOCK_ID), nullable(Jwt.class)))
-        .thenReturn(detailDto);
+        .thenReturn(responseDto);
 
     mockMvc
         .perform(get("/api/reporting-units/{reportingUnitId}/{blockId}", RU_ID, BLOCK_ID))
@@ -276,10 +287,14 @@ class BlockControllerTest {
         .andExpect(jsonPath("$.id").value(BLOCK_ID))
         .andExpect(jsonPath("$.reportingUnitId").value(RU_ID))
         .andExpect(jsonPath("$.blockType").value("DISTRICT_AVERAGE"))
+        .andExpect(jsonPath("$.state").value("ACTIVE"))
         .andExpect(jsonPath("$.draft").value(false))
         .andExpect(jsonPath("$.plcDate").value("2026-03-15"))
+        .andExpect(jsonPath("$.version").value(2))
         .andExpect(jsonPath("$.revision").value(2))
-        .andExpect(jsonPath("$.isLegacy").value(false));
+        .andExpect(jsonPath("$.isLegacy").value(false))
+        .andExpect(jsonPath("$.createdAt").value("2026-08-24T12:00:00Z"))
+        .andExpect(jsonPath("$.updatedAt").value("2026-08-24T12:00:00Z"));
   }
 
   @Test
@@ -288,12 +303,22 @@ class BlockControllerTest {
     when(featureFlagsConfiguration.isEnabled(FeatureFlag.REPORTING_UNIT_BLOCK_DETAILS_ENABLED))
         .thenReturn(true);
 
-    BlockDetailDto detailDto =
-        new BlockDetailDto(
-            BLOCK_ID, RU_ID, "DISTRICT_AVERAGE", false, LocalDate.of(2026, 3, 15), 2L, false);
+    BlockResponseDto responseDto =
+        new BlockResponseDto(
+            BLOCK_ID,
+            RU_ID,
+            "DISTRICT_AVERAGE",
+            "ACTIVE",
+            false,
+            LocalDate.of(2026, 3, 15),
+            2L,
+            2L,
+            false,
+            Instant.parse("2026-08-24T12:00:00Z"),
+            Instant.parse("2026-08-24T12:00:00Z"));
 
     when(blockService.getBlockDetails(eq(RU_ID), eq(BLOCK_ID), nullable(Jwt.class)))
-        .thenReturn(detailDto);
+        .thenReturn(responseDto);
 
     mockMvc
         .perform(get("/api/reporting-units/{reportingUnitId}/blocks/{blockId}", RU_ID, BLOCK_ID))

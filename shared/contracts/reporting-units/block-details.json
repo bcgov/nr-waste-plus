@@ -2,8 +2,12 @@
   "id" : 987000003,
   "reportingUnitId" : 987000001,
   "blockType" : "DISTRICT_AVERAGE",
+  "state" : "DRAFT",
   "draft" : true,
   "plcDate" : null,
+  "version" : 1,
   "revision" : 1,
-  "isLegacy" : false
+  "isLegacy" : false,
+  "createdAt" : null,
+  "updatedAt" : null
 }

@@ -2,8 +2,8 @@ package ca.bc.gov.nrs.hrs.service.block;
 
 import ca.bc.gov.nrs.hrs.dto.base.IdentityProvider;
 import ca.bc.gov.nrs.hrs.dto.base.Role;
-import ca.bc.gov.nrs.hrs.dto.block.BlockDetailDto;
 import ca.bc.gov.nrs.hrs.dto.block.BlockListItemDto;
+import ca.bc.gov.nrs.hrs.dto.block.BlockResponseDto;
 import ca.bc.gov.nrs.hrs.dto.block.BlockType;
 import ca.bc.gov.nrs.hrs.entity.block.BlockEntity;
 import ca.bc.gov.nrs.hrs.entity.block.ReportingUnitEntity;
@@ -203,7 +203,7 @@ public class BlockService {
    * @throws ResponseStatusException with HTTP 403 if a BCeID caller is scoped to a different
    *     client than the block's owner
    */
-  public BlockDetailDto getBlockDetails(Long reportingUnitId, Long blockId, Jwt jwt) {
+  public BlockResponseDto getBlockDetails(Long reportingUnitId, Long blockId, Jwt jwt) {
     return reportingUnitRepository
         .findByIdAndDeletedFalse(reportingUnitId)
         .map(
@@ -213,7 +213,7 @@ public class BlockService {
         .orElseGet(() -> getLegacyBlockDetails(reportingUnitId, blockId, jwt));
   }
 
-  private BlockDetailDto getPostgresBlockDetails(
+  private BlockResponseDto getPostgresBlockDetails(
       Long reportingUnitId, Long blockId, Jwt jwt, String clientNumber) {
     BlockEntity block =
         blockRepository
@@ -222,10 +222,10 @@ public class BlockService {
 
     enforceClientScope(jwt, reportingUnitId, clientNumber);
 
-    return blockMapper.toDetailDto(block);
+    return blockMapper.toResponseDto(block);
   }
 
-  private BlockDetailDto getLegacyBlockDetails(Long reportingUnitId, Long blockId, Jwt jwt) {
+  private BlockResponseDto getLegacyBlockDetails(Long reportingUnitId, Long blockId, Jwt jwt) {
     var legacyReportingUnit = legacyApiProvider.getReportingUnitDetails(reportingUnitId);
 
     BlockListItemDto legacyRow =
@@ -236,7 +236,7 @@ public class BlockService {
 
     enforceClientScope(jwt, reportingUnitId, legacyReportingUnit.clientNumber());
 
-    return toLegacyDetailDto(reportingUnitId, legacyRow);
+    return toLegacyResponseDto(reportingUnitId, legacyRow);
   }
 
   /**
@@ -361,15 +361,27 @@ public class BlockService {
   }
 
   /**
-   * Map a legacy block-list row to the details contract.
+   * Map a legacy block-list row to the resource response contract.
    *
    * <p>The legacy row only carries the block identifier and lifecycle status. Draft state is
    * derived from the {@code DFT} status code; every other non-identifier field is null and the
    * legacy marker is {@code true}.
    */
-  private BlockDetailDto toLegacyDetailDto(Long reportingUnitId, BlockListItemDto row) {
+  private BlockResponseDto toLegacyResponseDto(Long reportingUnitId, BlockListItemDto row) {
     boolean draft =
         row.status() != null && DRAFT_STATUS_CODE.equals(row.status().code());
-    return new BlockDetailDto(row.id(), reportingUnitId, null, draft, null, null, true);
+    String state = draft ? "DRAFT" : "ACTIVE";
+    return new BlockResponseDto(
+        row.id(),
+        reportingUnitId,
+        null,
+        state,
+        draft,
+        null,
+        null,
+        null,
+        true,
+        null,
+        null);
   }
 }

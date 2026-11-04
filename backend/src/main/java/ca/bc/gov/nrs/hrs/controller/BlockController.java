@@ -4,7 +4,6 @@ import ca.bc.gov.nrs.hrs.configuration.FeatureFlagsConfiguration;
 import ca.bc.gov.nrs.hrs.dto.base.FeatureFlag;
 import ca.bc.gov.nrs.hrs.dto.block.BlockCalculationDto;
 import ca.bc.gov.nrs.hrs.dto.block.BlockCreateRequestDto;
-import ca.bc.gov.nrs.hrs.dto.block.BlockDetailDto;
 import ca.bc.gov.nrs.hrs.dto.block.BlockListItemDto;
 import ca.bc.gov.nrs.hrs.dto.block.BlockResponseDto;
 import ca.bc.gov.nrs.hrs.entity.block.BlockEntity;
@@ -105,14 +104,14 @@ public class BlockController {
    * @param jwt the JWT principal for the authenticated caller
    * @param reportingUnitId the owning reporting-unit identifier
    * @param blockId the block identifier
-   * @return a {@link BlockDetailDto} containing the block's details and source marker
+   * @return a {@link BlockResponseDto} containing the block's details and source marker
    * @throws NotFoundGenericException when the feature flag is disabled or the block cannot be found
    */
   @GetMapping({
     "/{reportingUnitId}/{blockId}",
     "/{reportingUnitId}/blocks/{blockId}"
   })
-  public BlockDetailDto getBlockDetails(
+  public BlockResponseDto getBlockDetails(
       @AuthenticationPrincipal Jwt jwt,
       @PathVariable Long reportingUnitId,
       @PathVariable Long blockId) {
