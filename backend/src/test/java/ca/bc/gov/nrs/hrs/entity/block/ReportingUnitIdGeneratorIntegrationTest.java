@@ -31,8 +31,9 @@ class ReportingUnitIdGeneratorIntegrationTest extends AbstractTestContainerInteg
     ReportingUnitEntity entity = new ReportingUnitEntity();
     entity.setClientNumber("00012797");
     entity.setClientLocnCode("00");
-    entity.setGeographicCode("DND");
+    entity.setGeographicCode("DKM");
     entity.setSamplingCode("AVG");
+    entity.setGradeCode("COASTAL");
     entity.setDeleted(false);
     entity.setCreatedBy("test-generator");
     entity.setUpdatedBy("test-generator");
@@ -42,6 +43,8 @@ class ReportingUnitIdGeneratorIntegrationTest extends AbstractTestContainerInteg
 
     assertThat(saved.getId()).isNotNull();
     assertThat(saved.getId()).isGreaterThanOrEqualTo(1_000_000_000L);
+    assertThat(reportingUnitRepository.findById(saved.getId()).orElseThrow().getGradeCode())
+        .isEqualTo("COASTAL");
   }
 
   @Test
@@ -51,8 +54,9 @@ class ReportingUnitIdGeneratorIntegrationTest extends AbstractTestContainerInteg
     entity.setId(998877L);
     entity.setClientNumber("00012797");
     entity.setClientLocnCode("00");
-    entity.setGeographicCode("DND");
+    entity.setGeographicCode("DKM");
     entity.setSamplingCode("AVG");
+    entity.setGradeCode("COASTAL");
     entity.setDeleted(false);
     entity.setCreatedBy("test-generator");
     entity.setUpdatedBy("test-generator");

@@ -166,7 +166,8 @@ class BlockControllerIntegrationTest extends AbstractTestContainerIntegrationTes
     ReportingUnitEntity ru = new ReportingUnitEntity();
     ru.setClientNumber("00000000");
     ru.setClientLocnCode("CTRL-" + unique);
-    ru.setGeographicCode("DCC");
+    ru.setGeographicCode("DKM");
+    ru.setGradeCode("COASTAL");
     audit(ru);
     ReportingUnitEntity savedRu = reportingUnitRepository.saveAndFlush(ru);
     reportingUnitId = savedRu.getId();
@@ -174,7 +175,8 @@ class BlockControllerIntegrationTest extends AbstractTestContainerIntegrationTes
     ReportingUnitEntity otherRu = new ReportingUnitEntity();
     otherRu.setClientNumber("00000000");
     otherRu.setClientLocnCode("OTHER-" + unique);
-    otherRu.setGeographicCode("DCC");
+    otherRu.setGeographicCode("DKM");
+    otherRu.setGradeCode("COASTAL");
     audit(otherRu);
     otherReportingUnitId = reportingUnitRepository.saveAndFlush(otherRu).getId();
 
@@ -191,7 +193,8 @@ class BlockControllerIntegrationTest extends AbstractTestContainerIntegrationTes
     ReportingUnitEntity foreignRu = new ReportingUnitEntity();
     foreignRu.setClientNumber("99999999");
     foreignRu.setClientLocnCode("FOREIGN-" + unique);
-    foreignRu.setGeographicCode("DCC");
+    foreignRu.setGeographicCode("DKM");
+    foreignRu.setGradeCode("COASTAL");
     audit(foreignRu);
     ReportingUnitEntity savedForeignRu = reportingUnitRepository.saveAndFlush(foreignRu);
     foreignReportingUnitId = savedForeignRu.getId();

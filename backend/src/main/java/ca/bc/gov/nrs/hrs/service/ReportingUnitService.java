@@ -94,9 +94,11 @@ public class ReportingUnitService {
                 () -> new ForestClientNotFoundException(reportingUnit.getClientNumber()));
     var districtAreas = districtVolumeService.getAreasForDistrictCode(district.code());
     var grade =
-        districtAreas.size() == 1
-            ? new CodeDescriptionDto(districtAreas.getFirst(), districtAreas.getFirst())
-            : new CodeDescriptionDto(null, null);
+        StringUtils.isNotBlank(reportingUnit.getGradeCode())
+            ? describeGrade(reportingUnit.getGradeCode())
+            : districtAreas.size() == 1
+                ? new CodeDescriptionDto(districtAreas.getFirst(), districtAreas.getFirst())
+                : new CodeDescriptionDto(null, null);
 
     var sampling =
         reportingUnit.getSamplingCode() != null
@@ -112,6 +114,16 @@ public class ReportingUnitService {
         sampling,
         new CodeDescriptionDto(district.code(), district.description()),
         grade);
+  }
+
+  private CodeDescriptionDto describeGrade(String gradeCode) {
+    String description =
+        switch (gradeCode) {
+          case "COASTAL" -> "Coast";
+          case "INTERIOR" -> "Interior";
+          default -> gradeCode;
+        };
+    return new CodeDescriptionDto(gradeCode, description);
   }
 
   private ReportingUnitDetailsDto getLegacyReportingUnitDetails(Long reportingUnitId) {
@@ -179,20 +191,19 @@ public class ReportingUnitService {
    *
    * <ul>
    *   <li>Validates that only the {@code AVG} sampling code is supported.
+   *   <li>Validates that the required grade code matches an area configured for the district.
    *   <li>Checks that a reporting unit with the same client number and district does not already
    *       exist.
-   *   <li>Validates that a grade code is provided when the district has multiple configured areas.
    *   <li>Verifies that the client exists in the Forest Client API.
-   *   <li>Creates the reporting unit through the legacy API.
-   *   <li>Persists the reporting unit in PostgreSQL with matching identifier and sampling code.
+   *   <li>Persists the reporting unit in PostgreSQL with a database-generated identifier.
    * </ul>
    *
-   * @param request the validated create request containing client, district, sampling, and optional
-   *     grade information
+   * @param request the validated create request containing client, district, sampling, and grade
+   *     information
    * @return the ID of the newly created reporting unit
    * @throws ForestClientNotFoundException if the client does not exist in the Forest Client API
-   * @throws ResponseStatusException with HTTP 400 if the sampling code is invalid, a grade code is
-   *     required but missing, or any required validation fails
+   * @throws ResponseStatusException with HTTP 400 if the sampling code is invalid, the grade code
+   *     is missing or unsupported for the selected district, or any required validation fails
    * @throws ResponseStatusException with HTTP 409 if a duplicate reporting unit already exists for
    *     the same client number and district
    */
@@ -202,7 +213,10 @@ public class ReportingUnitService {
   }
 
   /**
-   * Creates or reconciles a reporting unit using the idempotency key to correlate a remote create.
+   * Creates or reconciles a reporting unit locally.
+   *
+   * <p>The idempotency key is accepted for controller-call compatibility; the create is local, so
+   * the key no longer correlates a remote write.
    *
    * @param request the validated create request
    * @param idempotencyKey the retry-correlation key, or null when the request is not idempotent
@@ -218,6 +232,23 @@ public class ReportingUnitService {
       throw new ResponseStatusException(
           HttpStatus.BAD_REQUEST,
           "Invalid samplingCode: " + request.samplingCode() + " (only AVG is currently supported)");
+    }
+
+    var districtAreas = districtVolumeService.getAreasForDistrictCode(request.districtCode());
+
+    if (StringUtils.isBlank(request.gradeCode())) {
+      throw new ResponseStatusException(
+          HttpStatus.BAD_REQUEST,
+          String.format("Grade code is required for district %s", request.districtCode()));
+    }
+    if (!districtAreas.contains(request.gradeCode())) {
+      String supportedGrades =
+          districtAreas.isEmpty() ? "none configured" : String.join(", ", districtAreas);
+      throw new ResponseStatusException(
+          HttpStatus.BAD_REQUEST,
+          String.format(
+              "Grade code '%s' is not supported for district %s. Supported grades: %s",
+              request.gradeCode(), request.districtCode(), supportedGrades));
     }
 
     // Check for existing reporting unit with the same client number and district
@@ -247,48 +278,42 @@ public class ReportingUnitService {
               request.clientNumber(), request.districtCode()));
     }
 
-    var districtAreas = districtVolumeService.getAreasForDistrictCode(request.districtCode());
-
-    if (districtAreas.size() > 1 && StringUtils.isBlank(request.gradeCode())) {
-      throw new ResponseStatusException(
-          HttpStatus.BAD_REQUEST,
-          String.format("Grade code is required for district %s", request.districtCode()));
-    }
-
     // Validate client exists via Forest Client API
     forestClientApiProvider
         .fetchClientByNumber(request.clientNumber())
         .orElseThrow(() -> new ForestClientNotFoundException(request.clientNumber()));
 
-    // Create reporting unit via legacy API
-    Long createdId = idempotencyKey == null || idempotencyKey.isBlank()
-        ? legacyApiProvider.createReportingUnit(request)
-        : legacyApiProvider.createReportingUnit(request, idempotencyKey);
-
-    // Persist reporting unit in PostgreSQL
-    return persistLocalReportingUnit(createdId, request);
+    // Persist locally with a database-generated identifier; the idempotency key
+    // no longer correlates a remote create because the create is local.
+    return persistLocalReportingUnit(null, request);
   }
 
   private Long persistLocalReportingUnit(
       Long reportingUnitId, CreateReportingUnitRequestDto request) {
     ReportingUnitEntity entity =
-        reportingUnitRepository
-            .findById(reportingUnitId)
-            .orElseGet(
-                () -> {
-                  ReportingUnitEntity newEntity = new ReportingUnitEntity();
-                  newEntity.setId(reportingUnitId);
-                  return newEntity;
-                });
+        reportingUnitId == null
+            ? new ReportingUnitEntity()
+            : reportingUnitRepository
+                .findById(reportingUnitId)
+                .orElseGet(
+                    () -> {
+                      ReportingUnitEntity newEntity = new ReportingUnitEntity();
+                      newEntity.setId(reportingUnitId);
+                      return newEntity;
+                    });
     entity.setClientNumber(request.clientNumber());
     entity.setClientLocnCode("00");
     entity.setGeographicCode(request.districtCode());
     entity.setSamplingCode(request.samplingCode());
+    entity.setGradeCode(request.gradeCode());
     entity.setDeleted(false);
 
-    reportingUnitRepository.saveAndFlush(entity);
-    log.info("Persisted local reporting unit {} in PostgreSQL", reportingUnitId);
-    return reportingUnitId;
+    ReportingUnitEntity savedEntity = reportingUnitRepository.saveAndFlush(entity);
+    // Reconciliation persists an already-known legacy id; only the generated
+    // path needs the save result for its sequence-assigned identifier.
+    Long persistedId = reportingUnitId != null ? reportingUnitId : savedEntity.getId();
+    log.info("Persisted local reporting unit {} in PostgreSQL", persistedId);
+    return persistedId;
   }
 
   private boolean matchesRequestAttributes(

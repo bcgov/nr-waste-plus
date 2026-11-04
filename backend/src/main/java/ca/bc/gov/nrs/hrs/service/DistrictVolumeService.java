@@ -5,18 +5,22 @@ import ca.bc.gov.nrs.hrs.dto.districtaveragevolume.DistrictVolumeCreateDto;
 import ca.bc.gov.nrs.hrs.dto.districtaveragevolume.DistrictVolumeDetailDto;
 import ca.bc.gov.nrs.hrs.dto.districtaveragevolume.DistrictVolumeListItemDto;
 import ca.bc.gov.nrs.hrs.dto.districtaveragevolume.InteriorDataDto;
+import ca.bc.gov.nrs.hrs.dto.districtaveragevolume.TableDataDto;
 import ca.bc.gov.nrs.hrs.entity.districtaveragevolume.Area;
 import ca.bc.gov.nrs.hrs.entity.districtaveragevolume.ConfigType;
 import ca.bc.gov.nrs.hrs.entity.districtaveragevolume.DistrictVolumeEntity;
 import ca.bc.gov.nrs.hrs.entity.districtaveragevolume.TableData;
 import ca.bc.gov.nrs.hrs.mapper.DistrictVolumeMapper;
+import ca.bc.gov.nrs.hrs.repository.DistrictGradeSupportRepository;
 import ca.bc.gov.nrs.hrs.repository.DistrictVolumeRepository;
 import io.micrometer.tracing.annotation.NewSpan;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
@@ -45,6 +49,7 @@ import org.springframework.web.server.ResponseStatusException;
 public class DistrictVolumeService {
 
   private final DistrictVolumeRepository districtVolumeRepository;
+  private final DistrictGradeSupportRepository districtGradeSupportRepository;
 
   /**
    * Retrieves a paginated list of district volume records.
@@ -283,15 +288,59 @@ public class DistrictVolumeService {
     entity.setTableData(DistrictVolumeMapper.toEntityTableData(createDto.tableData()));
 
     DistrictVolumeEntity savedEntity = districtVolumeRepository.save(entity);
+    List<String> districtCodes = extractDistrictCodes(createDto.tableData());
+    districtGradeSupportRepository.insertSupportedPairs(areaEnum, districtCodes);
 
     return DistrictVolumeMapper.toDetailDto(savedEntity);
+  }
+
+  private List<String> extractDistrictCodes(TableDataDto tableData) {
+    Stream<String> districtCodes;
+    if (tableData instanceof InteriorDataDto interiorData) {
+      districtCodes =
+          interiorData.zones() == null
+              ? Stream.empty()
+              : interiorData.zones().stream()
+                  .filter(Objects::nonNull)
+                  .flatMap(
+                      zone ->
+                          zone.districts() == null
+                              ? Stream.empty()
+                              : zone.districts().stream())
+                  .filter(Objects::nonNull)
+                  .map(row -> row.code());
+    } else if (tableData instanceof CoastDataDto coastData) {
+      districtCodes =
+          coastData.sections() == null
+              ? Stream.empty()
+              : coastData.sections().stream()
+                  .filter(Objects::nonNull)
+                  .flatMap(
+                      section ->
+                          section.districts() == null
+                              ? Stream.empty()
+                              : section.districts().stream())
+                  .filter(Objects::nonNull)
+                  .map(row -> row.code());
+    } else {
+      throw new IllegalStateException(
+          "District Volume support pairs require InteriorDataDto or CoastDataDto");
+    }
+
+    return districtCodes
+        .map(StringUtils::trimToNull)
+        .filter(Objects::nonNull)
+        .map(code -> code.toUpperCase(Locale.ROOT))
+        .distinct()
+        .toList();
   }
 
   /**
    * Checks if the provided table data contains a district with the specified code.
    *
    * <p>Searches through zones or sections (depending on the table data structure) to find a
-   * matching district code. Comparison is case-insensitive.
+   * matching district code. Both sides are trimmed and compared case-insensitively so codes stored
+   * before normalization still match.
    *
    * @param tableData the table data structure to search (may be null)
    * @param districtCode the district code to search for
@@ -303,7 +352,7 @@ public class DistrictVolumeService {
       return false;
     }
 
-    String normalizedCode = districtCode.toUpperCase();
+    String normalizedCode = districtCode.trim().toUpperCase(Locale.ROOT);
 
     if (tableData.sections() != null) {
       boolean match =
@@ -311,7 +360,12 @@ public class DistrictVolumeService {
               .flatMap(
                   section ->
                       section.districts() != null ? section.districts().stream() : Stream.empty())
-              .anyMatch(d -> normalizedCode.equals(d.district().code().toUpperCase()));
+              .anyMatch(
+                  d ->
+                      d.district() != null
+                          && d.district().code() != null
+                          && normalizedCode.equals(
+                              d.district().code().trim().toUpperCase(Locale.ROOT)));
       if (match) {
         return true;
       }
@@ -320,7 +374,12 @@ public class DistrictVolumeService {
     if (tableData.zones() != null) {
       return tableData.zones().stream()
           .flatMap(zone -> zone.districts() != null ? zone.districts().stream() : Stream.empty())
-          .anyMatch(d -> normalizedCode.equals(d.district().code().toUpperCase()));
+          .anyMatch(
+              d ->
+                  d.district() != null
+                      && d.district().code() != null
+                      && normalizedCode.equals(
+                          d.district().code().trim().toUpperCase(Locale.ROOT)));
     }
 
     return false;

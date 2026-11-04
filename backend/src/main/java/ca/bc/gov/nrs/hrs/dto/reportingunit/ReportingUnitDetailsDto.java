@@ -8,18 +8,8 @@ import lombok.With;
  * Data Transfer Object representing the full details of a Reporting Unit.
  *
  * <p>Aggregates information from both the legacy API and the Forest Client API, presenting a
- * unified view of a reporting unit's identity, client association, status, sampling method, and
- * district.
- * <!-- TODO(grade-configuration): The {@code grade} field has been removed from this contract
- *      because no data source can populate it yet.  It will be reinstated — as a
- *      {@link CodeDescriptionDto} parameter — once the grade-configuration feature branch
- *      wires up the lookup table and the legacy mapping.  When that work lands:
- *        1. Re-add {@code CodeDescriptionDto grade} to this record.
- *        2. Restore the grade parameter in {@code ReportingUnitService#getReportingUnitDetails}.
- *        3. Add the corresponding {@code $.grade.code} / {@code $.grade.description} assertions
- *           to {@code ReportingUnitControllerIntegrationTest} and
- *           {@code ReportingUnitServiceTest}.
- * -->
+ * unified view of a reporting unit's identity, client association, status, sampling method,
+ * district, and selected grade.
  *
  * <p>Components:
  * <ul>
@@ -28,8 +18,8 @@ import lombok.With;
  *   <li>{@code clientStatus}: the current status code and description of the associated client</li>
  *   <li>{@code sampling}: the sampling method code and description for the reporting unit</li>
  *   <li>{@code district}: the natural resource district code and description</li>
- *   <li>{@code grade}: the harvest grade code and description, unpopulated until grade
- *       configuration</li>
+ *   <li>{@code grade}: the selected grade code and display description; may be unpopulated for
+ *       historical reporting units</li>
  *   <li>{@code blockRule}: the block-creation rule for the sampling type; omitted when no rule
  *       applies</li>
  *   <li>{@code isLegacy}: true when the reporting unit has no postgres block record and predates
@@ -60,7 +50,7 @@ public record ReportingUnitDetailsDto(
    * @param clientStatus the current status code and description of the associated client
    * @param sampling the sampling method code and description for the reporting unit
    * @param district the natural resource district code and description
-   * @param grade the harvest grade code and description, unpopulated until grade configuration
+   * @param grade the selected grade code and display description, or null when unavailable
    */
   public ReportingUnitDetailsDto(
       Long id,

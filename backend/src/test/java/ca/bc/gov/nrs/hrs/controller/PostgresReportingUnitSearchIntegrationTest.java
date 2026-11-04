@@ -156,7 +156,7 @@ class PostgresReportingUnitSearchIntegrationTest extends AbstractTestContainerIn
         .andExpect(status().isOk())
         .andExpect(content().contentType("application/json;charset=UTF-8"))
         .andExpect(jsonPath("$.page.totalElements").value(2))
-        // Block row (RU A): block/mark fields populated, WAA id = block id, fixed sampling,
+        // Block row (RU A): block/mark fields populated, WAA id = block id, persisted sampling,
         // placeholders.
         .andExpect(jsonPath("$.content[0].ruNumber").value(seed.ruA().intValue()))
         .andExpect(jsonPath("$.content[0].wasteAssessmentAreaId").value(seed.blockA().intValue()))
@@ -823,10 +823,18 @@ class PostgresReportingUnitSearchIntegrationTest extends AbstractTestContainerIn
         GEO_CODE_ID_SEQ.incrementAndGet(),
         district,
         district + " Natural Resource District");
+    jdbcTemplate.update(
+        """
+        INSERT INTO wasteplus.district_grade_support (geographic_code, grade_code)
+        VALUES (?, 'COASTAL')
+        ON CONFLICT (geographic_code, grade_code) DO NOTHING
+        """,
+        district);
     ReportingUnitEntity unit = new ReportingUnitEntity();
     unit.setClientNumber(clientNumber);
     unit.setClientLocnCode("00");
     unit.setGeographicCode(district);
+    unit.setGradeCode("COASTAL");
     unit.setCreatedBy(ACTOR);
     unit.setUpdatedBy(ACTOR);
     unit.setCreatedAt(BASE_TIME);
