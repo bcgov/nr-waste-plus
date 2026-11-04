@@ -393,7 +393,8 @@ public class BlockService {
    *
    * <p>The legacy row only carries the block identifier and lifecycle status. Draft state is
    * derived from the {@code DFT} status code; every other non-identifier field is null and the
-   * legacy marker is {@code true}.
+   * legacy marker is {@code true}. {@code blockType} stays null on purpose: the legacy (Oracle)
+   * payload carries no block subtype, so the envelope reports the subtype as unknown.
    */
   private BlockResponseDto toLegacyResponseDto(Long reportingUnitId, BlockListItemDto row) {
     boolean draft =

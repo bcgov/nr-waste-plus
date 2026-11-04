@@ -262,7 +262,7 @@ class BlockControllerIntegrationTest extends AbstractTestContainerIntegrationTes
   }
 
   @Test
-  @DisplayName("Returns legacy block details with isLegacy true")
+  @DisplayName("Returns legacy block details with isLegacy true and unknown blockType")
   @WithMockJwt
   void returnsLegacyBlockDetailsWithIsLegacyTrue() throws Exception {
     long legacyReportingUnitId = 555L;
