@@ -402,9 +402,10 @@ public final class ReportingUnitSearchQueryConstants {
    * <p>{@code wasteAssessmentAreaId} now projects the same column as {@code blockId} (legacy WAA
    * → {@code block_id}) but stays ABSENT here so PG sort behaviour is unchanged (still rejected,
    * HTTP 428). The {@code sampling} / {@code sampling.code} keys sort on the persisted {@code
-   * ru.sampling_code}; {@code sampling.description} sorts on the fixed {@code 'Average'} output
-   * literal. RU/block tie-breakers keep the ordering deterministic. Unknown keys are rejected the
-   * same way (legacy reject parity).
+   * ru.sampling_code}; {@code sampling.description} sorts on the fixed {@code upper('Average')}
+   * output expression (the {@code upper()} wrapper keeps the parenthesized ORDER BY fragment a
+   * valid expression instead of a bare string literal). RU/block tie-breakers keep the ordering
+   * deterministic. Unknown keys are rejected the same way (legacy reject parity).
    */
   public static final Map<String, String> SORT_EXPRESSIONS =
       Map.ofEntries(
@@ -423,5 +424,5 @@ public final class ReportingUnitSearchQueryConstants {
           Map.entry("timberMark", "pm.timber_mark"),
           Map.entry("sampling", "ru.sampling_code"),
           Map.entry("sampling.code", "ru.sampling_code"),
-          Map.entry("sampling.description", "'Average'"));
+          Map.entry("sampling.description", "upper('Average')"));
 }

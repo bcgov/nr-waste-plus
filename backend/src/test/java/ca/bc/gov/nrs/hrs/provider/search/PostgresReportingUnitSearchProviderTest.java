@@ -326,7 +326,9 @@ class PostgresReportingUnitSearchProviderTest {
       assertThat(provider.resolveSort(Sort.by(Sort.Direction.ASC, key)))
           .extracting(order -> order.getProperty() + " " + order.getDirection())
           .containsExactly(
-              key.equals("sampling.description") ? "('Average') ASC" : "(ru.sampling_code) ASC",
+              key.equals("sampling.description")
+                  ? "(upper('Average')) ASC"
+                  : "(ru.sampling_code) ASC",
               "(ru.reporting_unit_id) ASC",
               "(b.block_id) ASC");
     }
