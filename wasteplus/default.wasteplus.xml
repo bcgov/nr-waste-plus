@@ -569,8 +569,8 @@
          <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="client_number" nullable="false" remarks="Forest client number." size="8" type="varchar" typeCode="12"/>
          <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="client_locn_code" nullable="false" remarks="Forest client location code." size="32" type="varchar" typeCode="12"/>
          <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="geographic_code" nullable="false" remarks="Three-character district code; references geographic_code.code." size="3" type="varchar" typeCode="12">
-            <parent column="code" foreignKey="fk_reporting_unit_geographic_code" implied="false" onDeleteCascade="false" schema="wasteplus" table="geographic_code"/>
             <parent column="geographic_code" foreignKey="fk_reporting_unit_district_grade_support" implied="false" onDeleteCascade="false" schema="wasteplus" table="district_grade_support"/>
+            <parent column="code" foreignKey="fk_reporting_unit_geographic_code" implied="false" onDeleteCascade="false" schema="wasteplus" table="geographic_code"/>
          </column>
          <column autoUpdated="false" defaultValue="1" digits="0" id="4" name="revision" nullable="false" remarks="Optimistic locking revision counter." size="19" type="int8" typeCode="-5"/>
          <column autoUpdated="false" defaultValue="null" digits="0" id="5" name="created_by" nullable="false" remarks="Audit actor that created this reporting unit." size="128" type="varchar" typeCode="12"/>
