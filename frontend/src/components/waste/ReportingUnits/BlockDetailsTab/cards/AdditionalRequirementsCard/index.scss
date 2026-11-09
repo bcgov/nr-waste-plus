@@ -1,0 +1,13 @@
+.additional-requirements-card {
+  &__grid {
+    row-gap: 1rem;
+  }
+
+  &__label {
+    font-weight: 600;
+  }
+
+  &__value {
+    margin: 0;
+  }
+}

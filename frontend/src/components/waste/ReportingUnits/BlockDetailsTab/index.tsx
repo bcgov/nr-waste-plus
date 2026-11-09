@@ -5,7 +5,9 @@ import SubmissionDetailsCard, {
 } from './cards/SubmissionDetailsCard';
 import WasteAssessmentAreaSummaryCard from './cards/WasteAssessmentAreaSummaryCard';
 import DistrictAverageVolumesSummaryCard from './cards/DistrictAverageVolumesSummaryCard';
-import AdditionalRequirementsCard from './cards/AdditionalRequirementsCard';
+import AdditionalRequirementsCard, {
+  type AdditionalRequirementsCardProps,
+} from './cards/AdditionalRequirementsCard';
 import { resolveSubmissionVariant, type SubmissionVariant } from './resolveSubmissionVariant';
 
 import type { CodeDescriptionDto } from '@/types/search.types';
@@ -19,18 +21,20 @@ export interface BlockDetailsTabProps extends Omit<SubmissionDetailsCardProps, '
   readonly variant?: SubmissionVariant;
   /** Navigate to another block-details tab (S7 card buttons). */
   readonly onNavigateTab?: (tabIndex: number) => void;
+  /** Card 4 — Additional requirements (S8/D11). Defaults to read-only/empty when omitted. */
+  readonly additionalRequirements?: AdditionalRequirementsCardProps;
 }
 
 /**
  * Block Details tab content (D20 tier 1). Resolves the submission-details variant and
- * composes card 1 (Submission details) plus the variant-identical cards 2–4 slots
- * (S7/S8 fill content). The page owns the 5-tab frame; this component owns tab-1 card
- * composition.
+ * composes card 1 (Submission details) plus the variant-identical cards 2–4
+ * (S7/S8). The page owns the 5-tab frame; this component owns tab-1 card composition.
  */
 const BlockDetailsTab: FC<BlockDetailsTabProps> = ({
   grade,
   variant,
-  onNavigateTab: _onNavigateTab,
+  onNavigateTab,
+  additionalRequirements,
   ...cardProps
 }) => {
   const resolvedVariant = variant ?? resolveSubmissionVariant(grade);
@@ -39,7 +43,11 @@ const BlockDetailsTab: FC<BlockDetailsTabProps> = ({
       <SubmissionDetailsCard {...cardProps} variant={resolvedVariant} />
       <WasteAssessmentAreaSummaryCard />
       <DistrictAverageVolumesSummaryCard />
-      <AdditionalRequirementsCard />
+      <AdditionalRequirementsCard
+        mode={cardProps.mode}
+        {...additionalRequirements}
+        onAddAttachments={additionalRequirements?.onAddAttachments ?? (() => onNavigateTab?.(3))}
+      />
     </>
   );
 };

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  validateAdditionalRequirementsCertify,
   validateDispersedRetentionExplanation,
   validateDispersedRetentionPct,
   validatePrimaryLoggingCompleteDate,
@@ -57,5 +58,12 @@ describe('submission details validators (BR-1, D30, D32)', () => {
     expect(validateDispersedRetentionExplanation('  ', true)).toMatch(/explain/i);
     expect(validateDispersedRetentionExplanation('Calculated from survey', true)).toBeUndefined();
     expect(validateDispersedRetentionExplanation('', false)).toBeUndefined();
+  });
+
+  it('requires certify only when both additional-requirements toggles are No (BR-3/D11)', () => {
+    expect(validateAdditionalRequirementsCertify(false, false, false)).toMatch(/confirm/i);
+    expect(validateAdditionalRequirementsCertify(true, false, false)).toBeUndefined();
+    expect(validateAdditionalRequirementsCertify(false, true, false)).toBeUndefined();
+    expect(validateAdditionalRequirementsCertify(false, false, true)).toBeUndefined();
   });
 });

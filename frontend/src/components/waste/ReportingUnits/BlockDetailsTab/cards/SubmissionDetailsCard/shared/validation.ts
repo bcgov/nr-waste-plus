@@ -50,3 +50,17 @@ export const validateDispersedRetentionExplanation = (
   if (!hasDispersedRetention) return undefined;
   return explanation?.trim() ? undefined : 'Explain how the retention percentage was calculated.';
 };
+
+/**
+ * Additional requirements (BR-3, INT-1.8a/CST-1.11, D11): when both toggles are No, the certify
+ * checkbox must be selected. When either toggle is Yes the checkbox is not rendered and forced
+ * false, so no error is returned.
+ */
+export const validateAdditionalRequirementsCertify = (
+  certified: boolean,
+  werePilesBurnt: boolean,
+  requiresRationale: boolean,
+): string | undefined => {
+  if (werePilesBurnt || requiresRationale) return undefined;
+  return certified ? undefined : 'Select the checkbox to confirm before continuing.';
+};

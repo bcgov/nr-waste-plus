@@ -1,5 +1,5 @@
 import { screen } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import { renderWithAppAsync } from '@/config/tests/renderWithApp';
 
@@ -43,6 +43,17 @@ describe('BlockDetailsTab (D20/S3b)', () => {
   it('re-exports resolveSubmissionVariant', () => {
     expect(resolveSubmissionVariant({ code: 'I', description: 'Interior' })).toBe('interior');
   });
+
+  it('navigates to attachments from additional requirements (S8)', async () => {
+    const onNavigateTab = vi.fn();
+    await renderWithAppAsync(
+      <BlockDetailsTab {...baseProps} variant="interior" onNavigateTab={onNavigateTab} />,
+    );
+
+    await screen.findByRole('button', { name: 'Add attachments' });
+    screen.getByRole('button', { name: 'Add attachments' }).click();
+    expect(onNavigateTab).toHaveBeenCalledWith(3);
+  });
 });
 
 describe('SubmissionDetailsCard', () => {
@@ -57,10 +68,12 @@ describe('SubmissionDetailsCard', () => {
   });
 });
 
-describe('tab-tier card placeholders (S7/S8)', () => {
-  it('render without content until implemented', () => {
+describe('tab-tier cards (S7/S8)', () => {
+  it('renders S7 placeholders as empty and S8 additional requirements content', async () => {
     expect(WasteAssessmentAreaSummaryCard({})).toBeNull();
     expect(DistrictAverageVolumesSummaryCard({})).toBeNull();
-    expect(AdditionalRequirementsCard({})).toBeNull();
+
+    await renderWithAppAsync(<AdditionalRequirementsCard mode="read-only" />);
+    expect(screen.getByRole('heading', { name: 'Additional requirements' })).toBeTruthy();
   });
 });
