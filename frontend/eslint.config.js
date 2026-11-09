@@ -1,5 +1,5 @@
-import { createRequire } from 'node:module';
 import tanstackQuery from '@tanstack/eslint-plugin-query';
+import { importX } from 'eslint-plugin-import-x';
 import eslintConfigPrettier from 'eslint-config-prettier';
 import tseslint from 'typescript-eslint';
 import prettierPlugin from 'eslint-plugin-prettier';
@@ -9,9 +9,6 @@ import reactHooks from 'eslint-plugin-react-hooks';
 import testingLibrary from 'eslint-plugin-testing-library';
 import vitest from '@vitest/eslint-plugin';
 import { globalIgnores, defineConfig } from 'eslint/config';
-
-const require = createRequire(import.meta.url);
-const { importX } = require('eslint-plugin-import-x');
 
 // Local rule: barrel re-exports (`export ... from './x'`) stay sorted
 // case-insensitively by source module — keeps the @/types barrel stable
