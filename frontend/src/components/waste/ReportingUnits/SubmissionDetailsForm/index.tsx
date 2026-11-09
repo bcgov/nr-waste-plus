@@ -10,28 +10,10 @@ import type {
 } from '@/components/waste/ReportingUnits/InteriorSubmissionDetailsForm';
 import type { CodeDescriptionDto } from '@/types/search.types';
 
-/** Which submission-details twin renders. Driven by the reporting-unit grade (plan D3). */
-export type SubmissionVariant = 'interior' | 'coast';
+import type { SubmissionVariant } from '@/components/waste/ReportingUnits/BlockDetailsTab';
 
-/**
- * Grade shape needed for variant resolution — satisfied by the reporting-unit
- * details `grade` field (`code`/`description`, both nullable).
- */
-type GradeLike = Pick<CodeDescriptionDto, 'code' | 'description'> | null | undefined;
-
-/**
- * Resolves the submission-details variant from the reporting-unit grade.
- *
- * Coast is matched on the grade description (case- and whitespace-insensitive)
- * because the grade code domain is not settled yet (stub data uses `G1`, tests
- * use `IN`). Anything else — including no grade — falls back to interior, which
- * matches today's population (units without a grade are legacy-only).
- *
- * @param grade - The reporting-unit grade code/description, if available.
- * @returns `coast` for Coast grades, `interior` otherwise.
- */
-export const resolveSubmissionVariant = (grade: GradeLike): SubmissionVariant =>
-  grade?.description?.trim().toLowerCase() === 'coast' ? 'coast' : 'interior';
+export { resolveSubmissionVariant } from '@/components/waste/ReportingUnits/BlockDetailsTab';
+export type { SubmissionVariant };
 
 /**
  * Props for the variant-dispatching {@link SubmissionDetailsForm}. Option lists
