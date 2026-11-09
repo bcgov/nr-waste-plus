@@ -228,3 +228,115 @@ WHERE ru.client_number = '00001271'
   AND NOT ru.is_deleted
   AND b.created_by = 'test-seed:reporting-unit-block-list-v1'
   AND NOT b.is_deleted;
+
+-- Reporting-unit block-list test data (Interior DA fixture). Mirrors the v1 COASTAL
+-- fixture above but for grade_code INTERIOR, using a distinct non-colliding identity
+-- (TEST-1254-C / test-seed:reporting-unit-block-list-v2) and distinct PRIMARY mark.
+-- DKM supports INTERIOR via district_grade_support (V1.3.7 / fixture seed above).
+-- Idempotent/repeatable: soft-delete prior live rows owned by this fixture identity
+-- before re-inserting so reruns do not violate live uniqueness constraints.
+UPDATE wasteplus.district_average_block dab
+SET is_deleted = TRUE,
+    updated_at = NOW(),
+    updated_by = 'test-seed:reporting-unit-block-list-v2'
+FROM wasteplus.block b
+JOIN wasteplus.reporting_unit ru ON ru.reporting_unit_id = b.reporting_unit_id
+WHERE dab.district_average_block_id = b.block_id
+  AND ru.client_number = '00001271'
+  AND ru.client_locn_code = 'TEST-1254-C'
+  AND ru.geographic_code = 'DKM'
+  AND ru.created_by = 'test-seed:reporting-unit-block-list-v2'
+  AND b.created_by = 'test-seed:reporting-unit-block-list-v2'
+  AND NOT dab.is_deleted;
+
+UPDATE wasteplus.block b
+SET is_deleted = TRUE,
+    updated_at = NOW(),
+    updated_by = 'test-seed:reporting-unit-block-list-v2'
+FROM wasteplus.reporting_unit ru
+WHERE ru.reporting_unit_id = b.reporting_unit_id
+  AND ru.client_number = '00001271'
+  AND ru.client_locn_code = 'TEST-1254-C'
+  AND ru.geographic_code = 'DKM'
+  AND ru.created_by = 'test-seed:reporting-unit-block-list-v2'
+  AND b.created_by = 'test-seed:reporting-unit-block-list-v2'
+  AND NOT b.is_deleted;
+
+UPDATE wasteplus.reporting_unit
+SET is_deleted = TRUE,
+    updated_at = NOW(),
+    updated_by = 'test-seed:reporting-unit-block-list-v2'
+WHERE client_number = '00001271'
+  AND client_locn_code = 'TEST-1254-C'
+  AND geographic_code = 'DKM'
+  AND created_by = 'test-seed:reporting-unit-block-list-v2'
+  AND NOT is_deleted;
+
+INSERT INTO wasteplus.reporting_unit (
+    client_number, client_locn_code, geographic_code, sampling_code, grade_code, created_by, updated_by)
+VALUES
+    ('00001271', 'TEST-1254-C', 'DKM', 'AVG', 'INTERIOR', 'test-seed:reporting-unit-block-list-v2', 'test-seed:reporting-unit-block-list-v2');
+
+INSERT INTO wasteplus.block
+    (reporting_unit_id, block_type, is_draft, created_by, updated_by)
+SELECT
+    ru.reporting_unit_id,
+    'DISTRICT_AVERAGE',
+    TRUE,
+    'test-seed:reporting-unit-block-list-v2',
+    'test-seed:reporting-unit-block-list-v2'
+FROM wasteplus.reporting_unit ru
+WHERE ru.client_number = '00001271'
+  AND ru.client_locn_code = 'TEST-1254-C'
+  AND ru.geographic_code = 'DKM'
+  AND ru.created_by = 'test-seed:reporting-unit-block-list-v2'
+  AND NOT ru.is_deleted;
+
+-- PRIMARY mark for the seeded Interior DA block (distinct from v1 BJ6994/A74912/994/LV2399).
+INSERT INTO wasteplus.block_mark
+    (block_id, mark_type, sequence_no, mark, forest_file_id, cutting_permit_id, cut_block_id, timber_mark, created_by, updated_by)
+SELECT
+    b.block_id,
+    'PRIMARY',
+    1,
+    'IN8801',
+    'A74913',
+    '995',
+    'LV2400',
+    'IN8801',
+    'test-seed:reporting-unit-block-list-v2',
+    'test-seed:reporting-unit-block-list-v2'
+FROM wasteplus.block b
+JOIN wasteplus.reporting_unit ru ON ru.reporting_unit_id = b.reporting_unit_id
+WHERE ru.client_number = '00001271'
+  AND ru.client_locn_code = 'TEST-1254-C'
+  AND ru.geographic_code = 'DKM'
+  AND ru.created_by = 'test-seed:reporting-unit-block-list-v2'
+  AND NOT ru.is_deleted
+  AND b.created_by = 'test-seed:reporting-unit-block-list-v2'
+  AND NOT b.is_deleted
+  AND NOT EXISTS (
+      SELECT 1
+      FROM wasteplus.block_mark bm
+      WHERE bm.block_id = b.block_id
+        AND bm.mark_type = 'PRIMARY'
+        AND bm.is_deleted = FALSE
+  );
+
+INSERT INTO wasteplus.district_average_block
+    (district_average_block_id, has_dispersed_retention, is_heli_logging, created_by, updated_by)
+SELECT
+    b.block_id,
+    FALSE,
+    FALSE,
+    'test-seed:reporting-unit-block-list-v2',
+    'test-seed:reporting-unit-block-list-v2'
+FROM wasteplus.block b
+JOIN wasteplus.reporting_unit ru ON ru.reporting_unit_id = b.reporting_unit_id
+WHERE ru.client_number = '00001271'
+  AND ru.client_locn_code = 'TEST-1254-C'
+  AND ru.geographic_code = 'DKM'
+  AND ru.created_by = 'test-seed:reporting-unit-block-list-v2'
+  AND NOT ru.is_deleted
+  AND b.created_by = 'test-seed:reporting-unit-block-list-v2'
+  AND NOT b.is_deleted;
