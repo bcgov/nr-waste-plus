@@ -211,6 +211,7 @@ const mockDistrictOptions: CodeDescriptionDto[] = [
 const mockSamplingOptions: CodeDescriptionDto[] = [
   { code: 'SAM1', description: 'Ground Sampling' },
   { code: 'SAM2', description: 'Crown Sampling' },
+  { code: 'AVG', description: 'District Average' },
 ];
 
 const mockClients: CodeDescriptionDto[] = [
@@ -505,8 +506,10 @@ describe('grade selection', () => {
 
   it('blocks District Average creation when the selected district has no configured grade', async () => {
     await renderComponent();
+    const samplingComboBox = screen.getByLabelText('Sampling option');
     const districtComboBox = screen.getByLabelText('District');
 
+    await userEvent.selectOptions(samplingComboBox, 'AVG');
     await userEvent.selectOptions(districtComboBox, 'DPG');
 
     const gradeError = await screen.findByRole('alert');

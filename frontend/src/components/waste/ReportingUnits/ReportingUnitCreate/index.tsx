@@ -21,13 +21,6 @@ import type { CodeDescriptionDto } from '@/types/search.types';
 
 import './index.scss';
 
-// TEMP TEST ONLY: do not commit. Provides the District Average option while
-// creating test reporting units; remove after the backend sampling list is fixed.
-const TEST_DISTRICT_AVERAGE_OPTION: CodeDescriptionDto = {
-  code: 'AVG',
-  description: 'District Average',
-};
-
 /**
  * Form component for creating a new waste reporting unit.
  *
@@ -52,10 +45,6 @@ const ReportingUnitCreate: FC = () => {
   const auth = useAuth();
 
   const { samplingOptions, districtOptions } = useWasteSearchFilterOptions();
-  const createSamplingOptions = [
-    TEST_DISTRICT_AVERAGE_OPTION,
-    ...samplingOptions.filter((option) => option.code !== TEST_DISTRICT_AVERAGE_OPTION.code),
-  ];
   const validateGradeForDistrict = (value: {
     readonly districtCode: string | null;
     readonly gradeCode: string | null;
@@ -309,11 +298,11 @@ const ReportingUnitCreate: FC = () => {
               placeholder="Sampling option"
               titleText="Sampling option"
               id="as-sampling-multi-select"
-              items={createSamplingOptions}
+              items={samplingOptions}
               itemToString={(option) => activeMSItemToString(option, '')}
               onBlur={field.handleBlur}
               onChange={createComboBoxOnChange(field.handleChange)}
-              selectedItem={findSelectedItem(createSamplingOptions, field.state.value)}
+              selectedItem={findSelectedItem(samplingOptions, field.state.value)}
               invalid={field.state.meta.isTouched && !!field.state.meta.errors.length}
               invalidText={field.state.meta.errors[0]}
               data-testid="sampling-combobox"

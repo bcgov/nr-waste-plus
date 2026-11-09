@@ -528,7 +528,7 @@ describe('ReportingUnitCreate - Coverage Enhancement', () => {
       expect(samplingComboBox).toBeTruthy();
     });
 
-    it('should use createComboBoxOnChange with null selectedItem', async () => {
+    it('should use createComboBoxOnChange with a selected item', async () => {
       await renderComponent();
 
       const samplingInput = screen.getByRole<HTMLInputElement>('combobox', {
@@ -536,14 +536,14 @@ describe('ReportingUnitCreate - Coverage Enhancement', () => {
       });
       // Select a sampling option through the real ComboBox — exercises createComboBoxOnChange
       await userEvent.clear(samplingInput);
-      await userEvent.type(samplingInput, 'AVG');
+      await userEvent.type(samplingInput, 'Ground');
 
-      const samplingText = await screen.findByText(/District Average/i);
+      const samplingText = await screen.findByText(/Ground Sampling/i);
       await userEvent.click(samplingText);
 
       // The selected code must propagate to the field via createComboBoxOnChange
       await waitFor(() => {
-        expect(samplingInput.value).toBe('AVG - District Average');
+        expect(samplingInput.value).toBe('GND - Ground Sampling');
       });
     });
   });
