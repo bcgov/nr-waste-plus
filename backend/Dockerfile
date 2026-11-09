@@ -1,4 +1,4 @@
-# syntax=docker/dockerfile:1.7
+# syntax=docker/dockerfile:1.28
 
 ### Builder
 FROM ghcr.io/graalvm/native-image-community:25.0.2 AS build
