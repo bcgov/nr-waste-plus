@@ -2,7 +2,7 @@
 @use '@carbon/react/scss/breakpoint' as *;
 @use '@carbon/styles/scss/border-radius' as *;
 @use '@carbon/type' as *;
-@use '../../../../styles/page-shell' as shell;
+@use '../../../../../../../../styles/page-shell' as shell;
 
 .interior-submission-details {
   display: flex;
