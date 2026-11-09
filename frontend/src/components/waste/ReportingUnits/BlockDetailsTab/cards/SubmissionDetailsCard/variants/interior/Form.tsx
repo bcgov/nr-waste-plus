@@ -22,7 +22,10 @@ import {
   validateDispersedRetentionPct,
   validatePrimaryLoggingCompleteDate,
 } from '@/components/waste/ReportingUnits/BlockDetailsTab/cards/SubmissionDetailsCard/shared/validation';
-import { toSelectedItems } from '@/components/waste/ReportingUnits/BlockDetailsTab/cards/SubmissionDetailsCard/shared/format';
+import {
+  codeDescriptionToString,
+  toSelectedItems,
+} from '@/components/waste/ReportingUnits/BlockDetailsTab/cards/SubmissionDetailsCard/shared/format';
 
 import SubmissionDetailsHeader from './Header';
 import { normalizeInitialValues, toSelectedItem } from './types';
@@ -115,7 +118,7 @@ export const InteriorSubmissionDetailsFormView = ({
                   id="interior-harvest-status"
                   titleText="Harvest status"
                   items={[...harvestStatuses]}
-                  itemToString={(item) => item?.description ?? ''}
+                  itemToString={codeDescriptionToString}
                   selectedItem={toSelectedItem(harvestStatuses, field.state.value)}
                   onChange={({ selectedItem }) => field.handleChange(selectedItem?.code ?? '')}
                 />
@@ -130,7 +133,7 @@ export const InteriorSubmissionDetailsFormView = ({
                   id="interior-bec-zone"
                   titleText="BEC zone"
                   items={[...becZones]}
-                  itemToString={(item) => item?.description ?? ''}
+                  itemToString={codeDescriptionToString}
                   selectedItem={toSelectedItem(becZones, field.state.value)}
                   onChange={({ selectedItem }) => {
                     const code = selectedItem?.code ?? '';
@@ -151,7 +154,7 @@ export const InteriorSubmissionDetailsFormView = ({
                   items={becSubzoneVariants.filter(
                     (option) => option.becZoneCode === form.state.values.becZoneCode,
                   )}
-                  itemToString={(item) => item?.description ?? ''}
+                  itemToString={codeDescriptionToString}
                   selectedItem={toSelectedItem(becSubzoneVariants, field.state.value)}
                   onChange={({ selectedItem }) => field.handleChange(selectedItem?.code ?? '')}
                   disabled={!form.state.values.becZoneCode}

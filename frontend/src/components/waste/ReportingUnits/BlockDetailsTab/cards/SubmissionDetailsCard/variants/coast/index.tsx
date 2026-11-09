@@ -21,6 +21,7 @@ import {
   toDateValue,
   toIsoDate,
   toSelectedItem,
+  codeDescriptionToString,
   toSelectedItems,
   toYesNo,
 } from '@/components/waste/ReportingUnits/BlockDetailsTab/cards/SubmissionDetailsCard/shared/format';
@@ -338,7 +339,7 @@ const CoastSubmissionDetailsForm: FC<CoastSubmissionDetailsFormProps> = ({
                   id="coast-harvest-status"
                   titleText="Harvest status"
                   items={[...harvestStatuses]}
-                  itemToString={(item) => item?.description ?? ''}
+                  itemToString={codeDescriptionToString}
                   selectedItem={toSelectedItem(harvestStatuses, field.state.value)}
                   onChange={({ selectedItem }) => field.handleChange(selectedItem?.code ?? '')}
                 />
@@ -353,7 +354,7 @@ const CoastSubmissionDetailsForm: FC<CoastSubmissionDetailsFormProps> = ({
                   id="coast-maturity"
                   titleText="Maturity"
                   items={[...maturityOptions]}
-                  itemToString={(item) => item?.description ?? ''}
+                  itemToString={codeDescriptionToString}
                   selectedItem={toSelectedItem(maturityOptions, field.state.value)}
                   onChange={({ selectedItem }) => field.handleChange(selectedItem?.code ?? '')}
                 />

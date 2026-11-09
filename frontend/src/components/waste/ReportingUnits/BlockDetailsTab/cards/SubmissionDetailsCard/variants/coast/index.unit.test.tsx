@@ -154,5 +154,53 @@ describe('CoastSubmissionDetailsForm', () => {
     expect(cable.value).toBe('');
     expect(ground.value).toBe('');
     expect(skyline.value).toBe('');
+
+    await user.click(screen.getByRole('switch', { name: 'Heli logging' }));
+    expect(cable.disabled).toBe(false);
+  });
+
+  it('renders dispersed retention details and legacy criteria in read-only mode (D28)', async () => {
+    await renderWithAppAsync(
+      <CoastSubmissionDetailsForm
+        {...options}
+        mode="read-only"
+        initialValues={{
+          hasDispersedRetention: true,
+          dispersedRetentionPct: '75',
+          dispersedRetentionExplanation: 'Survey based',
+          districtAverageCriteriaCode: '7',
+        }}
+      />,
+    );
+
+    expect(screen.getByText('75')).toBeTruthy();
+    expect(screen.getByText('Survey based')).toBeTruthy();
+    expect(screen.getByText(/Criterion 7/)).toBeTruthy();
+  });
+
+  it('validates dispersed retention fields in form mode (BR-1, D32)', async () => {
+    const user = userEvent.setup();
+    await renderWithAppAsync(<CoastSubmissionDetailsForm {...options} />);
+
+    await user.click(screen.getByRole('switch', { name: 'Is dispersed retention >= 50%?' }));
+    const pct = screen.getByRole('spinbutton', { name: 'Dispersed retention percentage' });
+    const explanation = screen.getByRole('textbox', {
+      name: 'Explain how retention percentage was calculated',
+    });
+
+    await user.type(pct, '49');
+    expect(await screen.findByText('Enter a whole number between 50 and 100.')).toBeTruthy();
+
+    await user.clear(pct);
+    await user.type(pct, '75');
+    expect(screen.queryByText('Enter a whole number between 50 and 100.')).toBeNull();
+
+    await user.click(explanation);
+    await user.type(explanation, 'x');
+    await user.clear(explanation);
+    await user.tab();
+    expect(
+      await screen.findByText('Explain how the retention percentage was calculated.'),
+    ).toBeTruthy();
   });
 });

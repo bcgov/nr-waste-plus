@@ -29,7 +29,12 @@ describe('submission details validators (BR-1, D30, D32)', () => {
     expect(validatePrimaryLoggingCompleteDateNotFuture(isoDateOffset(1))).toMatch(/future/i);
     expect(validatePrimaryLoggingCompleteDateNotFuture(isoDateOffset(0))).toBeUndefined();
     expect(validatePrimaryLoggingCompleteDateNotFuture(isoDateOffset(-1))).toBeUndefined();
+    expect(validatePrimaryLoggingCompleteDateNotFuture('')).toBeUndefined();
+    expect(validatePrimaryLoggingCompleteDateNotFuture('   ')).toBeUndefined();
+    expect(validatePrimaryLoggingCompleteDateNotFuture('not-a-date')).toBeUndefined();
     expect(validatePrimaryLoggingCompleteDate('')).toMatch(/required/i);
+    expect(validatePrimaryLoggingCompleteDate(isoDateOffset(-1))).toBeUndefined();
+    expect(validatePrimaryLoggingCompleteDate(isoDateOffset(1))).toMatch(/future/i);
   });
 
   it('validates dispersed retention percentage as a whole number 50-100 (D32)', () => {
@@ -38,6 +43,9 @@ describe('submission details validators (BR-1, D30, D32)', () => {
     expect(validateDispersedRetentionPct('101', true)).toMatch(/50 and 100/);
     expect(validateDispersedRetentionPct('50.5', true)).toMatch(/whole number/i);
     expect(validateDispersedRetentionPct('abc', true)).toMatch(/whole number/i);
+    expect(validateDispersedRetentionPct(undefined as unknown as string, true)).toMatch(
+      /required/i,
+    );
     expect(validateDispersedRetentionPct('50', true)).toBeUndefined();
     expect(validateDispersedRetentionPct('100', true)).toBeUndefined();
     expect(validateDispersedRetentionPct('75', true)).toBeUndefined();

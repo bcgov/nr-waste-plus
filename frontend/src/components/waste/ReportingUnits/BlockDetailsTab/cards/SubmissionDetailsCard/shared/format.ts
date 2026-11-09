@@ -1,5 +1,10 @@
 import type { CodeDescriptionDto } from '@/types/search.types';
 
+/** Carbon ComboBox item-to-string for code/description options. */
+export const codeDescriptionToString = (
+  item: Pick<CodeDescriptionDto, 'description'> | null,
+): string => item?.description ?? '';
+
 /**
  * Finds the option matching a stored code.
  *
