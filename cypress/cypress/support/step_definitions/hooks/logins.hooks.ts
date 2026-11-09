@@ -70,8 +70,27 @@ const readAccessToken = (): Cypress.Chainable<string> =>
  * (`nr-waste-plus-1382-backend`). It therefore has to be read from
  * `/data/config.js`.
  *
+ * Local dev is the exception: the dev server ships the source placeholder
+ * (`window.config = {}`) because `/data/config.js` is deploy-time injected, and
+ * the dev app resolves its backend from Vite env instead — which defaults to
+ * `http://localhost:8080` (`frontend/.env`). When the runtime config carries no
+ * backend URL and the suite targets localhost, fall back to that same default
+ * so headless local runs can validate sessions.
+ *
  * @returns The backend origin, without a trailing slash.
  */
+const LOCAL_BACKEND_FALLBACK = "http://localhost:8080";
+
+const isLocalBaseUrl = (): boolean => {
+  try {
+    return ["localhost", "127.0.0.1"].includes(
+      new URL(Cypress.config("baseUrl") ?? "").hostname,
+    );
+  } catch {
+    return false;
+  }
+};
+
 const resolveBackendOrigin = (): Cypress.Chainable<string> => {
   if (backendOriginCache) {
     return cy.wrap(backendOriginCache, { log: false });
@@ -86,15 +105,20 @@ const resolveBackendOrigin = (): Cypress.Chainable<string> => {
           : JSON.stringify(response.body);
       const match = /VITE_BACKEND_URL:\s*['"]([^'"]+)['"]/.exec(body);
 
-      if (!match) {
-        throw new Error(
-          "Could not resolve VITE_BACKEND_URL from /data/config.js; the session " +
-            "probe cannot reach the backend.",
-        );
+      if (match) {
+        backendOriginCache = match[1].replace(/\/+$/, "");
+        return backendOriginCache;
       }
 
-      backendOriginCache = match[1].replace(/\/+$/, "");
-      return backendOriginCache;
+      if (isLocalBaseUrl()) {
+        backendOriginCache = LOCAL_BACKEND_FALLBACK;
+        return backendOriginCache;
+      }
+
+      throw new Error(
+        "Could not resolve VITE_BACKEND_URL from /data/config.js; the session " +
+          "probe cannot reach the backend.",
+      );
     });
 };
 
