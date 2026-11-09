@@ -22,7 +22,9 @@ import TagWrapper from '@/components/core/Tags/TagWrapper';
 import UnderConstructionTag from '@/components/core/Tags/UnderConstructionTag';
 import BlockDetailsSkeleton from '@/components/waste/ReportingUnits/BlockDetailsSkeleton';
 import BlockDetailsSummary from '@/components/waste/ReportingUnits/BlockDetailsSummary';
-import InteriorSubmissionDetailsForm from '@/components/waste/ReportingUnits/InteriorSubmissionDetailsForm';
+import SubmissionDetailsForm, {
+  resolveSubmissionVariant,
+} from '@/components/waste/ReportingUnits/SubmissionDetailsForm';
 import { useBlockDetailsQuery, useReportingUnitDetailsQuery } from '@/config/react-query/hooks';
 import useDelayedFlag from '@/hooks/useDelayedFlag';
 
@@ -35,7 +37,7 @@ import './index.scss';
 const EVENT_TARGET = 'reporting-unit-block-details';
 
 /**
- * Read-only District Average block details page for a single reporting unit.
+ * District Average block details page for a single reporting unit.
  *
  * Route: `/reporting-units/$ruId/$blockId` (issue #1369).
  *
@@ -43,11 +45,15 @@ const EVENT_TARGET = 'reporting-unit-block-details';
  * block existence) and the reporting unit through
  * {@link useReportingUnitDetailsQuery} (which backs the
  * {@link BlockDetailsSummary} card), then renders the page banner (breadcrumb +
- * focusable `h1`), the summary card, and a Back action. Only a failed/missing
- * block query renders the not-found state (an inline `role="alert"` notification
- * with Retry/Back actions); a reporting-unit-only failure keeps the block page
- * and swaps the summary card for an inline error. The loading skeleton is
- * deferred by 300 ms via `useDelayedFlag`.
+ * focusable `h1`), the summary card, the 3-step progress indicator, the five
+ * tabs, and the first-tab submission-details form — its variant is resolved
+ * from the reporting-unit grade (plan D3) and its mode from the block's
+ * `isLegacy` flag (plan D6). Save/Submit keep their placeholder navigation
+ * (plan D5). Only a failed/missing block query renders the not-found state (an
+ * inline `role="alert"` notification with Retry/Back actions); a
+ * reporting-unit-only failure keeps the block page and swaps the summary card
+ * for an inline error. The loading skeleton is deferred by 300 ms via
+ * `useDelayedFlag`.
  *
  * @returns The block details page columns, ready for the layout `Grid`.
  */
@@ -236,7 +242,8 @@ const ReportingUnitBlockDetailsPage: FC = () => {
           </TabList>
           <TabPanels>
             <TabPanel>
-              <InteriorSubmissionDetailsForm
+              <SubmissionDetailsForm
+                variant={resolveSubmissionVariant(data?.grade)}
                 mode={blockData.isLegacy ? 'read-only' : 'form'}
                 initialValues={{
                   primaryLoggingCompleteDate: blockData.plcDate ?? '',
@@ -244,6 +251,7 @@ const ReportingUnitBlockDetailsPage: FC = () => {
                 harvestStatuses={[]}
                 becZones={[]}
                 becSubzoneVariants={[]}
+                maturityOptions={[]}
                 districtAverageCriteria={[]}
               />
             </TabPanel>

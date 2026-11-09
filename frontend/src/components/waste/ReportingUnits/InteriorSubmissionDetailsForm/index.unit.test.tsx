@@ -6,7 +6,7 @@ import { renderWithAppAsync } from '@/config/tests/renderWithApp';
 
 import InteriorSubmissionDetailsForm from './index';
 
-import type { InteriorSubmissionDetailsFormProps } from './index';
+import type { InteriorSubmissionDetailsFormProps } from './types';
 
 const options: InteriorSubmissionDetailsFormProps = {
   mode: 'form',

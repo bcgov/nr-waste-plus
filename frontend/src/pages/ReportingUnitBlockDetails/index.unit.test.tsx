@@ -349,6 +349,31 @@ describe('ReportingUnitBlockDetailsPage', () => {
       expect(screen.getByRole('tab', { name: 'Endorsement' })).toBeTruthy();
       expect(screen.getByRole('heading', { name: 'Submission details' })).toBeTruthy();
     });
+
+    it('shouldRenderInteriorVariant_forInteriorGrade', async () => {
+      await renderPage();
+
+      expect(screen.getByRole('combobox', { name: 'BEC zone' })).toBeTruthy();
+      expect(screen.queryByRole('combobox', { name: 'Maturity' })).toBeNull();
+    });
+
+    it('shouldRenderCoastVariant_forCoastGrade', async () => {
+      mockQuery({ data: { ...defaultData, grade: { code: 'CO', description: 'Coast' } } });
+      await renderPage();
+
+      expect(screen.getByRole('combobox', { name: 'Maturity' })).toBeTruthy();
+      expect(screen.getByRole('switch', { name: 'Heli logging' })).toBeTruthy();
+      expect(screen.queryByRole('combobox', { name: 'BEC zone' })).toBeNull();
+    });
+
+    it('shouldRenderReadOnlyMode_whenBlockIsLegacy_evenForCoastGrade', async () => {
+      mockQuery({ data: { ...defaultData, grade: { code: 'CO', description: 'Coast' } } });
+      mockBlockQuery({ data: { ...defaultBlockData, isLegacy: true } });
+      await renderPage();
+
+      expect(screen.queryByRole('combobox', { name: 'Maturity' })).toBeNull();
+      expect(screen.getByTestId('card-item-content-heli-logging').textContent).toBe('No');
+    });
   });
 
   describe('success actions', () => {

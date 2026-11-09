@@ -336,8 +336,14 @@ describe('ReportingUnitCreate', () => {
 
     it('renders the sampling option dropdown', async () => {
       await renderComponent();
-      const samplingInput = screen.getByLabelText('Sampling option');
+      const samplingInput = screen.getByRole('combobox', { name: 'Sampling option' });
+      const districtAverageOption = screen.getByRole('option', { name: 'District Average' });
+
       expect(samplingInput).toBeDefined();
+      expect(districtAverageOption).toBeDefined();
+      expect(
+        districtAverageOption instanceof HTMLOptionElement && districtAverageOption.selected,
+      ).toBe(true);
     });
 
     it('renders form element', async () => {
@@ -495,6 +501,18 @@ describe('grade selection', () => {
       const gradeGroup = screen.queryByTestId('grade-radio-group');
       expect(gradeGroup).toBeNull();
     });
+  });
+
+  it('blocks District Average creation when the selected district has no configured grade', async () => {
+    await renderComponent();
+    const districtComboBox = screen.getByLabelText('District');
+
+    await userEvent.selectOptions(districtComboBox, 'DPG');
+
+    const gradeError = await screen.findByRole('alert');
+    expect(gradeError.textContent).toContain(
+      'The selected district has no configured grade for District Average.',
+    );
   });
 });
 

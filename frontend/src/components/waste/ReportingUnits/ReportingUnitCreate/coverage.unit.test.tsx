@@ -538,12 +538,12 @@ describe('ReportingUnitCreate - Coverage Enhancement', () => {
       await userEvent.clear(samplingInput);
       await userEvent.type(samplingInput, 'AVG');
 
-      const samplingText = await screen.findByText(/Average/i);
+      const samplingText = await screen.findByText(/District Average/i);
       await userEvent.click(samplingText);
 
       // The selected code must propagate to the field via createComboBoxOnChange
       await waitFor(() => {
-        expect(samplingInput.value).toBe('AVG - Average');
+        expect(samplingInput.value).toBe('AVG - District Average');
       });
     });
   });

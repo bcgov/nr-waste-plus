@@ -21,6 +21,13 @@ import type { CodeDescriptionDto } from '@/types/search.types';
 
 import './index.scss';
 
+// TEMP TEST ONLY: do not commit. Provides the District Average option while
+// creating test reporting units; remove after the backend sampling list is fixed.
+const TEST_DISTRICT_AVERAGE_OPTION: CodeDescriptionDto = {
+  code: 'AVG',
+  description: 'District Average',
+};
+
 /**
  * Form component for creating a new waste reporting unit.
  *
@@ -45,6 +52,36 @@ const ReportingUnitCreate: FC = () => {
   const auth = useAuth();
 
   const { samplingOptions, districtOptions } = useWasteSearchFilterOptions();
+  const createSamplingOptions = [
+    TEST_DISTRICT_AVERAGE_OPTION,
+    ...samplingOptions.filter((option) => option.code !== TEST_DISTRICT_AVERAGE_OPTION.code),
+  ];
+  const validateGradeForDistrict = (value: {
+    readonly districtCode: string | null;
+    readonly gradeCode: string | null;
+    readonly samplingCode: string | null;
+  }): string | undefined => {
+    if (value.samplingCode !== 'AVG' || value.districtCode === null) {
+      return undefined;
+    }
+
+    const supportedGrades =
+      districtOptions.find((district) => district.code === value.districtCode)?.areas ?? [];
+
+    if (supportedGrades.length === 0) {
+      return 'The selected district has no configured grade for District Average.';
+    }
+
+    if (value.gradeCode === null) {
+      return 'You must select a grade supported by the selected district.';
+    }
+
+    if (!supportedGrades.includes(value.gradeCode)) {
+      return 'The selected grade is not supported by this district.';
+    }
+
+    return undefined;
+  };
   const createMutation = useReportingUnitCreateMutation({
     notificationTarget: 'create-ru',
     onSuccess: (ruId) => {
@@ -62,6 +99,10 @@ const ReportingUnitCreate: FC = () => {
       districtCode: null as string | null,
       samplingCode: 'AVG' as string | null,
       gradeCode: null as string | null,
+    },
+    validators: {
+      onChange: ({ value }) => validateGradeForDistrict(value),
+      onSubmit: ({ value }) => validateGradeForDistrict(value),
     },
     onSubmit: async ({ value }) => {
       await createMutation.mutateAsync(value as ReportingUnitCreateDto);
@@ -268,17 +309,28 @@ const ReportingUnitCreate: FC = () => {
               placeholder="Sampling option"
               titleText="Sampling option"
               id="as-sampling-multi-select"
-              items={samplingOptions}
+              items={createSamplingOptions}
               itemToString={(option) => activeMSItemToString(option, '')}
               onBlur={field.handleBlur}
               onChange={createComboBoxOnChange(field.handleChange)}
-              selectedItem={findSelectedItem(samplingOptions, field.state.value)}
+              selectedItem={findSelectedItem(createSamplingOptions, field.state.value)}
               invalid={field.state.meta.isTouched && !!field.state.meta.errors.length}
               invalidText={field.state.meta.errors[0]}
               data-testid="sampling-combobox"
             />
           )}
         </form.Field>
+        <form.Subscribe selector={(state) => [state.errorMap.onChange, state.errorMap.onSubmit]}>
+          {([onChangeError, onSubmitError]) => {
+            const error = onSubmitError ?? onChangeError;
+
+            return error ? (
+              <div className="cds--form-requirement" role="alert">
+                {error}
+              </div>
+            ) : null;
+          }}
+        </form.Subscribe>
         <form.Subscribe selector={(state) => [state.canSubmit, state.isSubmitting]}>
           {([canSubmit, isSubmitting]) => (
             <Button
