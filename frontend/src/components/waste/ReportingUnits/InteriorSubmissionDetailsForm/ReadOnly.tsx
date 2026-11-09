@@ -1,9 +1,10 @@
 import { Column, Grid } from '@carbon/react';
 
 import ReadonlyInput from '@/components/Form/ReadonlyInput';
+import { toSelectedItems } from '@/components/waste/ReportingUnits/BlockDetailsTab/cards/SubmissionDetailsCard/shared/format';
 
 import SubmissionDetailsHeader from './Header';
-import { EMPTY_VALUES, toSelectedItem } from './types';
+import { normalizeInitialValues, toSelectedItem } from './types';
 
 import type { InteriorSubmissionDetailsReadOnlyProps } from './types';
 
@@ -21,7 +22,10 @@ export const InteriorSubmissionDetailsReadOnly = ({
   becSubzoneVariants,
   districtAverageCriteria,
 }: InteriorSubmissionDetailsReadOnlyProps) => {
-  const values = { ...EMPTY_VALUES, ...initialValues };
+  const values = normalizeInitialValues(initialValues);
+  const criteriaText = toSelectedItems(districtAverageCriteria, values.districtAverageCriteriaCodes)
+    .map((item) => item.description)
+    .join(', ');
 
   return (
     <section className="interior-submission-details" aria-labelledby="interior-submission-heading">
@@ -120,10 +124,7 @@ export const InteriorSubmissionDetailsReadOnly = ({
         )}
         <Column max={16} xlg={16} lg={16} md={8} sm={4}>
           <ReadonlyInput label="District average criteria">
-            {
-              toSelectedItem(districtAverageCriteria, values.districtAverageCriteriaCode)
-                ?.description
-            }
+            {criteriaText || undefined}
           </ReadonlyInput>
         </Column>
       </Grid>

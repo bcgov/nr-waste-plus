@@ -13,15 +13,28 @@ import { Add } from '@carbon/react/icons';
 import { useForm } from '@tanstack/react-form';
 import { type ChangeEvent } from 'react';
 
+import ActiveMultiSelect from '@/components/Form/ActiveMultiSelect';
 import ConditionalField from '@/components/Form/ConditionalField';
 import ReadonlyInput from '@/components/Form/ReadonlyInput';
+import { activeMSItemToString } from '@/components/waste/WasteSearch/WasteSearchFiltersActive/utils';
+import {
+  validateDispersedRetentionExplanation,
+  validateDispersedRetentionPct,
+  validatePrimaryLoggingCompleteDate,
+} from '@/components/waste/ReportingUnits/BlockDetailsTab/cards/SubmissionDetailsCard/shared/validation';
+import { toSelectedItems } from '@/components/waste/ReportingUnits/BlockDetailsTab/cards/SubmissionDetailsCard/shared/format';
 
 import SubmissionDetailsHeader from './Header';
-import { EMPTY_VALUES, toSelectedItem } from './types';
+import { normalizeInitialValues, toSelectedItem } from './types';
 
 import type { InteriorSubmissionDetailsFormProps } from './types';
 
 type FormViewProps = Omit<InteriorSubmissionDetailsFormProps, 'mode'>;
+
+const fieldError = (errors: readonly unknown[]): string | undefined => {
+  const first = errors.find((error) => typeof error === 'string' && error.length > 0);
+  return typeof first === 'string' ? first : undefined;
+};
 
 /**
  * Editable Interior submission-details view with local form state.
@@ -42,7 +55,8 @@ export const InteriorSubmissionDetailsFormView = ({
   onAddSecondaryTimberMark,
   onAddRoadPermitTimberMark,
 }: FormViewProps) => {
-  const form = useForm({ defaultValues: { ...EMPTY_VALUES, ...initialValues } });
+  const form = useForm({ defaultValues: normalizeInitialValues(initialValues) });
+  const today = new Date();
 
   return (
     <section className="interior-submission-details" aria-labelledby="interior-submission-heading">
@@ -56,30 +70,41 @@ export const InteriorSubmissionDetailsFormView = ({
         <SubmissionDetailsHeader />
         <Grid className="interior-submission-details__details-grid">
           <Column max={3} xlg={4} lg={5} md={4} sm={4}>
-            <form.Field name="primaryLoggingCompleteDate">
-              {(field) => (
-                <DatePicker
-                  datePickerType="single"
-                  dateFormat="m/d/Y"
-                  allowInput
-                  value={field.state.value ? [new Date(`${field.state.value}T00:00:00`)] : []}
-                  onChange={([date]) => {
-                    if (date) {
-                      const year = date.getFullYear();
-                      const month = String(date.getMonth() + 1).padStart(2, '0');
-                      const day = String(date.getDate()).padStart(2, '0');
-                      field.handleChange(`${year}-${month}-${day}`);
-                    }
-                  }}
-                >
-                  <DatePickerInput
-                    id="interior-primary-logging-date"
-                    labelText="Primary logging complete"
-                    placeholder="mm/dd/yyyy"
-                    onBlur={field.handleBlur}
-                  />
-                </DatePicker>
-              )}
+            <form.Field
+              name="primaryLoggingCompleteDate"
+              validators={{ onChange: ({ value }) => validatePrimaryLoggingCompleteDate(value) }}
+            >
+              {(field) => {
+                const invalidText = fieldError(field.state.meta.errors);
+                return (
+                  <DatePicker
+                    datePickerType="single"
+                    dateFormat="m/d/Y"
+                    allowInput
+                    maxDate={today}
+                    value={field.state.value ? [new Date(`${field.state.value}T00:00:00`)] : []}
+                    onChange={([date]) => {
+                      if (date) {
+                        const year = date.getFullYear();
+                        const month = String(date.getMonth() + 1).padStart(2, '0');
+                        const day = String(date.getDate()).padStart(2, '0');
+                        field.handleChange(`${year}-${month}-${day}`);
+                      } else {
+                        field.handleChange('');
+                      }
+                    }}
+                  >
+                    <DatePickerInput
+                      id="interior-primary-logging-date"
+                      labelText="Primary logging complete"
+                      placeholder="mm/dd/yyyy"
+                      onBlur={field.handleBlur}
+                      invalid={Boolean(invalidText)}
+                      invalidText={invalidText}
+                    />
+                  </DatePicker>
+                );
+              }}
             </form.Field>
           </Column>
 
@@ -154,7 +179,13 @@ export const InteriorSubmissionDetailsFormView = ({
                   id="interior-dispersed-retention"
                   labelText="Is dispersed retention >= 50%?"
                   toggled={field.state.value}
-                  onToggle={field.handleChange}
+                  onToggle={(toggled) => {
+                    field.handleChange(toggled);
+                    if (!toggled) {
+                      form.setFieldValue('dispersedRetentionPct', '');
+                      form.setFieldValue('dispersedRetentionExplanation', '');
+                    }
+                  }}
                   labelA="No"
                   labelB="Yes"
                 />
@@ -164,57 +195,101 @@ export const InteriorSubmissionDetailsFormView = ({
 
           <Column max={3} xlg={4} lg={5} md={8} sm={4}>
             <ConditionalField
-              form={form}
+              form={form as never}
               conditions={{ field: 'hasDispersedRetention', operator: 'truthy' }}
               fieldNames={['dispersedRetentionPct', 'dispersedRetentionExplanation']}
             >
-              <form.Field name="dispersedRetentionPct">
-                {(field) => (
-                  <TextInput
-                    id="interior-dispersed-retention-percentage"
-                    labelText="Dispersed retention percentage"
-                    type="number"
-                    value={field.state.value}
-                    onChange={(event) => field.handleChange(event.currentTarget.value)}
-                  />
-                )}
+              <form.Field
+                name="dispersedRetentionPct"
+                validators={{
+                  onChangeListenTo: ['hasDispersedRetention'],
+                  onChange: ({ value, fieldApi }) =>
+                    validateDispersedRetentionPct(
+                      value,
+                      fieldApi.form.getFieldValue('hasDispersedRetention'),
+                    ),
+                }}
+              >
+                {(field) => {
+                  const invalidText = fieldError(field.state.meta.errors);
+                  return (
+                    <TextInput
+                      id="interior-dispersed-retention-percentage"
+                      labelText="Dispersed retention percentage"
+                      type="number"
+                      min={50}
+                      max={100}
+                      step={1}
+                      value={field.state.value}
+                      onBlur={field.handleBlur}
+                      onChange={(event) => field.handleChange(event.currentTarget.value)}
+                      invalid={Boolean(invalidText)}
+                      invalidText={invalidText}
+                    />
+                  );
+                }}
               </form.Field>
             </ConditionalField>
           </Column>
 
           <Column max={10} xlg={8} lg={6} md={8} sm={4}>
             <ConditionalField
-              form={form}
+              form={form as never}
               conditions={{ field: 'hasDispersedRetention', operator: 'truthy' }}
               fieldNames={['dispersedRetentionPct', 'dispersedRetentionExplanation']}
             >
-              <form.Field name="dispersedRetentionExplanation">
-                {(field) => (
-                  <TextArea
-                    id="interior-dispersed-retention-explanation"
-                    labelText="Explain how retention percentage was calculated"
-                    rows={3}
-                    value={field.state.value}
-                    onChange={(event: ChangeEvent<HTMLTextAreaElement>) =>
-                      field.handleChange(event.currentTarget.value)
-                    }
-                  />
-                )}
+              <form.Field
+                name="dispersedRetentionExplanation"
+                validators={{
+                  onChangeListenTo: ['hasDispersedRetention'],
+                  onChange: ({ value, fieldApi }) =>
+                    validateDispersedRetentionExplanation(
+                      value,
+                      fieldApi.form.getFieldValue('hasDispersedRetention'),
+                    ),
+                }}
+              >
+                {(field) => {
+                  const invalidText = fieldError(field.state.meta.errors);
+                  return (
+                    <TextArea
+                      id="interior-dispersed-retention-explanation"
+                      labelText="Explain how retention percentage was calculated"
+                      rows={3}
+                      value={field.state.value}
+                      onBlur={field.handleBlur}
+                      onChange={(event: ChangeEvent<HTMLTextAreaElement>) =>
+                        field.handleChange(event.currentTarget.value)
+                      }
+                      invalid={Boolean(invalidText)}
+                      invalidText={invalidText}
+                    />
+                  );
+                }}
               </form.Field>
             </ConditionalField>
           </Column>
 
           <Column max={16} xlg={16} lg={16} md={8} sm={4}>
-            <form.Field name="districtAverageCriteriaCode">
+            <form.Field name="districtAverageCriteriaCodes">
               {(field) => (
-                <ComboBox
+                <ActiveMultiSelect
                   id="interior-district-average-criteria"
                   titleText="District average criteria"
+                  placeholder="Select criteria"
                   helperText="Select the district average criteria that applies to this submission"
                   items={[...districtAverageCriteria]}
-                  itemToString={(item) => item?.description ?? ''}
-                  selectedItem={toSelectedItem(districtAverageCriteria, field.state.value)}
-                  onChange={({ selectedItem }) => field.handleChange(selectedItem?.code ?? '')}
+                  itemToString={activeMSItemToString}
+                  selectedItems={toSelectedItems(districtAverageCriteria, field.state.value)}
+                  onChange={(data) => {
+                    const selected = (data.selectedItems ?? []) as Array<{
+                      code?: string | null;
+                      value?: string;
+                    }>;
+                    field.handleChange(
+                      selected.map((item) => item.code ?? item.value ?? '').filter(Boolean),
+                    );
+                  }}
                 />
               )}
             </form.Field>

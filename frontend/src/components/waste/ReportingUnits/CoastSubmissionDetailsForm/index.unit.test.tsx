@@ -28,7 +28,7 @@ describe('CoastSubmissionDetailsForm', () => {
     expect(screen.getByRole('spinbutton', { name: 'Cable yarding (ha)' })).toBeTruthy();
     expect(screen.getByRole('spinbutton', { name: 'Ground based (ha)' })).toBeTruthy();
     expect(screen.getByRole('spinbutton', { name: 'Skyline logging (ha)' })).toBeTruthy();
-    expect(screen.getByRole('combobox', { name: 'District average criteria' })).toBeTruthy();
+    expect(screen.getByText('District average criteria')).toBeTruthy();
     expect(screen.getByTestId('card-item-content-waste-benchmark-(m³/ha)').textContent).toBe('25');
     expect(screen.queryByRole('combobox', { name: 'BEC zone' })).toBeNull();
     expect(screen.queryByRole('combobox', { name: 'BEC subzone/variant' })).toBeNull();
@@ -84,7 +84,7 @@ describe('CoastSubmissionDetailsForm', () => {
           isHeliLogging: true,
           cableYardingAreaHa: '12.500',
           wasteBenchmark: '25',
-          districtAverageCriteriaCode: '7',
+          districtAverageCriteriaCodes: ['7'],
         }}
       />,
     );
@@ -94,7 +94,7 @@ describe('CoastSubmissionDetailsForm', () => {
     expect(screen.getByText('Yes')).toBeTruthy();
     expect(screen.getByText('12.500')).toBeTruthy();
     expect(screen.getByText('25')).toBeTruthy();
-    expect(screen.getByText('Criterion 7')).toBeTruthy();
+    expect(screen.getByText(/Criterion 7/)).toBeTruthy();
     expect(screen.queryByRole('combobox', { name: 'Maturity' })).toBeNull();
     expect(screen.queryByRole('spinbutton', { name: 'Cable yarding (ha)' })).toBeNull();
   });
@@ -125,5 +125,34 @@ describe('CoastSubmissionDetailsForm', () => {
 
     expect(onAddRoadPermitTimberMark).toHaveBeenCalledOnce();
     expect(screen.getByRole('button', { name: 'Add road permit timber mark' })).toBeTruthy();
+  });
+
+  it('clears and disables the three harvest-area fields when heli logging is on (BR-4, D31)', async () => {
+    const user = userEvent.setup();
+    await renderWithAppAsync(<CoastSubmissionDetailsForm {...options} />);
+
+    const cable = screen.getByRole('spinbutton', {
+      name: 'Cable yarding (ha)',
+    }) as HTMLInputElement;
+    const ground = screen.getByRole('spinbutton', {
+      name: 'Ground based (ha)',
+    }) as HTMLInputElement;
+    const skyline = screen.getByRole('spinbutton', {
+      name: 'Skyline logging (ha)',
+    }) as HTMLInputElement;
+
+    await user.type(cable, '1.5');
+    expect(cable.value).toBe('1.5');
+    expect(cable.disabled).toBe(false);
+    expect(skyline).toBeTruthy(); // D31: Skyline stays visible
+
+    await user.click(screen.getByRole('switch', { name: 'Heli logging' }));
+
+    expect(cable.disabled).toBe(true);
+    expect(ground.disabled).toBe(true);
+    expect(skyline.disabled).toBe(true);
+    expect(cable.value).toBe('');
+    expect(ground.value).toBe('');
+    expect(skyline.value).toBe('');
   });
 });

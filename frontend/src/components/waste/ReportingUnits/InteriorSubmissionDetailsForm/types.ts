@@ -14,7 +14,8 @@ export interface InteriorSubmissionDetailsValues {
   readonly hasDispersedRetention: boolean;
   readonly dispersedRetentionPct: string;
   readonly dispersedRetentionExplanation: string;
-  readonly districtAverageCriteriaCode: string;
+  /** Multi-select (D28). Stores selected criteria codes. */
+  readonly districtAverageCriteriaCodes: readonly string[];
 }
 
 /** One BEC subzone/variant option, scoped to its parent BEC zone. */
@@ -57,7 +58,31 @@ export const EMPTY_VALUES: InteriorSubmissionDetailsValues = {
   hasDispersedRetention: false,
   dispersedRetentionPct: '',
   dispersedRetentionExplanation: '',
-  districtAverageCriteriaCode: '',
+  districtAverageCriteriaCodes: [],
+};
+
+/** Normalizes legacy single-code criteria to the D28 multi-select array shape. */
+export const normalizeInitialValues = (
+  initialValues?: Partial<InteriorSubmissionDetailsValues> & {
+    readonly districtAverageCriteriaCode?: string;
+  },
+): InteriorSubmissionDetailsValues => {
+  if (!initialValues) return EMPTY_VALUES;
+  const legacy = (initialValues as { districtAverageCriteriaCode?: string })
+    .districtAverageCriteriaCode;
+  const codes =
+    initialValues.districtAverageCriteriaCodes ??
+    (legacy ? [legacy] : EMPTY_VALUES.districtAverageCriteriaCodes);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { districtAverageCriteriaCode: _legacy, ...rest } = initialValues as Record<
+    string,
+    unknown
+  >;
+  return {
+    ...EMPTY_VALUES,
+    ...(rest as Partial<InteriorSubmissionDetailsValues>),
+    districtAverageCriteriaCodes: codes,
+  };
 };
 
 /**

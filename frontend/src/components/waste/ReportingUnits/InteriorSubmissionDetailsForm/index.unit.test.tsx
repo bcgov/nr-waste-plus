@@ -29,7 +29,7 @@ describe('InteriorSubmissionDetailsForm', () => {
     expect(screen.getByRole('combobox', { name: 'Harvest status' })).toBeTruthy();
     expect(screen.getByRole('combobox', { name: 'BEC zone' })).toBeTruthy();
     expect(screen.getByRole('combobox', { name: 'BEC subzone/variant' })).toBeTruthy();
-    expect(screen.getByRole('combobox', { name: 'District average criteria' })).toBeTruthy();
+    expect(screen.getByText('District average criteria')).toBeTruthy();
     expect(screen.getByText('Dry belt')).toBeTruthy();
     expect(screen.getByTestId('card-item-content-waste-benchmark-(m³/ha)').textContent).toBe('4');
     expect(screen.getByRole('button', { name: 'Add secondary timber mark' })).toBeTruthy();
@@ -77,7 +77,7 @@ describe('InteriorSubmissionDetailsForm', () => {
           becSubzoneVariantCode: 'un',
           benchmarkZone: 'Dry belt',
           wasteBenchmark: '4',
-          districtAverageCriteriaCode: '7',
+          districtAverageCriteriaCodes: ['7'],
         }}
       />,
     );

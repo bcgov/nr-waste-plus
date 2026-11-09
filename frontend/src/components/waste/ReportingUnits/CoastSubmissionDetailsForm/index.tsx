@@ -13,8 +13,22 @@ import { Add } from '@carbon/react/icons';
 import { useForm } from '@tanstack/react-form';
 import { type ChangeEvent, type FC } from 'react';
 
+import ActiveMultiSelect from '@/components/Form/ActiveMultiSelect';
 import ConditionalField from '@/components/Form/ConditionalField';
 import ReadonlyInput from '@/components/Form/ReadonlyInput';
+import { activeMSItemToString } from '@/components/waste/WasteSearch/WasteSearchFiltersActive/utils';
+import {
+  toDateValue,
+  toIsoDate,
+  toSelectedItem,
+  toSelectedItems,
+  toYesNo,
+} from '@/components/waste/ReportingUnits/BlockDetailsTab/cards/SubmissionDetailsCard/shared/format';
+import {
+  validateDispersedRetentionExplanation,
+  validateDispersedRetentionPct,
+  validatePrimaryLoggingCompleteDate,
+} from '@/components/waste/ReportingUnits/BlockDetailsTab/cards/SubmissionDetailsCard/shared/validation';
 
 import type { CodeDescriptionDto } from '@/types/search.types';
 
@@ -32,12 +46,15 @@ export interface CoastSubmissionDetailsValues {
   readonly hasDispersedRetention: boolean;
   readonly dispersedRetentionPct: string;
   readonly dispersedRetentionExplanation: string;
-  readonly districtAverageCriteriaCode: string;
+  /** Multi-select (D28). */
+  readonly districtAverageCriteriaCodes: readonly string[];
 }
 
 export interface CoastSubmissionDetailsFormProps {
   readonly mode: 'form' | 'read-only';
-  readonly initialValues?: Partial<CoastSubmissionDetailsValues>;
+  readonly initialValues?: Partial<CoastSubmissionDetailsValues> & {
+    readonly districtAverageCriteriaCode?: string;
+  };
   readonly harvestStatuses: readonly CodeDescriptionDto[];
   readonly maturityOptions: readonly CodeDescriptionDto[];
   readonly districtAverageCriteria: readonly CodeDescriptionDto[];
@@ -57,7 +74,26 @@ const EMPTY_VALUES: CoastSubmissionDetailsValues = {
   hasDispersedRetention: false,
   dispersedRetentionPct: '',
   dispersedRetentionExplanation: '',
-  districtAverageCriteriaCode: '',
+  districtAverageCriteriaCodes: [],
+};
+
+const normalizeInitialValues = (
+  initialValues?: CoastSubmissionDetailsFormProps['initialValues'],
+): CoastSubmissionDetailsValues => {
+  if (!initialValues) return EMPTY_VALUES;
+  const legacy = initialValues.districtAverageCriteriaCode;
+  const codes =
+    initialValues.districtAverageCriteriaCodes ??
+    (legacy ? [legacy] : EMPTY_VALUES.districtAverageCriteriaCodes);
+  const { districtAverageCriteriaCode: _legacy, ...rest } = initialValues as Record<
+    string,
+    unknown
+  >;
+  return {
+    ...EMPTY_VALUES,
+    ...(rest as Partial<CoastSubmissionDetailsValues>),
+    districtAverageCriteriaCodes: codes,
+  };
 };
 
 /** Area fields share the 3-decimal entry rule (product decision D15, `numeric(12,3)` columns). */
@@ -73,20 +109,9 @@ type AreaFieldName = keyof typeof AREA_FIELD_LABELS;
 
 const AREA_FIELD_NAMES = Object.keys(AREA_FIELD_LABELS) as AreaFieldName[];
 
-const toSelectedItem = (
-  options: readonly CodeDescriptionDto[],
-  code: string,
-): CodeDescriptionDto | null => options.find((option) => option.code === code) ?? null;
-
-const toYesNo = (value: boolean): string => (value ? 'Yes' : 'No');
-
-const toDateValue = (isoDate: string): Date[] => (isoDate ? [new Date(`${isoDate}T00:00:00`)] : []);
-
-const toIsoDate = (date: Date): string => {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
+const fieldError = (errors: readonly unknown[]): string | undefined => {
+  const first = errors.find((error) => typeof error === 'string' && error.length > 0);
+  return typeof first === 'string' ? first : undefined;
 };
 
 /**
@@ -108,10 +133,11 @@ const CoastSubmissionDetailsForm: FC<CoastSubmissionDetailsFormProps> = ({
   onAddSecondaryTimberMark,
   onAddRoadPermitTimberMark,
 }) => {
-  const form = useForm({ defaultValues: { ...EMPTY_VALUES, ...initialValues } });
+  const form = useForm({ defaultValues: normalizeInitialValues(initialValues) });
+  const today = new Date();
 
   if (mode === 'read-only') {
-    const values = { ...EMPTY_VALUES, ...form.state.values };
+    const values = normalizeInitialValues(initialValues);
 
     return (
       <section className="coast-submission-details" aria-labelledby="coast-submission-heading">
@@ -231,10 +257,9 @@ const CoastSubmissionDetailsForm: FC<CoastSubmissionDetailsFormProps> = ({
           )}
           <Column max={16} xlg={16} lg={16} md={8} sm={4}>
             <ReadonlyInput label="District average criteria">
-              {
-                toSelectedItem(districtAverageCriteria, values.districtAverageCriteriaCode)
-                  ?.description
-              }
+              {toSelectedItems(districtAverageCriteria, values.districtAverageCriteriaCodes)
+                .map((item) => item.description)
+                .join(', ') || undefined}
             </ReadonlyInput>
           </Column>
         </Grid>
@@ -242,7 +267,7 @@ const CoastSubmissionDetailsForm: FC<CoastSubmissionDetailsFormProps> = ({
     );
   }
 
-  const renderAreaField = (name: AreaFieldName) => (
+  const renderAreaField = (name: AreaFieldName, disabled: boolean) => (
     <form.Field name={name}>
       {(field) => (
         <TextInput
@@ -252,6 +277,7 @@ const CoastSubmissionDetailsForm: FC<CoastSubmissionDetailsFormProps> = ({
           step="0.001"
           min="0"
           value={field.state.value}
+          disabled={disabled}
           onChange={(event: ChangeEvent<HTMLInputElement>) => {
             const next = event.currentTarget.value;
             if (THREE_DECIMAL_PATTERN.test(next)) {
@@ -270,27 +296,38 @@ const CoastSubmissionDetailsForm: FC<CoastSubmissionDetailsFormProps> = ({
         <p>Complete all fields and click Save before leaving this tab</p>
         <Grid className="coast-submission-details__details-grid">
           <Column max={3} xlg={4} lg={5} md={4} sm={4}>
-            <form.Field name="primaryLoggingCompleteDate">
-              {(field) => (
-                <DatePicker
-                  datePickerType="single"
-                  dateFormat="m/d/Y"
-                  allowInput
-                  value={toDateValue(field.state.value)}
-                  onChange={([date]) => {
-                    if (date) {
-                      field.handleChange(toIsoDate(date));
-                    }
-                  }}
-                >
-                  <DatePickerInput
-                    id="coast-primary-logging-date"
-                    labelText="Primary logging complete"
-                    placeholder="mm/dd/yyyy"
-                    onBlur={field.handleBlur}
-                  />
-                </DatePicker>
-              )}
+            <form.Field
+              name="primaryLoggingCompleteDate"
+              validators={{ onChange: ({ value }) => validatePrimaryLoggingCompleteDate(value) }}
+            >
+              {(field) => {
+                const invalidText = fieldError(field.state.meta.errors);
+                return (
+                  <DatePicker
+                    datePickerType="single"
+                    dateFormat="m/d/Y"
+                    allowInput
+                    maxDate={today}
+                    value={toDateValue(field.state.value)}
+                    onChange={([date]) => {
+                      if (date) {
+                        field.handleChange(toIsoDate(date));
+                      } else {
+                        field.handleChange('');
+                      }
+                    }}
+                  >
+                    <DatePickerInput
+                      id="coast-primary-logging-date"
+                      labelText="Primary logging complete"
+                      placeholder="mm/dd/yyyy"
+                      onBlur={field.handleBlur}
+                      invalid={Boolean(invalidText)}
+                      invalidText={invalidText}
+                    />
+                  </DatePicker>
+                );
+              }}
             </form.Field>
           </Column>
 
@@ -331,7 +368,14 @@ const CoastSubmissionDetailsForm: FC<CoastSubmissionDetailsFormProps> = ({
                   id="coast-heli-logging"
                   labelText="Heli logging"
                   toggled={field.state.value}
-                  onToggle={field.handleChange}
+                  onToggle={(toggled) => {
+                    field.handleChange(toggled);
+                    if (toggled) {
+                      form.setFieldValue('cableYardingAreaHa', '');
+                      form.setFieldValue('groundBasedAreaHa', '');
+                      form.setFieldValue('skylineLoggingAreaHa', '');
+                    }
+                  }}
                   labelA="No"
                   labelB="Yes"
                 />
@@ -339,11 +383,15 @@ const CoastSubmissionDetailsForm: FC<CoastSubmissionDetailsFormProps> = ({
             </form.Field>
           </Column>
 
-          {AREA_FIELD_NAMES.map((name) => (
-            <Column key={name} max={2} xlg={3} lg={4} md={4} sm={4}>
-              {renderAreaField(name)}
-            </Column>
-          ))}
+          <form.Subscribe selector={(state) => state.values.isHeliLogging}>
+            {(isHeliLogging) =>
+              AREA_FIELD_NAMES.map((name) => (
+                <Column key={name} max={2} xlg={3} lg={4} md={4} sm={4}>
+                  {renderAreaField(name, isHeliLogging)}
+                </Column>
+              ))
+            }
+          </form.Subscribe>
 
           <Column max={2} xlg={3} lg={4} md={4} sm={4}>
             <ReadonlyInput label="Waste benchmark (m³/ha)">
@@ -358,7 +406,13 @@ const CoastSubmissionDetailsForm: FC<CoastSubmissionDetailsFormProps> = ({
                   id="coast-dispersed-retention"
                   labelText="Is dispersed retention >= 50%?"
                   toggled={field.state.value}
-                  onToggle={field.handleChange}
+                  onToggle={(toggled) => {
+                    field.handleChange(toggled);
+                    if (!toggled) {
+                      form.setFieldValue('dispersedRetentionPct', '');
+                      form.setFieldValue('dispersedRetentionExplanation', '');
+                    }
+                  }}
                   labelA="No"
                   labelB="Yes"
                 />
@@ -368,57 +422,101 @@ const CoastSubmissionDetailsForm: FC<CoastSubmissionDetailsFormProps> = ({
 
           <Column max={3} xlg={4} lg={5} md={8} sm={4}>
             <ConditionalField
-              form={form}
+              form={form as never}
               conditions={{ field: 'hasDispersedRetention', operator: 'truthy' }}
               fieldNames={['dispersedRetentionPct', 'dispersedRetentionExplanation']}
             >
-              <form.Field name="dispersedRetentionPct">
-                {(field) => (
-                  <TextInput
-                    id="coast-dispersed-retention-percentage"
-                    labelText="Dispersed retention percentage"
-                    type="number"
-                    value={field.state.value}
-                    onChange={(event) => field.handleChange(event.currentTarget.value)}
-                  />
-                )}
+              <form.Field
+                name="dispersedRetentionPct"
+                validators={{
+                  onChangeListenTo: ['hasDispersedRetention'],
+                  onChange: ({ value, fieldApi }) =>
+                    validateDispersedRetentionPct(
+                      value,
+                      fieldApi.form.getFieldValue('hasDispersedRetention'),
+                    ),
+                }}
+              >
+                {(field) => {
+                  const invalidText = fieldError(field.state.meta.errors);
+                  return (
+                    <TextInput
+                      id="coast-dispersed-retention-percentage"
+                      labelText="Dispersed retention percentage"
+                      type="number"
+                      min={50}
+                      max={100}
+                      step={1}
+                      value={field.state.value}
+                      onBlur={field.handleBlur}
+                      onChange={(event) => field.handleChange(event.currentTarget.value)}
+                      invalid={Boolean(invalidText)}
+                      invalidText={invalidText}
+                    />
+                  );
+                }}
               </form.Field>
             </ConditionalField>
           </Column>
 
           <Column max={10} xlg={8} lg={6} md={8} sm={4}>
             <ConditionalField
-              form={form}
+              form={form as never}
               conditions={{ field: 'hasDispersedRetention', operator: 'truthy' }}
               fieldNames={['dispersedRetentionPct', 'dispersedRetentionExplanation']}
             >
-              <form.Field name="dispersedRetentionExplanation">
-                {(field) => (
-                  <TextArea
-                    id="coast-dispersed-retention-explanation"
-                    labelText="Explain how retention percentage was calculated"
-                    rows={3}
-                    value={field.state.value}
-                    onChange={(event: ChangeEvent<HTMLTextAreaElement>) =>
-                      field.handleChange(event.currentTarget.value)
-                    }
-                  />
-                )}
+              <form.Field
+                name="dispersedRetentionExplanation"
+                validators={{
+                  onChangeListenTo: ['hasDispersedRetention'],
+                  onChange: ({ value, fieldApi }) =>
+                    validateDispersedRetentionExplanation(
+                      value,
+                      fieldApi.form.getFieldValue('hasDispersedRetention'),
+                    ),
+                }}
+              >
+                {(field) => {
+                  const invalidText = fieldError(field.state.meta.errors);
+                  return (
+                    <TextArea
+                      id="coast-dispersed-retention-explanation"
+                      labelText="Explain how retention percentage was calculated"
+                      rows={3}
+                      value={field.state.value}
+                      onBlur={field.handleBlur}
+                      onChange={(event: ChangeEvent<HTMLTextAreaElement>) =>
+                        field.handleChange(event.currentTarget.value)
+                      }
+                      invalid={Boolean(invalidText)}
+                      invalidText={invalidText}
+                    />
+                  );
+                }}
               </form.Field>
             </ConditionalField>
           </Column>
 
           <Column max={16} xlg={16} lg={16} md={8} sm={4}>
-            <form.Field name="districtAverageCriteriaCode">
+            <form.Field name="districtAverageCriteriaCodes">
               {(field) => (
-                <ComboBox
+                <ActiveMultiSelect
                   id="coast-district-average-criteria"
                   titleText="District average criteria"
+                  placeholder="Select criteria"
                   helperText="Select the district average criteria that applies to this submission"
                   items={[...districtAverageCriteria]}
-                  itemToString={(item) => item?.description ?? ''}
-                  selectedItem={toSelectedItem(districtAverageCriteria, field.state.value)}
-                  onChange={({ selectedItem }) => field.handleChange(selectedItem?.code ?? '')}
+                  itemToString={activeMSItemToString}
+                  selectedItems={toSelectedItems(districtAverageCriteria, field.state.value)}
+                  onChange={(data) => {
+                    const selected = (data.selectedItems ?? []) as Array<{
+                      code?: string | null;
+                      value?: string;
+                    }>;
+                    field.handleChange(
+                      selected.map((item) => item.code ?? item.value ?? '').filter(Boolean),
+                    );
+                  }}
                 />
               )}
             </form.Field>
