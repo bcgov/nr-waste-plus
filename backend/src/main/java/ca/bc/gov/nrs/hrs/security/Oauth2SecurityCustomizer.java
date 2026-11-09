@@ -1,8 +1,8 @@
 package ca.bc.gov.nrs.hrs.security;
 
-import ca.bc.gov.nrs.hrs.provider.cognito.CognitoUserInfoClient;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
@@ -20,15 +20,19 @@ import org.springframework.security.oauth2.server.resource.authentication.JwtAut
 import org.springframework.stereotype.Component;
 
 /**
- * Customize OAuth2 resource server configuration to extract authorities from the JWT's {@code
- * cognito:groups} claim and to configure the JWK set URI.
+ * Customize OAuth2 resource server configuration to extract authorities from the Keycloak role
+ * claims and to configure the JWK set URI.
  *
- * <p>The customizer sets a {@link Converter} that uses the {@code cognito:groups} claim as the
- * primary source of granted authorities. When the access token carries no groups, which can happen
- * when an access token rather than an ID token is used, the converter falls back to calling the
- * Cognito {@code /oauth2/userInfo} endpoint to retrieve the groups from there. This guarantees that
- * role-based authorization decisions in {@link ApiAuthorizationCustomizer} always have authorities
- * available.
+ * <p>Authorities come from the {@code client_roles} claim (CSS-era FAM). When that claim is absent
+ * or empty, the converter falls back to {@code resource_access.<azp>.roles} (stock Keycloak).
+ * {@code FAM:} bookkeeping entries (per-grant expiry records such as {@code
+ * FAM:EXPIRES:2026-09-30:WASTE_PLUS_ADMIN}) never become authorities.
+ *
+ * <p><strong>Token validation (epic #1506):</strong> the decoder requires the {@code azp}
+ * (authorized party) claim to match the configured {@code client-id}. As a transitional measure for
+ * the Cognito-to-Keycloak migration, a token that carries no {@code azp} is still accepted when its
+ * legacy {@code client_id} claim matches; that fallback branch is removed in the S3 sweep of the
+ * migration.
  */
 @Component
 public class Oauth2SecurityCustomizer
@@ -37,26 +41,37 @@ public class Oauth2SecurityCustomizer
                 .OAuth2ResourceServerConfigurer<
             HttpSecurity>> {
 
-  private final CognitoUserInfoClient cognitoUserInfoClient;
+  /** Claim naming the authorized party in Keycloak access tokens. */
+  static final String CLAIM_AZP = "azp";
+
+  /** Legacy Cognito claim naming the client the token was issued to. */
+  static final String CLAIM_CLIENT_ID = "client_id";
+
+  /** Claim carrying the CSS-era FAM client roles (primary source of authorities). */
+  static final String CLAIM_CLIENT_ROLES = "client_roles";
+
+  /** Claim carrying stock-Keycloak per-client role maps (fallback source of authorities). */
+  static final String CLAIM_RESOURCE_ACCESS = "resource_access";
+
+  /** Prefix of FAM expiry-bookkeeping entries that must never become authorities. */
+  static final String FAM_EXPIRY_PREFIX = "FAM:";
+
   private final String issuerUri;
   private final String expectedClientId;
 
   private final String jwkSetUri;
 
   /**
-   * Creates the customizer from the configured Cognito resource-server properties.
+   * Creates the customizer from the configured Keycloak resource-server properties.
    *
-   * @param cognitoUserInfoClient client used to resolve the caller's Cognito groups
    * @param issuerUri expected JWT issuer URI
-   * @param expectedClientId {@code client_id} the token must carry
+   * @param expectedClientId {@code azp} (or transitional {@code client_id}) the token must carry
    * @param jwkSetUri JWK set used to verify token signatures
    */
   public Oauth2SecurityCustomizer(
-      CognitoUserInfoClient cognitoUserInfoClient,
       @Value("${spring.security.oauth2.resourceserver.jwt.issuer-uri}") String issuerUri,
       @Value("${spring.security.oauth2.resourceserver.jwt.client-id}") String expectedClientId,
       @Value("${spring.security.oauth2.resourceserver.jwt.jwk-set-uri}") String jwkSetUri) {
-    this.cognitoUserInfoClient = cognitoUserInfoClient;
     this.issuerUri = issuerUri;
     this.expectedClientId = expectedClientId;
     this.jwkSetUri = jwkSetUri;
@@ -72,52 +87,77 @@ public class Oauth2SecurityCustomizer
     decoder.setJwtValidator(
         new org.springframework.security.oauth2.core.DelegatingOAuth2TokenValidator<>(
             JwtValidators.createDefaultWithIssuer(issuerUri),
-            new ClientIdValidator(expectedClientId)));
+            new AzpClientIdValidator(expectedClientId)));
     customize.jwt(jwt -> jwt.jwtAuthenticationConverter(converter()).decoder(decoder));
   }
 
-  private record ClientIdValidator(String expectedClientId)
+  /**
+   * Validates that the token was issued for the configured client.
+   *
+   * <p>A token is accepted when its {@code azp} claim matches the expected client id. Transitional
+   * fallback for epic #1506: a token without {@code azp} is also accepted while its legacy Cognito
+   * {@code client_id} claim matches — the fallback is removed in the S3 sweep.
+   */
+  private record AzpClientIdValidator(String expectedClientId)
       implements OAuth2TokenValidator<Jwt> {
 
     @Override
     public OAuth2TokenValidatorResult validate(Jwt token) {
-      String clientId = token.getClaimAsString("client_id");
-      if (expectedClientId.equals(clientId)) {
+      if (expectedClientId.equals(token.getClaimAsString(CLAIM_AZP))
+          || expectedClientId.equals(token.getClaimAsString(CLAIM_CLIENT_ID))) {
         return OAuth2TokenValidatorResult.success();
       }
       return OAuth2TokenValidatorResult.failure(
-          new OAuth2Error("invalid_token", "Token client_id is not authorized", null));
+          new OAuth2Error("invalid_token", "Token azp is not authorized", null));
     }
   }
 
   private Converter<Jwt, AbstractAuthenticationToken> converter() {
-    org.springframework.security.oauth2.server.resource.authentication
-            .JwtGrantedAuthoritiesConverter
-        authConverter =
-            new org.springframework.security.oauth2.server.resource.authentication
-                .JwtGrantedAuthoritiesConverter();
-    authConverter.setAuthoritiesClaimName("cognito:groups");
-    authConverter.setAuthorityPrefix("");
-
-    return jwt -> {
-      Collection<GrantedAuthority> authorities = authConverter.convert(jwt);
-
-      if (authorities.isEmpty()) {
-        authorities = fetchAuthoritiesFromUserInfo(jwt.getTokenValue());
-      }
-
-      return new JwtAuthenticationToken(jwt, authorities);
-    };
+    return jwt -> new JwtAuthenticationToken(jwt, toAuthorities(jwt));
   }
 
-  private Collection<GrantedAuthority> fetchAuthoritiesFromUserInfo(String accessToken) {
-    return cognitoUserInfoClient
-        .fetchUserInfo(accessToken)
-        .map(
-            response ->
-                response.groups().stream()
-                    .<GrantedAuthority>map(SimpleGrantedAuthority::new)
-                    .toList())
-        .orElse(List.of());
+  /**
+   * Resolves the granted authorities of the token from the Keycloak role claims.
+   *
+   * <p>{@code client_roles} is the primary source; when absent or empty, {@code
+   * resource_access.<azp>.roles} is consulted. {@code FAM:} expiry-bookkeeping entries are
+   * filtered out and never become authorities.
+   *
+   * @param jwt the decoded access token
+   * @return the granted authorities carried by the token
+   */
+  private Collection<GrantedAuthority> toAuthorities(Jwt jwt) {
+    return readRoles(jwt).stream()
+        .filter(role -> !role.startsWith(FAM_EXPIRY_PREFIX))
+        .<GrantedAuthority>map(SimpleGrantedAuthority::new)
+        .toList();
+  }
+
+  private List<String> readRoles(Jwt jwt) {
+    if (jwt.getClaims().get(CLAIM_CLIENT_ROLES) instanceof List<?> clientRoles
+        && !clientRoles.isEmpty()) {
+      return toStringList(clientRoles);
+    }
+    return readResourceAccessRoles(jwt);
+  }
+
+  private List<String> readResourceAccessRoles(Jwt jwt) {
+    if (!(jwt.getClaims().get(CLAIM_RESOURCE_ACCESS) instanceof Map<?, ?> resourceAccess)) {
+      return List.of();
+    }
+    if (!(resourceAccess.get(jwt.getClaimAsString(CLAIM_AZP)) instanceof Map<?, ?> client)) {
+      return List.of();
+    }
+    if (!(client.get("roles") instanceof List<?> roles)) {
+      return List.of();
+    }
+    return toStringList(roles);
+  }
+
+  private static List<String> toStringList(List<?> entries) {
+    return entries.stream()
+        .filter(String.class::isInstance)
+        .map(String.class::cast)
+        .toList();
   }
 }

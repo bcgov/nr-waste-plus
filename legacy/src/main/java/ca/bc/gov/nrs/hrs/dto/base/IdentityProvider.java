@@ -2,9 +2,7 @@ package ca.bc.gov.nrs.hrs.dto.base;
 
 import java.util.Arrays;
 import java.util.Optional;
-import lombok.AccessLevel;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 
 /**
  * Enumeration of the identity providers our application works with.
@@ -13,15 +11,29 @@ import lombok.RequiredArgsConstructor;
  * application can map incoming tokens to one of the supported providers.
  * </p>
  */
-@RequiredArgsConstructor(access = AccessLevel.PRIVATE)
 public enum IdentityProvider {
-  IDIR("idir"),
+  /**
+   * BC Government IDIR. Keycloak standard-realm tokens carry {@code azureidir}
+   * (the Azure AD-backed IDIR broker) or {@code idir}; both aliases resolve here.
+   */
+  IDIR("idir", "azureidir"),
   BUSINESS_BCEID("bceidbusiness"),
   BCEID("bceid"),
   BCSC("bcsc");
 
   @Getter
   private final String claimName;
+
+  /**
+   * Alternative claim values that resolve to this provider, such as the
+   * Keycloak broker name {@code azureidir}.
+   */
+  private final String[] aliases;
+
+  IdentityProvider(String claimName, String... aliases) {
+    this.claimName = claimName;
+    this.aliases = aliases;
+  }
 
   /**
    * Extract the identity provider from a claim value.
@@ -32,7 +44,11 @@ public enum IdentityProvider {
    */
   public static Optional<IdentityProvider> fromClaim(String provider) {
     return Arrays.stream(values())
-        .filter(enumValue -> enumValue.claimName.equalsIgnoreCase(provider))
+        .filter(
+            enumValue ->
+                enumValue.claimName.equalsIgnoreCase(provider)
+                    || Arrays.stream(enumValue.aliases)
+                        .anyMatch(alias -> alias.equalsIgnoreCase(provider)))
         .findFirst();
   }
 }
