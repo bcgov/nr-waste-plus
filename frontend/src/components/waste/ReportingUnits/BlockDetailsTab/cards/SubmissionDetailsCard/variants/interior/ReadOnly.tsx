@@ -2,6 +2,7 @@ import { Column, Grid } from '@carbon/react';
 
 import ReadonlyInput from '@/components/Form/ReadonlyInput';
 import { toSelectedItems } from '@/components/waste/ReportingUnits/BlockDetailsTab/cards/SubmissionDetailsCard/shared/format';
+import TimberMarkRepeatSection from '@/components/waste/ReportingUnits/BlockDetailsTab/cards/SubmissionDetailsCard/shared/TimberMarkRepeatSection';
 
 import SubmissionDetailsHeader from './Header';
 import { normalizeInitialValues, toSelectedItem } from './types';
@@ -126,6 +127,24 @@ export const InteriorSubmissionDetailsReadOnly = ({
           <ReadonlyInput label="District average criteria">
             {criteriaText || undefined}
           </ReadonlyInput>
+        </Column>
+        <Column max={16} xlg={16} lg={16} md={8} sm={4}>
+          <TimberMarkRepeatSection
+            label="Secondary timber mark"
+            addButtonLabel="Add secondary timber mark"
+            idPrefix="interior-secondary-timber-mark"
+            mode="read-only"
+            marks={[...values.secondaryTimberMarks]}
+            onChange={() => {}}
+          />
+          <TimberMarkRepeatSection
+            label="Road permit timber mark"
+            addButtonLabel="Add road permit timber mark"
+            idPrefix="interior-road-permit-timber-mark"
+            mode="read-only"
+            marks={[...values.roadPermitTimberMarks]}
+            onChange={() => {}}
+          />
         </Column>
       </Grid>
     </section>

@@ -1,5 +1,4 @@
 import {
-  Button,
   Column,
   ComboBox,
   DatePicker,
@@ -9,12 +8,12 @@ import {
   TextInput,
   Toggle,
 } from '@carbon/react';
-import { Add } from '@carbon/react/icons';
 import { useForm } from '@tanstack/react-form';
 import { type ChangeEvent } from 'react';
 
 import ActiveMultiSelect from '@/components/Form/ActiveMultiSelect';
 import ConditionalField from '@/components/Form/ConditionalField';
+import TimberMarkRepeatSection from '@/components/waste/ReportingUnits/BlockDetailsTab/cards/SubmissionDetailsCard/shared/TimberMarkRepeatSection';
 import ReadonlyInput from '@/components/Form/ReadonlyInput';
 import { activeMSItemToString } from '@/components/waste/WasteSearch/WasteSearchFiltersActive/utils';
 import {
@@ -55,8 +54,8 @@ export const InteriorSubmissionDetailsFormView = ({
   becZones,
   becSubzoneVariants,
   districtAverageCriteria,
-  onAddSecondaryTimberMark,
-  onAddRoadPermitTimberMark,
+  onAddSecondaryTimberMark: _onAddSecondaryTimberMark,
+  onAddRoadPermitTimberMark: _onAddRoadPermitTimberMark,
 }: FormViewProps) => {
   const form = useForm({ defaultValues: normalizeInitialValues(initialValues) });
   const today = new Date();
@@ -302,13 +301,31 @@ export const InteriorSubmissionDetailsFormView = ({
 
       <hr />
 
-      <Button kind="ghost" onClick={onAddSecondaryTimberMark} renderIcon={Add}>
-        Add secondary timber mark
-      </Button>
+      <form.Field name="secondaryTimberMarks">
+        {(field) => (
+          <TimberMarkRepeatSection
+            label="Secondary timber mark"
+            addButtonLabel="Add secondary timber mark"
+            idPrefix="interior-secondary-timber-mark"
+            mode="form"
+            marks={field.state.value}
+            onChange={(marks) => field.handleChange(marks)}
+          />
+        )}
+      </form.Field>
 
-      <Button kind="ghost" onClick={onAddRoadPermitTimberMark} renderIcon={Add}>
-        Add road permit timber mark
-      </Button>
+      <form.Field name="roadPermitTimberMarks">
+        {(field) => (
+          <TimberMarkRepeatSection
+            label="Road permit timber mark"
+            addButtonLabel="Add road permit timber mark"
+            idPrefix="interior-road-permit-timber-mark"
+            mode="form"
+            marks={field.state.value}
+            onChange={(marks) => field.handleChange(marks)}
+          />
+        )}
+      </form.Field>
     </section>
   );
 };

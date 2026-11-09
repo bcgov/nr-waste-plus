@@ -1,5 +1,4 @@
 import {
-  Button,
   Column,
   ComboBox,
   DatePicker,
@@ -9,12 +8,12 @@ import {
   TextInput,
   Toggle,
 } from '@carbon/react';
-import { Add } from '@carbon/react/icons';
 import { useForm } from '@tanstack/react-form';
 import { type ChangeEvent, type FC } from 'react';
 
 import ActiveMultiSelect from '@/components/Form/ActiveMultiSelect';
 import ConditionalField from '@/components/Form/ConditionalField';
+import TimberMarkRepeatSection from '@/components/waste/ReportingUnits/BlockDetailsTab/cards/SubmissionDetailsCard/shared/TimberMarkRepeatSection';
 import ReadonlyInput from '@/components/Form/ReadonlyInput';
 import { activeMSItemToString } from '@/components/waste/WasteSearch/WasteSearchFiltersActive/utils';
 import {
@@ -49,6 +48,10 @@ export interface CoastSubmissionDetailsValues {
   readonly dispersedRetentionExplanation: string;
   /** Multi-select (D28). */
   readonly districtAverageCriteriaCodes: readonly string[];
+  /** S6/BR-2: secondary timber marks (max 5, normalized). */
+  readonly secondaryTimberMarks: readonly string[];
+  /** S6/BR-2: road permit timber marks (max 5, normalized). */
+  readonly roadPermitTimberMarks: readonly string[];
 }
 
 export interface CoastSubmissionDetailsFormProps {
@@ -76,6 +79,8 @@ const EMPTY_VALUES: CoastSubmissionDetailsValues = {
   dispersedRetentionPct: '',
   dispersedRetentionExplanation: '',
   districtAverageCriteriaCodes: [],
+  secondaryTimberMarks: [],
+  roadPermitTimberMarks: [],
 };
 
 const normalizeInitialValues = (
@@ -94,6 +99,8 @@ const normalizeInitialValues = (
     ...EMPTY_VALUES,
     ...(rest as Partial<CoastSubmissionDetailsValues>),
     districtAverageCriteriaCodes: codes,
+    secondaryTimberMarks: (rest.secondaryTimberMarks as string[] | undefined) ?? [],
+    roadPermitTimberMarks: (rest.roadPermitTimberMarks as string[] | undefined) ?? [],
   };
 };
 
@@ -131,8 +138,8 @@ const CoastSubmissionDetailsForm: FC<CoastSubmissionDetailsFormProps> = ({
   harvestStatuses,
   maturityOptions,
   districtAverageCriteria,
-  onAddSecondaryTimberMark,
-  onAddRoadPermitTimberMark,
+  onAddSecondaryTimberMark: _onAddSecondaryTimberMark,
+  onAddRoadPermitTimberMark: _onAddRoadPermitTimberMark,
 }) => {
   const form = useForm({ defaultValues: normalizeInitialValues(initialValues) });
   const today = new Date();
@@ -262,6 +269,24 @@ const CoastSubmissionDetailsForm: FC<CoastSubmissionDetailsFormProps> = ({
                 .map((item) => item.description)
                 .join(', ') || undefined}
             </ReadonlyInput>
+          </Column>
+          <Column max={16} xlg={16} lg={16} md={8} sm={4}>
+            <TimberMarkRepeatSection
+              label="Secondary timber mark"
+              addButtonLabel="Add secondary timber mark"
+              idPrefix="coast-secondary-timber-mark"
+              mode="read-only"
+              marks={[...values.secondaryTimberMarks]}
+              onChange={() => {}}
+            />
+            <TimberMarkRepeatSection
+              label="Road permit timber mark"
+              addButtonLabel="Add road permit timber mark"
+              idPrefix="coast-road-permit-timber-mark"
+              mode="read-only"
+              marks={[...values.roadPermitTimberMarks]}
+              onChange={() => {}}
+            />
           </Column>
         </Grid>
       </section>
@@ -527,13 +552,31 @@ const CoastSubmissionDetailsForm: FC<CoastSubmissionDetailsFormProps> = ({
 
       <hr />
 
-      <Button kind="ghost" onClick={onAddSecondaryTimberMark} renderIcon={Add}>
-        Add secondary timber mark
-      </Button>
+      <form.Field name="secondaryTimberMarks">
+        {(field) => (
+          <TimberMarkRepeatSection
+            label="Secondary timber mark"
+            addButtonLabel="Add secondary timber mark"
+            idPrefix="coast-secondary-timber-mark"
+            mode="form"
+            marks={field.state.value}
+            onChange={(marks) => field.handleChange(marks)}
+          />
+        )}
+      </form.Field>
 
-      <Button kind="ghost" onClick={onAddRoadPermitTimberMark} renderIcon={Add}>
-        Add road permit timber mark
-      </Button>
+      <form.Field name="roadPermitTimberMarks">
+        {(field) => (
+          <TimberMarkRepeatSection
+            label="Road permit timber mark"
+            addButtonLabel="Add road permit timber mark"
+            idPrefix="coast-road-permit-timber-mark"
+            mode="form"
+            marks={field.state.value}
+            onChange={(marks) => field.handleChange(marks)}
+          />
+        )}
+      </form.Field>
     </section>
   );
 };

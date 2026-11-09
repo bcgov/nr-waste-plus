@@ -1,4 +1,4 @@
-import { screen } from '@testing-library/react';
+import { fireEvent, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 
@@ -102,20 +102,14 @@ describe('InteriorSubmissionDetailsForm', () => {
     expect(screen.getByTestId('card-item-content-waste-benchmark-(m³/ha)').textContent).toBe('--');
   });
 
-  it('delegates add-mark actions without submitting the local form', async () => {
-    const onAddSecondaryTimberMark = vi.fn();
+  it('adds a secondary timber mark section with BR-2 normalization (S6)', async () => {
     const user = userEvent.setup();
-    await renderWithAppAsync(
-      <InteriorSubmissionDetailsForm
-        {...options}
-        onAddSecondaryTimberMark={onAddSecondaryTimberMark}
-      />,
-    );
+    await renderWithAppAsync(<InteriorSubmissionDetailsForm {...options} />);
 
     await user.click(screen.getByRole('button', { name: 'Add secondary timber mark' }));
-
-    expect(onAddSecondaryTimberMark).toHaveBeenCalledOnce();
-    expect(screen.getByRole('button', { name: 'Add secondary timber mark' })).toBeTruthy();
+    const input = screen.getByLabelText('Secondary timber mark 1');
+    fireEvent.change(input, { target: { value: 'ab-12' } });
+    expect((input as HTMLInputElement).value).toBe('AB12');
   });
 
   it('validates dispersed retention fields when enabled (BR-1, D32)', async () => {

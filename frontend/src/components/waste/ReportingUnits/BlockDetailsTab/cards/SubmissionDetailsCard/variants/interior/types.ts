@@ -16,6 +16,10 @@ export interface InteriorSubmissionDetailsValues {
   readonly dispersedRetentionExplanation: string;
   /** Multi-select (D28). Stores selected criteria codes. */
   readonly districtAverageCriteriaCodes: readonly string[];
+  /** S6/BR-2: secondary timber marks (max 5, normalized). */
+  readonly secondaryTimberMarks: readonly string[];
+  /** S6/BR-2: road permit timber marks (max 5, normalized). */
+  readonly roadPermitTimberMarks: readonly string[];
 }
 
 /** One BEC subzone/variant option, scoped to its parent BEC zone. */
@@ -59,6 +63,8 @@ export const EMPTY_VALUES: InteriorSubmissionDetailsValues = {
   dispersedRetentionPct: '',
   dispersedRetentionExplanation: '',
   districtAverageCriteriaCodes: [],
+  secondaryTimberMarks: [],
+  roadPermitTimberMarks: [],
 };
 
 /** Normalizes legacy single-code criteria to the D28 multi-select array shape. */

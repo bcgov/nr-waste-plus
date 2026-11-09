@@ -1,4 +1,4 @@
-import { screen } from '@testing-library/react';
+import { fireEvent, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 
@@ -111,20 +111,14 @@ describe('CoastSubmissionDetailsForm', () => {
     expect(screen.getByTestId('card-item-content-waste-benchmark-(m³/ha)').textContent).toBe('--');
   });
 
-  it('delegates add-mark actions without submitting the local form', async () => {
-    const onAddRoadPermitTimberMark = vi.fn();
+  it('adds a road permit timber mark section with BR-2 normalization (S6)', async () => {
     const user = userEvent.setup();
-    await renderWithAppAsync(
-      <CoastSubmissionDetailsForm
-        {...options}
-        onAddRoadPermitTimberMark={onAddRoadPermitTimberMark}
-      />,
-    );
+    await renderWithAppAsync(<CoastSubmissionDetailsForm {...options} />);
 
     await user.click(screen.getByRole('button', { name: 'Add road permit timber mark' }));
-
-    expect(onAddRoadPermitTimberMark).toHaveBeenCalledOnce();
-    expect(screen.getByRole('button', { name: 'Add road permit timber mark' })).toBeTruthy();
+    const input = screen.getByLabelText('Road permit timber mark 1');
+    fireEvent.change(input, { target: { value: 'rp/9a' } });
+    expect((input as HTMLInputElement).value).toBe('RP9A');
   });
 
   it('clears and disables the three harvest-area fields when heli logging is on (BR-4, D31)', async () => {
