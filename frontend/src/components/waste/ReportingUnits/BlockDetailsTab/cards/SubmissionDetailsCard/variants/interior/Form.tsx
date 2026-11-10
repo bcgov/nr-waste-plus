@@ -279,7 +279,6 @@ export const InteriorSubmissionDetailsFormView = ({
                   id="interior-district-average-criteria"
                   titleText="District average criteria"
                   placeholder="Select criteria"
-                  helperText="Select the district average criteria that applies to this submission"
                   items={[...districtAverageCriteria]}
                   itemToString={activeMSItemToString}
                   selectedItems={toSelectedItems(districtAverageCriteria, field.state.value)}
