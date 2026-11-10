@@ -12,7 +12,7 @@ import {
   Tabs,
 } from '@carbon/react';
 import { useNavigate, useParams } from '@tanstack/react-router';
-import { useEffect, useRef, type FC } from 'react';
+import { useEffect, useRef, useState, type FC } from 'react';
 
 import EmptySection from '@/components/core/EmptySection';
 import PageNotification from '@/components/core/PageNotification';
@@ -22,6 +22,7 @@ import TagWrapper from '@/components/core/Tags/TagWrapper';
 import UnderConstructionTag from '@/components/core/Tags/UnderConstructionTag';
 import BlockDetailsSkeleton from '@/components/waste/ReportingUnits/BlockDetailsSkeleton';
 import BlockDetailsSummary from '@/components/waste/ReportingUnits/BlockDetailsSummary';
+import BlockDetailsTab from '@/components/waste/ReportingUnits/BlockDetailsTab';
 import { useBlockDetailsQuery, useReportingUnitDetailsQuery } from '@/config/react-query/hooks';
 import useDelayedFlag from '@/hooks/useDelayedFlag';
 
@@ -34,7 +35,7 @@ import './index.scss';
 const EVENT_TARGET = 'reporting-unit-block-details';
 
 /**
- * Read-only District Average block details page for a single reporting unit.
+ * District Average block details page for a single reporting unit.
  *
  * Route: `/reporting-units/$ruId/$blockId` (issue #1369).
  *
@@ -42,11 +43,15 @@ const EVENT_TARGET = 'reporting-unit-block-details';
  * block existence) and the reporting unit through
  * {@link useReportingUnitDetailsQuery} (which backs the
  * {@link BlockDetailsSummary} card), then renders the page banner (breadcrumb +
- * focusable `h1`), the summary card, and a Back action. Only a failed/missing
- * block query renders the not-found state (an inline `role="alert"` notification
- * with Retry/Back actions); a reporting-unit-only failure keeps the block page
- * and swaps the summary card for an inline error. The loading skeleton is
- * deferred by 300 ms via `useDelayedFlag`.
+ * focusable `h1`), the summary card, the 3-step progress indicator, the five
+ * tabs, and the first-tab submission-details form — its variant is resolved
+ * from the reporting-unit grade (plan D3) and its mode from the block's
+ * `isLegacy` flag (plan D6). Save/Submit keep their placeholder navigation
+ * (plan D5). Only a failed/missing block query renders the not-found state (an
+ * inline `role="alert"` notification with Retry/Back actions); a
+ * reporting-unit-only failure keeps the block page and swaps the summary card
+ * for an inline error. The loading skeleton is deferred by 300 ms via
+ * `useDelayedFlag`.
  *
  * @returns The block details page columns, ready for the layout `Grid`.
  */
@@ -89,6 +94,7 @@ const ReportingUnitBlockDetailsPage: FC = () => {
 
   const showSkeleton = useDelayedFlag(isLoading);
   const bannerRef = useRef<HTMLDivElement>(null);
+  const [selectedTabIndex, setSelectedTabIndex] = useState(0);
 
   // Move focus to the h1 once the page has real content (after data resolves).
   useEffect(() => {
@@ -225,7 +231,12 @@ const ReportingUnitBlockDetailsPage: FC = () => {
         )}
       </Column>
       <Column lg={16} md={8} sm={4} className="rublock-column__content">
-        <Tabs defaultSelectedIndex={0}>
+        <Tabs
+          selectedIndex={selectedTabIndex}
+          onChange={({ selectedIndex }: { selectedIndex: number }) =>
+            setSelectedTabIndex(selectedIndex)
+          }
+        >
           <TabList aria-label="Block details sections" contained size="lg">
             <Tab>Block details</Tab>
             <Tab>Area calculator</Tab>
@@ -234,7 +245,21 @@ const ReportingUnitBlockDetailsPage: FC = () => {
             <Tab>Endorsement</Tab>
           </TabList>
           <TabPanels>
-            <TabPanel>Block details content</TabPanel>
+            <TabPanel>
+              <BlockDetailsTab
+                grade={data?.grade}
+                mode={blockData.isLegacy ? 'read-only' : 'form'}
+                initialValues={{
+                  primaryLoggingCompleteDate: blockData.plcDate ?? '',
+                }}
+                harvestStatuses={[]}
+                becZones={[]}
+                becSubzoneVariants={[]}
+                maturityOptions={[]}
+                districtAverageCriteria={[]}
+                onNavigateTab={setSelectedTabIndex}
+              />
+            </TabPanel>
             <TabPanel>Area calculator content</TabPanel>
             <TabPanel>Waste volumes content</TabPanel>
             <TabPanel>Attachments content</TabPanel>
