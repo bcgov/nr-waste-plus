@@ -12,8 +12,12 @@ export type WasteAssessmentAreaSummaryCardProps = {
   onGoToAreaCalculator?: () => void;
 };
 
-const WasteAssessmentAreaSummaryCard: FC<WasteAssessmentAreaSummaryCardProps> = () => (
-  <section aria-label="Waste assessment area summary">Waste assessment area summary (stub)</section>
+const WasteAssessmentAreaSummaryCard: FC<WasteAssessmentAreaSummaryCardProps> = ({
+  onGoToAreaCalculator,
+}) => (
+  <section aria-label="Waste assessment area summary">
+    <button type="button" onClick={onGoToAreaCalculator}>Go to area calculator</button>
+  </section>
 );
 
 export default WasteAssessmentAreaSummaryCard;

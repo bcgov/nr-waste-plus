@@ -12,8 +12,10 @@ export type AdditionalRequirementsCardProps = {
   onAddAttachments?: () => void;
 };
 
-const AdditionalRequirementsCard: FC<AdditionalRequirementsCardProps> = () => (
-  <section aria-label="Additional requirements">Additional requirements (stub)</section>
+const AdditionalRequirementsCard: FC<AdditionalRequirementsCardProps> = ({ onAddAttachments }) => (
+  <section aria-label="Additional requirements">
+    <button type="button" onClick={onAddAttachments}>Add attachments</button>
+  </section>
 );
 
 export default AdditionalRequirementsCard;

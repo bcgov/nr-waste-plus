@@ -1,5 +1,6 @@
 import { render, screen } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import userEvent from '@testing-library/user-event';
+import { describe, expect, it, vi } from 'vitest';
 
 import BlockDetailsTab, { resolveSubmissionVariant } from './index';
 
@@ -20,6 +21,33 @@ describe('BlockDetailsTab (foundation)', () => {
     expect(screen.getByLabelText('Waste assessment area summary')).toBeTruthy();
     expect(screen.getByLabelText('District average volumes summary')).toBeTruthy();
     expect(screen.getByLabelText('Additional requirements')).toBeTruthy();
+  });
+
+  it('navigates to tabs via card actions and supports provided add-attachments handler', async () => {
+    const user = userEvent.setup();
+    const onNavigateTab = vi.fn();
+    const onAddAttachments = vi.fn();
+    const { rerender } = render(
+      <BlockDetailsTab {...baseProps} variant="interior" onNavigateTab={onNavigateTab} />,
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Go to area calculator' }));
+    await user.click(screen.getByRole('button', { name: 'View volume details' }));
+    await user.click(screen.getByRole('button', { name: 'Add attachments' }));
+    expect(onNavigateTab).toHaveBeenCalledWith(1);
+    expect(onNavigateTab).toHaveBeenCalledWith(2);
+    expect(onNavigateTab).toHaveBeenCalledWith(3);
+
+    rerender(
+      <BlockDetailsTab
+        {...baseProps}
+        variant="interior"
+        onNavigateTab={onNavigateTab}
+        additionalRequirements={{ mode: 'form', onAddAttachments }}
+      />,
+    );
+    await user.click(screen.getByRole('button', { name: 'Add attachments' }));
+    expect(onAddAttachments).toHaveBeenCalled();
   });
 
   it('re-exports resolveSubmissionVariant', () => {

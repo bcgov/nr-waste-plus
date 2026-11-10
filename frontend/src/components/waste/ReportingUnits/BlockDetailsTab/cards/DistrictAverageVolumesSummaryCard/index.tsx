@@ -21,8 +21,12 @@ export type DistrictAverageVolumesSummaryCardProps = {
   onViewVolumeDetails?: () => void;
 };
 
-const DistrictAverageVolumesSummaryCard: FC<DistrictAverageVolumesSummaryCardProps> = () => (
-  <section aria-label="District average volumes summary">District average volumes summary (stub)</section>
+const DistrictAverageVolumesSummaryCard: FC<DistrictAverageVolumesSummaryCardProps> = ({
+  onViewVolumeDetails,
+}) => (
+  <section aria-label="District average volumes summary">
+    <button type="button" onClick={onViewVolumeDetails}>View volume details</button>
+  </section>
 );
 
 export default DistrictAverageVolumesSummaryCard;
