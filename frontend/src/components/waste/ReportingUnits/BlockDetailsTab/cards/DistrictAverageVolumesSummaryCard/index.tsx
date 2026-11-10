@@ -65,7 +65,7 @@ const DistrictAverageVolumesSummaryCard: FC<DistrictAverageVolumesSummaryCardPro
     aria-labelledby="district-average-volumes-summary-heading"
   >
     <div className="district-average-volumes-summary-card__header">
-      <div>
+      <div className="district-average-volumes-summary-card__title-block">
         <h3
           id="district-average-volumes-summary-heading"
           className="district-average-volumes-summary-card__heading"
@@ -76,7 +76,11 @@ const DistrictAverageVolumesSummaryCard: FC<DistrictAverageVolumesSummaryCardPro
           Estimated volumes are auto-calculated and may differ from final volumes
         </p>
       </div>
-      <Button kind="tertiary" onClick={onViewVolumeDetails}>
+      <Button
+        kind="tertiary"
+        className="district-average-volumes-summary-card__action"
+        onClick={onViewVolumeDetails}
+      >
         View volume details
       </Button>
     </div>

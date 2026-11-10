@@ -1,13 +1,32 @@
+@use '@carbon/react/scss/spacing' as *;
+@use '@carbon/styles/scss/border-radius' as *;
+@use '@carbon/type' as *;
+
 .additional-requirements-card {
+  padding: $spacing-07;
+  border: 1px solid var(--cds-border-subtle-01);
+  border-radius: $border-radius-08;
+  background-color: var(--cds-background);
+
+  h3 {
+    margin: 0 0 $spacing-06;
+    @include type-style('heading-compact-01');
+    color: var(--cds-text-primary);
+  }
+
   &__grid {
-    row-gap: 1rem;
+    row-gap: $spacing-05;
   }
 
   &__label {
+    @include type-style('label-01');
+    color: var(--cds-text-secondary);
     font-weight: 600;
   }
 
   &__value {
     margin: 0;
+    @include type-style('body-compact-01');
+    color: var(--cds-text-primary);
   }
 }

@@ -16,6 +16,12 @@
     margin-bottom: $spacing-06;
   }
 
+  &__title-block {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-02;
+  }
+
   &__heading {
     margin: 0;
     @include type-style('heading-compact-01');
@@ -23,12 +29,45 @@
   }
 
   &__helper {
-    margin: $spacing-01 0 0;
+    margin: 0;
     @include type-style('label-01');
     color: var(--cds-text-secondary);
   }
 
+  &__action {
+    flex-shrink: 0;
+  }
+
   &__list {
     max-width: 34.8125rem; // 557px, per Figma 1:7432
+
+    // Scoped flush alignment closer to Figma 1:7425
+    .cds--structured-list-th,
+    .cds--structured-list-td {
+      padding-top: $spacing-03;
+      padding-bottom: $spacing-03;
+      padding-right: $spacing-05;
+      @include type-style('body-compact-01');
+      color: var(--cds-text-primary);
+    }
+
+    .cds--structured-list-th {
+      @include type-style('heading-compact-01');
+    }
+
+    .cds--structured-list-row {
+      border-bottom: 1px solid var(--cds-border-subtle-01);
+    }
+
+    // 3-column layout approximating Figma proportions (370 / flex / 187 in 557px)
+    .cds--structured-list-row .cds--structured-list-th:first-child,
+    .cds--structured-list-row .cds--structured-list-td:first-child {
+      width: 66%;
+    }
+
+    .cds--structured-list-row .cds--structured-list-th:nth-child(3),
+    .cds--structured-list-row .cds--structured-list-td:nth-child(3) {
+      width: 34%;
+    }
   }
 }

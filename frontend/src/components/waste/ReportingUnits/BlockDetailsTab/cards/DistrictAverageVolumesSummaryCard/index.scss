@@ -16,6 +16,12 @@
     margin-bottom: $spacing-06;
   }
 
+  &__title-block {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-02;
+  }
+
   &__heading {
     margin: 0;
     @include type-style('heading-compact-01');
@@ -23,12 +29,78 @@
   }
 
   &__helper {
-    margin: $spacing-01 0 0;
+    margin: 0;
     @include type-style('label-01');
     color: var(--cds-text-secondary);
   }
 
+  &__action {
+    flex-shrink: 0;
+  }
+
   &__list {
     width: 100%;
+
+    .cds--structured-list-thead .cds--structured-list-row {
+      align-items: flex-end;
+    }
+
+    .cds--structured-list-th,
+    .cds--structured-list-td {
+      padding-top: $spacing-03;
+      padding-bottom: $spacing-03;
+      padding-right: $spacing-04;
+      vertical-align: middle;
+      @include type-style('body-compact-01');
+      color: var(--cds-text-primary);
+    }
+
+    .cds--structured-list-th {
+      @include type-style('heading-compact-01');
+      vertical-align: bottom;
+    }
+
+    .cds--structured-list-row {
+      border-bottom: 1px solid var(--cds-border-subtle-01);
+    }
+
+    // 8-column proportions approximating Figma 1:7464 (114,134,180,147,135,108,120,134)
+    .cds--structured-list-row .cds--structured-list-th:nth-child(1),
+    .cds--structured-list-row .cds--structured-list-td:nth-child(1) {
+      width: 10.5%;
+    }
+    .cds--structured-list-row .cds--structured-list-th:nth-child(2),
+    .cds--structured-list-row .cds--structured-list-td:nth-child(2) {
+      width: 12.5%;
+    }
+    .cds--structured-list-row .cds--structured-list-th:nth-child(3),
+    .cds--structured-list-row .cds--structured-list-td:nth-child(3) {
+      width: 16.5%;
+      min-width: 11rem;
+    }
+    .cds--structured-list-row .cds--structured-list-th:nth-child(4),
+    .cds--structured-list-row .cds--structured-list-td:nth-child(4) {
+      width: 13.5%;
+    }
+    .cds--structured-list-row .cds--structured-list-th:nth-child(5),
+    .cds--structured-list-row .cds--structured-list-td:nth-child(5) {
+      width: 12%;
+    }
+    .cds--structured-list-row .cds--structured-list-th:nth-child(6),
+    .cds--structured-list-row .cds--structured-list-td:nth-child(6) {
+      width: 10%;
+    }
+    .cds--structured-list-row .cds--structured-list-th:nth-child(7),
+    .cds--structured-list-row .cds--structured-list-td:nth-child(7),
+    .cds--structured-list-row .cds--structured-list-th:nth-child(8),
+    .cds--structured-list-row .cds--structured-list-td:nth-child(8) {
+      width: 12.5%;
+    }
+
+    // Keep inline harvest dropdown compact in-cell
+    .cds--dropdown__wrapper,
+    .cds--list-box__wrapper {
+      margin-bottom: 0;
+    }
   }
 }

@@ -43,7 +43,7 @@ const WasteAssessmentAreaSummaryCard: FC<WasteAssessmentAreaSummaryCardProps> = 
     aria-labelledby="waste-assessment-area-summary-heading"
   >
     <div className="waste-assessment-area-summary-card__header">
-      <div>
+      <div className="waste-assessment-area-summary-card__title-block">
         <h3
           id="waste-assessment-area-summary-heading"
           className="waste-assessment-area-summary-card__heading"
@@ -54,7 +54,11 @@ const WasteAssessmentAreaSummaryCard: FC<WasteAssessmentAreaSummaryCardProps> = 
           Use area calculator to add waste assessment area details
         </p>
       </div>
-      <Button kind="tertiary" onClick={onGoToAreaCalculator}>
+      <Button
+        kind="tertiary"
+        className="waste-assessment-area-summary-card__action"
+        onClick={onGoToAreaCalculator}
+      >
         Go to area calculator
       </Button>
     </div>
