@@ -1,7 +1,8 @@
-import type { FC } from 'react';
-
-export type CoastSubmissionDetailsValues = Record<string, unknown>;
-export type CoastSubmissionDetailsFormProps = { mode?: 'form' | 'read-only'; [key: string]: unknown };
-
-const CoastSubmissionDetailsForm: FC<CoastSubmissionDetailsFormProps> = () => null;
-export default CoastSubmissionDetailsForm;
+/**
+ * Back-compat shim (D20/S3b): implementation moved to BlockDetailsTab variant.
+ */
+export type {
+  CoastSubmissionDetailsFormProps,
+  CoastSubmissionDetailsValues,
+} from '../BlockDetailsTab/cards/SubmissionDetailsCard/variants/coast';
+export { default } from '../BlockDetailsTab/cards/SubmissionDetailsCard/variants/coast';
