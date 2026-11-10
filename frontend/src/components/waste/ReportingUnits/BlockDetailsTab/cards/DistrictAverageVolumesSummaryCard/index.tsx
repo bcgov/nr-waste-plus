@@ -14,7 +14,10 @@ export type DistrictAverageVolumeRow = {
 
 export type DistrictAverageVolumesSummaryCardProps = {
   rows?: readonly DistrictAverageVolumeRow[];
-  totals?: { totalBillableVolumeM3?: string | number | null; totalCutControlVolumeM3?: string | number | null };
+  totals?: {
+    totalBillableVolumeM3?: string | number | null;
+    totalCutControlVolumeM3?: string | number | null;
+  };
   harvestMethodOptions?: readonly CodeDescriptionDto[];
   onHarvestMethodChange?: (index: number, code: string) => void;
   mode?: 'form' | 'read-only';
@@ -22,11 +25,26 @@ export type DistrictAverageVolumesSummaryCardProps = {
 };
 
 const DistrictAverageVolumesSummaryCard: FC<DistrictAverageVolumesSummaryCardProps> = ({
+  rows,
+  totals,
+  harvestMethodOptions,
+  onHarvestMethodChange,
+  mode,
   onViewVolumeDetails,
-}) => (
-  <section aria-label="District average volumes summary">
-    <button type="button" onClick={onViewVolumeDetails}>View volume details</button>
-  </section>
-);
+}) => {
+  void rows;
+  void totals;
+  void harvestMethodOptions;
+  void onHarvestMethodChange;
+  void mode;
+
+  return (
+    <section aria-label="District average volumes summary">
+      <button type="button" onClick={onViewVolumeDetails}>
+        View volume details
+      </button>
+    </section>
+  );
+};
 
 export default DistrictAverageVolumesSummaryCard;

@@ -12,10 +12,21 @@ export type AdditionalRequirementsCardProps = {
   onAddAttachments?: () => void;
 };
 
-const AdditionalRequirementsCard: FC<AdditionalRequirementsCardProps> = ({ onAddAttachments }) => (
-  <section aria-label="Additional requirements">
-    <button type="button" onClick={onAddAttachments}>Add attachments</button>
-  </section>
-);
+const AdditionalRequirementsCard: FC<AdditionalRequirementsCardProps> = ({
+  mode,
+  initialValues,
+  onAddAttachments,
+}) => {
+  void mode;
+  void initialValues;
+
+  return (
+    <section aria-label="Additional requirements">
+      <button type="button" onClick={onAddAttachments}>
+        Add attachments
+      </button>
+    </section>
+  );
+};
 
 export default AdditionalRequirementsCard;

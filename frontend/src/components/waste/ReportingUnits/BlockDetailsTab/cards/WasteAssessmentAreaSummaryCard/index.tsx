@@ -13,11 +13,20 @@ export type WasteAssessmentAreaSummaryCardProps = {
 };
 
 const WasteAssessmentAreaSummaryCard: FC<WasteAssessmentAreaSummaryCardProps> = ({
+  rows,
+  totalNetWasteAreaHa,
   onGoToAreaCalculator,
-}) => (
-  <section aria-label="Waste assessment area summary">
-    <button type="button" onClick={onGoToAreaCalculator}>Go to area calculator</button>
-  </section>
-);
+}) => {
+  void rows;
+  void totalNetWasteAreaHa;
+
+  return (
+    <section aria-label="Waste assessment area summary">
+      <button type="button" onClick={onGoToAreaCalculator}>
+        Go to area calculator
+      </button>
+    </section>
+  );
+};
 
 export default WasteAssessmentAreaSummaryCard;
