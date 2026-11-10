@@ -9,8 +9,14 @@ type GradeLike = Pick<CodeDescriptionDto, 'code' | 'description'> | null | undef
 /**
  * Resolves the submission-details variant from the reporting-unit grade.
  *
- * Coast is matched on the grade description (case- and whitespace-insensitive)
- * because the grade code domain is not settled yet. Anything else falls back to interior.
+ * Coast is matched on the grade code (`COASTAL`, case-insensitive) and on the
+ * grade description (`coast`/`coastal`, case- and whitespace-insensitive) to
+ * cover legacy and fallback responses. Anything else falls back to interior.
  */
-export const resolveSubmissionVariant = (grade: GradeLike): SubmissionVariant =>
-  grade?.description?.trim().toLowerCase() === 'coast' ? 'coast' : 'interior';
+export const resolveSubmissionVariant = (grade: GradeLike): SubmissionVariant => {
+  if (grade?.code?.trim().toUpperCase() === 'COASTAL') {
+    return 'coast';
+  }
+  const description = grade?.description?.trim().toLowerCase();
+  return description === 'coast' || description === 'coastal' ? 'coast' : 'interior';
+};

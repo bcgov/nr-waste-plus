@@ -27,8 +27,10 @@ export interface BlockDetailsTabProps extends Omit<SubmissionDetailsCardProps, '
   readonly variant?: SubmissionVariant;
   /** Navigate to another block-details tab (S7 controlled tabs). */
   readonly onNavigateTab?: (tabIndex: number) => void;
-  /** Card 4 — Additional requirements (S8/D11). Defaults to read-only/empty when omitted. */
-  readonly additionalRequirements?: AdditionalRequirementsCardProps;
+  /** Card 4 — Additional requirements (S8/D11). `mode` is forwarded from the tab when omitted. */
+  readonly additionalRequirements?: Omit<AdditionalRequirementsCardProps, 'mode'> & {
+    readonly mode?: AdditionalRequirementsCardProps['mode'];
+  };
   /** Card 2 — Waste assessment area summary (S7). */
   readonly wasteAssessmentArea?: Omit<WasteAssessmentAreaSummaryCardProps, 'onGoToAreaCalculator'>;
   /** Card 3 — District average volumes summary (S7). */
