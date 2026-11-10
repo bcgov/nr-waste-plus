@@ -58,7 +58,6 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
-    "@axe-core/playwright": "^4.11.0",
     "@eslint/js": "^10.0.0",
     "@playwright/test": "1.65.0",
     "@tanstack/eslint-plugin-query": "^5.91.2",
@@ -78,7 +77,6 @@
     "@vitejs/plugin-react": "^6.0.0",
     "@vitest/coverage-v8": "^5.0.0",
     "@vitest/eslint-plugin": "1.6.27",
-    "axe-core": "^4.11.1",
     "axe-playwright": "^2.2.2",
     "cross-env": "^10.1.0",
     "dotenv-cli": "^11.0.0",
@@ -88,15 +86,12 @@
     "eslint-plugin-import-x": "^4.18.1",
     "eslint-plugin-prettier": "^5.5.4",
     "eslint-plugin-react-hooks": "^7.0.1",
-    "eslint-plugin-react-refresh": "^0.5.0",
     "eslint-plugin-testing-library": "^7.16.2",
     "globals": "^17.0.0",
     "istanbul-lib-coverage": "^3.2.2",
     "istanbul-lib-report": "^3.0.1",
     "istanbul-reports": "^3.2.0",
     "jsdom": "^30.0.0",
-    "lint-staged": "^17.0.0",
-    "playwright": "1.65.0",
     "prettier": "^3.7.4",
     "sass": "^1.104.1",
     "stylelint": "^17.16.0",
@@ -114,16 +109,8 @@
   "overrides": {
     "minimatch": "^11.0.4",
     "unzipper": "0.12.5",
-    "flatted": "^3.4.2",
     "glob": "^14.0.0",
-    "immutable": "^5.1.5",
     "uuid": "^14.0.0",
-    "fast-xml-parser@>=5.9.3 <5.10.1": "5.10.1",
-    "brace-expansion@1": "1.1.21",
-    "brace-expansion@2": "2.1.7",
-    "brace-expansion@5": "5.0.12",
-    "js-yaml@<4.3.2": "4.3.2",
-    "dompurify": "^3.4.13",
-    "seroval": "^1.6.3"
+    "dompurify": "^3.4.17"
   }
 }
