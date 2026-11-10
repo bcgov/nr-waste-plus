@@ -138,8 +138,8 @@ const CoastSubmissionDetailsForm: FC<CoastSubmissionDetailsFormProps> = ({
   harvestStatuses,
   maturityOptions,
   districtAverageCriteria,
-  onAddSecondaryTimberMark: _onAddSecondaryTimberMark,
-  onAddRoadPermitTimberMark: _onAddRoadPermitTimberMark,
+  onAddSecondaryTimberMark,
+  onAddRoadPermitTimberMark,
 }) => {
   const form = useForm({ defaultValues: normalizeInitialValues(initialValues) });
   const today = new Date();
@@ -451,6 +451,7 @@ const CoastSubmissionDetailsForm: FC<CoastSubmissionDetailsFormProps> = ({
               form={form as never}
               conditions={{ field: 'hasDispersedRetention', operator: 'truthy' }}
               fieldNames={['dispersedRetentionPct', 'dispersedRetentionExplanation']}
+              unregisterOnHide={false}
             >
               <form.Field
                 name="dispersedRetentionPct"
@@ -490,6 +491,7 @@ const CoastSubmissionDetailsForm: FC<CoastSubmissionDetailsFormProps> = ({
               form={form as never}
               conditions={{ field: 'hasDispersedRetention', operator: 'truthy' }}
               fieldNames={['dispersedRetentionPct', 'dispersedRetentionExplanation']}
+              unregisterOnHide={false}
             >
               <form.Field
                 name="dispersedRetentionExplanation"
@@ -560,6 +562,7 @@ const CoastSubmissionDetailsForm: FC<CoastSubmissionDetailsFormProps> = ({
             mode="form"
             marks={field.state.value}
             onChange={(marks) => field.handleChange(marks)}
+            onAdd={onAddSecondaryTimberMark}
           />
         )}
       </form.Field>
@@ -573,6 +576,7 @@ const CoastSubmissionDetailsForm: FC<CoastSubmissionDetailsFormProps> = ({
             mode="form"
             marks={field.state.value}
             onChange={(marks) => field.handleChange(marks)}
+            onAdd={onAddRoadPermitTimberMark}
           />
         )}
       </form.Field>

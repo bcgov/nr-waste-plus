@@ -3,15 +3,11 @@ import { type FC } from 'react';
 import { InteriorSubmissionDetailsFormView } from './Form';
 import { InteriorSubmissionDetailsReadOnly } from './ReadOnly';
 
-import type {
-  InteriorBecSubzoneVariantOption,
-  InteriorSubmissionDetailsFormProps,
-  InteriorSubmissionDetailsValues,
-} from './types';
+import type { InteriorSubmissionDetailsFormProps } from './types';
 
 import './index.scss';
 
-export type { InteriorBecSubzoneVariantOption, InteriorSubmissionDetailsValues };
+export type { InteriorBecSubzoneVariantOption, InteriorSubmissionDetailsValues } from './types';
 
 /**
  * Interior District Average submission-details component: renders the editable

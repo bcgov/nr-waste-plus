@@ -29,6 +29,8 @@ describe('D20/S3b back-compat shims', () => {
       dispersedRetentionPct: '',
       dispersedRetentionExplanation: '',
       districtAverageCriteriaCodes: [],
+      secondaryTimberMarks: [],
+      roadPermitTimberMarks: [],
     };
     const interiorValues: InteriorSubmissionDetailsValues = {
       primaryLoggingCompleteDate: '',
@@ -41,6 +43,8 @@ describe('D20/S3b back-compat shims', () => {
       dispersedRetentionPct: '',
       dispersedRetentionExplanation: '',
       districtAverageCriteriaCodes: [],
+      secondaryTimberMarks: [],
+      roadPermitTimberMarks: [],
     };
     const variant: InteriorBecSubzoneVariantOption = {
       code: 'dw2',

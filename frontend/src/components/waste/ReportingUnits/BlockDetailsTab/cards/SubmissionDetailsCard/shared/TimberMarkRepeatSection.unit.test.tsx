@@ -48,8 +48,7 @@ describe('TimberMarkRepeatSection (S6, BR-2)', () => {
     expect(last).toEqual(['AB12C']);
   });
 
-  it('prevents adding beyond max with observable feedback (BR-2, max 5)', async () => {
-    const user = userEvent.setup();
+  it('prevents adding beyond max with observable feedback (BR-2, max 5)', () => {
     render(<Harness max={2} initial={['A', 'B']} />);
 
     const add = screen.getByRole('button', { name: 'Add secondary timber mark' });

@@ -1,6 +1,6 @@
 import { fireEvent, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import { renderWithAppAsync } from '@/config/tests/renderWithApp';
 
@@ -196,5 +196,37 @@ describe('CoastSubmissionDetailsForm', () => {
     expect(
       await screen.findByText('Explain how the retention percentage was calculated.'),
     ).toBeTruthy();
+  });
+
+  it('clears dispersed retention values when toggled off from seeded data', async () => {
+    const user = userEvent.setup();
+    await renderWithAppAsync(
+      <CoastSubmissionDetailsForm
+        {...options}
+        initialValues={{
+          hasDispersedRetention: true,
+          dispersedRetentionPct: '75',
+          dispersedRetentionExplanation: 'Seeded explanation',
+        }}
+      />,
+    );
+
+    await user.click(screen.getByRole('switch', { name: 'Is dispersed retention >= 50%?' }));
+    await user.click(screen.getByRole('switch', { name: 'Is dispersed retention >= 50%?' }));
+
+    expect(
+      (
+        screen.getByRole('spinbutton', {
+          name: 'Dispersed retention percentage',
+        }) as HTMLInputElement
+      ).value,
+    ).toBe('');
+    expect(
+      (
+        screen.getByRole('textbox', {
+          name: 'Explain how retention percentage was calculated',
+        }) as HTMLTextAreaElement
+      ).value,
+    ).toBe('');
   });
 });

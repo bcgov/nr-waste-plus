@@ -7,9 +7,11 @@ import {
   TextInput,
 } from '@carbon/react';
 import { Add, Close } from '@carbon/react/icons';
-import { type FC, useState } from 'react';
+import { type FC, useEffect, useRef, useState } from 'react';
 
 import { normalizeTimberMark } from './format';
+
+import './TimberMarkRepeatSection.scss';
 
 export type TimberMarkRepeatSectionProps = {
   /** Visible section/field label, e.g. "Secondary timber mark". */
@@ -20,6 +22,8 @@ export type TimberMarkRepeatSectionProps = {
   marks: readonly string[];
   /** Called with the next marks array. */
   onChange: (marks: string[]) => void;
+  /** Optional callback invoked when a new mark row is added. */
+  onAdd?: () => void;
   /** Maximum number of entries (INT-1.6d/CST-1.9: 5). */
   max?: number;
   mode: 'form' | 'read-only';
@@ -43,15 +47,34 @@ const TimberMarkRepeatSection: FC<TimberMarkRepeatSectionProps> = ({
   addButtonLabel,
   marks,
   onChange,
+  onAdd,
   max = DEFAULT_MAX,
   mode,
   idPrefix,
 }) => {
   const [pendingRemoveIndex, setPendingRemoveIndex] = useState<number | null>(null);
+  const keyCounter = useRef(0);
+  const makeKey = () => `${idPrefix}-row-${keyCounter.current++}`;
+  const [rowKeys, setRowKeys] = useState<string[]>(() => marks.map(() => makeKey()));
   const atMax = marks.length >= max;
 
+  useEffect(() => {
+    setRowKeys((current) => {
+      if (current.length === marks.length) return current;
+      if (marks.length > current.length) {
+        return [
+          ...current,
+          ...Array.from({ length: marks.length - current.length }, () => makeKey()),
+        ];
+      }
+      return current.slice(0, marks.length);
+    });
+  }, [marks.length, idPrefix]);
+
   const handleAdd = () => {
+    setRowKeys((current) => [...current, makeKey()]);
     onChange([...marks, '']);
+    onAdd?.();
   };
 
   const handleMarkChange = (index: number, value: string) => {
@@ -62,6 +85,7 @@ const TimberMarkRepeatSection: FC<TimberMarkRepeatSectionProps> = ({
 
   const confirmRemove = () => {
     if (pendingRemoveIndex !== null) {
+      setRowKeys((current) => current.filter((_key, index) => index !== pendingRemoveIndex));
       onChange(marks.filter((_mark, index) => index !== pendingRemoveIndex));
     }
     setPendingRemoveIndex(null);
@@ -83,7 +107,7 @@ const TimberMarkRepeatSection: FC<TimberMarkRepeatSectionProps> = ({
   return (
     <div className="timber-mark-repeat-section">
       {marks.map((mark, index) => (
-        <div key={`${idPrefix}-${index}`} className="timber-mark-repeat-section__row">
+        <div key={rowKeys[index] ?? `${idPrefix}-${index}`} className="timber-mark-repeat-section__row">
           <TextInput
             id={`${idPrefix}-${index}`}
             labelText={`${label} ${index + 1}`}
@@ -111,9 +135,9 @@ const TimberMarkRepeatSection: FC<TimberMarkRepeatSectionProps> = ({
         {addButtonLabel}
       </Button>
       {atMax ? (
-        <p className="timber-mark-repeat-section__limit" role="status">
+        <output className="timber-mark-repeat-section__limit">
           You can add up to {max} {label.toLowerCase()}s.
-        </p>
+        </output>
       ) : null}
 
       {pendingRemoveIndex === null ? null : (

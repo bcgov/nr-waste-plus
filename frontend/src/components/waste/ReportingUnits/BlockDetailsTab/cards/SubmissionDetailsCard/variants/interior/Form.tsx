@@ -54,8 +54,8 @@ export const InteriorSubmissionDetailsFormView = ({
   becZones,
   becSubzoneVariants,
   districtAverageCriteria,
-  onAddSecondaryTimberMark: _onAddSecondaryTimberMark,
-  onAddRoadPermitTimberMark: _onAddRoadPermitTimberMark,
+  onAddSecondaryTimberMark,
+  onAddRoadPermitTimberMark,
 }: FormViewProps) => {
   const form = useForm({ defaultValues: normalizeInitialValues(initialValues) });
   const today = new Date();
@@ -145,21 +145,25 @@ export const InteriorSubmissionDetailsFormView = ({
           </Column>
 
           <Column max={3} xlg={4} lg={5} md={4} sm={4}>
-            <form.Field name="becSubzoneVariantCode">
-              {(field) => (
-                <ComboBox
-                  id="interior-bec-subzone-variant"
-                  titleText="BEC subzone/variant"
-                  items={becSubzoneVariants.filter(
-                    (option) => option.becZoneCode === form.state.values.becZoneCode,
+            <form.Subscribe selector={(state) => state.values.becZoneCode}>
+              {(becZoneCode) => (
+                <form.Field name="becSubzoneVariantCode">
+                  {(field) => (
+                    <ComboBox
+                      id="interior-bec-subzone-variant"
+                      titleText="BEC subzone/variant"
+                      items={becSubzoneVariants.filter(
+                        (option) => option.becZoneCode === becZoneCode,
+                      )}
+                      itemToString={codeDescriptionToString}
+                      selectedItem={toSelectedItem(becSubzoneVariants, field.state.value)}
+                      onChange={({ selectedItem }) => field.handleChange(selectedItem?.code ?? '')}
+                      disabled={!becZoneCode}
+                    />
                   )}
-                  itemToString={codeDescriptionToString}
-                  selectedItem={toSelectedItem(becSubzoneVariants, field.state.value)}
-                  onChange={({ selectedItem }) => field.handleChange(selectedItem?.code ?? '')}
-                  disabled={!form.state.values.becZoneCode}
-                />
+                </form.Field>
               )}
-            </form.Field>
+            </form.Subscribe>
           </Column>
 
           <Column max={2} xlg={4} lg={5} md={4} sm={4}>
@@ -200,6 +204,7 @@ export const InteriorSubmissionDetailsFormView = ({
               form={form as never}
               conditions={{ field: 'hasDispersedRetention', operator: 'truthy' }}
               fieldNames={['dispersedRetentionPct', 'dispersedRetentionExplanation']}
+              unregisterOnHide={false}
             >
               <form.Field
                 name="dispersedRetentionPct"
@@ -239,6 +244,7 @@ export const InteriorSubmissionDetailsFormView = ({
               form={form as never}
               conditions={{ field: 'hasDispersedRetention', operator: 'truthy' }}
               fieldNames={['dispersedRetentionPct', 'dispersedRetentionExplanation']}
+              unregisterOnHide={false}
             >
               <form.Field
                 name="dispersedRetentionExplanation"
@@ -309,6 +315,7 @@ export const InteriorSubmissionDetailsFormView = ({
             mode="form"
             marks={field.state.value}
             onChange={(marks) => field.handleChange(marks)}
+            onAdd={onAddSecondaryTimberMark}
           />
         )}
       </form.Field>
@@ -322,6 +329,7 @@ export const InteriorSubmissionDetailsFormView = ({
             mode="form"
             marks={field.state.value}
             onChange={(marks) => field.handleChange(marks)}
+            onAdd={onAddRoadPermitTimberMark}
           />
         )}
       </form.Field>

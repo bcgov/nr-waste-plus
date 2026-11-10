@@ -1,6 +1,6 @@
 import { fireEvent, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import { renderWithAppAsync } from '@/config/tests/renderWithApp';
 
@@ -185,10 +185,50 @@ describe('InteriorSubmissionDetailsForm', () => {
 
     await user.click(screen.getByRole('combobox', { name: 'BEC subzone/variant' }));
     await user.click(await screen.findByText('SBS dw2'));
+    expect(
+      (screen.getByRole('combobox', { name: 'BEC subzone/variant' }) as HTMLInputElement).value,
+    ).toContain('dw2');
 
     await user.click(screen.getByRole('combobox', { name: 'BEC zone' }));
     await user.click(await screen.findByText('Interior Cedar Hemlock'));
-    expect(screen.getByRole('combobox', { name: 'BEC subzone/variant' })).toBeTruthy();
+
+    const subzoneInput = screen.getByRole('combobox', {
+      name: 'BEC subzone/variant',
+    }) as HTMLInputElement;
+    expect(subzoneInput.disabled).toBe(false);
+    expect(subzoneInput.value).toBe('');
+  });
+
+  it('clears dispersed retention values when toggled off from seeded data', async () => {
+    const user = userEvent.setup();
+    await renderWithAppAsync(
+      <InteriorSubmissionDetailsForm
+        {...options}
+        initialValues={{
+          hasDispersedRetention: true,
+          dispersedRetentionPct: '60',
+          dispersedRetentionExplanation: 'Seeded explanation',
+        }}
+      />,
+    );
+
+    await user.click(screen.getByRole('switch', { name: 'Is dispersed retention >= 50%?' }));
+    await user.click(screen.getByRole('switch', { name: 'Is dispersed retention >= 50%?' }));
+
+    expect(
+      (
+        screen.getByRole('spinbutton', {
+          name: 'Dispersed retention percentage',
+        }) as HTMLInputElement
+      ).value,
+    ).toBe('');
+    expect(
+      (
+        screen.getByRole('textbox', {
+          name: 'Explain how retention percentage was calculated',
+        }) as HTMLTextAreaElement
+      ).value,
+    ).toBe('');
   });
 
   it('renders read-only values including multi-select criteria and retention (D28)', async () => {
