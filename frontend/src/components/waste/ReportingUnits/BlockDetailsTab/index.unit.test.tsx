@@ -1,4 +1,5 @@
-import { screen } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 
 import { renderWithAppAsync } from '@/config/tests/renderWithApp';
@@ -69,11 +70,27 @@ describe('SubmissionDetailsCard', () => {
 });
 
 describe('tab-tier cards (S7/S8)', () => {
-  it('renders S7 placeholders as empty and S8 additional requirements content', async () => {
-    expect(WasteAssessmentAreaSummaryCard({})).toBeNull();
-    expect(DistrictAverageVolumesSummaryCard({})).toBeNull();
+  it('renders S7 summary cards and S8 additional requirements content', async () => {
+    render(<WasteAssessmentAreaSummaryCard />);
+    expect(screen.getByRole('heading', { name: 'Waste assessment area summary' })).toBeTruthy();
+
+    render(<DistrictAverageVolumesSummaryCard />);
+    expect(screen.getByRole('heading', { name: 'District average volumes summary' })).toBeTruthy();
 
     await renderWithAppAsync(<AdditionalRequirementsCard mode="read-only" />);
     expect(screen.getByRole('heading', { name: 'Additional requirements' })).toBeTruthy();
+  });
+
+  it('navigates to area calculator and volume details via S7 actions', async () => {
+    const user = userEvent.setup();
+    const onNavigateTab = vi.fn();
+    await renderWithAppAsync(
+      <BlockDetailsTab {...baseProps} variant="interior" onNavigateTab={onNavigateTab} />,
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Go to area calculator' }));
+    await user.click(screen.getByRole('button', { name: 'View volume details' }));
+    expect(onNavigateTab).toHaveBeenCalledWith(1);
+    expect(onNavigateTab).toHaveBeenCalledWith(2);
   });
 });

@@ -376,6 +376,26 @@ describe('ReportingUnitBlockDetailsPage', () => {
     });
   });
 
+  describe('block details tab navigation (S7)', () => {
+    it('shouldSwitchToAreaCalculatorAndWasteVolumesTabs_viaSummaryCardActions', async () => {
+      const user = userEvent.setup();
+      await renderPage();
+
+      await user.click(screen.getByRole('button', { name: 'Go to area calculator' }));
+      expect(
+        screen.getByRole('tab', { name: 'Area calculator' }).getAttribute('aria-selected'),
+      ).toBe('true');
+      expect(screen.getByText('Area calculator content')).toBeTruthy();
+
+      await user.click(screen.getByRole('tab', { name: 'Block details' }));
+      await user.click(screen.getByRole('button', { name: 'View volume details' }));
+      expect(screen.getByRole('tab', { name: 'Waste volumes' }).getAttribute('aria-selected')).toBe(
+        'true',
+      );
+      expect(screen.getByText('Waste volumes content')).toBeTruthy();
+    });
+  });
+
   describe('success actions', () => {
     it('shouldNavigateToReportingUnit_whenSaveIsClicked', async () => {
       const user = userEvent.setup();

@@ -3,8 +3,12 @@ import { type FC } from 'react';
 import SubmissionDetailsCard, {
   type SubmissionDetailsCardProps,
 } from './cards/SubmissionDetailsCard';
-import WasteAssessmentAreaSummaryCard from './cards/WasteAssessmentAreaSummaryCard';
-import DistrictAverageVolumesSummaryCard from './cards/DistrictAverageVolumesSummaryCard';
+import WasteAssessmentAreaSummaryCard, {
+  type WasteAssessmentAreaSummaryCardProps,
+} from './cards/WasteAssessmentAreaSummaryCard';
+import DistrictAverageVolumesSummaryCard, {
+  type DistrictAverageVolumesSummaryCardProps,
+} from './cards/DistrictAverageVolumesSummaryCard';
 import AdditionalRequirementsCard, {
   type AdditionalRequirementsCardProps,
 } from './cards/AdditionalRequirementsCard';
@@ -19,10 +23,17 @@ export interface BlockDetailsTabProps extends Omit<SubmissionDetailsCardProps, '
   readonly grade?: Pick<CodeDescriptionDto, 'code' | 'description'> | null;
   /** Optional override for the resolved variant. */
   readonly variant?: SubmissionVariant;
-  /** Navigate to another block-details tab (S7 card buttons). */
+  /** Navigate to another block-details tab (S7 controlled tabs). */
   readonly onNavigateTab?: (tabIndex: number) => void;
   /** Card 4 — Additional requirements (S8/D11). Defaults to read-only/empty when omitted. */
   readonly additionalRequirements?: AdditionalRequirementsCardProps;
+  /** Card 2 — Waste assessment area summary (S7). */
+  readonly wasteAssessmentArea?: Omit<WasteAssessmentAreaSummaryCardProps, 'onGoToAreaCalculator'>;
+  /** Card 3 — District average volumes summary (S7). */
+  readonly districtAverageVolumes?: Omit<
+    DistrictAverageVolumesSummaryCardProps,
+    'onViewVolumeDetails' | 'mode'
+  >;
 }
 
 /**
@@ -35,14 +46,23 @@ const BlockDetailsTab: FC<BlockDetailsTabProps> = ({
   variant,
   onNavigateTab,
   additionalRequirements,
+  wasteAssessmentArea,
+  districtAverageVolumes,
   ...cardProps
 }) => {
   const resolvedVariant = variant ?? resolveSubmissionVariant(grade);
   return (
     <>
       <SubmissionDetailsCard {...cardProps} variant={resolvedVariant} />
-      <WasteAssessmentAreaSummaryCard />
-      <DistrictAverageVolumesSummaryCard />
+      <WasteAssessmentAreaSummaryCard
+        {...wasteAssessmentArea}
+        onGoToAreaCalculator={() => onNavigateTab?.(1)}
+      />
+      <DistrictAverageVolumesSummaryCard
+        mode={cardProps.mode}
+        {...districtAverageVolumes}
+        onViewVolumeDetails={() => onNavigateTab?.(2)}
+      />
       <AdditionalRequirementsCard
         mode={cardProps.mode}
         {...additionalRequirements}

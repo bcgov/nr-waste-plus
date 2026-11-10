@@ -12,7 +12,7 @@ import {
   Tabs,
 } from '@carbon/react';
 import { useNavigate, useParams } from '@tanstack/react-router';
-import { useEffect, useRef, type FC } from 'react';
+import { useEffect, useRef, useState, type FC } from 'react';
 
 import EmptySection from '@/components/core/EmptySection';
 import PageNotification from '@/components/core/PageNotification';
@@ -22,9 +22,7 @@ import TagWrapper from '@/components/core/Tags/TagWrapper';
 import UnderConstructionTag from '@/components/core/Tags/UnderConstructionTag';
 import BlockDetailsSkeleton from '@/components/waste/ReportingUnits/BlockDetailsSkeleton';
 import BlockDetailsSummary from '@/components/waste/ReportingUnits/BlockDetailsSummary';
-import SubmissionDetailsForm, {
-  resolveSubmissionVariant,
-} from '@/components/waste/ReportingUnits/SubmissionDetailsForm';
+import BlockDetailsTab from '@/components/waste/ReportingUnits/BlockDetailsTab';
 import { useBlockDetailsQuery, useReportingUnitDetailsQuery } from '@/config/react-query/hooks';
 import useDelayedFlag from '@/hooks/useDelayedFlag';
 
@@ -96,6 +94,7 @@ const ReportingUnitBlockDetailsPage: FC = () => {
 
   const showSkeleton = useDelayedFlag(isLoading);
   const bannerRef = useRef<HTMLDivElement>(null);
+  const [selectedTabIndex, setSelectedTabIndex] = useState(0);
 
   // Move focus to the h1 once the page has real content (after data resolves).
   useEffect(() => {
@@ -232,7 +231,12 @@ const ReportingUnitBlockDetailsPage: FC = () => {
         )}
       </Column>
       <Column lg={16} md={8} sm={4} className="rublock-column__content">
-        <Tabs defaultSelectedIndex={0}>
+        <Tabs
+          selectedIndex={selectedTabIndex}
+          onChange={({ selectedIndex }: { selectedIndex: number }) =>
+            setSelectedTabIndex(selectedIndex)
+          }
+        >
           <TabList aria-label="Block details sections" contained size="lg">
             <Tab>Block details</Tab>
             <Tab>Area calculator</Tab>
@@ -242,8 +246,8 @@ const ReportingUnitBlockDetailsPage: FC = () => {
           </TabList>
           <TabPanels>
             <TabPanel>
-              <SubmissionDetailsForm
-                variant={resolveSubmissionVariant(data?.grade)}
+              <BlockDetailsTab
+                grade={data?.grade}
                 mode={blockData.isLegacy ? 'read-only' : 'form'}
                 initialValues={{
                   primaryLoggingCompleteDate: blockData.plcDate ?? '',
@@ -253,6 +257,7 @@ const ReportingUnitBlockDetailsPage: FC = () => {
                 becSubzoneVariants={[]}
                 maturityOptions={[]}
                 districtAverageCriteria={[]}
+                onNavigateTab={setSelectedTabIndex}
               />
             </TabPanel>
             <TabPanel>Area calculator content</TabPanel>
