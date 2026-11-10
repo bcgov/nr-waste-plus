@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
+import { Route as AuthCallbackRouteImport } from './routes/authCallback'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as NoRoleRouteImport } from './routes/no-role'
 import { Route as UnauthorizedRouteImport } from './routes/unauthorized'
@@ -45,6 +46,11 @@ const IndexRoute = IndexRouteImport.update({
 } as any)
 const AuthenticatedRoute = AuthenticatedRouteImport.update({
   id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthCallbackRoute = AuthCallbackRouteImport.update({
+  id: '/authCallback',
+  path: '/authCallback',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DashboardRoute = DashboardRouteImport.update({
@@ -204,6 +210,7 @@ const AuthenticatedAdminConfigurationSpeciesCompositionUploadRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/authCallback': typeof AuthCallbackRoute
   '/dashboard': typeof DashboardRoute
   '/no-role': typeof NoRoleRoute
   '/unauthorized': typeof UnauthorizedRoute
@@ -231,6 +238,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/authCallback': typeof AuthCallbackRoute
   '/dashboard': typeof DashboardRoute
   '/no-role': typeof NoRoleRoute
   '/unauthorized': typeof UnauthorizedRoute
@@ -255,6 +263,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteWithChildren
+  '/authCallback': typeof AuthCallbackRoute
   '/dashboard': typeof DashboardRoute
   '/no-role': typeof NoRoleRoute
   '/unauthorized': typeof UnauthorizedRoute
@@ -286,6 +295,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/authCallback'
     | '/dashboard'
     | '/no-role'
     | '/unauthorized'
@@ -313,6 +323,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/authCallback'
     | '/dashboard'
     | '/no-role'
     | '/unauthorized'
@@ -336,6 +347,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/_authenticated'
+    | '/authCallback'
     | '/dashboard'
     | '/no-role'
     | '/unauthorized'
@@ -367,6 +379,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
+  AuthCallbackRoute: typeof AuthCallbackRoute
   DashboardRoute: typeof DashboardRoute
   NoRoleRoute: typeof NoRoleRoute
   UnauthorizedRoute: typeof UnauthorizedRoute
@@ -386,6 +399,13 @@ declare module '@tanstack/react-router' {
       path: ''
       fullPath: '/'
       preLoaderRoute: typeof AuthenticatedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/authCallback': {
+      id: '/authCallback'
+      path: '/authCallback'
+      fullPath: '/authCallback'
+      preLoaderRoute: typeof AuthCallbackRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/dashboard': {
@@ -732,6 +752,7 @@ const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
+  AuthCallbackRoute: AuthCallbackRoute,
   DashboardRoute: DashboardRoute,
   NoRoleRoute: NoRoleRoute,
   UnauthorizedRoute: UnauthorizedRoute,

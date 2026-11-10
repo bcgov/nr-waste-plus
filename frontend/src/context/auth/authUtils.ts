@@ -1,83 +1,84 @@
-import { env } from '@/env';
 import {
   AVAILABLE_ROLES,
   Role,
-  validIdpProviders,
   type FamLoginUser,
   type FamRole,
   type IdpProviderType,
-  type JWT,
   type ROLE_TYPE,
   type USER_PRIVILEGE_TYPE,
 } from '@/types/auth.types';
 
 /**
- * Retrieves the value of a cookie by name.
- * @param {string} name - The name of the cookie to retrieve.
- * @returns {string} The cookie value, or an empty string if not found.
+ * Role-claim entries carrying this prefix are FAM per-grant expiry
+ * bookkeeping (for example `FAM:EXPIRES:2026-09-30:WASTE_PLUS_ADMIN`) and
+ * never represent an application authority.
  */
-export const getCookie = (name: string): string => {
-  const cookies = document.cookie.split('; ');
-  const match = cookies.find((cookie) => cookie.startsWith(`${name}=`));
-  return match ? (match.split('=')[1] ?? '') : '';
+const FAM_BOOKKEEPING_PREFIX = 'FAM:';
+
+/**
+ * Claim that carries the CSS-era role assignments on the access token.
+ */
+const CLIENT_ROLES_CLAIM = 'client_roles';
+
+/**
+ * Token claim holding the broker name the user authenticated through.
+ */
+const IDENTITY_PROVIDER_CLAIM = 'identity_provider';
+
+/**
+ * Maps a raw identity-provider claim value to the application's provider
+ * label. The IDIR-MFA broker federates through Azure AD, so the realm reports
+ * `azureidir`; every IDIR alias normalizes to the same label the UI already
+ * uses.
+ *
+ * @param value The raw `identity_provider` claim value.
+ * @returns The normalized provider label, or `undefined` when unrecognized.
+ */
+const normalizeIdpProvider = (value: unknown): IdpProviderType | undefined => {
+  const provider = (typeof value === 'string' ? value : '').toLowerCase();
+  if (provider === 'azureidir' || provider === 'idir') return 'IDIR';
+  if (provider === 'bceidbusiness') return 'BCEIDBUSINESS';
+  return undefined;
 };
 
 /**
- * Retrieves the Cognito accessToken for the current user from cookies.
- * @returns {string | undefined} The accessToken string, or undefined if not found.
+ * Extracts the role-claim string list from decoded token claims, dropping FAM
+ * bookkeeping entries.
+ *
+ * @param claims Decoded token claims.
+ * @returns Application role names; empty when the claim is absent or malformed.
  */
-export const getUserAccessTokenFromCookie = (): string | undefined => {
-  const baseCookieName = `CognitoIdentityServiceProvider.${env.VITE_USER_POOLS_WEB_CLIENT_ID}`;
-  const userId = encodeURIComponent(getCookie(`${baseCookieName}.LastAuthUser`));
-  if (userId) {
-    return getCookie(`${baseCookieName}.${userId}.accessToken`);
-  } else {
-    return undefined;
-  }
+const extractClientRoles = (claims: Record<string, unknown> | undefined): string[] => {
+  const raw = claims?.[CLIENT_ROLES_CLAIM];
+  if (!Array.isArray(raw)) return [];
+  return raw.filter(
+    (entry): entry is string => typeof entry === 'string' && !entry.startsWith(FAM_BOOKKEEPING_PREFIX),
+  );
 };
 
 /**
- * Retrieves the Cognito idToken for the current user from cookies.
- * @returns {string | undefined} The idToken string, or undefined if not found.
+ * Parses decoded token claims and returns a FamLoginUser object if valid.
+ *
+ * Reads the Keycloak claim set (`identity_provider`, `idir_username`,
+ * `display_name`, `email`, `client_roles`); the legacy Cognito
+ * `custom:idp_name` claim is honoured only to keep the provider label
+ * resolvable for tokens minted before the cutover.
+ *
+ * @param claims Decoded token claims (access-token payload merged over the ID-token profile).
+ * @returns The parsed user object, or undefined when claims are absent.
  */
-export const getUserIdTokenFromCookie = (): string | undefined => {
-  const baseCookieName = `CognitoIdentityServiceProvider.${env.VITE_USER_POOLS_WEB_CLIENT_ID}`;
-  const userId = encodeURIComponent(getCookie(`${baseCookieName}.LastAuthUser`));
-  if (userId) {
-    return getCookie(`${baseCookieName}.${userId}.idToken`);
-  } else {
-    return undefined;
-  }
-};
-
-/**
- * Backward-compatible alias for existing call sites.
- * Uses the access token because API authorization depends on it.
- */
-export const getUserTokenFromCookie = getUserAccessTokenFromCookie;
-
-/**
- * Parses a JWT token and returns a FamLoginUser object if valid.
- * @param {JWT | undefined} idToken - The JWT token to parse.
- * @returns {FamLoginUser | undefined} The parsed user object, or undefined if invalid.
- */
-export const parseToken = (idToken: JWT | undefined): FamLoginUser | undefined => {
-  if (!idToken) return undefined;
-  const decodedIdToken = idToken?.payload;
-  const displayName = (decodedIdToken?.['custom:idp_display_name'] as string) || '';
-  const idpProvider = validIdpProviders.includes(
-    (decodedIdToken?.['custom:idp_name'] as string)?.toUpperCase() as IdpProviderType,
-  )
-    ? ((decodedIdToken?.['custom:idp_name'] as string).toUpperCase() as IdpProviderType)
-    : undefined;
+export const parseToken = (claims: Record<string, unknown> | undefined): FamLoginUser | undefined => {
+  if (!claims) return undefined;
+  const displayName = (claims['display_name'] as string) || '';
+  const idpProvider = normalizeIdpProvider(claims[IDENTITY_PROVIDER_CLAIM]);
   const hasComma = displayName.includes(',');
   let [lastName, firstName] = hasComma ? displayName.split(', ') : displayName.split(' ');
   if (!hasComma) [lastName, firstName] = [firstName, lastName];
   const sanitizedFirstName = hasComma ? firstName?.split(' ')[0]?.trim() : firstName || '';
-  const userName = (decodedIdToken?.['custom:idp_username'] as string) || '';
-  const email = (decodedIdToken?.['email'] as string) || '';
-  const cognitoGroups = extractGroups(decodedIdToken);
-  const roles = extractRoles(cognitoGroups);
+  const userName = (claims['idir_username'] as string) || '';
+  const email = (claims['email'] as string) || '';
+  const clientRoles = extractClientRoles(claims);
+  const roles = extractRoles(clientRoles);
   roles.push(
     idpProvider === 'IDIR' ? { role: Role.IDIR, clients: [] } : { role: Role.BCeID, clients: [] },
   );
@@ -87,7 +88,7 @@ export const parseToken = (idToken: JWT | undefined): FamLoginUser | undefined =
     displayName,
     email,
     idpProvider,
-    privileges: parsePrivileges(cognitoGroups),
+    privileges: parsePrivileges(clientRoles),
     firstName: sanitizedFirstName,
     lastName,
     providerUsername: `${idpProvider}\\${userName}`,
@@ -95,6 +96,16 @@ export const parseToken = (idToken: JWT | undefined): FamLoginUser | undefined =
   };
 };
 
+/**
+ * Parses role names into the privilege map consumed by access checks.
+ *
+ * Roles arrive as bare application codes (`WASTE_PLUS_ADMIN`) or scope-
+ * suffixed names (`WASTE_PLUS_VIEWER_00147603`); the numeric suffix carries
+ * the scoped value (legacy client number).
+ *
+ * @param input Application role names with the FAM bookkeeping entries removed.
+ * @returns The privilege map keyed by user-facing role label.
+ */
 function parsePrivileges(input: string[]): USER_PRIVILEGE_TYPE {
   const result: USER_PRIVILEGE_TYPE = {};
   const knownPrefix = 'WASTE_PLUS_';
@@ -121,14 +132,13 @@ function parsePrivileges(input: string[]): USER_PRIVILEGE_TYPE {
   return result;
 }
 
-function extractGroups(decodedIdToken: object | undefined): string[] {
-  if (!decodedIdToken) return [];
-  if ('cognito:groups' in decodedIdToken) {
-    return decodedIdToken['cognito:groups'] as string[];
-  }
-  return [];
-}
-
+/**
+ * Groups application role names into {@link FamRole} assignments with their
+ * scoped client values.
+ *
+ * @param roles Application role names with the FAM bookkeeping entries removed.
+ * @returns One entry per role, each carrying the distinct scoped client values.
+ */
 function extractRoles(roles: string[]): FamRole[] {
   const roleMap = new Map<Role, Set<string>>();
   const knownPrefix = 'WASTE_PLUS_';

@@ -1,10 +1,3 @@
-import type { JWT as AmplifyJWT } from '@aws-amplify/core';
-
-/**
- * Re-export of the Amplify JWT type used by the auth layer.
- */
-export type JWT = AmplifyJWT;
-
 /**
  * User-facing role labels supported by the application.
  */

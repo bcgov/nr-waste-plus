@@ -1,13 +1,9 @@
 import { QueryClientProvider } from '@tanstack/react-query';
-import { Amplify } from 'aws-amplify';
-import { cognitoUserPoolsTokenProvider } from 'aws-amplify/auth/cognito';
-import { CookieStorage } from 'aws-amplify/utils';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import '@/styles/index.scss';
 import App from '@/App.tsx';
-import amplifyconfig from '@/config/fam/config';
 import { queryClient } from '@/config/react-query/config';
 import AnnouncerProvider from '@/context/announcer/AnnouncerProvider';
 import { AuthProvider } from '@/context/auth/AuthProvider';
@@ -17,8 +13,6 @@ import { PreferenceProvider } from '@/context/preference/PreferenceProvider.tsx'
 import ThemeProvider from '@/context/theme/ThemeProvider.tsx';
 import { migrateOldServiceWorker } from '@/registerServiceWorker';
 
-Amplify.configure(amplifyconfig);
-cognitoUserPoolsTokenProvider.setKeyValueStorage(new CookieStorage());
 migrateOldServiceWorker();
 
 createRoot(document.getElementById('root')!).render(

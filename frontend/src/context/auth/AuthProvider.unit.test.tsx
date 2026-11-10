@@ -1,190 +1,161 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { render, waitFor, act } from '@testing-library/react';
-import { describe, it, expect, vi, beforeAll, afterAll } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
+import type { User } from 'oidc-client-ts';
 
-import { jwtfy } from '@/config/tests/auth.helper';
 import { Role, type FamLoginUser, type FamRole } from '@/types/auth.types';
 import { navigateTo } from '@/utils/navigation';
 
-import { AuthContext } from './AuthContext';
+import { AuthContext, type AuthContextType } from './AuthContext';
 import { AuthProvider, preserveRolesReference } from './AuthProvider';
 
-// Mocks
-vi.mock('aws-amplify/auth', () => ({
-  fetchAuthSession: vi.fn(),
-  signInWithRedirect: vi.fn(),
-  signOut: vi.fn(),
+// The provider consumes the OIDC service exclusively; mock it at the module
+// boundary and craft fake users with real Keycloak claim shapes.
+const keycloakService = vi.hoisted(() => ({
+  ensureFreshUser: vi.fn<() => Promise<User | null>>(),
+  signIn: vi.fn<() => Promise<void>>(),
+  signOut: vi.fn<() => Promise<void>>(),
+  removeUserLocally: vi.fn<() => Promise<void>>(),
 }));
 
-vi.mock('./authUtils', () => ({
-  parseToken: vi.fn((token) => ({ id: 'user', name: 'Test User', token })),
-  getUserAccessTokenFromCookie: vi.fn(() => undefined),
-  getUserIdTokenFromCookie: vi.fn(() => undefined),
-}));
+vi.mock('@/services/keycloak', () => keycloakService);
 
 vi.mock('@/utils/navigation', () => ({
   navigateTo: vi.fn(),
 }));
 
-describe('AuthProvider (extra coverage)', () => {
-  describe('when VITE_MOCK_AUTH is false', () => {
-    let originalMockAuth: string | undefined;
-    beforeAll(async () => {
-      const module = await import('@/env');
-      originalMockAuth = module.env.VITE_MOCK_AUTH;
-      module.env.VITE_MOCK_AUTH = 'false';
-    });
+const IDIR_CLAIMS = {
+  identity_provider: 'azureidir',
+  idir_username: 'JRYAN',
+  display_name: 'Ryan, Jack Admin CIA:IN',
+  email: 'jack.ryan@gov.bc.ca',
+  client_roles: ['WASTE_PLUS_ADMIN'],
+};
 
-    afterAll(async () => {
-      // Restore the original value
-      if (originalMockAuth !== undefined) {
-        const module = await import('@/env');
-        module.env.VITE_MOCK_AUTH = originalMockAuth;
-      }
-    });
+const fakeOidcUser = (overrides: Partial<Record<string, unknown>> = {}): User =>
+  ({
+    access_token: `header.${btoa(JSON.stringify(IDIR_CLAIMS))}.signature`,
+    profile: { email: IDIR_CLAIMS.email },
+    expired: false,
+    expires_at: Math.floor(Date.now() / 1000) + 600,
+    ...overrides,
+  }) as unknown as User;
 
-    it('calls fetchAuthSession', async () => {
-      const { fetchAuthSession } = await import('aws-amplify/auth');
-      let context: any;
-      render(
-        <AuthProvider>
-          <AuthContext.Consumer>
-            {(value) => {
-              context = value;
-              return null;
-            }}
-          </AuthContext.Consumer>
-        </AuthProvider>,
-      );
-      await waitFor(() => expect(context).toBeDefined());
-      expect(fetchAuthSession).toHaveBeenCalledWith();
-    });
+/**
+ * Renders the provider and returns a live ref to the latest context value —
+ * NOT a snapshot. The provider re-renders the Consumer on every state change,
+ * so `context.current` always reflects the current auth state.
+ */
+const renderWithProvider = () => {
+  const context: { current: AuthContextType | undefined } = { current: undefined };
+  render(
+    <AuthProvider>
+      <AuthContext.Consumer>
+        {(value) => {
+          context.current = value;
+          return null;
+        }}
+      </AuthContext.Consumer>
+    </AuthProvider>,
+  );
+  // Flush the mount effect so isLoading resolves before assertions.
+  return waitFor(() => {
+    if (!context.current) throw new Error('context not ready');
+    expect(context.current.isLoading).toBe(false);
+  }).then(() => context);
+};
 
-    it('calls login with IDIR and BCEIDBUSINESS', async () => {
-      const { signInWithRedirect } = await import('aws-amplify/auth');
-      let context: any;
-      render(
-        <AuthProvider>
-          <AuthContext.Consumer>
-            {(value) => {
-              context = value;
-              return null;
-            }}
-          </AuthContext.Consumer>
-        </AuthProvider>,
-      );
-      await waitFor(() => expect(context).toBeDefined());
-      await act(async () => {
-        context.login('IDIR');
-      });
-      expect(signInWithRedirect).toHaveBeenCalledWith({ provider: { custom: 'TEST-IDIR' } });
-      await act(async () => {
-        context.login('BCEIDBUSINESS');
-      });
-      expect(signInWithRedirect).toHaveBeenCalledWith({
-        provider: { custom: 'TEST-BCEIDBUSINESS' },
-      });
-    });
+describe('AuthProvider', () => {
+  it('initializes the session from the OIDC service and maps the user', async () => {
+    keycloakService.ensureFreshUser.mockResolvedValue(fakeOidcUser());
+    const context = await renderWithProvider();
 
-    it('calls logout and sets user undefined', async () => {
-      const { signOut } = await import('aws-amplify/auth');
-      const { signOutUrl } = await import('@/config/fam/config');
-      let context: any;
-      render(
-        <AuthProvider>
-          <AuthContext.Consumer>
-            {(value) => {
-              context = value;
-              return null;
-            }}
-          </AuthContext.Consumer>
-        </AuthProvider>,
-      );
-      await waitFor(() => expect(context).toBeDefined());
-      await act(async () => {
-        context.logout();
-      });
-      expect(signOut).toHaveBeenCalled();
-      expect(navigateTo).toHaveBeenCalledWith(signOutUrl);
-    });
-
-    it('calls userToken and returns value', async () => {
-      const { getUserAccessTokenFromCookie } = await import('./authUtils');
-      (getUserAccessTokenFromCookie as any).mockReturnValue('sometoken');
-      let context: any;
-      render(
-        <AuthProvider>
-          <AuthContext.Consumer>
-            {(value) => {
-              context = value;
-              return null;
-            }}
-          </AuthContext.Consumer>
-        </AuthProvider>,
-      );
-      await waitFor(() => expect(context).toBeDefined());
-      expect(context.userToken()).toBe('sometoken');
-    });
+    expect(keycloakService.ensureFreshUser).toHaveBeenCalledTimes(1);
+    await waitFor(() => expect(context.current?.isLoggedIn).toBe(true));
+    expect(context.current?.user?.userName).toBe('JRYAN');
+    expect(context.current?.user?.displayName).toBe('Ryan, Jack Admin CIA:IN');
+    expect(context.current?.user?.idpProvider).toBe('IDIR');
+    expect(context.current?.user?.roles).toEqual([
+      { role: Role.ADMIN, clients: [] },
+      { role: Role.IDIR, clients: [] },
+    ]);
+    expect(context.current?.userToken()).toBe(fakeOidcUser().access_token);
   });
 
-  describe('when VITE_MOCK_AUTH is true', () => {
-    let originalMockAuth: string | undefined;
-    beforeAll(async () => {
-      const module = await import('@/env');
-      originalMockAuth = module.env.VITE_MOCK_AUTH;
-      module.env.VITE_MOCK_AUTH = 'true';
+  it('stays signed out when no session exists', async () => {
+    keycloakService.ensureFreshUser.mockResolvedValue(null);
+    const context = await renderWithProvider();
+
+    expect(context.current?.isLoggedIn).toBe(false);
+    expect(context.current?.user).toBeUndefined();
+  });
+
+  it('clears the local session when initialization fails', async () => {
+    keycloakService.ensureFreshUser.mockRejectedValue(new Error('unresolvable'));
+    const context = await renderWithProvider();
+
+    expect(keycloakService.removeUserLocally).toHaveBeenCalledTimes(1);
+    expect(context.current?.user).toBeUndefined();
+    expect(context.current?.isLoading).toBe(false);
+  });
+
+  it('starts the sign-in redirect for the chosen provider', async () => {
+    keycloakService.ensureFreshUser.mockResolvedValue(null);
+    const context = await renderWithProvider();
+
+    await act(async () => {
+      await context.current?.login('IDIR');
+    });
+    expect(keycloakService.signIn).toHaveBeenCalledWith('IDIR');
+
+    await act(async () => {
+      await context.current?.login('BCEIDBUSINESS');
+    });
+    expect(keycloakService.signIn).toHaveBeenCalledWith('BCEIDBUSINESS');
+  });
+
+  it('signs out through the realm without local pre-cleanup', async () => {
+    keycloakService.ensureFreshUser.mockResolvedValue(fakeOidcUser());
+    const context = await renderWithProvider();
+
+    await act(async () => {
+      await context.current?.logout();
     });
 
-    afterAll(async () => {
-      // Restore the original value
-      if (originalMockAuth !== undefined) {
-        const module = await import('@/env');
-        module.env.VITE_MOCK_AUTH = originalMockAuth;
-      }
+    expect(keycloakService.signOut).toHaveBeenCalledTimes(1);
+    expect(keycloakService.removeUserLocally).not.toHaveBeenCalled();
+    expect(navigateTo).not.toHaveBeenCalled();
+  });
+
+  it('falls back to local cleanup and the landing page when the sign-out redirect fails', async () => {
+    keycloakService.ensureFreshUser.mockResolvedValue(fakeOidcUser());
+    keycloakService.signOut.mockRejectedValue(new Error('redirect failed'));
+    const context = await renderWithProvider();
+
+    await act(async () => {
+      await context.current?.logout();
     });
 
-    it("doesn't call fetchAuthSession", async () => {
-      const { fetchAuthSession } = await import('aws-amplify/auth');
-      let context: any;
-      render(
-        <AuthProvider>
-          <AuthContext.Consumer>
-            {(value) => {
-              context = value;
-              return null;
-            }}
-          </AuthContext.Consumer>
-        </AuthProvider>,
-      );
-      await waitFor(() => expect(context).toBeDefined());
-      expect(fetchAuthSession).not.toHaveBeenCalled();
-    });
+    expect(keycloakService.signOut).toHaveBeenCalledTimes(1);
+    expect(keycloakService.removeUserLocally).toHaveBeenCalledTimes(1);
+    await waitFor(() => expect(context.current?.user).toBeUndefined());
+    expect(navigateTo).toHaveBeenCalledWith('/');
+  });
 
-    it("calls getUserIdTokenFromCookie and sets the user token payload to the cookie's decoded value", async () => {
-      const { getUserIdTokenFromCookie } = await import('./authUtils');
+  it('collects distinct client values across roles', async () => {
+    keycloakService.ensureFreshUser.mockResolvedValue(
+      fakeOidcUser({
+        access_token: `header.${btoa(
+          JSON.stringify({
+            ...IDIR_CLAIMS,
+            client_roles: ['WASTE_PLUS_VIEWER_00147603', 'WASTE_PLUS_VIEWER_00147603'],
+          }),
+        )}.signature`,
+      }),
+    );
+    const context = await renderWithProvider();
 
-      const payload = {
-        testKey: 'testValue',
-      };
-
-      const jwt = jwtfy(payload);
-
-      (getUserIdTokenFromCookie as any).mockReturnValue(jwt);
-      let context: any;
-      render(
-        <AuthProvider>
-          <AuthContext.Consumer>
-            {(value) => {
-              context = value;
-              return null;
-            }}
-          </AuthContext.Consumer>
-        </AuthProvider>,
-      );
-      await waitFor(() => expect(context).toBeDefined());
-      expect(getUserIdTokenFromCookie).toHaveBeenCalled();
-      expect(context.user.token.payload).toEqual(payload);
-    });
+    expect(context.current?.getClients()).toEqual(['00147603']);
   });
 });
 
@@ -239,8 +210,14 @@ describe('preserveRolesReference', () => {
 
   it('returns nextUser unchanged when roles reference is already the same', () => {
     const sharedRoles = mockRoles;
-    const previousUser = { ...mockUser, roles: sharedRoles };
-    const nextUser = { ...mockUser, roles: sharedRoles };
+    const previousUser = {
+      ...mockUser,
+      roles: sharedRoles,
+    };
+    const nextUser = {
+      ...mockUser,
+      roles: sharedRoles,
+    };
 
     const result = preserveRolesReference(previousUser, nextUser);
 

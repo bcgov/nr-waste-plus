@@ -21,15 +21,14 @@ jobs:
       VITE_FEATURE_FLAGS: '{"offline-mode-enabled":false}'
       VITE_ZONE: TEST
       VITE_MOCK_AUTH: true
-      VITE_USER_POOLS_ID: ${{ secrets.COGNITO_USER_POOL }}
-      VITE_USER_POOLS_WEB_CLIENT_ID: ${{ secrets.COGNITO_CLIENT_ID }}
+      VITE_KEYCLOAK_URL: https://test.loginproxy.gov.bc.ca/auth/realms/standard
+      VITE_KEYCLOAK_CLIENT_ID: waste-waste-plus-6729
       VITE_LEGACY_BASE_URL: https://apps.nrs.gov.bc.ca/ext/waste-for
       VITE_CLIENT_BASE_URL: https://forestclient.nrs.gov.bc.ca
       VITE_BACKEND_URL: http://localhost:8080
       VITE_NODE_ENV: test
       VITE_COVERAGE: true
       VITE_PORT: 3000
-      VITE_FAM_DOMAIN: ${{ secrets.FAM_DOMAIN }}
       VITE_BCEID_HELP: ${{ secrets.VITE_BCEID_HELP }}
       VITE_IDIR_HELP: ${{ secrets.VITE_IDIR_HELP }}
     steps:
