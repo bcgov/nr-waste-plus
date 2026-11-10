@@ -1,0 +1,34 @@
+@use '@carbon/react/scss/spacing' as *;
+@use '@carbon/styles/scss/border-radius' as *;
+@use '@carbon/type' as *;
+
+.district-average-volumes-summary-card {
+  padding: $spacing-07;
+  border: 1px solid var(--cds-border-subtle-01);
+  border-radius: $border-radius-08;
+  background-color: var(--cds-background);
+
+  &__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: $spacing-05;
+    margin-bottom: $spacing-06;
+  }
+
+  &__heading {
+    margin: 0;
+    @include type-style('heading-compact-01');
+    color: var(--cds-text-primary);
+  }
+
+  &__helper {
+    margin: $spacing-01 0 0;
+    @include type-style('label-01');
+    color: var(--cds-text-secondary);
+  }
+
+  &__list {
+    width: 100%;
+  }
+}

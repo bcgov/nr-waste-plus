@@ -11,6 +11,8 @@ import { type FC } from 'react';
 
 import type { CodeDescriptionDto } from '@/types/search.types';
 
+import './index.scss';
+
 export type DistrictAverageVolumeRow = {
   populationType?: string | null;
   wasteType?: string | null;
@@ -46,7 +48,7 @@ const display = (value: string | number | null | undefined): string => {
 };
 
 /**
- * Card 3 — District average volumes summary (D20 tier 1, S7, variant-identical).
+ * Card 3 — District average volumes summary (D20 tier 1, S7, variant-identical, Figma 1:7464).
  * 8 columns; D8 fixed values rendered as received. Only Harvest method is editable
  * (inline dropdown); recalculation semantics deferred (OQD).
  */
@@ -64,14 +66,24 @@ const DistrictAverageVolumesSummaryCard: FC<DistrictAverageVolumesSummaryCardPro
   >
     <div className="district-average-volumes-summary-card__header">
       <div>
-        <h3 id="district-average-volumes-summary-heading">District average volumes summary</h3>
-        <p>Review district average volume details</p>
+        <h3
+          id="district-average-volumes-summary-heading"
+          className="district-average-volumes-summary-card__heading"
+        >
+          District average volumes summary
+        </h3>
+        <p className="district-average-volumes-summary-card__helper">
+          Estimated volumes are auto-calculated and may differ from final volumes
+        </p>
       </div>
-      <Button kind="secondary" onClick={onViewVolumeDetails}>
+      <Button kind="tertiary" onClick={onViewVolumeDetails}>
         View volume details
       </Button>
     </div>
-    <StructuredListWrapper aria-label="District average volumes summary">
+    <StructuredListWrapper
+      aria-label="District average volumes summary"
+      className="district-average-volumes-summary-card__list"
+    >
       <StructuredListHead>
         <StructuredListRow head>
           <StructuredListCell head>Population type</StructuredListCell>

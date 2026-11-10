@@ -8,6 +8,8 @@ import {
 } from '@carbon/react';
 import { type FC } from 'react';
 
+import './index.scss';
+
 export type WasteAssessmentAreaRow = {
   markType?: string | null;
   timberMarkId?: string | null;
@@ -27,7 +29,7 @@ const display = (value: string | number | null | undefined): string => {
 };
 
 /**
- * Card 2 — Waste assessment area summary (D20 tier 1, S7, variant-identical).
+ * Card 2 — Waste assessment area summary (D20 tier 1, S7, variant-identical, Figma 1:7425).
  * Renders supplied rows/totals as received (empty-safe, dashes for empties).
  * Data source is the Area calculator (tab 2); recalculation deferred (OQD).
  */
@@ -42,14 +44,24 @@ const WasteAssessmentAreaSummaryCard: FC<WasteAssessmentAreaSummaryCardProps> = 
   >
     <div className="waste-assessment-area-summary-card__header">
       <div>
-        <h3 id="waste-assessment-area-summary-heading">Waste assessment area summary</h3>
-        <p>Use area calculator to add waste assessment area details</p>
+        <h3
+          id="waste-assessment-area-summary-heading"
+          className="waste-assessment-area-summary-card__heading"
+        >
+          Waste assessment area summary
+        </h3>
+        <p className="waste-assessment-area-summary-card__helper">
+          Use area calculator to add waste assessment area details
+        </p>
       </div>
-      <Button kind="secondary" onClick={onGoToAreaCalculator}>
+      <Button kind="tertiary" onClick={onGoToAreaCalculator}>
         Go to area calculator
       </Button>
     </div>
-    <StructuredListWrapper aria-label="Waste assessment area summary">
+    <StructuredListWrapper
+      aria-label="Waste assessment area summary"
+      className="waste-assessment-area-summary-card__list"
+    >
       <StructuredListHead>
         <StructuredListRow head>
           <StructuredListCell head>Timber mark type</StructuredListCell>

@@ -16,6 +16,8 @@ import { resolveSubmissionVariant, type SubmissionVariant } from './resolveSubmi
 
 import type { CodeDescriptionDto } from '@/types/search.types';
 
+import './index.scss';
+
 export { resolveSubmissionVariant, type SubmissionVariant };
 
 export interface BlockDetailsTabProps extends Omit<SubmissionDetailsCardProps, 'variant'> {
@@ -52,7 +54,7 @@ const BlockDetailsTab: FC<BlockDetailsTabProps> = ({
 }) => {
   const resolvedVariant = variant ?? resolveSubmissionVariant(grade);
   return (
-    <>
+    <div className="block-details-tab">
       <SubmissionDetailsCard {...cardProps} variant={resolvedVariant} />
       <WasteAssessmentAreaSummaryCard
         {...wasteAssessmentArea}
@@ -68,7 +70,7 @@ const BlockDetailsTab: FC<BlockDetailsTabProps> = ({
         {...additionalRequirements}
         onAddAttachments={additionalRequirements?.onAddAttachments ?? (() => onNavigateTab?.(3))}
       />
-    </>
+    </div>
   );
 };
 
