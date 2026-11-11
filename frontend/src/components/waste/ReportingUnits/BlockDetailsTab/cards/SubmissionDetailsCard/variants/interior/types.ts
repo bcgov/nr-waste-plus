@@ -1,9 +1,7 @@
+import { toSelectedItem as toSelectedItemFromFormat } from '@/components/waste/ReportingUnits/BlockDetailsTab/cards/SubmissionDetailsCard/shared/format';
+
 import type { CodeDescriptionDto } from '@/types/search.types';
 
-/**
- * Field values owned by the Interior submission-details twins. Both the form
- * and read-only views seed from the same shape, so the two stay in lockstep.
- */
 export interface InteriorSubmissionDetailsValues {
   readonly primaryLoggingCompleteDate: string;
   readonly harvestStatusCode: string;
@@ -27,10 +25,6 @@ export interface InteriorBecSubzoneVariantOption extends CodeDescriptionDto {
   readonly becZoneCode: string;
 }
 
-/**
- * Public props for the Interior submission-details component: {@linkcode mode}
- * selects the twin, the callbacks drive the timber-mark sections.
- */
 export interface InteriorSubmissionDetailsFormProps {
   readonly mode: 'form' | 'read-only';
   readonly initialValues?: Partial<InteriorSubmissionDetailsValues>;
@@ -42,16 +36,11 @@ export interface InteriorSubmissionDetailsFormProps {
   readonly onAddRoadPermitTimberMark?: () => void;
 }
 
-/**
- * Props for the read-only twin: the same data as the form twin minus the mode
- * selector and the add-mark callbacks it never renders.
- */
 export type InteriorSubmissionDetailsReadOnlyProps = Omit<
   InteriorSubmissionDetailsFormProps,
   'mode' | 'onAddSecondaryTimberMark' | 'onAddRoadPermitTimberMark'
 >;
 
-/** Seed values merged under the caller-supplied {@link initialValues}. */
 export const EMPTY_VALUES: InteriorSubmissionDetailsValues = {
   primaryLoggingCompleteDate: '',
   harvestStatusCode: '',
@@ -67,23 +56,17 @@ export const EMPTY_VALUES: InteriorSubmissionDetailsValues = {
   roadPermitTimberMarks: [],
 };
 
-/** Normalizes legacy single-code criteria to the D28 multi-select array shape. */
 export const normalizeInitialValues = (
   initialValues?: Partial<InteriorSubmissionDetailsValues> & {
     readonly districtAverageCriteriaCode?: string;
   },
 ): InteriorSubmissionDetailsValues => {
   if (!initialValues) return EMPTY_VALUES;
-  const legacy = (initialValues as { districtAverageCriteriaCode?: string })
-    .districtAverageCriteriaCode;
+  const legacy = (initialValues as { districtAverageCriteriaCode?: string }).districtAverageCriteriaCode;
   const codes =
     initialValues.districtAverageCriteriaCodes ??
     (legacy ? [legacy] : EMPTY_VALUES.districtAverageCriteriaCodes);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { districtAverageCriteriaCode: _legacy, ...rest } = initialValues as Record<
-    string,
-    unknown
-  >;
+  const { districtAverageCriteriaCode: _legacy, ...rest } = initialValues as Record<string, unknown>;
   return {
     ...EMPTY_VALUES,
     ...(rest as Partial<InteriorSubmissionDetailsValues>),
@@ -91,14 +74,5 @@ export const normalizeInitialValues = (
   };
 };
 
-/**
- * Finds the option matching a stored code.
- *
- * @param options the option list to search
- * @param code the stored code; empty string matches nothing
- * @returns the matching option, or null when the code is unset or unknown
- */
-export const toSelectedItem = (
-  options: readonly CodeDescriptionDto[],
-  code: string,
-): CodeDescriptionDto | null => options.find((option) => option.code === code) ?? null;
+/** Back-compat re-export; canonical implementation lives in shared/format. */
+export const toSelectedItem = toSelectedItemFromFormat;
