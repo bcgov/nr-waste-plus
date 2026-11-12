@@ -100,6 +100,24 @@ describe('AdditionalRequirementsCard', () => {
     expect(screen.queryByRole('checkbox', { name: CERTIFY_LABEL })).toBeNull();
   });
 
+  it('starts certify unchecked when initialValues are contradictory (D11)', async () => {
+    const user = userEvent.setup();
+    render(
+      <AdditionalRequirementsCard
+        mode="form"
+        initialValues={{ werePilesBurnt: true, certifyNoAdditionalRequirements: true }}
+      />,
+    );
+
+    // D11: piles burnt = Yes, so the certify value is ignored while hidden.
+    expect(screen.queryByRole('checkbox', { name: CERTIFY_LABEL })).toBeNull();
+
+    // Revealing the checkbox must not surface a pre-checked value.
+    await user.click(screen.getByRole('switch', { name: PILE_BURN_QUESTION }));
+    const certify = screen.getByRole('checkbox', { name: CERTIFY_LABEL });
+    expect((certify as HTMLInputElement).checked).toBe(false);
+  });
+
   it('renders read-only Yes/No values and hides the certify checkbox when not both No', () => {
     render(
       <AdditionalRequirementsCard

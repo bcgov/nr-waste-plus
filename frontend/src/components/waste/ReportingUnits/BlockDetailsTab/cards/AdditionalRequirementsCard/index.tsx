@@ -35,7 +35,11 @@ const AdditionalRequirementsCard: FC<AdditionalRequirementsCardProps> = ({
     initialValues?.requiresRationale ?? false,
   );
   const [certified, setCertified] = useState(
-    initialValues?.certifyNoAdditionalRequirements ?? false,
+    // D11: a certify value can only start as true while both toggles start "No";
+    // contradictory initialValues are sanitised to false at initialisation.
+    !initialValues?.werePilesBurnt && !initialValues?.requiresRationale
+      ? (initialValues?.certifyNoAdditionalRequirements ?? false)
+      : false,
   );
   const [certifyTouched, setCertifyTouched] = useState(false);
 
