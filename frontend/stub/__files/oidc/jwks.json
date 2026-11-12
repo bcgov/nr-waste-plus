@@ -1,0 +1,12 @@
+{
+  "keys": [
+    {
+      "kty": "RSA",
+      "use": "sig",
+      "alg": "RS256",
+      "kid": "mock-realm-key-1",
+      "n": "5Qv2D6QVhLtQo4TLfnWcrA7OAZO2O9hoLp5DI8_iaXLIi7nHiZxQs6CBDgsPiefqL9ZTQBVV9ZiTojl3hTAGEgYFo2tsm5MeoCVOnTTps0gxoOO2N7zcS_rMT5jA95XshawuJbvEtXxosu6yRSunXJWHb_OKEeU0AOyXgX7v4okSLuBfxGpIybYCls9Lseui-Z7-AW0K9ez7vm4qm7C1TF-Mm5HdNBUopmBoLtbs4OuSFuGI8TM0p9CcyCvIt-SM8AESSapzCYxXgiMEzDGLBAMOIA7Riw0iuLZMH393Y6l60Jc0DWo2BT_7balhJxY_m7WtwF80sqtJp1jk-k52Cw",
+      "e": "AQAB"
+    }
+  ]
+}

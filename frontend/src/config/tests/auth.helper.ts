@@ -1,145 +1,218 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable no-console */
-import crypto from 'node:crypto';
+import { createSign } from 'node:crypto';
+import fs from 'node:fs';
 import path from 'node:path';
 
 import type { Page } from '@playwright/test';
 
-interface CookieData {
-  lastAuthUser: string;
-  idToken: string;
-  accessToken: string;
-}
+type Provider = 'idir' | 'bceid';
 
-const defaultGroups = {
-  bceid: [
-    'WASTE_PLUS_VIEWER_00147603',
-    'WASTE_PLUS_SUBMITTER_00010005',
-    'WASTE_PLUS_SUBMITTER_00011457',
-    'WASTE_PLUS_SUBMITTER_00001271',
-  ],
-  idir: ['WASTE_PLUS_ADMIN'],
+/**
+ * Directory holding the generated mock-realm fixtures (tokens, sessions,
+ * JWKS). Regenerate with `node stub/keys/generate-mock-realm.mjs`.
+ */
+const MOCK_OIDC_DIR = path.resolve(process.cwd(), 'stub', '__files', 'oidc');
+const MOCK_PRIVATE_KEY_PATH = path.resolve(process.cwd(), 'stub', 'keys', 'mock-realm-private.pem');
+
+/**
+ * Claim-name translation from the legacy Cognito vocabulary the specs were
+ * written against to the Keycloak claims the tokens now carry. Specs keep
+ * speaking the old names; this helper converts them. Sweep candidate.
+ */
+const LEGACY_CLAIM_MAP: Record<string, string> = {
+  'custom:idp_name': 'identity_provider',
+  'cognito:groups': 'client_roles',
+  'custom:idp_username': 'idir_username',
+  'custom:idp_display_name': 'display_name',
+  'custom:idp_user_id': 'idir_user_guid',
+  'custom:idp_business_id': 'bceid_user_guid',
 };
 
-const defaultClaims = (userId: string, businessId: string) => {
-  const idir = {
-    'custom:idp_name': 'idir',
-    'cognito:groups': defaultGroups.idir,
-    'cognito:username': `test-idir_${userId}@idir`,
-    'custom:idp_user_id': userId.toUpperCase(),
-    'custom:idp_username': 'JRYAN',
-    'custom:idp_display_name': 'Ryan, Jack Admin CIA:IN',
-    'email': 'jack.ryan@gov.bc.ca',
-    'preferred_username': `${userId}@idir`,
-    'email_verified': false,
-  };
-  const bceid = {
-    'custom:idp_name': 'bceidbusiness',
-    'cognito:groups': defaultGroups.bceid,
-    'custom:idp_business_id': businessId.toUpperCase(),
-    'cognito:username': `test-bceidbusiness_${userId}@bceidbusiness`,
-    'custom:idp_user_id': userId.toUpperCase(),
-    'custom:idp_username': 'uattest',
-    'custom:idp_display_name': 'Uat Test',
-    'email': 'uattest@gov.bc.ca',
-  };
-  return { idir, bceid };
+/**
+ * Broker alias normalization: the realm reports IDIR as `azureidir` (IDIR-MFA
+ * federates through Azure AD); specs may pass either name.
+ */
+const normalizeBroker = (value: unknown): unknown => {
+  if (value === 'idir') return 'azureidir';
+  return value;
 };
 
-const genRandomId = () => crypto.randomBytes(16).toString('hex');
-
-const setupCustomClaims = (
-  userType: 'idir' | 'bceid',
-  claimOverrides: Record<string, any> = {},
-): CookieData => {
-  const lastAuthUser = userType === 'idir' ? 'idirUser' : 'bceidUser';
-  const { idir, bceid } = defaultClaims(genRandomId(), genRandomId());
-
-  return {
-    lastAuthUser,
-    idToken: jwtfy(
-      userType === 'idir' ? { ...idir, ...claimOverrides } : { ...bceid, ...claimOverrides },
-    ),
-    accessToken: jwtfy(
-      userType === 'idir' ? { ...idir, ...claimOverrides } : { ...bceid, ...claimOverrides },
-    ),
-  };
+const translateLegacyClaims = (overrides: Record<string, any>): Record<string, any> => {
+  const translated: Record<string, any> = {};
+  for (const [key, value] of Object.entries(overrides)) {
+    const claimName = LEGACY_CLAIM_MAP[key] ?? key;
+    translated[claimName] = claimName === 'identity_provider' ? normalizeBroker(value) : value;
+  }
+  return translated;
 };
 
+const signJwt = (payload: Record<string, unknown>): string => {
+  const header = { alg: 'RS256', typ: 'JWT', kid: 'mock-realm-key-1' };
+  const encode = (value: object) => Buffer.from(JSON.stringify(value)).toString('base64url');
+  const signingInput = `${encode(header)}.${encode(payload)}`;
+  const signature = createSign('RSA-SHA256')
+    .update(signingInput)
+    .sign(fs.readFileSync(MOCK_PRIVATE_KEY_PATH, 'utf8'), 'base64url');
+  return `${signingInput}.${signature}`;
+};
+
+/**
+ * The mock realm issuer. Must mirror `buildMockAuthority()` in
+ * `src/services/keycloak.ts` exactly: the VITE_BACKEND_URL host with port
+ * 8080 swapped for the WireMock port 8181.
+ */
+const buildMockAuthority = (): string => {
+  const backendUrl = process.env.VITE_BACKEND_URL ?? 'http://localhost:8080';
+  const host = backendUrl.replace(/^https?:\/\//, '').replace(':8080', ':8181');
+  return `http://${host}/realms/standard`;
+};
+
+/**
+ * The sessionStorage key `oidc-client-ts` stores the user under.
+ *
+ * `UserManager._userStoreKey` builds `user:<authority>:<client_id>`, but the
+ * `WebStorageStateStore` used for the user store applies its **default
+ * `oidc.` prefix**, so the effective key is `oidc.user:<authority>:<client_id>`.
+ * Verified against the installed `oidc-client-ts` 3.5.0.
+ */
+export const getMockUserStorageKey = (): string =>
+  `oidc.user:${buildMockAuthority()}:${process.env.VITE_KEYCLOAK_CLIENT_ID ?? 'waste-waste-plus-6729'}`;
+
+/**
+ * Whether tests should run against the mock realm rather than a real one.
+ */
+export const isMockAuthEnabled = (): boolean =>
+  process.env.VITE_MOCK_AUTH?.toLowerCase() === 'true';
+
+const loadSessionFixture = (userType: Provider): string => {
+  const sessionPath = path.join(MOCK_OIDC_DIR, `session-${userType}.json`);
+  if (!fs.existsSync(sessionPath)) {
+    throw new Error(
+      `Mock OIDC session fixture missing: ${sessionPath}. ` +
+        'Generate it with: node stub/keys/generate-mock-realm.mjs',
+    );
+  }
+  return fs.readFileSync(sessionPath, 'utf-8');
+};
+
+/**
+ * Plants a pre-signed OIDC session into the store the mock-mode user manager
+ * reads — localStorage under the `oidc.user:<authority>:<client_id>` key —
+ * before any application script runs on this page.
+ *
+ * The setup project calls this, then saves a storageState: localStorage IS
+ * captured by Playwright's storageState, so the browser projects inherit the
+ * session through the normal mechanism with no per-page planting.
+ *
+ * @param page The page to plant the session into.
+ * @param userType Which mock user to plant.
+ */
+export const injectMockOidcSession = async (page: Page, userType: Provider): Promise<void> => {
+  await page.addInitScript(
+    ([storageKey, sessionJson]) => {
+      window.localStorage.setItem(storageKey, sessionJson as string);
+    },
+    [getMockUserStorageKey(), loadSessionFixture(userType)],
+  );
+};
+
+/**
+ * Plants an overridden OIDC session into sessionStorage before the app boots.
+ *
+ * Keeps the historic export name and Cognito-claim override vocabulary so the
+ * 20+ spec files calling it stay untouched; claims are translated and the
+ * resulting tokens re-signed with the fixture key. Signature validity is
+ * cosmetic in e2e (no real backend sees these tokens), but keeping tokens
+ * well-formed keeps the fixtures honest.
+ *
+ * @param page The spec's page (init script registers before navigation).
+ * @param metadata Project metadata carrying `userType`.
+ * @param claimOverrides Legacy-named claim overrides on top of the fixture user.
+ */
 export async function mockJwt(
   page: Page,
   metadata: Record<string, any>,
   claimOverrides: Record<string, any> = {},
-) {
-  const cookieData = setupCustomClaims(metadata.userType.toLowerCase(), claimOverrides);
+): Promise<void> {
+  const userType = metadata.userType.toLowerCase() as Provider;
+  const base = JSON.parse(loadSessionFixture(userType)) as Record<string, any>;
+  const profile = { ...base.profile, ...translateLegacyClaims(claimOverrides) };
 
-  const { lastAuthUser, idToken, accessToken } = cookieData;
+  const user = {
+    id_token: signJwt(profile),
+    session_state: null,
+    access_token: signJwt({ ...profile }),
+    refresh_token: `mock-refresh-${userType}`,
+    token_type: 'Bearer',
+    scope: 'openid profile email',
+    profile,
+    expires_at: profile.exp ?? base.expires_at,
+  };
 
-  const clientId = process.env.VITE_USER_POOLS_WEB_CLIENT_ID;
-  if (!clientId) {
-    throw new Error('VITE_USER_POOLS_WEB_CLIENT_ID is not defined for mockJwt');
-  }
-  await page
-    .context()
-    .clearCookies({ name: `CognitoIdentityServiceProvider.${clientId}.LastAuthUser` });
-  await page
-    .context()
-    .clearCookies({ name: `CognitoIdentityServiceProvider.${clientId}.${lastAuthUser}.idToken` });
-  await page.context().clearCookies({
-    name: `CognitoIdentityServiceProvider.${clientId}.${lastAuthUser}.accessToken`,
-  });
-  await page.context().addCookies([
-    {
-      name: `CognitoIdentityServiceProvider.${clientId}.LastAuthUser`,
-      value: lastAuthUser,
-      sameSite: 'Lax',
-      expires: 2908989880,
-      path: '/',
-      domain: 'localhost',
+  await page.addInitScript(
+    ([storageKey, sessionJson]) => {
+      window.localStorage.setItem(storageKey, sessionJson as string);
     },
-    {
-      name: `CognitoIdentityServiceProvider.${clientId}.${lastAuthUser}.idToken`,
-      value: idToken,
-      sameSite: 'Lax',
-      expires: 2908989880,
-      path: '/',
-      domain: 'localhost',
-    },
-    {
-      name: `CognitoIdentityServiceProvider.${clientId}.${lastAuthUser}.accessToken`,
-      value: accessToken,
-      sameSite: 'Lax',
-      expires: 2908989880,
-      path: '/',
-      domain: 'localhost',
-    },
-  ]);
-  await page.reload();
+    [getMockUserStorageKey(), JSON.stringify(user)],
+  );
 }
 
-async function initializeAndCheck(page: Page): Promise<boolean> {
-  await page.goto('/landing');
+/**
+ * Replaces the former Cognito-cookie mock: plants the fixture session, walks
+ * to the app, verifies the authenticated shell renders, and saves a
+ * storageState for the browser projects (cookies are empty under the OIDC
+ * client — the session lives in sessionStorage and is re-planted per page by
+ * the shared fixture).
+ *
+ * @param page The setup project's page.
+ * @param metadata Project metadata carrying `userType` and `stateFile`.
+ */
+export async function mockAuthenticate(page: Page, metadata: Record<string, any>): Promise<void> {
+  const userType = metadata.userType.toLowerCase() as Provider;
+  console.log(`Setup - Mock Auth: ${userType} user`);
 
-  await page.waitForLoadState('networkidle');
+  await mockJwt(page, metadata);
 
-  const notFoundVisible = await page
-    .getByRole('heading', { name: 'Content Not Found' })
-    .isVisible({ timeout: 2000 }); // 2s max
+  await page.goto('/');
 
-  const searchPageVisible = await page
-    .getByRole('heading', { name: 'Waste search' })
-    .isVisible({ timeout: 2000 }); // 2s max
-
-  if (notFoundVisible || searchPageVisible) {
-    console.log('Setup - Already authenticated, skipping login');
-    return true;
+  // Authenticated shell proof: the app header renders (the landing page has
+  // no header) and the login CTA is gone. The app may land on /dashboard or a
+  // restored deep-link target — the header is the stable signal either way.
+  try {
+    await page.waitForSelector('.cds--header__name', { timeout: 20_000 });
+  } catch (error) {
+    // Diagnostics: what does the page actually hold against the key we injected?
+    const storageKeys = await page.evaluate(() => Object.keys(localStorage));
+    const injected = await page.evaluate((k) => localStorage.getItem(k) !== null, getMockUserStorageKey());
+    // eslint-disable-next-line no-console
+    console.log(
+      `DEBUG storageKeys=${JSON.stringify(storageKeys)} injected=${injected} ` +
+        `expectedKey=${getMockUserStorageKey()} url=${page.url()}`,
+    );
+    throw error;
   }
 
-  return false;
+  console.log(`Setup - Mock authenticated as ${userType}`);
+
+  const authFile = path.resolve(process.cwd(), 'src/config/tests', metadata.stateFile);
+  await page.context().storageState({ path: authFile });
 }
 
+/**
+ * Real-credential login through the DEV realm. Used only when
+ * `VITE_MOCK_AUTH` is not enabled (local, against the real integration).
+ *
+ * With `kc_idp_hint=azureidir` the realm hands off straight to the Azure AD
+ * sign-in page (`loginfmt` / password / MFA). MFA cannot be automated — the
+ * caller completes it by hand within the timeout, or uses an MFA-exempt
+ * automation account. BCeID business users authenticate on the BCeID hosted
+ * page instead.
+ *
+ * @param page The setup project's page.
+ * @param metadata Project metadata carrying `userType` and `stateFile`.
+ */
 export async function authenticate(page: Page, metadata: Record<string, any>): Promise<void> {
-  const userType = metadata.userType.toLowerCase() as 'idir' | 'bceid';
+  const userType = metadata.userType.toLowerCase() as Provider;
   const user =
     userType === 'idir' ? (process.env.IDIR_USERNAME ?? '') : (process.env.BCEID_USERNAME ?? '');
   const password =
@@ -147,58 +220,30 @@ export async function authenticate(page: Page, metadata: Record<string, any>): P
   // Credentials are read lazily from process.env — never stored in project metadata
   console.log(`Setup - Auth: ${user} via ${userType}`);
 
-  const alreadyAuthenticated = await initializeAndCheck(page);
-  if (alreadyAuthenticated) {
-    return;
-  }
-
+  await page.goto('/');
   await page.getByTestId(`landing-button__${userType}`).click();
 
   await page.waitForLoadState('networkidle');
-  await page.locator('#user').waitFor({ state: 'visible', timeout: 60000 });
 
-  console.log(`Setup - Filling credentials for user: ${user}`);
-  await page.fill('#user', user);
-  await page.fill('#password', password);
-
-  console.log('Setup - Submitting login form');
-  await page.click('input[name="btnSubmit"]');
+  // The broker sign-in page is cross-origin; all interaction stays inside
+  // cy-free Playwright page APIs. Azure AD (IDIR-MFA) and the BCeID hosted
+  // page expose different fields.
+  if (userType === 'idir') {
+    await page.fill('input[name="loginfmt"]', user);
+    await page.click('input[value="Next"]');
+    await page.fill('input[name="passwd"]', password);
+    await page.click('input[value="Sign in"]');
+    console.log('Setup - Complete the MFA challenge in the browser before the timeout.');
+  } else {
+    await page.fill('#user', user);
+    await page.fill('#password', password);
+    await page.click('input[type="submit"]');
+  }
 
   // Wait for navigation to authenticated page
-  console.log('Setup - Waiting for authentication to complete...');
   await page.waitForLoadState('networkidle');
-
   console.log('Setup - Authentication verified successfully');
 
   const authFile = path.resolve(process.cwd(), 'src/config/tests', metadata.stateFile);
-
-  console.log(`Setup - Saving storage state to ${authFile}`);
-  await page.context().storageState({ path: authFile });
-}
-
-export const jwtfy = (jwtBody: object) => {
-  const header = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9';
-  const payload = btoa(JSON.stringify(jwtBody))
-    .replace(/\+/g, '-')
-    .replace(/\//g, '_')
-    .replace(/=+$/, '');
-  return `${header}.${payload}.`;
-};
-
-export async function mockAuthenticate(page: Page, metadata: Record<string, any>): Promise<void> {
-  console.log(`Setup - Mock Auth: ${metadata.userType.toLowerCase()} user`);
-
-  const alreadyAuthenticated = await initializeAndCheck(page);
-  if (alreadyAuthenticated) {
-    return;
-  }
-
-  // Set the JWT cookie directly to mock authentication without UI interaction
-  // We set no additional claims by default
-  await mockJwt(page, metadata);
-
-  const authFile = path.resolve(process.cwd(), 'src/config/tests', metadata.stateFile);
-
-  console.log(`Setup - Saving storage state to ${authFile}`);
   await page.context().storageState({ path: authFile });
 }

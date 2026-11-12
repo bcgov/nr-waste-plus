@@ -1,0 +1,31 @@
+{
+  "id_token": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6Im1vY2stcmVhbG0ta2V5LTEifQ.eyJpc3MiOiJodHRwOi8vbG9jYWxob3N0OjgxODEvcmVhbG1zL3N0YW5kYXJkIiwiYXVkIjoid2FzdGUtd2FzdGUtcGx1cy02NzI5IiwiYXpwIjoid2FzdGUtd2FzdGUtcGx1cy02NzI5IiwiZXhwIjoxODkzNDU2MDAwLCJpYXQiOjE3NTAwMDAwMDAsImp0aSI6Im1vY2staWRpci1pZCIsImZpZCI6Im1vY2staWRpciIsInN1YiI6ImI1ZWNkYjA5LTRkZmItNDE0OS1hNmE4LTQ0NWEwMWE5NmJmMCIsImlkZW50aXR5X3Byb3ZpZGVyIjoiYXp1cmVpZGlyIiwiaWRpcl91c2VybmFtZSI6IkpSWUFOIiwiZGlzcGxheV9uYW1lIjoiUnlhbiwgSmFjayBBZG1pbiBDSUE6SU4iLCJlbWFpbCI6ImphY2sucnlhbkBnb3YuYmMuY2EiLCJnaXZlbl9uYW1lIjoiSmFjayIsImZhbWlseV9uYW1lIjoiUnlhbiIsImlkaXJfdXNlcl9ndWlkIjoiQjVFQ0RCMDk0REZCNDE0OUE2QTg0NDVBMDFBOTZCRjAiLCJwcmVmZXJyZWRfdXNlcm5hbWUiOiJiNWVjZGIwOTRkZmI0MTQ5YTZhODQ0NWEwMWE5NmJmMEBhenVyZWlkaXIiLCJjbGllbnRfcm9sZXMiOlsiV0FTVEVfUExVU19BRE1JTiIsIkZBTTpFWFBJUkVTOjIwMjYtMDktMzA6V0FTVEVfUExVU19BRE1JTiJdfQ.Gn31WpSiZPto5d7gaMLybSv5uIVm22jYCFlYbR6-p06jvxHO6AMaf0IiuLFVBr7Hx9lbo7cUyUoj98PHTqhnJHOdrbIrxEReHuIxaZ3NyJKk-n1w3TjW7IqJo6YezVCPMdrbUR45454Ou0bBKpWnWSyi9y8bKe6TI_UhhqaKtzgfSh1huBGkhjCRyJqebL8K92m2ux3RxqbgMKic6vevz9PncrjCTqziX5QzcWa1QF_iC_xjoYhzBEUW8YciM_OOFxNDQAQuZzmBuqb0xmIXag9iUSS5qe7pjs3PjfaWIZtr-b3eDadgxldqkad6e6FGE45VG-vfQ5T6IA8CApjZtw",
+  "session_state": null,
+  "access_token": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6Im1vY2stcmVhbG0ta2V5LTEifQ.eyJmaWQiOiJtb2NrLWlkaXIiLCJpc3MiOiJodHRwOi8vbG9jYWxob3N0OjgxODEvcmVhbG1zL3N0YW5kYXJkIiwiYXVkIjoid2FzdGUtd2FzdGUtcGx1cy02NzI5IiwiYXpwIjoid2FzdGUtd2FzdGUtcGx1cy02NzI5IiwiZXhwIjoxODkzNDU2MDAwLCJpYXQiOjE3NTAwMDAwMDAsImp0aSI6Im1vY2staWRpci1hY2Nlc3MiLCJzdWIiOiJiNWVjZGIwOS00ZGZiLTQxNDktYTZhOC00NDVhMDFhOTZiZjAiLCJpZGVudGl0eV9wcm92aWRlciI6ImF6dXJlaWRpciIsImlkaXJfdXNlcm5hbWUiOiJKUllBTiIsImRpc3BsYXlfbmFtZSI6IlJ5YW4sIEphY2sgQWRtaW4gQ0lBOklOIiwiZW1haWwiOiJqYWNrLnJ5YW5AZ292LmJjLmNhIiwiZ2l2ZW5fbmFtZSI6IkphY2siLCJmYW1pbHlfbmFtZSI6IlJ5YW4iLCJpZGlyX3VzZXJfZ3VpZCI6IkI1RUNEQjA5NERGQjQxNDlBNkE4NDQ1QTAxQTk2QkYwIiwicHJlZmVycmVkX3VzZXJuYW1lIjoiYjVlY2RiMDk0ZGZiNDE0OWE2YTg0NDVhMDFhOTZiZjBAYXp1cmVpZGlyIiwiY2xpZW50X3JvbGVzIjpbIldBU1RFX1BMVVNfQURNSU4iLCJGQU06RVhQSVJFUzoyMDI2LTA5LTMwOldBU1RFX1BMVVNfQURNSU4iXX0.xS2WWro-WcXYgD6qFcWzuzG-om6sP2Rtx5mJ8XGpfQEzpkXS5naY7u84e_m2y_XpPDCcivfRNJtkrLu72vdtzbsTNgMj88UI2QknZ8doFZL18IzFEi_dIKMutr-wlijuEpAuc3Pekwr-hObC-rnI1bzq3ECtNlVbKxeCzDq4aWHImTEyc5Adz62HIh5p3kCrxKhMAp9TmgI9tx1NvTQKdYi2C059Z4_D_6XCAoZMFC8-aipxpZmdcXE3L_M_fv7JGhVSl0oP5xjvypEFTF4X4yjeQEzCvW6-z_PdiWX8cUTr1zIp2e1yAs6uzSePnf-QDpf32bAD4Vrv5_YK4k5aNg",
+  "refresh_token": "mock-refresh-idir",
+  "token_type": "Bearer",
+  "scope": "openid profile email",
+  "profile": {
+    "iss": "http://localhost:8181/realms/standard",
+    "aud": "waste-waste-plus-6729",
+    "azp": "waste-waste-plus-6729",
+    "exp": 1893456000,
+    "iat": 1750000000,
+    "jti": "mock-idir-id",
+    "fid": "mock-idir",
+    "sub": "b5ecdb09-4dfb-4149-a6a8-445a01a96bf0",
+    "identity_provider": "azureidir",
+    "idir_username": "JRYAN",
+    "display_name": "Ryan, Jack Admin CIA:IN",
+    "email": "jack.ryan@gov.bc.ca",
+    "given_name": "Jack",
+    "family_name": "Ryan",
+    "idir_user_guid": "B5ECDB094DFB4149A6A8445A01A96BF0",
+    "preferred_username": "b5ecdb094dfb4149a6a8445a01a96bf0@azureidir",
+    "client_roles": [
+      "WASTE_PLUS_ADMIN",
+      "FAM:EXPIRES:2026-09-30:WASTE_PLUS_ADMIN"
+    ]
+  },
+  "expires_at": 1893456000
+}

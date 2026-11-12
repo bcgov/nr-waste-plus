@@ -75,13 +75,20 @@ const buildPostLogoutRedirectUri = (): string =>
 /**
  * Returns the shared {@link UserManager}, creating it on first call.
  *
- * Tokens are kept in `sessionStorage` (they die with the tab, matching the
- * previous cookie lifetime). Silent renew is manual — the auth provider
- * drives renewal through {@link ensureFreshUser} on its refresh cadence.
+ * Tokens live in `sessionStorage` (they die with the tab, matching the
+ * previous cookie lifetime). **Mock-auth builds read from `localStorage`
+ * instead**: Playwright's `storageState` captures localStorage but never
+ * sessionStorage, so the e2e harness can only seed sessions through
+ * localStorage. `VITE_MOCK_AUTH=true` never reaches a deployed build, so the
+ * sessionStorage guarantee holds everywhere the app actually ships.
+ *
+ * Silent renew is manual — the auth provider drives renewal through
+ * {@link ensureFreshUser} on its refresh cadence.
  *
  * @returns The process-wide user manager.
  */
 export const getUserManager = (): UserManager => {
+  const isMock = env.VITE_MOCK_AUTH === 'true';
   userManager ??= new UserManager({
     authority: resolveAuthority(),
     client_id: env.VITE_KEYCLOAK_CLIENT_ID,
@@ -89,7 +96,9 @@ export const getUserManager = (): UserManager => {
     post_logout_redirect_uri: buildPostLogoutRedirectUri(),
     scope: OIDC_SCOPES,
     response_type: 'code',
-    userStore: new WebStorageStateStore({ store: globalThis.sessionStorage }),
+    userStore: new WebStorageStateStore({
+      store: isMock ? globalThis.localStorage : globalThis.sessionStorage,
+    }),
     automaticSilentRenew: false,
   });
   return userManager;

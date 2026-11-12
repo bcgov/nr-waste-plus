@@ -1,0 +1,33 @@
+{
+  "id_token": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6Im1vY2stcmVhbG0ta2V5LTEifQ.eyJpc3MiOiJodHRwOi8vbG9jYWxob3N0OjgxODEvcmVhbG1zL3N0YW5kYXJkIiwiYXVkIjoid2FzdGUtd2FzdGUtcGx1cy02NzI5IiwiYXpwIjoid2FzdGUtd2FzdGUtcGx1cy02NzI5IiwiZXhwIjoxODkzNDU2MDAwLCJpYXQiOjE3NTAwMDAwMDAsImp0aSI6Im1vY2stYmNlaWQtaWQiLCJmaWQiOiJtb2NrLWJjZWlkIiwic3ViIjoiMGM1ZDhlYzItN2ZmMi00YTNlLTlmNGItOGMyYTVkMWU3YjMxIiwiaWRlbnRpdHlfcHJvdmlkZXIiOiJiY2VpZGJ1c2luZXNzIiwiaWRpcl91c2VybmFtZSI6InVhdHRlc3QiLCJkaXNwbGF5X25hbWUiOiJVYXQgVGVzdCIsImVtYWlsIjoidWF0dGVzdEBnb3YuYmMuY2EiLCJnaXZlbl9uYW1lIjoiVWF0IiwiZmFtaWx5X25hbWUiOiJUZXN0IiwiYmNlaWRfdXNlcl9ndWlkIjoiMEM1RDhFQzI3RkYyNEEzRTlGNEI4QzJBNUQxRTdCMzEiLCJwcmVmZXJyZWRfdXNlcm5hbWUiOiIwYzVkOGVjMi03ZmYyLTRhM2UtOWY0Yi04YzJhNWQxZTdiMzFAYmNlaWRidXNpbmVzcyIsImNsaWVudF9yb2xlcyI6WyJXQVNURV9QTFVTX1ZJRVdFUl8wMDE0NzYwMyIsIldBU1RFX1BMVVNfU1VCTUlUVEVSXzAwMDEwMDA1IiwiV0FTVEVfUExVU19TVUJNSVRURVJfMDAwMTE0NTciLCJXQVNURV9QTFVTX1NVQk1JVFRFUl8wMDAwMTI3MSJdfQ.TDMw0NzV_Dp5WvlW_LPox6rPLgPPXey67rJFLE4b7BrRBSup3YyCzf9bcIvKJ819H85mAC9c4zgSGXZF2rnwL1O_In3ppsMd2ACoN7qwL9ZB-gJ32YNrW_K0C7unqJhIc_uSHSuLapuCKRgN73OVCqlmvHieGkV9SOOSuRM60igQwvl9-7ceNPMJFcXFpsMGVESR_pTYwk_q2-5S8h_gHiWkKcPlvuA1-uCIc2vmNJYVCLM_mkbIrmKQ1B-jWJcvSBUjwbalG5iG3QbZ49nIWNZTu2byAYlACvdDc3gwdXT6qRc14Hx2TMRXBcGaSVxVdZiDaQz6lmNNdiZD1GfqLw",
+  "session_state": null,
+  "access_token": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6Im1vY2stcmVhbG0ta2V5LTEifQ.eyJmaWQiOiJtb2NrLWJjZWlkIiwiaXNzIjoiaHR0cDovL2xvY2FsaG9zdDo4MTgxL3JlYWxtcy9zdGFuZGFyZCIsImF1ZCI6Indhc3RlLXdhc3RlLXBsdXMtNjcyOSIsImF6cCI6Indhc3RlLXdhc3RlLXBsdXMtNjcyOSIsImV4cCI6MTg5MzQ1NjAwMCwiaWF0IjoxNzUwMDAwMDAwLCJqdGkiOiJtb2NrLWJjZWlkLWFjY2VzcyIsInN1YiI6IjBjNWQ4ZWMyLTdmZjItNGEzZS05ZjRiLThjMmE1ZDFlN2IzMSIsImlkZW50aXR5X3Byb3ZpZGVyIjoiYmNlaWRidXNpbmVzcyIsImlkaXJfdXNlcm5hbWUiOiJ1YXR0ZXN0IiwiZGlzcGxheV9uYW1lIjoiVWF0IFRlc3QiLCJlbWFpbCI6InVhdHRlc3RAZ292LmJjLmNhIiwiZ2l2ZW5fbmFtZSI6IlVhdCIsImZhbWlseV9uYW1lIjoiVGVzdCIsImJjZWlkX3VzZXJfZ3VpZCI6IjBDNUQ4RUMyN0ZGMjRBM0U5RjRCOEMyQTVEMUU3QjMxIiwicHJlZmVycmVkX3VzZXJuYW1lIjoiMGM1ZDhlYzItN2ZmMi00YTNlLTlmNGItOGMyYTVkMWU3YjMxQGJjZWlkYnVzaW5lc3MiLCJjbGllbnRfcm9sZXMiOlsiV0FTVEVfUExVU19WSUVXRVJfMDAxNDc2MDMiLCJXQVNURV9QTFVTX1NVQk1JVFRFUl8wMDAxMDAwNSIsIldBU1RFX1BMVVNfU1VCTUlUVEVSXzAwMDExNDU3IiwiV0FTVEVfUExVU19TVUJNSVRURVJfMDAwMDEyNzEiXX0.Z0YgmxJVewi1WsQno8a7Ugn0_iAc7NR8M4aPVua69nTswhzUrT1lgRrubwylEg5YcFkjr4Cw-xLmI_bkdgm3BonewcsCZ59K59DilEmtzWgycMFYmbiCrprrJyAdDjp3atXMMFKIJ1c-zJ23Qo_XS-xOAY7GKk-Uvsdddpev2X5jfputymWQDmZ1hLBFn3dr4oOPflaj2bSNpe1_jvvTHHl7NXbBH7A2M4w4Wunvn2UZAY16PaI-tpMENSvD-uNIZ8ZR64KQ3qEKjPz71nB7-MGwazRzH4ij3wZF6cM6Va3lWuhUnihlg3cpMHYU7_wvws399PCHrq7Eudh3gc8DAQ",
+  "refresh_token": "mock-refresh-bceid",
+  "token_type": "Bearer",
+  "scope": "openid profile email",
+  "profile": {
+    "iss": "http://localhost:8181/realms/standard",
+    "aud": "waste-waste-plus-6729",
+    "azp": "waste-waste-plus-6729",
+    "exp": 1893456000,
+    "iat": 1750000000,
+    "jti": "mock-bceid-id",
+    "fid": "mock-bceid",
+    "sub": "0c5d8ec2-7ff2-4a3e-9f4b-8c2a5d1e7b31",
+    "identity_provider": "bceidbusiness",
+    "idir_username": "uattest",
+    "display_name": "Uat Test",
+    "email": "uattest@gov.bc.ca",
+    "given_name": "Uat",
+    "family_name": "Test",
+    "bceid_user_guid": "0C5D8EC27FF24A3E9F4B8C2A5D1E7B31",
+    "preferred_username": "0c5d8ec2-7ff2-4a3e-9f4b-8c2a5d1e7b31@bceidbusiness",
+    "client_roles": [
+      "WASTE_PLUS_VIEWER_00147603",
+      "WASTE_PLUS_SUBMITTER_00010005",
+      "WASTE_PLUS_SUBMITTER_00011457",
+      "WASTE_PLUS_SUBMITTER_00001271"
+    ]
+  },
+  "expires_at": 1893456000
+}

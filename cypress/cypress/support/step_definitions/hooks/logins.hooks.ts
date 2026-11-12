@@ -19,9 +19,12 @@ const PROVIDERS: Record<Provider, { loginButton: string }> = {
  */
 const SESSION_PROBE_PATH = "/api/users/preferences";
 
-/** Cognito namespaces its cookies as `<prefix>.<userId>.<tokenName>`. */
-const ACCESS_TOKEN_SUFFIX = ".accessToken";
-const LAST_AUTH_USER_SUFFIX = ".LastAuthUser";
+/**
+ * sessionStorage prefix `oidc-client-ts` stores the signed-in user under:
+ * `user:<authority>:<client_id>`. The authority segment differs per
+ * environment, so the key is located by prefix rather than reconstructed.
+ */
+const OIDC_USER_KEY_PREFIX = "user:";
 
 /** Resolved once per run; `/data/config.js` is injected at deploy time. */
 let backendOriginCache: string | null = null;
@@ -29,36 +32,36 @@ let backendOriginCache: string | null = null;
 /**
  * Reads the access token the app sends as `Authorization: Bearer`.
  *
- * `services/APIs.ts` resolves its token via `getUserAccessTokenFromCookie()`,
- * which reads `document.cookie` on the frontend origin. The backend lives on a
- * different origin, so a `cy.request` to it carries no usable credentials by
- * itself — the header has to be set explicitly from this cookie.
+ * `services/APIs.ts` resolves its token from the `oidc-client-ts` user object,
+ * which lives in the frontend origin's **sessionStorage** (the migration moved
+ * tokens off Cognito cookies). `cy.session` snapshots cookies and localStorage
+ * but never sessionStorage, so the token must be read from the live page right
+ * before it is needed.
  *
  * @returns The current user's access token.
- * @throws When no access-token cookie exists, which means the session snapshot
- *   was captured before the OAuth callback finished storing tokens.
+ * @throws When no OIDC user is stored, which means the session snapshot was
+ *   captured before the OAuth callback finished exchanging its code.
  */
 const readAccessToken = (): Cypress.Chainable<string> =>
-  cy.getCookies({ log: false }).then((cookies) => {
-    const bySuffix = (suffix: string) =>
-      cookies.find((cookie) => cookie.name.endsWith(suffix))?.value;
+  cy.window({ log: false }).then((win) => {
+    const storage = win.sessionStorage;
 
-    // Mirror getUserAccessTokenFromCookie(): prefer the cookie namespaced by the
-    // current user id, then fall back to any access-token cookie.
-    const lastAuthUser = bySuffix(LAST_AUTH_USER_SUFFIX);
-    const namespaced = lastAuthUser
-      ? bySuffix(`.${encodeURIComponent(lastAuthUser)}${ACCESS_TOKEN_SUFFIX}`)
-      : undefined;
-    const token = namespaced ?? bySuffix(ACCESS_TOKEN_SUFFIX);
+    for (let index = 0; index < storage.length; index += 1) {
+      const key = storage.key(index);
+      if (!key || !key.includes("user:")) continue;
 
-    if (!token) {
-      throw new Error(
-        "No Cognito accessToken cookie present: the session snapshot was taken " +
-          "before the OAuth callback finished exchanging its code.",
-      );
+      const parsed = JSON.parse(storage.getItem(key) ?? "{}") as {
+        access_token?: string;
+      };
+      if (parsed.access_token) {
+        return parsed.access_token;
+      }
     }
 
-    return token;
+    throw new Error(
+      "No OIDC user found in sessionStorage: the session snapshot was taken " +
+        "before the OAuth callback finished exchanging its code.",
+    );
   });
 
 /**
@@ -176,18 +179,35 @@ const doLogin = (
           .then((loginOrigin) => {
             cy.origin(
               loginOrigin,
-              { args: { username, password } },
-              ({ username: loginUsername, password: loginPassword }) => {
-                cy.get(".site-title", { timeout: 30_000 }).should("be.visible");
-
-                // Keep credentials out of the command log and recordings.
-                cy.get("#user", { timeout: 30_000 }).type(loginUsername, {
-                  log: false,
-                });
-                cy.get("#password", { timeout: 30_000 }).type(loginPassword, {
-                  log: false,
-                });
-                cy.get('input[type="submit"]', { timeout: 30_000 }).click();
+              { args: { provider, username, password } },
+              ({ provider: loginProvider, username: loginUsername, password: loginPassword }) => {
+                // The realm's brokers expose different hosted pages: IDIR
+                // federates through Azure AD (`loginfmt`/`passwd`), while the
+                // BCeID business page keeps the classic `#user`/`#password`
+                // form. IDIR additionally demands an MFA challenge that
+                // cannot be automated — an MFA-exempt automation account is
+                // required for unattended IDIR logins (tracked with the CSS
+                // platform owners).
+                if (loginProvider === "idir") {
+                  cy.get('input[name="loginfmt"]', { timeout: 30_000 }).type(
+                    loginUsername,
+                    { log: false },
+                  );
+                  cy.get('input[value="Next"]', { timeout: 30_000 }).click();
+                  cy.get('input[name="passwd"]', { timeout: 30_000 }).type(
+                    loginPassword,
+                    { log: false },
+                  );
+                  cy.get('input[value="Sign in"]', { timeout: 30_000 }).click();
+                } else {
+                  cy.get("#user", { timeout: 30_000 }).type(loginUsername, {
+                    log: false,
+                  });
+                  cy.get("#password", { timeout: 30_000 }).type(loginPassword, {
+                    log: false,
+                  });
+                  cy.get('input[type="submit"]', { timeout: 30_000 }).click();
+                }
               },
             );
           });
