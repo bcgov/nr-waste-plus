@@ -7,6 +7,7 @@ import ca.bc.gov.nrs.hrs.mappers.AbstractSingleMapper;
 import ca.bc.gov.nrs.hrs.mappers.MapperConstants;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
+import tools.jackson.core.JacksonException;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingConstants;
@@ -105,7 +106,7 @@ public abstract class ReportingUnitSearchExpandedMapper implements
 
     try {
       return objectMapper.readValue(json, SECONDARY_TYPE_REF);
-    } catch (Exception e) {
+    } catch (JacksonException e) {
       log.error("Failed to parse secondary marks JSON: {}", json, e);
       return List.of();
     }
