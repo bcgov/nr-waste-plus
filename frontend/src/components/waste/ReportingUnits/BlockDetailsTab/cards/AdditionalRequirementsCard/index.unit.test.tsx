@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 
@@ -131,7 +131,7 @@ describe('AdditionalRequirementsCard', () => {
     expect(screen.queryByRole('switch')).toBeNull();
     expect(screen.getByText('No')).toBeTruthy();
     expect(screen.getByText('Yes')).toBeTruthy();
-    expect(screen.queryByRole('checkbox', { name: CERTIFY_LABEL })).toBeNull();
+    expect(screen.queryByText(CERTIFY_LABEL)).toBeNull();
   });
 
   it('renders the certify value read-only when both toggles are No', () => {
@@ -147,6 +147,9 @@ describe('AdditionalRequirementsCard', () => {
     );
 
     expect(screen.getByText(CERTIFY_LABEL)).toBeTruthy();
-    expect(screen.queryByRole('checkbox')).toBeNull();
+    // eslint-disable-next-line testing-library/no-node-access -- ReadonlyInput wraps label/value in a <dl>
+    const certifyItem = screen.getByText(CERTIFY_LABEL).closest('dl');
+    expect(certifyItem).not.toBeNull();
+    expect(within(certifyItem as HTMLElement).getByText('Yes')).toBeTruthy();
   });
 });
