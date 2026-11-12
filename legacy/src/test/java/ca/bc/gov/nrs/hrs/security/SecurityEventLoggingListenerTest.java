@@ -22,8 +22,9 @@ import org.springframework.security.authentication.event.AuthenticationFailureBa
 import org.springframework.security.authorization.AuthorizationDecision;
 import org.springframework.security.authorization.event.AuthorizationDeniedEvent;
 import org.springframework.security.core.authority.AuthorityUtils;
-import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.core.DefaultOAuth2AuthenticatedPrincipal;
 import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.security.web.access.intercept.RequestAuthorizationContext;
 import org.springframework.web.servlet.HandlerMapping;
@@ -185,6 +186,27 @@ class SecurityEventLoggingListenerTest {
 
     assertThat(message())
         .contains("event=AUTHENTICATION_FAILED", "status=401", "method=", "routeTemplate=")
+        .doesNotContain(SECRET_MARKER);
+  }
+
+  @Test
+  void nonStringOauthIdentityAttributesAreLoggedAsEmptyValues() {
+    MockHttpServletRequest request = request("GET", "/api/clients/42");
+    DefaultOAuth2AuthenticatedPrincipal principal = new DefaultOAuth2AuthenticatedPrincipal(
+        "principal",
+        Map.of("iss", 42, "sub", 99),
+        AuthorityUtils.createAuthorityList("ROLE_USER"));
+    UsernamePasswordAuthenticationToken authentication =
+        UsernamePasswordAuthenticationToken.authenticated(principal, "", List.of());
+    AuthorizationDeniedEvent<RequestAuthorizationContext> event = new AuthorizationDeniedEvent<>(
+        () -> authentication,
+        new RequestAuthorizationContext(request),
+        new AuthorizationDecision(false));
+
+    listener.onAuthorizationDenied(event);
+
+    assertThat(message())
+        .contains("event=AUTHORIZATION_DENIED", "status=403", "identityProvider= subject=")
         .doesNotContain(SECRET_MARKER);
   }
 
