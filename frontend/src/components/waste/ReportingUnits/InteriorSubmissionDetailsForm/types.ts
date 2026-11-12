@@ -1,2 +1,4 @@
-export type InteriorBecSubzoneVariantOption = { code: string; description: string; becZoneCode?: string; [key: string]: unknown };
-export type InteriorSubmissionDetailsValues = Record<string, unknown>;
+/**
+ * Back-compat shim (D20/S3b): implementation moved to BlockDetailsTab variant.
+ */
+export * from '../BlockDetailsTab/cards/SubmissionDetailsCard/variants/interior/types';

@@ -1,6 +1,8 @@
-import type { FC } from 'react';
-
-export type { InteriorBecSubzoneVariantOption, InteriorSubmissionDetailsValues } from './types';
-
-const InteriorSubmissionDetailsForm: FC<Record<string, unknown>> = () => null;
-export default InteriorSubmissionDetailsForm;
+/**
+ * Back-compat shim (D20/S3b): implementation moved to BlockDetailsTab variant.
+ */
+export type {
+  InteriorBecSubzoneVariantOption,
+  InteriorSubmissionDetailsValues,
+} from '../BlockDetailsTab/cards/SubmissionDetailsCard/variants/interior';
+export { default } from '../BlockDetailsTab/cards/SubmissionDetailsCard/variants/interior';
