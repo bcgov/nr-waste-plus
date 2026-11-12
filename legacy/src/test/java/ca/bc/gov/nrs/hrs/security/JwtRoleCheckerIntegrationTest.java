@@ -12,6 +12,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 
@@ -39,6 +41,17 @@ class JwtRoleCheckerIntegrationTest extends AbstractTestContainerIntegrationTest
     assertTrue(checker.hasRole("Approver"));
     assertTrue(checker.hasRole("Approver_12345678"));
     assertFalse(checker.hasRole("Viewer"));
+  }
+
+  @Test
+  void testHasRole_shouldMatchRoleContainedInAuthority() {
+    Authentication authentication = UsernamePasswordAuthenticationToken.authenticated(
+        "user", "", AuthorityUtils.createAuthorityList("ROLE_SUPER_APPROVER"));
+    SecurityContext context = SecurityContextHolder.createEmptyContext();
+    context.setAuthentication(authentication);
+    SecurityContextHolder.setContext(context);
+
+    assertTrue(new JwtRoleChecker().hasRole("Approver"));
   }
 
   @Test
