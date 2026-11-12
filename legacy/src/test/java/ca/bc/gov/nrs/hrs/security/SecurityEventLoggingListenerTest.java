@@ -8,6 +8,8 @@ import ch.qos.logback.core.read.ListAppender;
 import jakarta.servlet.http.Cookie;
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -15,25 +17,28 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.authentication.event.AuthenticationFailureBadCredentialsEvent;
 import org.springframework.security.authorization.AuthorizationDecision;
 import org.springframework.security.authorization.event.AuthorizationDeniedEvent;
 import org.springframework.security.core.authority.AuthorityUtils;
+import org.springframework.security.oauth2.core.DefaultOAuth2AuthenticatedPrincipal;
+import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.security.web.access.intercept.RequestAuthorizationContext;
-import org.springframework.web.servlet.HandlerMapping;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
+import org.springframework.web.servlet.HandlerMapping;
 
 class SecurityEventLoggingListenerTest {
   private static final String ISSUER = "https://issuer.test.example/pool";
   private static final String SUBJECT = "synthetic-subject";
   private static final String SECRET_MARKER = "never-log-this-value";
 
-  private final Logger logger = (Logger) LoggerFactory.getLogger(SecurityEventLoggingListener.class);
+  private final Logger logger = (Logger) LoggerFactory
+      .getLogger(SecurityEventLoggingListener.class);
   private ListAppender<ILoggingEvent> appender;
   private SecurityEventLoggingListener listener;
 
@@ -111,6 +116,31 @@ class SecurityEventLoggingListenerTest {
   }
 
   @Test
+  void authorizationDenialReadsAuthenticationSupplierOnce() {
+    Jwt jwt = Jwt.withTokenValue("test-token")
+        .header("alg", "RS256")
+        .issuer(ISSUER)
+        .subject(SUBJECT)
+        .issuedAt(Instant.now())
+        .expiresAt(Instant.now().plusSeconds(60))
+        .build();
+    JwtAuthenticationToken authentication = new JwtAuthenticationToken(jwt);
+    AtomicInteger supplierCalls = new AtomicInteger();
+    AuthorizationDeniedEvent<Object> event = new AuthorizationDeniedEvent<>(
+        () -> {
+          supplierCalls.incrementAndGet();
+          return authentication;
+        },
+        new Object(),
+        new AuthorizationDecision(false));
+
+    listener.onAuthorizationDenied(event);
+
+    assertThat(supplierCalls).hasValue(1);
+    assertThat(message()).contains("identityProvider=" + ISSUER, "subject=" + SUBJECT);
+  }
+
+  @Test
   void unauthenticatedAuthorizationDenialEmits401AuthenticationFailed() {
     MockHttpServletRequest request = request("GET", "/api/reporting-units/123");
     RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));
@@ -149,9 +179,81 @@ class SecurityEventLoggingListenerTest {
         .doesNotContain("event=AUTHORIZATION_DENIED");
   }
 
+  @Test
+  void oauth2PrincipalAndRequestContextFallbackAreLoggedSafely() {
+    MockHttpServletRequest request = request("PATCH", "/api/clients/42");
+    RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));
+    DefaultOAuth2User principal = new DefaultOAuth2User(
+        AuthorityUtils.createAuthorityList("ROLE_USER"),
+        Map.of("iss", ISSUER, "sub", SUBJECT),
+        "sub");
+    UsernamePasswordAuthenticationToken authentication =
+        UsernamePasswordAuthenticationToken.authenticated(principal, "", List.of());
+    AuthorizationDeniedEvent<Object> event = new AuthorizationDeniedEvent<>(
+        () -> authentication,
+        new Object(),
+        new AuthorizationDecision(false));
+    MDC.put("X-TRACE-ID", "correlation-fallback");
+
+    listener.onAuthorizationDenied(event);
+
+    assertThat(message())
+        .contains("event=AUTHORIZATION_DENIED", "status=403", "method=PATCH")
+        .contains("routeTemplate=/api/clients/42", "correlationId=correlation-fallback")
+        .contains("identityProvider=" + ISSUER, "subject=" + SUBJECT)
+        .doesNotContain(SECRET_MARKER);
+  }
+
+  @Test
+  void authenticationFailureWithoutRequestContextLogsEmptyRequestFields() {
+    listener.onAuthenticationFailure(
+        new AuthenticationFailureBadCredentialsEvent(
+            new UsernamePasswordAuthenticationToken("ignored", SECRET_MARKER),
+            new BadCredentialsException("invalid credentials")));
+
+    assertThat(message())
+        .contains("event=AUTHENTICATION_FAILED", "status=401", "method=", "routeTemplate=")
+        .doesNotContain(SECRET_MARKER);
+  }
+
+  @Test
+  void nonStringOauthIdentityAttributesAreLoggedAsEmptyValues() {
+    MockHttpServletRequest request = request("GET", "/api/clients/42");
+    DefaultOAuth2AuthenticatedPrincipal principal = new DefaultOAuth2AuthenticatedPrincipal(
+        "principal",
+        Map.of("iss", 42, "sub", 99),
+        AuthorityUtils.createAuthorityList("ROLE_USER"));
+    UsernamePasswordAuthenticationToken authentication =
+        UsernamePasswordAuthenticationToken.authenticated(principal, "", List.of());
+    AuthorizationDeniedEvent<RequestAuthorizationContext> event = new AuthorizationDeniedEvent<>(
+        () -> authentication,
+        new RequestAuthorizationContext(request),
+        new AuthorizationDecision(false));
+
+    listener.onAuthorizationDenied(event);
+
+    assertThat(message())
+        .contains("event=AUTHORIZATION_DENIED", "status=403", "identityProvider= subject=")
+        .doesNotContain(SECRET_MARKER);
+  }
+
+  @Test
+  void blankPrimaryTraceIdFallsBackToNextAvailableTraceId() {
+    MDC.put("traceId", "  ");
+    MDC.put("X-B3-TraceId", "fallback-correlation");
+
+    listener.onAuthenticationFailure(
+        new AuthenticationFailureBadCredentialsEvent(
+            new UsernamePasswordAuthenticationToken("ignored", SECRET_MARKER),
+            new BadCredentialsException("invalid credentials")));
+
+    assertThat(message()).contains("correlationId=fallback-correlation");
+  }
+
   private static MockHttpServletRequest request(String method, String route) {
     MockHttpServletRequest request = new MockHttpServletRequest(method, route);
-    request.setAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE, route.replace("123", "{id}"));
+    request.setAttribute(
+        HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE, route.replace("123", "{id}"));
     request.addHeader("Authorization", "Bearer " + SECRET_MARKER);
     request.addHeader("X-Api-Key", SECRET_MARKER);
     request.setCookies(new Cookie("session", SECRET_MARKER));

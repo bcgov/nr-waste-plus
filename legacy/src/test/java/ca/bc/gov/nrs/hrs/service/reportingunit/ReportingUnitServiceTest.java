@@ -15,8 +15,8 @@ import ca.bc.gov.nrs.hrs.dto.reportingunit.ReportingUnitBlockDto;
 import ca.bc.gov.nrs.hrs.dto.reportingunit.ReportingUnitDetailsDto;
 import ca.bc.gov.nrs.hrs.entity.codes.OrgUnitEntity;
 import ca.bc.gov.nrs.hrs.entity.codes.SamplingOptionEntity;
-import ca.bc.gov.nrs.hrs.entity.reportingunit.ReportingUnitDetailsProjection;
 import ca.bc.gov.nrs.hrs.entity.reportingunit.ReportingUnitBlockProjection;
+import ca.bc.gov.nrs.hrs.entity.reportingunit.ReportingUnitDetailsProjection;
 import ca.bc.gov.nrs.hrs.entity.reportingunit.ReportingUnitEntity;
 import ca.bc.gov.nrs.hrs.exception.WasteReportingUnitNotFound;
 import ca.bc.gov.nrs.hrs.mappers.reportingunit.ReportingUnitDetailsMapper;
@@ -174,7 +174,8 @@ class ReportingUnitServiceTest {
     when(projection.getSubmitter()).thenReturn("Sponsor Name");
     when(projection.getStatusCode()).thenReturn("APP");
     when(projection.getStatusName()).thenReturn("Approved");
-    when(projection.getLastUpdated()).thenReturn(java.time.LocalDateTime.parse("2025-08-11T10:19:56"));
+    when(projection.getLastUpdated())
+        .thenReturn(java.time.LocalDateTime.parse("2025-08-11T10:19:56"));
 
     List<ReportingUnitBlockDto> result = service.getReportingUnitBlocks(RU_ID);
 
@@ -229,6 +230,20 @@ class ReportingUnitServiceTest {
 
     assertThat(result.status()).isEqualTo(new CodeDescriptionDto("DFT", "Draft"));
     assertThat(result.cutBlockId()).isEqualTo("CUT-9");
+  }
+
+  @Test
+  @DisplayName("shouldUseDraftDefaults_whenProjectionStatusCodeIsMissing")
+  void shouldUseDraftDefaults_whenProjectionStatusCodeIsMissing() {
+    ReportingUnitBlockProjection projection = mock(ReportingUnitBlockProjection.class);
+    when(ruRepository.existsById(RU_ID)).thenReturn(true);
+    when(ruRepository.getReportingUnitBlocks(RU_ID)).thenReturn(List.of(projection));
+    when(projection.getStatusCode()).thenReturn(null);
+    when(projection.getStatusName()).thenReturn("Approved");
+
+    var result = service.getReportingUnitBlocks(RU_ID).getFirst();
+
+    assertThat(result.status()).isEqualTo(new CodeDescriptionDto("DFT", "Draft"));
   }
 
   @Test
@@ -299,6 +314,26 @@ class ReportingUnitServiceTest {
     }
 
     @Test
+    @DisplayName("does not persist a blank idempotency key")
+    void shouldIgnoreBlankIdempotencyKey() {
+      OrgUnitEntity orgUnit = OrgUnitEntity.builder().orgUnitNo(123L).orgUnitCode("DKM").build();
+      when(orgUnitRepository.findByOrgUnitCode("DKM"))
+          .thenReturn(java.util.Optional.of(orgUnit));
+      when(samplingOptionRepository.findAllValid())
+          .thenReturn(List.of(SamplingOptionEntity.builder().id("AGR").build()));
+      ReportingUnitEntity saved = ReportingUnitEntity.builder().id(555L).build();
+      when(ruRepository.save(ArgumentMatchers.any(ReportingUnitEntity.class))).thenReturn(saved);
+      CreateReportingUnitRequestDto request =
+          new CreateReportingUnitRequestDto("00001271", "DKM", "AGR", null);
+
+      assertThat(service.createReportingUnit(request, "IDIR\\user", "   ")).isEqualTo(555L);
+
+      verify(ruRepository, never()).findByIdempotencyKey(ArgumentMatchers.anyString());
+      verify(ruRepository).save(ruEntityCaptor.capture());
+      assertThat(ruEntityCaptor.getValue().getIdempotencyKey()).isNull();
+    }
+
+    @Test
     @DisplayName("returns the original reporting unit for a retry with the same idempotency key")
     void shouldReturnPreviouslyCreatedReportingUnit_whenIdempotencyKeyExists() {
       OrgUnitEntity orgUnit = OrgUnitEntity.builder().orgUnitNo(123L).orgUnitCode("DKM").build();
@@ -321,6 +356,85 @@ class ReportingUnitServiceTest {
 
       assertThat(result).isEqualTo(555L);
       verify(ruRepository, never()).save(ArgumentMatchers.any());
+    }
+
+    @Test
+    @DisplayName("rejects reuse of an idempotency key by a different user")
+    void shouldRejectIdempotencyKey_whenCreatedByDifferentUser() {
+      CreateReportingUnitRequestDto request = matchingIdempotencyRequest();
+      stubExistingIdempotencyKey(
+          "another-user", request.clientNumber(), 123L, request.samplingCode());
+
+      assertThatThrownBy(() -> service.createReportingUnit(request, "IDIR\\user", "retry-key"))
+          .isInstanceOf(ResponseStatusException.class)
+          .satisfies(ex -> assertThat(((ResponseStatusException) ex).getStatusCode())
+              .isEqualTo(HttpStatus.CONFLICT));
+      verify(ruRepository, never()).save(ArgumentMatchers.any());
+    }
+
+    @Test
+    @DisplayName("rejects reuse of an idempotency key for a different request")
+    void shouldRejectIdempotencyKey_whenRequestDoesNotMatch() {
+      CreateReportingUnitRequestDto request = matchingIdempotencyRequest();
+      stubExistingIdempotencyKey(
+          "IDIR\\user", "another-client", 123L, request.samplingCode());
+
+      assertThatThrownBy(() -> service.createReportingUnit(request, "IDIR\\user", "retry-key"))
+          .isInstanceOf(ResponseStatusException.class)
+          .satisfies(ex -> assertThat(((ResponseStatusException) ex).getStatusCode())
+              .isEqualTo(HttpStatus.CONFLICT));
+      verify(ruRepository, never()).save(ArgumentMatchers.any());
+    }
+
+    @Test
+    @DisplayName("rejects reuse of an idempotency key for a different district")
+    void shouldRejectIdempotencyKey_whenDistrictDoesNotMatch() {
+      CreateReportingUnitRequestDto request = matchingIdempotencyRequest();
+      stubExistingIdempotencyKey("IDIR\\user", request.clientNumber(), 999L,
+          request.samplingCode());
+
+      assertThatThrownBy(() -> service.createReportingUnit(request, "IDIR\\user", "retry-key"))
+          .isInstanceOf(ResponseStatusException.class)
+          .satisfies(ex -> assertThat(((ResponseStatusException) ex).getStatusCode())
+              .isEqualTo(HttpStatus.CONFLICT));
+      verify(ruRepository, never()).save(ArgumentMatchers.any());
+    }
+
+    @Test
+    @DisplayName("rejects reuse of an idempotency key for a different sampling option")
+    void shouldRejectIdempotencyKey_whenSamplingOptionDoesNotMatch() {
+      CreateReportingUnitRequestDto request = matchingIdempotencyRequest();
+      stubExistingIdempotencyKey("IDIR\\user", request.clientNumber(), 123L, "OTHER");
+
+      assertThatThrownBy(() -> service.createReportingUnit(request, "IDIR\\user", "retry-key"))
+          .isInstanceOf(ResponseStatusException.class)
+          .satisfies(ex -> assertThat(((ResponseStatusException) ex).getStatusCode())
+              .isEqualTo(HttpStatus.CONFLICT));
+      verify(ruRepository, never()).save(ArgumentMatchers.any());
+    }
+
+    private CreateReportingUnitRequestDto matchingIdempotencyRequest() {
+      OrgUnitEntity orgUnit = OrgUnitEntity.builder().orgUnitNo(123L).orgUnitCode("DKM").build();
+      when(orgUnitRepository.findByOrgUnitCode("DKM"))
+          .thenReturn(java.util.Optional.of(orgUnit));
+      return new CreateReportingUnitRequestDto("00001271", "DKM", "AGR", null);
+    }
+
+    private void stubExistingIdempotencyKey(
+        String createdBy,
+        String clientNumber,
+        Long orgUnitNo,
+        String samplingCode) {
+      ReportingUnitEntity existing = ReportingUnitEntity.builder()
+          .id(555L)
+          .orgUnitNo(orgUnitNo)
+          .clientNumber(clientNumber)
+          .wasteSamplingOptionCode(samplingCode)
+          .createdBy(createdBy)
+          .idempotencyKey("retry-key")
+          .build();
+      when(ruRepository.findByIdempotencyKey("retry-key"))
+          .thenReturn(java.util.Optional.of(existing));
     }
 
     @Test
@@ -365,6 +479,24 @@ class ReportingUnitServiceTest {
                 assertThat(statusEx.getReason())
                     .isEqualTo("Invalid samplingCode: " + invalidSamplingCode);
               });
+      verify(ruRepository, never()).save(ArgumentMatchers.any());
+    }
+
+    @Test
+    @DisplayName("should reject sampling code absent from otherwise valid options")
+    void shouldThrow_whenSamplingCodeNotInValidOptions() {
+      OrgUnitEntity orgUnit = OrgUnitEntity.builder().orgUnitNo(123L).orgUnitCode("DKM").build();
+      when(orgUnitRepository.findByOrgUnitCode("DKM"))
+          .thenReturn(java.util.Optional.of(orgUnit));
+      when(samplingOptionRepository.findAllValid())
+          .thenReturn(List.of(SamplingOptionEntity.builder().id("AGR").build()));
+      CreateReportingUnitRequestDto request =
+          new CreateReportingUnitRequestDto("00001271", "DKM", "BAD", null);
+
+      assertThatThrownBy(() -> service.createReportingUnit(request, "user"))
+          .isInstanceOf(ResponseStatusException.class)
+          .satisfies(ex -> assertThat(((ResponseStatusException) ex).getStatusCode())
+              .isEqualTo(HttpStatus.BAD_REQUEST));
       verify(ruRepository, never()).save(ArgumentMatchers.any());
     }
   }

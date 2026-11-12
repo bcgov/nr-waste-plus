@@ -26,10 +26,10 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.slf4j.LoggerFactory;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.HttpHeaders;
@@ -183,7 +183,7 @@ class ApiAuthorizationBoundaryIntegrationTest
 
   @Test
   @WithMockJwt
-  @DisplayName("should return 403 and audit it before the controller when the CSRF token is missing")
+  @DisplayName("should return 403 and audit it before controller when CSRF token is missing")
   void shouldReturn403BeforeController_whenCsrfTokenIsMissing() throws Exception {
     mockMvc
         .perform(

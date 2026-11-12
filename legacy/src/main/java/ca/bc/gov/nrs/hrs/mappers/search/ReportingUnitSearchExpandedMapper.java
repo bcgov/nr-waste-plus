@@ -12,6 +12,7 @@ import org.mapstruct.Mapping;
 import org.mapstruct.MappingConstants;
 import org.mapstruct.ReportingPolicy;
 import org.springframework.beans.factory.annotation.Autowired;
+import tools.jackson.core.JacksonException;
 import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.ObjectMapper;
 
@@ -105,7 +106,7 @@ public abstract class ReportingUnitSearchExpandedMapper implements
 
     try {
       return objectMapper.readValue(json, SECONDARY_TYPE_REF);
-    } catch (Exception e) {
+    } catch (JacksonException e) {
       log.error("Failed to parse secondary marks JSON: {}", json, e);
       return List.of();
     }

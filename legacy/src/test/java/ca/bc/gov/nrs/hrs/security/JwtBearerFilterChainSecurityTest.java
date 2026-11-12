@@ -31,10 +31,10 @@ import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.security.oauth2.jwt.JwsHeader;
 import org.springframework.security.oauth2.jwt.JwtClaimsSet;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
-import org.springframework.security.oauth2.jwt.JwsHeader;
 import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.test.context.ContextConfiguration;
@@ -149,7 +149,8 @@ class JwtBearerFilterChainSecurityTest {
 
   @Test
   void expiredTokenIsRejectedBeforeController() throws Exception {
-    assertRejectedBeforeController(token("client-good", ISSUER, null, Instant.now().minusSeconds(60)));
+    assertRejectedBeforeController(
+        token("client-good", ISSUER, null, Instant.now().minusSeconds(60)));
   }
 
   @Test
