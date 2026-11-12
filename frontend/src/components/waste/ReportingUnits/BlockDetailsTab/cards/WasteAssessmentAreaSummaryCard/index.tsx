@@ -23,8 +23,9 @@ export type WasteAssessmentAreaSummaryCardProps = {
 };
 
 const toDisplayValue = (value?: string | number | null): string => {
-  if (value === null || value === undefined || value === '') return '-';
-  return String(value);
+  if (value === null || value === undefined) return '-';
+  const stringValue = String(value);
+  return stringValue.trim() === '' ? '-' : stringValue;
 };
 
 const WasteAssessmentAreaSummaryCard: FC<WasteAssessmentAreaSummaryCardProps> = ({
@@ -40,7 +41,7 @@ const WasteAssessmentAreaSummaryCard: FC<WasteAssessmentAreaSummaryCardProps> = 
   };
 
   const displayRows = [primaryMarkRow, ...(rows ?? [])];
-  const total = toDisplayValue(totalNetWasteAreaHa ?? '0.0');
+  const total = toDisplayValue(totalNetWasteAreaHa === undefined ? '0.0' : totalNetWasteAreaHa);
 
   return (
     <section
@@ -80,7 +81,9 @@ const WasteAssessmentAreaSummaryCard: FC<WasteAssessmentAreaSummaryCardProps> = 
         </StructuredListHead>
         <StructuredListBody>
           {displayRows.map((row, index) => (
-            <StructuredListRow key={`${row.markType ?? 'row'}-${row.timberMarkId ?? index}`}>
+            <StructuredListRow
+              key={`${index}-${row.markType ?? 'row'}-${row.timberMarkId ?? 'mark'}`}
+            >
               <StructuredListCell>{toDisplayValue(row.markType)}</StructuredListCell>
               <StructuredListCell>{toDisplayValue(row.timberMarkId)}</StructuredListCell>
               <StructuredListCell>{toDisplayValue(row.netWasteAreaHa)}</StructuredListCell>

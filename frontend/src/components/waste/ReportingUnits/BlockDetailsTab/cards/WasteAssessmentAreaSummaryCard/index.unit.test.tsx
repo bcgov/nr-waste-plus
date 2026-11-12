@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 
@@ -8,9 +8,7 @@ describe('WasteAssessmentAreaSummaryCard', () => {
   it('renders header, helper, and table columns', () => {
     render(<WasteAssessmentAreaSummaryCard />);
 
-    expect(
-      screen.getByRole('heading', { name: 'Waste assessment area summary' }),
-    ).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'Waste assessment area summary' })).toBeTruthy();
     expect(
       screen.getByText('Use area calculator to add waste assessment area details'),
     ).toBeTruthy();
@@ -19,25 +17,31 @@ describe('WasteAssessmentAreaSummaryCard', () => {
     expect(screen.getByText('Net waste area (ha)')).toBeTruthy();
   });
 
-  it('renders hardcoded primary mark row and default total as empty-safe values', () => {
+  it('renders hardcoded primary mark row and default total when undefined', () => {
     render(<WasteAssessmentAreaSummaryCard />);
 
     expect(screen.getByText('Primary mark')).toBeTruthy();
     expect(screen.getByText('74/1AD')).toBeTruthy();
-    expect(screen.getByText('Total net waste area (ha)')).toBeTruthy();
-    expect(screen.getByText('0.0')).toBeTruthy();
+    const totalLabel = screen.getByText('Total net waste area (ha)');
+    const totalRow = totalLabel.closest('[role="row"]');
+    expect(totalRow).not.toBeNull();
+    expect(within(totalRow as HTMLElement).getByText('0.0')).toBeTruthy();
   });
 
-  it('renders supplied rows and total as received/empty-safe', () => {
+  it('renders supplied rows and explicit null total as empty-safe', () => {
     render(
       <WasteAssessmentAreaSummaryCard
-        rows={[{ markType: 'Secondary mark', timberMarkId: null, netWasteAreaHa: '' }]}
+        rows={[{ markType: 'Secondary mark', timberMarkId: null, netWasteAreaHa: '   ' }]}
         totalNetWasteAreaHa={null}
       />,
     );
 
     expect(screen.getByText('Secondary mark')).toBeTruthy();
-    expect(screen.getAllByText('-').length).toBeGreaterThanOrEqual(2);
+    const totalLabel = screen.getByText('Total net waste area (ha)');
+    const totalRow = totalLabel.closest('[role="row"]');
+    expect(totalRow).not.toBeNull();
+    expect(within(totalRow as HTMLElement).getByText('-')).toBeTruthy();
+    expect(within(totalRow as HTMLElement).queryByText('0.0')).toBeNull();
   });
 
   it('calls onGoToAreaCalculator when button is clicked', async () => {
