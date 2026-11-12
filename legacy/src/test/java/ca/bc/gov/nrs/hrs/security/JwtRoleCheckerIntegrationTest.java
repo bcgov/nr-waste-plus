@@ -100,7 +100,7 @@ class JwtRoleCheckerIntegrationTest extends AbstractTestContainerIntegrationTest
   void testGetJwt_shouldThrowExceptionWhenAuthenticationIsMissing() {
     SecurityContextHolder.setContext(SecurityContextHolder.createEmptyContext());
 
-    assertThrows(IllegalStateException.class, () -> new JwtRoleChecker().hasIdpProvider("idir"));
+    assertThrows(IllegalStateException.class, () -> checker.hasIdpProvider("idir"));
   }
 
 
