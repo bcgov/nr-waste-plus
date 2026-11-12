@@ -61,6 +61,10 @@ describe('DistrictAverageVolumesSummaryCard', () => {
     expect(screen.getByText('D - District average')).toBeTruthy();
     expect(screen.getByText('X - Not stratified')).toBeTruthy();
 
+    const dataRow = screen.getByText('Dispersed').closest('[role="row"]');
+    expect(dataRow).not.toBeNull();
+    expect(within(dataRow as HTMLElement).getAllByText('-')).toHaveLength(3);
+
     const totalLabel = screen.getByText('Total');
     const totalRow = totalLabel.closest('[role="row"]');
     expect(totalRow).not.toBeNull();
@@ -89,10 +93,34 @@ describe('DistrictAverageVolumesSummaryCard', () => {
       />,
     );
 
-    await user.click(screen.getByRole('combobox', { name: 'Harvest method' }));
+    await user.click(
+      screen.getByRole('combobox', {
+        name: 'Harvest method for Dispersed, H– Historic waste information',
+      }),
+    );
     await user.click(screen.getByText('Cable'));
 
     expect(onHarvestMethodChange).toHaveBeenCalledWith(0, 'C');
+  });
+
+  it('renders selected harvest method in form mode from row code', () => {
+    render(
+      <DistrictAverageVolumesSummaryCard
+        mode="form"
+        rows={[
+          {
+            populationType: 'Dispersed',
+            wasteType: 'H– Historic waste information',
+            harvestMethodCode: 'G',
+            assessmentMethod: 'D - District average',
+            wasteLevel: 'X - Not stratified',
+          },
+        ]}
+        harvestMethodOptions={harvestMethodOptions}
+      />,
+    );
+
+    expect(screen.getByText('Ground')).toBeTruthy();
   });
 
   it('calls onViewVolumeDetails when button is clicked', async () => {

@@ -106,9 +106,14 @@ const DistrictAverageVolumesSummaryCard: FC<DistrictAverageVolumesSummaryCardPro
           {rows.map((row, index) => {
             const selectedItem =
               harvestMethodOptions.find((option) => option.code === row.harvestMethodCode) ?? null;
+            const rowLabel =
+              [row.populationType, row.wasteType].filter(Boolean).join(', ') || `row ${index + 1}`;
+            const harvestMethodLabel = `Harvest method for ${rowLabel}`;
 
             return (
-              <StructuredListRow key={index}>
+              <StructuredListRow
+                key={`${index}-${row.populationType ?? 'pop'}-${row.wasteType ?? 'waste'}-${row.harvestMethodCode ?? 'method'}`}
+              >
                 <StructuredListCell>{toDisplayValue(row.populationType)}</StructuredListCell>
                 <StructuredListCell>{toDisplayValue(row.wasteType)}</StructuredListCell>
                 <StructuredListCell className="district-average-volumes-summary-card__harvest-method-cell">
@@ -117,7 +122,8 @@ const DistrictAverageVolumesSummaryCard: FC<DistrictAverageVolumesSummaryCardPro
                   ) : (
                     <Dropdown
                       id={`district-average-harvest-method-${index}`}
-                      titleText="Harvest method"
+                      titleText={harvestMethodLabel}
+                      aria-label={harvestMethodLabel}
                       hideLabel
                       label="Select one"
                       items={[...harvestMethodOptions]}
@@ -126,8 +132,8 @@ const DistrictAverageVolumesSummaryCard: FC<DistrictAverageVolumesSummaryCardPro
                       }
                       selectedItem={selectedItem}
                       onChange={({ selectedItem: next }) => {
-                        if (next?.code) {
-                          onHarvestMethodChange?.(index, next.code);
+                        if (next) {
+                          onHarvestMethodChange?.(index, next.code ?? '');
                         }
                       }}
                       size="sm"
