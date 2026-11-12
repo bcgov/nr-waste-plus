@@ -59,6 +59,17 @@ class JwtRoleCheckerIntegrationTest extends AbstractTestContainerIntegrationTest
   }
 
   @Test
+  void testHasRoleMatching_shouldReturnFalseWhenAuthenticationIsNotAuthenticated() {
+    Authentication authentication = mock(Authentication.class);
+    when(authentication.isAuthenticated()).thenReturn(false);
+    SecurityContext context = SecurityContextHolder.createEmptyContext();
+    context.setAuthentication(authentication);
+    SecurityContextHolder.setContext(context);
+
+    assertFalse(new JwtRoleChecker().hasRoleMatching(role -> true));
+  }
+
+  @Test
   void testGetJwt_shouldThrowExceptionWhenPrincipalIsNotJwt() {
     Authentication auth = mock(Authentication.class);
     when(auth.getPrincipal()).thenReturn("not-a-jwt");
@@ -70,6 +81,13 @@ class JwtRoleCheckerIntegrationTest extends AbstractTestContainerIntegrationTest
     JwtRoleChecker checker = new JwtRoleChecker();
 
     assertThrows(IllegalStateException.class, () -> checker.hasIdpProvider("idir"));
+  }
+
+  @Test
+  void testGetJwt_shouldThrowExceptionWhenAuthenticationIsMissing() {
+    SecurityContextHolder.setContext(SecurityContextHolder.createEmptyContext());
+
+    assertThrows(IllegalStateException.class, () -> new JwtRoleChecker().hasIdpProvider("idir"));
   }
 
 

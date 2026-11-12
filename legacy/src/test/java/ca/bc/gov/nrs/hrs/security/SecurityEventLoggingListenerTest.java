@@ -210,6 +210,19 @@ class SecurityEventLoggingListenerTest {
         .doesNotContain(SECRET_MARKER);
   }
 
+  @Test
+  void blankPrimaryTraceIdFallsBackToNextAvailableTraceId() {
+    MDC.put("traceId", "  ");
+    MDC.put("X-B3-TraceId", "fallback-correlation");
+
+    listener.onAuthenticationFailure(
+        new AuthenticationFailureBadCredentialsEvent(
+            new UsernamePasswordAuthenticationToken("ignored", SECRET_MARKER),
+            new BadCredentialsException("invalid credentials")));
+
+    assertThat(message()).contains("correlationId=fallback-correlation");
+  }
+
   private static MockHttpServletRequest request(String method, String route) {
     MockHttpServletRequest request = new MockHttpServletRequest(method, route);
     request.setAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE, route.replace("123", "{id}"));
