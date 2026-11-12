@@ -133,6 +133,18 @@ class ReportingUnitSearchServiceTest {
     }
 
     @Test
+    @DisplayName("should replace null client filter with user client scope")
+    void shouldReplaceClientNumbers_whenFilterClientNumbersNull() {
+      ReportingUnitSearchParametersDto filters = new ReportingUnitSearchParametersDto();
+      filters.setClientNumbers(null);
+      when(ruRepository.searchReportingUnits(any(), any())).thenReturn(Page.empty());
+
+      service.search(filters, PageRequest.of(0, 10, Sort.unsorted()), CLIENT_NUMBERS, "user1");
+
+      assertThat(filters.getClientNumbers()).isEqualTo(CLIENT_NUMBERS);
+    }
+
+    @Test
     @DisplayName("should replace sentinel client filter with user client scope")
     void shouldReplaceClientNumbers_whenFilterContainsNoValueSentinel() {
       ReportingUnitSearchParametersDto filters = new ReportingUnitSearchParametersDto();
