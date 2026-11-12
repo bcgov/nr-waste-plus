@@ -313,6 +313,26 @@ class ReportingUnitServiceTest {
     }
 
     @Test
+    @DisplayName("does not persist a blank idempotency key")
+    void shouldIgnoreBlankIdempotencyKey() {
+      OrgUnitEntity orgUnit = OrgUnitEntity.builder().orgUnitNo(123L).orgUnitCode("DKM").build();
+      when(orgUnitRepository.findByOrgUnitCode("DKM"))
+          .thenReturn(java.util.Optional.of(orgUnit));
+      when(samplingOptionRepository.findAllValid())
+          .thenReturn(List.of(SamplingOptionEntity.builder().id("AGR").build()));
+      ReportingUnitEntity saved = ReportingUnitEntity.builder().id(555L).build();
+      when(ruRepository.save(ArgumentMatchers.any(ReportingUnitEntity.class))).thenReturn(saved);
+      CreateReportingUnitRequestDto request =
+          new CreateReportingUnitRequestDto("00001271", "DKM", "AGR", null);
+
+      assertThat(service.createReportingUnit(request, "IDIR\\user", "   ")).isEqualTo(555L);
+
+      verify(ruRepository, never()).findByIdempotencyKey(ArgumentMatchers.anyString());
+      verify(ruRepository).save(ruEntityCaptor.capture());
+      assertThat(ruEntityCaptor.getValue().getIdempotencyKey()).isNull();
+    }
+
+    @Test
     @DisplayName("returns the original reporting unit for a retry with the same idempotency key")
     void shouldReturnPreviouslyCreatedReportingUnit_whenIdempotencyKeyExists() {
       OrgUnitEntity orgUnit = OrgUnitEntity.builder().orgUnitNo(123L).orgUnitCode("DKM").build();

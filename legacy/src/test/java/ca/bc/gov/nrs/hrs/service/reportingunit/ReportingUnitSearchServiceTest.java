@@ -133,6 +133,19 @@ class ReportingUnitSearchServiceTest {
     }
 
     @Test
+    @DisplayName("should replace sentinel client filter with user client scope")
+    void shouldReplaceClientNumbers_whenFilterContainsNoValueSentinel() {
+      ReportingUnitSearchParametersDto filters = new ReportingUnitSearchParametersDto();
+      filters.setClientNumbers(List.of(ca.bc.gov.nrs.hrs.LegacyConstants.NOVALUE));
+      PageRequest pageable = PageRequest.of(0, 10, Sort.unsorted());
+      when(ruRepository.searchReportingUnits(any(), any())).thenReturn(Page.empty());
+
+      service.search(filters, pageable, CLIENT_NUMBERS, "user1");
+
+      assertThat(filters.getClientNumbers()).isEqualTo(CLIENT_NUMBERS);
+    }
+
+    @Test
     @DisplayName("should keep filter client numbers when they are explicitly set")
     void shouldKeepFilterClientNumbers_whenExplicitlySet() {
       // Arrange
