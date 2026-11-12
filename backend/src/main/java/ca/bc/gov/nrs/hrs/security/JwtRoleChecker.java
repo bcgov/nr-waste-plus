@@ -34,12 +34,58 @@ public class JwtRoleChecker {
    * @return true if the principal has the role, false otherwise
    */
   public boolean hasRole(String role) {
+    return hasRole(SecurityContextHolder.getContext().getAuthentication(), role);
+  }
+
+  /**
+   * Checks whether the supplied authentication principal has the specified {@link Role} using
+   * boundary-aware matching.
+   *
+   * @param authentication the authentication to inspect
+   * @param role the role enum
+   * @return true if the principal has the role
+   */
+  public boolean hasRole(Authentication authentication, Role role) {
+    if (role == null) {
+      return false;
+    }
+    return hasRole(authentication, role.name());
+  }
+
+  /**
+   * Checks whether the supplied authentication principal has the specified role string using
+   * boundary-aware matching.
+   *
+   * @param authentication the authentication to inspect
+   * @param role the role name to check
+   * @return true if the principal has the role
+   */
+  public boolean hasRole(Authentication authentication, String role) {
+    if (authentication == null || role == null) {
+      return false;
+    }
     String normalizedRole = role.toUpperCase(Locale.ROOT);
     return hasRoleMatching(
+        authentication,
         currentRole ->
             currentRole.equals(normalizedRole)
+                || currentRole.equals("WASTE_PLUS_" + normalizedRole)
                 || currentRole.startsWith(normalizedRole + "_")
                 || currentRole.startsWith("WASTE_PLUS_" + normalizedRole + "_"));
+  }
+
+  /**
+   * Checks whether the authenticated principal has any write role (SUBMITTER, AREA, DISTRICT, ADMIN)
+   * using boundary-aware matching.
+   *
+   * @param authentication the authentication to inspect
+   * @return true if the principal has at least one write role
+   */
+  public boolean hasAnyWriteRole(Authentication authentication) {
+    return hasRole(authentication, Role.SUBMITTER)
+        || hasRole(authentication, Role.AREA)
+        || hasRole(authentication, Role.DISTRICT)
+        || hasRole(authentication, Role.ADMIN);
   }
 
   /**
@@ -72,8 +118,17 @@ public class JwtRoleChecker {
    * @return true if any authority matches the predicate
    */
   public boolean hasRoleMatching(Predicate<String> matcher) {
-    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    return hasRoleMatching(SecurityContextHolder.getContext().getAuthentication(), matcher);
+  }
 
+  /**
+   * Check roles of the supplied authentication using an arbitrary predicate against upper-cased authorities.
+   *
+   * @param authentication the authentication to check
+   * @param matcher predicate to apply to each authority string
+   * @return true if any authority matches the predicate
+   */
+  public boolean hasRoleMatching(Authentication authentication, Predicate<String> matcher) {
     if (authentication == null || !authentication.isAuthenticated()) {
       return false;
     }
@@ -117,6 +172,7 @@ public class JwtRoleChecker {
    * Checks whether the authenticated principal satisfies the route-gate rules:
    * <ul>
    *   <li>Principal is authenticated and carries at least one recognized role.</li>
+   *   <li>Only IDIR and BUSINESS_BCEID identity providers are permitted.</li>
    *   <li>BCeID users never claim ADMIN, AREA, or DISTRICT roles.</li>
    *   <li>IDIR users carry a single role among ADMIN, AREA, DISTRICT, VIEWER.</li>
    * </ul>
@@ -141,16 +197,19 @@ public class JwtRoleChecker {
       return false;
     }
 
+    if (idp != IdentityProvider.IDIR && idp != IdentityProvider.BUSINESS_BCEID) {
+      return false;
+    }
+
     Map<Role, List<String>> roles = JwtPrincipalUtil.getRoles(jwt);
 
     if (IdentityProvider.BUSINESS_BCEID == idp) {
       boolean claimsForbiddenRole = roles.containsKey(Role.ADMIN)
           || roles.containsKey(Role.AREA)
           || roles.containsKey(Role.DISTRICT)
-          || authentication.getAuthorities().stream()
-              .map(GrantedAuthority::getAuthority)
-              .map(String::toUpperCase)
-              .anyMatch(a -> a.contains("ADMIN") || a.contains("AREA") || a.contains("DISTRICT"));
+          || hasRole(authentication, Role.ADMIN)
+          || hasRole(authentication, Role.AREA)
+          || hasRole(authentication, Role.DISTRICT);
       if (claimsForbiddenRole) {
         return false;
       }
@@ -164,7 +223,7 @@ public class JwtRoleChecker {
       return idirRoleCount == 1;
     }
 
-    return !roles.isEmpty();
+    return false;
   }
 
   private Jwt extractJwt(Authentication authentication) {

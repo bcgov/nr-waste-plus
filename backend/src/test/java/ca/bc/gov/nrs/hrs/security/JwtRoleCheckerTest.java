@@ -154,6 +154,32 @@ class JwtRoleCheckerTest {
             .isFalse();
       }
     }
+
+    @Test
+    @DisplayName("Unsupported or non-IDIR/BCeID provider (e.g. BCSC) is rejected")
+    void unsupportedProvider_isRejected() {
+      Jwt jwt =
+          WithMockJwtSecurityContextFactory.createJwt(
+              "bcsc_user", List.of("WASTE_PLUS_ADMIN"), "bcsc", "Bcsc, User", "bcsc@gov.bc.ca");
+      JwtAuthenticationToken auth =
+          new JwtAuthenticationToken(
+              jwt, AuthorityUtils.createAuthorityList("WASTE_PLUS_ADMIN"));
+      assertThat(checker.isValidRouteGatePrincipal(auth)).isFalse();
+    }
+
+    @Test
+    @DisplayName("Prefix-matching false positive such as ADMINISTRATOR is not treated as ADMIN")
+    void prefixFalsePositives_areNotTreatedAsAdmin() {
+      Jwt jwt =
+          WithMockJwtSecurityContextFactory.createJwt(
+              "admin_fake", List.of("WASTE_PLUS_ADMINISTRATOR_X"), "idir", "Admin, Fake", "fake@idir.ca");
+      JwtAuthenticationToken auth =
+          new JwtAuthenticationToken(
+              jwt, AuthorityUtils.createAuthorityList("WASTE_PLUS_ADMINISTRATOR_X"));
+
+      assertThat(checker.hasRole(auth, ca.bc.gov.nrs.hrs.dto.base.Role.ADMIN)).isFalse();
+      assertThat(checker.hasAnyWriteRole(auth)).isFalse();
+    }
   }
 
   private void authenticate(String... authorities) {

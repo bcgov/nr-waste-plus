@@ -129,17 +129,23 @@ public class JwtRoleAuthorizationManagerFactory {
     return (authenticationSupplier, context) -> {
       var auth = authenticationSupplier.get();
       boolean valid = roleChecker.isValidRouteGatePrincipal(auth)
-          && roleChecker.hasRoleMatching(role -> {
-            String upper = role.toUpperCase(Locale.ROOT);
-            return upper.startsWith("SUBMITTER")
-                || upper.startsWith("AREA")
-                || upper.startsWith("DISTRICT")
-                || upper.startsWith("ADMIN")
-                || upper.startsWith("WASTE_PLUS_SUBMITTER")
-                || upper.startsWith("WASTE_PLUS_AREA")
-                || upper.startsWith("WASTE_PLUS_DISTRICT")
-                || upper.startsWith("WASTE_PLUS_ADMIN");
-          });
+          && roleChecker.hasAnyWriteRole(auth);
+      return new AuthorizationDecision(valid);
+    };
+  }
+
+  /**
+   * AuthorizationManager for Reporting Unit write operations (POST, PUT, PATCH, DELETE under
+   * {@code /api/reporting-units/**}): enforces route gate and requires write roles
+   * (SUBMITTER, AREA, DISTRICT, ADMIN), rejecting read-only roles such as VIEWER at the route gate.
+   *
+   * @return an AuthorizationManager for request contexts
+   */
+  public AuthorizationManager<RequestAuthorizationContext> reportingUnitWriteGate() {
+    return (authenticationSupplier, context) -> {
+      var auth = authenticationSupplier.get();
+      boolean valid = roleChecker.isValidRouteGatePrincipal(auth)
+          && roleChecker.hasAnyWriteRole(auth);
       return new AuthorizationDecision(valid);
     };
   }

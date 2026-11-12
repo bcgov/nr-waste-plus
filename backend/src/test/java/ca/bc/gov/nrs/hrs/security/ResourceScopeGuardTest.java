@@ -416,4 +416,130 @@ class ResourceScopeGuardTest {
       assertThatCode(() -> guard.verify(customClaimJwt, RU_ID, "GET")).doesNotThrowAnyException();
     }
   }
+
+  // ── Edge Cases: Fail-Closed, IDPs, and Error Handling ───────────────────────
+
+  @Nested
+  @DisplayName("Fail-Closed Rules and Edge Cases")
+  class FailClosedAndEdgeCases {
+
+    @Test
+    @DisplayName("IDIR VIEWER with no assigned districts fails closed -> 404 Not Found")
+    void idirViewerWithoutDistricts_failsClosed_returns404() {
+      mockPostgresReportingUnit(CLIENT_IN_SCOPE, DISTRICT_IN_SCOPE);
+      Jwt jwt =
+          WithMockJwtSecurityContextFactory.createJwt(
+              "idir_viewer",
+              List.of("WASTE_PLUS_VIEWER"),
+              "idir",
+              "Viewer, Idir",
+              "viewer@idir.ca");
+
+      assertThatThrownBy(() -> guard.verify(jwt, RU_ID, "GET"))
+          .isInstanceOf(ReportingUnitNotFoundException.class);
+    }
+
+    @Test
+    @DisplayName("null reportingUnitId fails closed -> 400 Bad Request")
+    void nullReportingUnitId_throwsBadRequest() {
+      Jwt jwt =
+          WithMockJwtSecurityContextFactory.createJwt(
+              "admin_user", List.of("WASTE_PLUS_ADMIN"), "idir", "Admin, User", "admin@idir.ca");
+
+      assertThatThrownBy(() -> guard.verify(jwt, null, "GET"))
+          .isInstanceOf(ResponseStatusException.class)
+          .satisfies(
+              ex ->
+                  assertThat(((ResponseStatusException) ex).getStatusCode())
+                      .isEqualTo(HttpStatus.BAD_REQUEST));
+    }
+
+    @Test
+    @DisplayName("verify without explicit HTTP method outside request context fails closed")
+    void verifyWithoutRequestContext_throwsIllegalStateException() {
+      Jwt jwt =
+          WithMockJwtSecurityContextFactory.createJwt(
+              "admin_user", List.of("WASTE_PLUS_ADMIN"), "idir", "Admin, User", "admin@idir.ca");
+
+      // Outside of a Spring web request context, verify(jwt, ruId) must fail closed rather than defaulting to GET
+      assertThatThrownBy(() -> guard.verify(jwt, RU_ID))
+          .isInstanceOf(IllegalStateException.class)
+          .hasMessageContaining("no active HTTP request context");
+    }
+
+    @Test
+    @DisplayName("unresolved or null identity provider fails closed -> 401 Unauthorized")
+    void unresolvedIdp_throwsUnauthorized() {
+      Jwt jwt =
+          Jwt.withTokenValue("token")
+              .header("alg", "none")
+              .subject("user-no-idp")
+              .claim("cognito:groups", List.of("WASTE_PLUS_ADMIN"))
+              .build();
+
+      assertThatThrownBy(() -> guard.verify(jwt, RU_ID, "GET"))
+          .isInstanceOf(ResponseStatusException.class)
+          .satisfies(
+              ex ->
+                  assertThat(((ResponseStatusException) ex).getStatusCode())
+                      .isEqualTo(HttpStatus.UNAUTHORIZED));
+    }
+
+    @Test
+    @DisplayName("unsupported identity provider (e.g. BCSC) fails closed -> 403 Forbidden")
+    void unsupportedIdp_throwsForbidden() {
+      Jwt jwt =
+          WithMockJwtSecurityContextFactory.createJwt(
+              "bcsc_user", List.of("WASTE_PLUS_ADMIN"), "bcsc", "Bcsc, User", "bcsc@gov.bc.ca");
+
+      assertThatThrownBy(() -> guard.verify(jwt, RU_ID, "GET"))
+          .isInstanceOf(ResponseStatusException.class)
+          .satisfies(
+              ex ->
+                  assertThat(((ResponseStatusException) ex).getStatusCode())
+                      .isEqualTo(HttpStatus.FORBIDDEN));
+    }
+
+    @Test
+    @DisplayName("genuine legacy miss throws 404 ReportingUnitNotFoundException")
+    void genuineLegacyMiss_throws404() {
+      when(reportingUnitRepository.findByIdAndDeletedFalse(RU_ID)).thenReturn(Optional.empty());
+      when(legacyApiProvider.getReportingUnitDetails(RU_ID))
+          .thenThrow(new ReportingUnitNotFoundException(RU_ID));
+
+      Jwt jwt =
+          WithMockJwtSecurityContextFactory.createJwt(
+              "sub_user",
+              List.of("WASTE_PLUS_SUBMITTER_" + CLIENT_IN_SCOPE),
+              "bceidbusiness",
+              "Submitter, User",
+              "sub@bceid.ca");
+
+      assertThatThrownBy(() -> guard.verify(jwt, RU_ID, "GET"))
+          .isInstanceOf(ReportingUnitNotFoundException.class);
+    }
+
+    @Test
+    @DisplayName("legacy service outage/error throws 503 Service Unavailable (not 404)")
+    void legacyServiceOutage_throws503() {
+      when(reportingUnitRepository.findByIdAndDeletedFalse(RU_ID)).thenReturn(Optional.empty());
+      when(legacyApiProvider.getReportingUnitDetails(RU_ID))
+          .thenThrow(new RuntimeException("Legacy connection refused / 500 error"));
+
+      Jwt jwt =
+          WithMockJwtSecurityContextFactory.createJwt(
+              "sub_user",
+              List.of("WASTE_PLUS_SUBMITTER_" + CLIENT_IN_SCOPE),
+              "bceidbusiness",
+              "Submitter, User",
+              "sub@bceid.ca");
+
+      assertThatThrownBy(() -> guard.verify(jwt, RU_ID, "GET"))
+          .isInstanceOf(ResponseStatusException.class)
+          .satisfies(
+              ex ->
+                  assertThat(((ResponseStatusException) ex).getStatusCode())
+                      .isEqualTo(HttpStatus.SERVICE_UNAVAILABLE));
+    }
+  }
 }

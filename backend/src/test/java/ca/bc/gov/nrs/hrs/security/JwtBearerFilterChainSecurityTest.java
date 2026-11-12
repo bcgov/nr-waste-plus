@@ -288,6 +288,60 @@ class JwtBearerFilterChainSecurityTest {
   }
 
   @Test
+  void reportingUnitWriteGate_enforcesWriteRolesOnNestedPaths() throws Exception {
+    String idirViewerToken =
+        token(
+            "client-good",
+            ISSUER,
+            null,
+            Instant.now().plusSeconds(60),
+            List.of("WASTE_PLUS_VIEWER"),
+            "idir");
+
+    // VIEWER is rejected at the route filter gate for write operations
+    mockMvc
+        .perform(
+            post("/api/reporting-units/100/blocks")
+                .with(csrf())
+                .header("Authorization", "Bearer " + idirViewerToken))
+        .andExpect(status().isForbidden());
+
+    // Role prefix false positive (e.g. ADMINISTRATOR) is rejected
+    String fakeAdminToken =
+        token(
+            "client-good",
+            ISSUER,
+            null,
+            Instant.now().plusSeconds(60),
+            List.of("WASTE_PLUS_ADMINISTRATOR_X"),
+            "idir");
+
+    mockMvc
+        .perform(
+            post("/api/reporting-units/100/blocks")
+                .with(csrf())
+                .header("Authorization", "Bearer " + fakeAdminToken))
+        .andExpect(status().isForbidden());
+
+    // Valid write role (ADMIN) passes the route write gate
+    String idirAdminToken =
+        token(
+            "client-good",
+            ISSUER,
+            null,
+            Instant.now().plusSeconds(60),
+            List.of("WASTE_PLUS_ADMIN"),
+            "idir");
+
+    mockMvc
+        .perform(
+            post("/api/reporting-units/100/blocks")
+                .with(csrf())
+                .header("Authorization", "Bearer " + idirAdminToken))
+        .andExpect(status().isOk());
+  }
+
+  @Test
   void wrongClientIdDoesNotReachProtectedController() throws Exception {
     assertRejectedWithoutProvider(token("client-other", ISSUER, null));
   }
@@ -405,6 +459,12 @@ class JwtBearerFilterChainSecurityTest {
     @ResponseBody
     String createReportingUnitEndpoint() {
       return "ru-created";
+    }
+
+    @PostMapping("/api/reporting-units/{id}/blocks")
+    @ResponseBody
+    String createBlockEndpoint() {
+      return "block-created";
     }
   }
 

@@ -37,12 +37,14 @@ import org.springframework.web.server.ResponseStatusException;
  * <p>Enforces the following business rules:
  * <ul>
  *   <li>IDIR ADMIN and AREA callers carry cross-district privileges and are unrestricted by scope.</li>
- *   <li>IDIR DISTRICT scope is restricted to their assigned district's {@code org_unit_no} / code.</li>
+ *   <li>IDIR DISTRICT scope is restricted to their assigned district code.</li>
  *   <li>BCeID SUBMITTER and VIEWER scope is restricted to Reporting Units owned by their client number.</li>
  *   <li>Resources outside the requester's scope return HTTP 404, matching the "no existence disclosure"
- *       rule (never HTTP 403).</li>
+ *       rule (never HTTP 403). Note: the route-level filter gate returns HTTP 403 for unauthorized roles or invalid principals.</li>
  *   <li>VIEWER role (either provider) is read-only: HTTP 200 on in-scope reads, HTTP 403 on in-scope
  *       writes, and HTTP 404 on out-of-scope resources.</li>
+ *   <li>IDIR VIEWER without an assigned district fails closed (HTTP 404).</li>
+ *   <li>Unsupported or unresolved identity providers fail closed with HTTP 401/403.</li>
  *   <li>Every authorization failure is logged with a correlation ID for audit purposes.</li>
  * </ul>
  */
@@ -68,28 +70,38 @@ public class ResourceScopeGuard {
 
   /**
    * Verifies that the authenticated caller has access to the specified reporting unit,
-   * inferring the HTTP method from the current request context.
+   * inferring the HTTP method from the current request context. Fails closed if no request context exists.
    *
    * @param authentication the current Spring Security authentication
    * @param reportingUnitId the target reporting unit identifier
    */
   public void verify(Authentication authentication, Long reportingUnitId) {
     HttpServletRequest request = currentRequest();
-    String method = request != null ? request.getMethod() : "GET";
-    verify(authentication, reportingUnitId, method);
+    if (request == null) {
+      logSecurityDenied(
+          extractJwt(authentication),
+          reportingUnitId,
+          "UNKNOWN",
+          "Cannot infer HTTP method: no active request context");
+      throw new IllegalStateException("Cannot determine HTTP method: no active HTTP request context");
+    }
+    verify(authentication, reportingUnitId, request.getMethod());
   }
 
   /**
    * Verifies that the JWT caller has access to the specified reporting unit,
-   * inferring the HTTP method from the current request context.
+   * inferring the HTTP method from the current request context. Fails closed if no request context exists.
    *
    * @param jwt the caller's JWT token
    * @param reportingUnitId the target reporting unit identifier
    */
   public void verify(Jwt jwt, Long reportingUnitId) {
     HttpServletRequest request = currentRequest();
-    String method = request != null ? request.getMethod() : "GET";
-    verify(jwt, reportingUnitId, method);
+    if (request == null) {
+      logSecurityDenied(jwt, reportingUnitId, "UNKNOWN", "Cannot infer HTTP method: no active request context");
+      throw new IllegalStateException("Cannot determine HTTP method: no active HTTP request context");
+    }
+    verify(jwt, reportingUnitId, request.getMethod());
   }
 
   /**
@@ -133,10 +145,21 @@ public class ResourceScopeGuard {
    */
   public void verify(Jwt jwt, Long reportingUnitId, String httpMethod) {
     if (reportingUnitId == null) {
-      return;
+      logSecurityDenied(jwt, null, httpMethod, "Reporting unit ID cannot be null");
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Reporting unit ID cannot be null");
     }
 
     IdentityProvider idp = resolveIdentityProvider(jwt);
+    if (idp == null) {
+      logSecurityDenied(jwt, reportingUnitId, httpMethod, "Missing or unresolved identity provider");
+      throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unresolved identity provider");
+    }
+    if (idp != IdentityProvider.IDIR && idp != IdentityProvider.BUSINESS_BCEID) {
+      logSecurityDenied(jwt, reportingUnitId, httpMethod, "Unsupported identity provider: " + idp);
+      throw new ResponseStatusException(
+          HttpStatus.FORBIDDEN, "Unsupported identity provider: " + idp.name());
+    }
+
     Map<Role, List<String>> roles = JwtPrincipalUtil.getRoles(jwt);
 
     // IDIR ADMIN and AREA carry cross-district privileges and are unrestricted by scope
@@ -177,18 +200,24 @@ public class ResourceScopeGuard {
         }
       } else if (roles.containsKey(Role.VIEWER)) {
         Set<String> assignedDistricts = extractAssignedDistricts(jwt);
-        if (!assignedDistricts.isEmpty()) {
-          boolean matches = assignedDistricts.stream()
-              .anyMatch(d -> d.equalsIgnoreCase(targetScope.districtCode()));
-          if (!matches) {
-            logSecurityDenied(
-                jwt,
-                reportingUnitId,
-                httpMethod,
-                "IDIR VIEWER user assigned districts " + assignedDistricts
-                    + " does not match target RU district " + targetScope.districtCode());
-            throw new ReportingUnitNotFoundException(reportingUnitId);
-          }
+        if (assignedDistricts.isEmpty()) {
+          logSecurityDenied(
+              jwt,
+              reportingUnitId,
+              httpMethod,
+              "IDIR VIEWER has no assigned district: access denied");
+          throw new ReportingUnitNotFoundException(reportingUnitId);
+        }
+        boolean matches = assignedDistricts.stream()
+            .anyMatch(d -> d.equalsIgnoreCase(targetScope.districtCode()));
+        if (!matches) {
+          logSecurityDenied(
+              jwt,
+              reportingUnitId,
+              httpMethod,
+              "IDIR VIEWER user assigned districts " + assignedDistricts
+                  + " does not match target RU district " + targetScope.districtCode());
+          throw new ReportingUnitNotFoundException(reportingUnitId);
         }
       }
     }
@@ -246,25 +275,12 @@ public class ResourceScopeGuard {
       districts.addAll(roles.get(Role.VIEWER));
     }
 
-    // Custom claims
-    List<String> claimKeys = List.of(
-        "custom:idp_district",
-        "custom:district",
-        "custom:idp_org_unit_no",
-        "custom:idp_org_unit",
-        "custom:org_unit_no",
-        "org_unit_no",
-        "district");
+    // Custom claims emitted by IdP
+    List<String> claimKeys = List.of("custom:idp_district", "custom:district");
     for (String key : claimKeys) {
       Object val = jwt.getClaims().get(key);
       if (val instanceof String s && !s.isBlank()) {
         districts.add(s.trim());
-      } else if (val instanceof List<?> list) {
-        for (Object item : list) {
-          if (item instanceof String s && !s.isBlank()) {
-            districts.add(s.trim());
-          }
-        }
       }
     }
 
@@ -289,9 +305,13 @@ public class ResourceScopeGuard {
         return new ReportingUnitScope(legacyRu.clientNumber(), districtCode);
       }
     } catch (ReportingUnitNotFoundException e) {
+      logSecurityDenied(jwt, reportingUnitId, httpMethod, "Target reporting unit does not exist");
       throw e;
     } catch (Exception ex) {
-      log.debug("Legacy reporting unit fetch failed for RU {}: {}", reportingUnitId, ex.getMessage());
+      log.warn("Legacy reporting unit lookup failed for RU {}: {}", reportingUnitId, ex.getMessage(), ex);
+      logSecurityDenied(jwt, reportingUnitId, httpMethod, "Legacy lookup error: " + ex.getMessage());
+      throw new ResponseStatusException(
+          HttpStatus.SERVICE_UNAVAILABLE, "Legacy reporting unit service unavailable", ex);
     }
 
     logSecurityDenied(jwt, reportingUnitId, httpMethod, "Target reporting unit does not exist");
