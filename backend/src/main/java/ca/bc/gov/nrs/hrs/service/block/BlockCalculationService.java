@@ -46,7 +46,7 @@ public class BlockCalculationService {
             .getClientNumber();
     if (IdentityProvider.BUSINESS_BCEID.equals(JwtPrincipalUtil.getIdentityProvider(jwt))
         && !hasClientRole(jwt, clientNumber)) {
-      throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND);
     }
 
     blockRepository

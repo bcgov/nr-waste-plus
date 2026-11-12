@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import ca.bc.gov.nrs.hrs.configuration.SecurityConfiguration;
@@ -44,6 +45,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 @WebMvcTest(controllers = JwtBearerFilterChainSecurityTest.ProtectedProbeController.class)
@@ -163,6 +165,129 @@ class JwtBearerFilterChainSecurityTest {
   }
 
   @Test
+  void reportingUnitRouteGate_rejectsBceidClaimingForbiddenRoles() throws Exception {
+    for (String forbiddenGroup :
+        List.of("WASTE_PLUS_ADMIN", "WASTE_PLUS_AREA", "WASTE_PLUS_DISTRICT_DKM")) {
+      String bceidForbiddenToken =
+          token(
+              "client-good",
+              ISSUER,
+              null,
+              Instant.now().plusSeconds(60),
+              List.of(forbiddenGroup, "WASTE_PLUS_SUBMITTER_00012345"),
+              "bceidbusiness");
+
+      mockMvc
+          .perform(
+              get("/api/reporting-units/100")
+                  .header("Authorization", "Bearer " + bceidForbiddenToken))
+          .andExpect(status().isForbidden());
+    }
+  }
+
+  @Test
+  void reportingUnitRouteGate_rejectsIdirWithMultipleRoles() throws Exception {
+    String idirMultiRoleToken =
+        token(
+            "client-good",
+            ISSUER,
+            null,
+            Instant.now().plusSeconds(60),
+            List.of("WASTE_PLUS_ADMIN", "WASTE_PLUS_AREA"),
+            "idir");
+
+    mockMvc
+        .perform(
+            get("/api/reporting-units/100")
+                .header("Authorization", "Bearer " + idirMultiRoleToken))
+        .andExpect(status().isForbidden());
+  }
+
+  @Test
+  void reportingUnitRouteGate_allowsValidIdirAndBceidUsers() throws Exception {
+    String idirAdminToken =
+        token(
+            "client-good",
+            ISSUER,
+            null,
+            Instant.now().plusSeconds(60),
+            List.of("WASTE_PLUS_ADMIN"),
+            "idir");
+
+    mockMvc
+        .perform(
+            get("/api/reporting-units/100")
+                .header("Authorization", "Bearer " + idirAdminToken))
+        .andExpect(status().isOk());
+
+    String bceidSubmitterToken =
+        token(
+            "client-good",
+            ISSUER,
+            null,
+            Instant.now().plusSeconds(60),
+            List.of("WASTE_PLUS_SUBMITTER_00012345"),
+            "bceidbusiness");
+
+    mockMvc
+        .perform(
+            get("/api/reporting-units/100")
+                .header("Authorization", "Bearer " + bceidSubmitterToken))
+        .andExpect(status().isOk());
+  }
+
+  @Test
+  void reportingUnitCreateGate_rejectsViewerAndAllowsSubmitterOrAdmin() throws Exception {
+    String bceidViewerToken =
+        token(
+            "client-good",
+            ISSUER,
+            null,
+            Instant.now().plusSeconds(60),
+            List.of("WASTE_PLUS_VIEWER_00012345"),
+            "bceidbusiness");
+
+    mockMvc
+        .perform(
+            post("/api/reporting-units")
+                .with(csrf())
+                .header("Authorization", "Bearer " + bceidViewerToken))
+        .andExpect(status().isForbidden());
+
+    String bceidSubmitterToken =
+        token(
+            "client-good",
+            ISSUER,
+            null,
+            Instant.now().plusSeconds(60),
+            List.of("WASTE_PLUS_SUBMITTER_00012345"),
+            "bceidbusiness");
+
+    mockMvc
+        .perform(
+            post("/api/reporting-units")
+                .with(csrf())
+                .header("Authorization", "Bearer " + bceidSubmitterToken))
+        .andExpect(status().isOk());
+
+    String idirAdminToken =
+        token(
+            "client-good",
+            ISSUER,
+            null,
+            Instant.now().plusSeconds(60),
+            List.of("WASTE_PLUS_ADMIN"),
+            "idir");
+
+    mockMvc
+        .perform(
+            post("/api/reporting-units")
+                .with(csrf())
+                .header("Authorization", "Bearer " + idirAdminToken))
+        .andExpect(status().isOk());
+  }
+
+  @Test
   void wrongClientIdDoesNotReachProtectedController() throws Exception {
     assertRejectedWithoutProvider(token("client-other", ISSUER, null));
   }
@@ -208,13 +333,26 @@ class JwtBearerFilterChainSecurityTest {
   }
 
   private static String token(String clientId, String issuer, String audience, Instant expiresAt) {
+    return token(clientId, issuer, audience, expiresAt, List.of("WASTE_PLUS_VIEWER"), "idir");
+  }
+
+  private static String token(
+      String clientId,
+      String issuer,
+      String audience,
+      Instant expiresAt,
+      List<String> groups,
+      String idp) {
     JwtClaimsSet.Builder claims =
         JwtClaimsSet.builder()
             .issuer(issuer)
             .subject("synthetic-subject")
             .issuedAt(expiresAt.isBefore(Instant.now()) ? expiresAt.minusSeconds(120) : Instant.now())
             .expiresAt(expiresAt)
-            .claim("cognito:groups", List.of("WASTE_PLUS_VIEWER"));
+            .claim("cognito:groups", groups);
+    if (idp != null) {
+      claims.claim("custom:idp_name", idp);
+    }
     if (clientId != null) {
       claims.claim("client_id", clientId);
     }
@@ -255,6 +393,18 @@ class JwtBearerFilterChainSecurityTest {
     @ResponseBody
     String info() {
       return "{\"app\":{\"commit\":\"probe-commit\"}}";
+    }
+
+    @GetMapping("/api/reporting-units/{id}")
+    @ResponseBody
+    String reportingUnitEndpoint() {
+      return "ru-ok";
+    }
+
+    @PostMapping("/api/reporting-units")
+    @ResponseBody
+    String createReportingUnitEndpoint() {
+      return "ru-created";
     }
   }
 

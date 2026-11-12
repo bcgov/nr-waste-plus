@@ -107,4 +107,40 @@ public class JwtRoleAuthorizationManagerFactory {
     return (ignoredAuthentication, ignoredContext) ->
         new AuthorizationDecision(roleChecker.hasIdpProvider(provider));
   }
+
+  /**
+   * AuthorizationManager that enforces the route-level gate rules across Reporting Unit APIs:
+   * valid principal identity, single IDIR role, no BCeID forbidden roles.
+   *
+   * @return an AuthorizationManager for request contexts
+   */
+  public AuthorizationManager<RequestAuthorizationContext> reportingUnitRouteGate() {
+    return (authenticationSupplier, context) ->
+        new AuthorizationDecision(roleChecker.isValidRouteGatePrincipal(authenticationSupplier.get()));
+  }
+
+  /**
+   * AuthorizationManager for Reporting Unit creation: enforces route gate and requires create roles
+   * (SUBMITTER, AREA, DISTRICT, ADMIN).
+   *
+   * @return an AuthorizationManager for request contexts
+   */
+  public AuthorizationManager<RequestAuthorizationContext> reportingUnitCreateGate() {
+    return (authenticationSupplier, context) -> {
+      var auth = authenticationSupplier.get();
+      boolean valid = roleChecker.isValidRouteGatePrincipal(auth)
+          && roleChecker.hasRoleMatching(role -> {
+            String upper = role.toUpperCase(Locale.ROOT);
+            return upper.startsWith("SUBMITTER")
+                || upper.startsWith("AREA")
+                || upper.startsWith("DISTRICT")
+                || upper.startsWith("ADMIN")
+                || upper.startsWith("WASTE_PLUS_SUBMITTER")
+                || upper.startsWith("WASTE_PLUS_AREA")
+                || upper.startsWith("WASTE_PLUS_DISTRICT")
+                || upper.startsWith("WASTE_PLUS_ADMIN");
+          });
+      return new AuthorizationDecision(valid);
+    };
+  }
 }

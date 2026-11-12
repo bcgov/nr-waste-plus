@@ -277,8 +277,8 @@ public class BlockService {
    * @param jwt the authenticated caller's token
    * @param reportingUnitId the reporting unit being read
    * @param clientNumber the owning client number resolved by the caller
-   * @throws ResponseStatusException with HTTP 403 if a BCeID caller is scoped to a different
-   *     client than the block's owner
+   * @throws ReportingUnitNotFoundException if a BCeID caller is scoped to a different
+   *     client than the block's owner (no existence disclosure)
    */
   public void enforceClientScope(Jwt jwt, Long reportingUnitId, String clientNumber) {
     if (IdentityProvider.BUSINESS_BCEID.equals(JwtPrincipalUtil.getIdentityProvider(jwt))
@@ -287,9 +287,7 @@ public class BlockService {
           "SECURITY: BCeID user {} attempted unauthorized access to block details for RU {}",
           JwtPrincipalUtil.getUserId(jwt),
           reportingUnitId);
-      throw new ResponseStatusException(
-          HttpStatus.FORBIDDEN,
-          "User is not authorized to access reporting unit: " + reportingUnitId);
+      throw new ReportingUnitNotFoundException(reportingUnitId);
     }
   }
 

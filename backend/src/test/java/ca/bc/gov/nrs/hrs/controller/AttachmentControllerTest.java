@@ -14,6 +14,7 @@ import ca.bc.gov.nrs.hrs.dto.block.AttachmentFinalizeResponse;
 import ca.bc.gov.nrs.hrs.dto.block.AttachmentIntentResponse;
 import ca.bc.gov.nrs.hrs.exception.AttachmentConflictException;
 import ca.bc.gov.nrs.hrs.exception.AttachmentNotFoundException;
+import ca.bc.gov.nrs.hrs.security.ResourceScopeGuard;
 import ca.bc.gov.nrs.hrs.service.block.AttachmentService;
 import java.time.Instant;
 import org.junit.jupiter.api.BeforeEach;
@@ -43,6 +44,9 @@ class AttachmentControllerTest {
 
   @Mock
   private AttachmentService attachmentService;
+
+  @Mock
+  private ResourceScopeGuard resourceScopeGuard;
 
   @InjectMocks
   private AttachmentController attachmentController;

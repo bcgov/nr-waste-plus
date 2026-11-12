@@ -539,9 +539,9 @@ class AttachmentServiceTest {
                     RU_ID,
                     BLOCK_ID,
                     intentRequest(AttachmentDocumentType.FINAL_MAP.name())))
-        .isInstanceOf(ForbiddenException.class)
+        .isInstanceOf(ReportingUnitNotFoundException.class)
         .extracting(e -> ((ResponseStatusException) e).getStatusCode())
-        .isEqualTo(HttpStatus.FORBIDDEN);
+        .isEqualTo(HttpStatus.NOT_FOUND);
   }
 
   @Test
@@ -615,9 +615,9 @@ class AttachmentServiceTest {
             "bceid@example.com");
 
     assertThatThrownBy(() -> service.finalizeAttachment(jwt, RU_ID, BLOCK_ID, ATTACHMENT_ID))
-        .isInstanceOf(ForbiddenException.class)
+        .isInstanceOf(ReportingUnitNotFoundException.class)
         .extracting(e -> ((ResponseStatusException) e).getStatusCode())
-        .isEqualTo(HttpStatus.FORBIDDEN);
+        .isEqualTo(HttpStatus.NOT_FOUND);
   }
 
   @Test

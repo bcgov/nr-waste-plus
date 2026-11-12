@@ -4,6 +4,7 @@ import ca.bc.gov.nrs.hrs.dto.block.AttachmentDownloadResponse;
 import ca.bc.gov.nrs.hrs.dto.block.AttachmentFinalizeResponse;
 import ca.bc.gov.nrs.hrs.dto.block.AttachmentIntentRequest;
 import ca.bc.gov.nrs.hrs.dto.block.AttachmentIntentResponse;
+import ca.bc.gov.nrs.hrs.security.ResourceScopeGuard;
 import ca.bc.gov.nrs.hrs.service.block.AttachmentService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +29,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class AttachmentController {
 
   private final AttachmentService attachmentService;
+  private final ResourceScopeGuard resourceScopeGuard;
 
   /**
    * Registers an upload attempt and returns a short-lived presigned PUT URL.
@@ -44,6 +46,7 @@ public class AttachmentController {
       @PathVariable Long reportingUnitId,
       @PathVariable Long blockId,
       @Valid @RequestBody AttachmentIntentRequest request) {
+    resourceScopeGuard.verify(jwt, reportingUnitId);
     return ResponseEntity.status(HttpStatus.CREATED)
         .body(attachmentService.createAttempt(jwt, reportingUnitId, blockId, request));
   }
@@ -63,6 +66,7 @@ public class AttachmentController {
       @PathVariable Long reportingUnitId,
       @PathVariable Long blockId,
       @PathVariable Long attachmentId) {
+    resourceScopeGuard.verify(jwt, reportingUnitId);
     return ResponseEntity.ok(
         attachmentService.finalizeAttachment(jwt, reportingUnitId, blockId, attachmentId));
   }
@@ -85,6 +89,7 @@ public class AttachmentController {
       @PathVariable Long reportingUnitId,
       @PathVariable Long blockId,
       @PathVariable Long attachmentId) {
+    resourceScopeGuard.verify(jwt, reportingUnitId);
     return ResponseEntity.ok(
         attachmentService.getDownloadUrl(jwt, reportingUnitId, blockId, attachmentId));
   }

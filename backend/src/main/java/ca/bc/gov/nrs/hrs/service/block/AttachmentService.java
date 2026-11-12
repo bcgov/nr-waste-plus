@@ -517,8 +517,7 @@ public class AttachmentService {
             "SECURITY: BCeID user {} attempted unauthorized access to reporting unit {}",
             JwtPrincipalUtil.getUserId(jwt),
             reportingUnit.getId());
-        throw new ForbiddenException(
-            "User is not authorized to access reporting unit: " + reportingUnit.getId());
+        throw new ReportingUnitNotFoundException(reportingUnit.getId());
       }
     }
   }

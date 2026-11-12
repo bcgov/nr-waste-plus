@@ -1,14 +1,19 @@
 package ca.bc.gov.nrs.hrs.security;
 
 import ca.bc.gov.nrs.hrs.dto.base.IdentityProvider;
+import ca.bc.gov.nrs.hrs.dto.base.Role;
 import ca.bc.gov.nrs.hrs.util.JwtPrincipalUtil;
+import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.Predicate;
+import java.util.stream.Stream;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.stereotype.Component;
 
 /**
@@ -106,5 +111,69 @@ public class JwtRoleChecker {
       return jwt;
     }
     throw new IllegalStateException("JWT not available");
+  }
+
+  /**
+   * Checks whether the authenticated principal satisfies the route-gate rules:
+   * <ul>
+   *   <li>Principal is authenticated and carries at least one recognized role.</li>
+   *   <li>BCeID users never claim ADMIN, AREA, or DISTRICT roles.</li>
+   *   <li>IDIR users carry a single role among ADMIN, AREA, DISTRICT, VIEWER.</li>
+   * </ul>
+   *
+   * @param authentication the current authentication
+   * @return true if the principal passes the route-gate checks, false otherwise
+   */
+  public boolean isValidRouteGatePrincipal(Authentication authentication) {
+    if (authentication == null || !authentication.isAuthenticated()) {
+      return false;
+    }
+
+    Jwt jwt = extractJwt(authentication);
+    if (jwt == null) {
+      return false;
+    }
+
+    IdentityProvider idp;
+    try {
+      idp = JwtPrincipalUtil.getIdentityProvider(jwt);
+    } catch (Exception ex) {
+      return false;
+    }
+
+    Map<Role, List<String>> roles = JwtPrincipalUtil.getRoles(jwt);
+
+    if (IdentityProvider.BUSINESS_BCEID == idp) {
+      boolean claimsForbiddenRole = roles.containsKey(Role.ADMIN)
+          || roles.containsKey(Role.AREA)
+          || roles.containsKey(Role.DISTRICT)
+          || authentication.getAuthorities().stream()
+              .map(GrantedAuthority::getAuthority)
+              .map(String::toUpperCase)
+              .anyMatch(a -> a.contains("ADMIN") || a.contains("AREA") || a.contains("DISTRICT"));
+      if (claimsForbiddenRole) {
+        return false;
+      }
+      return roles.containsKey(Role.SUBMITTER) || roles.containsKey(Role.VIEWER);
+    }
+
+    if (IdentityProvider.IDIR == idp) {
+      long idirRoleCount = Stream.of(Role.ADMIN, Role.AREA, Role.DISTRICT, Role.VIEWER)
+          .filter(roles::containsKey)
+          .count();
+      return idirRoleCount == 1;
+    }
+
+    return !roles.isEmpty();
+  }
+
+  private Jwt extractJwt(Authentication authentication) {
+    if (authentication instanceof JwtAuthenticationToken jwtAuth) {
+      return jwtAuth.getToken();
+    }
+    if (authentication != null && authentication.getPrincipal() instanceof Jwt jwt) {
+      return jwt;
+    }
+    return null;
   }
 }
