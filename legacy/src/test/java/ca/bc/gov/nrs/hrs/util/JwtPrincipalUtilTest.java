@@ -411,6 +411,44 @@ class JwtPrincipalUtilTest {
     assertEquals(expectedGroups, actualGroups);
   }
 
+  @Test
+  @DisplayName("getGroups should filter non-string claims from a Jwt")
+  void shouldGetGroupsFromJwt() {
+    Map<String, Object> claims = Map.of("cognito:groups", List.of("Viewer_00001271", 42));
+
+    assertThat(JwtPrincipalUtil.getGroups(createJwt(claims)))
+        .containsExactly("Viewer_00001271");
+  }
+
+  @Test
+  @DisplayName("getGroups should return an empty set for a null Jwt")
+  void shouldReturnEmptyGroupsForNullJwt() {
+    assertThat(JwtPrincipalUtil.getGroups((Jwt) null)).isEmpty();
+  }
+
+  @Test
+  @DisplayName("name parsing handles a comma-formatted name without trailing details")
+  void shouldParseCommaFormattedNameWithoutSuffix() {
+    Map<String, Object> claims = Map.of(
+        "custom:idp_name", "idir",
+        "custom:idp_display_name", "Smith, Alice");
+
+    assertThat(JwtPrincipalUtil.getFirstName(createJwt(claims))).isEqualTo("Alice");
+    assertThat(JwtPrincipalUtil.getLastName(createJwt(claims))).isEqualTo("Smith");
+  }
+
+  @Test
+  @DisplayName("name parsing preserves a supplied first name when family name is absent")
+  void shouldPreserveFirstNameWhenFamilyNameIsAbsent() {
+    Map<String, Object> claims = Map.of(
+        "custom:idp_name", "idir",
+        "given_name", "Jane",
+        "family_name", "");
+
+    assertThat(JwtPrincipalUtil.getName(createJwt(claims))).isEqualTo("Jane");
+    assertThat(JwtPrincipalUtil.getLastName(createJwt(claims))).isEmpty();
+  }
+
   private static Stream<Arguments> provideGroupsTestData() {
     return Stream.of(
         Arguments.of(Map.of("cognito:groups", List.of("CLIENT_ADMIN")), Set.of("CLIENT_ADMIN")),
