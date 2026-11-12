@@ -1,0 +1,60 @@
+@use '@carbon/react/scss/spacing' as *;
+@use '@carbon/styles/scss/border-radius' as *;
+@use '@carbon/type' as *;
+
+.district-average-volumes-summary-card {
+  display: flex;
+  flex-direction: column;
+  padding: $spacing-07;
+  border: 1px solid var(--cds-border-subtle-01);
+  border-radius: $border-radius-08;
+  background-color: var(--cds-background);
+
+  &__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: $spacing-05;
+    margin-bottom: $spacing-06;
+  }
+
+  &__title-group {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-02;
+  }
+
+  &__title {
+    @include type-style('heading-01');
+    margin: 0;
+    color: var(--cds-text-primary);
+    font-weight: 700;
+  }
+
+  &__helper {
+    @include type-style('label-01');
+    margin: 0;
+    color: var(--cds-text-secondary);
+  }
+
+  &__button {
+    flex-shrink: 0;
+  }
+
+  &__table {
+    margin-bottom: 0;
+  }
+
+  &__harvest-method-cell {
+    min-width: 12rem;
+
+    .cds--dropdown__wrapper {
+      margin-bottom: 0;
+    }
+  }
+
+  &__total-cell {
+    @include type-style('heading-compact-01');
+    font-weight: 600;
+  }
+}
