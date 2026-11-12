@@ -11,7 +11,9 @@ import ca.bc.gov.nrs.hrs.extensions.WithMockJwt;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 
@@ -42,6 +44,17 @@ class JwtRoleCheckerIntegrationTest extends AbstractTestContainerIntegrationTest
   }
 
   @Test
+  void testHasRole_shouldRejectRoleContainedInUnrelatedAuthority() {
+    Authentication authentication = UsernamePasswordAuthenticationToken.authenticated(
+        "user", "", AuthorityUtils.createAuthorityList("ROLE_SUPER_APPROVER"));
+    SecurityContext context = SecurityContextHolder.createEmptyContext();
+    context.setAuthentication(authentication);
+    SecurityContextHolder.setContext(context);
+
+    assertFalse(new JwtRoleChecker().hasRole("Approver"));
+  }
+
+  @Test
   @WithMockJwt(idp = "idir")
   void testHasIdpProvider_shouldMatch() {
     assertTrue(checker.hasIdpProvider("idir"));
@@ -59,6 +72,17 @@ class JwtRoleCheckerIntegrationTest extends AbstractTestContainerIntegrationTest
   }
 
   @Test
+  void testHasRoleMatching_shouldReturnFalseWhenAuthenticationIsNotAuthenticated() {
+    Authentication authentication = mock(Authentication.class);
+    when(authentication.isAuthenticated()).thenReturn(false);
+    SecurityContext context = SecurityContextHolder.createEmptyContext();
+    context.setAuthentication(authentication);
+    SecurityContextHolder.setContext(context);
+
+    assertFalse(new JwtRoleChecker().hasRoleMatching(role -> true));
+  }
+
+  @Test
   void testGetJwt_shouldThrowExceptionWhenPrincipalIsNotJwt() {
     Authentication auth = mock(Authentication.class);
     when(auth.getPrincipal()).thenReturn("not-a-jwt");
@@ -68,6 +92,13 @@ class JwtRoleCheckerIntegrationTest extends AbstractTestContainerIntegrationTest
     SecurityContextHolder.setContext(context);
 
     JwtRoleChecker checker = new JwtRoleChecker();
+
+    assertThrows(IllegalStateException.class, () -> checker.hasIdpProvider("idir"));
+  }
+
+  @Test
+  void testGetJwt_shouldThrowExceptionWhenAuthenticationIsMissing() {
+    SecurityContextHolder.setContext(SecurityContextHolder.createEmptyContext());
 
     assertThrows(IllegalStateException.class, () -> checker.hasIdpProvider("idir"));
   }

@@ -42,6 +42,32 @@ class PaginationUtilTest {
   }
 
   @Test
+  @DisplayName("should sort using default when no sort was provided")
+  void shouldTestResolveSortWithNull() {
+    Sort result = PaginationUtil.resolveSort(
+        null, "defaultField", Map.of("field1", "database_field_1"));
+
+    Assertions.assertEquals(Sort.by("defaultField").ascending(), result);
+  }
+
+  @Test
+  @DisplayName("should map multiple client sort fields and preserve their directions")
+  void shouldMapMultipleSortFields() {
+    Sort receivedSort = Sort.by(
+        Sort.Order.desc("field1"), Sort.Order.asc("field2"));
+
+    Sort result = PaginationUtil.resolveSort(
+        receivedSort,
+        "defaultField",
+        Map.of("field1", "database_field_1", "field2", "database_field_2"));
+
+    Assertions.assertEquals(
+        Sort.by(
+            Sort.Order.desc("database_field_1"), Sort.Order.asc("database_field_2")),
+        result);
+  }
+
+  @Test
   @DisplayName("should throw exception when invalid field is used")
   void shouldTestResolveSortWithInvalidField() {
     // Given

@@ -31,6 +31,7 @@ public class DatabaseAuditor implements AuditorAware<String> {
         .map(SecurityContext::getAuthentication)
         .filter(Authentication::isAuthenticated)
         .map(Authentication::getPrincipal)
+        .filter(Jwt.class::isInstance)
         .map(Jwt.class::cast)
         .map(JwtPrincipalUtil::getUserId);
   }
