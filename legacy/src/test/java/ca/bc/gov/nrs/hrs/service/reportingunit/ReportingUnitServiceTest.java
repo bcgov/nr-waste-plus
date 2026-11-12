@@ -324,6 +324,58 @@ class ReportingUnitServiceTest {
     }
 
     @Test
+    @DisplayName("rejects reuse of an idempotency key by a different user")
+    void shouldRejectIdempotencyKey_whenCreatedByDifferentUser() {
+      CreateReportingUnitRequestDto request = matchingIdempotencyRequest();
+      stubExistingIdempotencyKey(
+          "another-user", request.clientNumber(), 123L, request.samplingCode());
+
+      assertThatThrownBy(() -> service.createReportingUnit(request, "IDIR\\user", "retry-key"))
+          .isInstanceOf(ResponseStatusException.class)
+          .satisfies(ex -> assertThat(((ResponseStatusException) ex).getStatusCode())
+              .isEqualTo(HttpStatus.CONFLICT));
+      verify(ruRepository, never()).save(ArgumentMatchers.any());
+    }
+
+    @Test
+    @DisplayName("rejects reuse of an idempotency key for a different request")
+    void shouldRejectIdempotencyKey_whenRequestDoesNotMatch() {
+      CreateReportingUnitRequestDto request = matchingIdempotencyRequest();
+      stubExistingIdempotencyKey(
+          "IDIR\\user", "another-client", 123L, request.samplingCode());
+
+      assertThatThrownBy(() -> service.createReportingUnit(request, "IDIR\\user", "retry-key"))
+          .isInstanceOf(ResponseStatusException.class)
+          .satisfies(ex -> assertThat(((ResponseStatusException) ex).getStatusCode())
+              .isEqualTo(HttpStatus.CONFLICT));
+      verify(ruRepository, never()).save(ArgumentMatchers.any());
+    }
+
+    private CreateReportingUnitRequestDto matchingIdempotencyRequest() {
+      OrgUnitEntity orgUnit = OrgUnitEntity.builder().orgUnitNo(123L).orgUnitCode("DKM").build();
+      when(orgUnitRepository.findByOrgUnitCode("DKM"))
+          .thenReturn(java.util.Optional.of(orgUnit));
+      return new CreateReportingUnitRequestDto("00001271", "DKM", "AGR", null);
+    }
+
+    private void stubExistingIdempotencyKey(
+        String createdBy,
+        String clientNumber,
+        Long orgUnitNo,
+        String samplingCode) {
+      ReportingUnitEntity existing = ReportingUnitEntity.builder()
+          .id(555L)
+          .orgUnitNo(orgUnitNo)
+          .clientNumber(clientNumber)
+          .wasteSamplingOptionCode(samplingCode)
+          .createdBy(createdBy)
+          .idempotencyKey("retry-key")
+          .build();
+      when(ruRepository.findByIdempotencyKey("retry-key"))
+          .thenReturn(java.util.Optional.of(existing));
+    }
+
+    @Test
     @DisplayName("should throw IllegalArgumentException when district code does not resolve")
     void shouldThrow_whenDistrictNotFound() {
       // Arrange
