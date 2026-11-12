@@ -9,6 +9,7 @@ import jakarta.servlet.http.Cookie;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -111,6 +112,31 @@ class SecurityEventLoggingListenerTest {
             "claims",
             "body",
             "query");
+  }
+
+  @Test
+  void authorizationDenialReadsAuthenticationSupplierOnce() {
+    Jwt jwt = Jwt.withTokenValue("test-token")
+        .header("alg", "RS256")
+        .issuer(ISSUER)
+        .subject(SUBJECT)
+        .issuedAt(Instant.now())
+        .expiresAt(Instant.now().plusSeconds(60))
+        .build();
+    JwtAuthenticationToken authentication = new JwtAuthenticationToken(jwt);
+    AtomicInteger supplierCalls = new AtomicInteger();
+    AuthorizationDeniedEvent<Object> event = new AuthorizationDeniedEvent<>(
+        () -> {
+          supplierCalls.incrementAndGet();
+          return authentication;
+        },
+        new Object(),
+        new AuthorizationDecision(false));
+
+    listener.onAuthorizationDenied(event);
+
+    assertThat(supplierCalls).hasValue(1);
+    assertThat(message()).contains("identityProvider=" + ISSUER, "subject=" + SUBJECT);
   }
 
   @Test
