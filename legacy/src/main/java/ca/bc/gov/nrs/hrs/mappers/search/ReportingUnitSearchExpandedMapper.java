@@ -7,12 +7,12 @@ import ca.bc.gov.nrs.hrs.mappers.AbstractSingleMapper;
 import ca.bc.gov.nrs.hrs.mappers.MapperConstants;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
-import tools.jackson.core.JacksonException;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingConstants;
 import org.mapstruct.ReportingPolicy;
 import org.springframework.beans.factory.annotation.Autowired;
+import tools.jackson.core.JacksonException;
 import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.ObjectMapper;
 

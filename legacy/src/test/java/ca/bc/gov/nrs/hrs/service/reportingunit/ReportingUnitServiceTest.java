@@ -15,8 +15,8 @@ import ca.bc.gov.nrs.hrs.dto.reportingunit.ReportingUnitBlockDto;
 import ca.bc.gov.nrs.hrs.dto.reportingunit.ReportingUnitDetailsDto;
 import ca.bc.gov.nrs.hrs.entity.codes.OrgUnitEntity;
 import ca.bc.gov.nrs.hrs.entity.codes.SamplingOptionEntity;
-import ca.bc.gov.nrs.hrs.entity.reportingunit.ReportingUnitDetailsProjection;
 import ca.bc.gov.nrs.hrs.entity.reportingunit.ReportingUnitBlockProjection;
+import ca.bc.gov.nrs.hrs.entity.reportingunit.ReportingUnitDetailsProjection;
 import ca.bc.gov.nrs.hrs.entity.reportingunit.ReportingUnitEntity;
 import ca.bc.gov.nrs.hrs.exception.WasteReportingUnitNotFound;
 import ca.bc.gov.nrs.hrs.mappers.reportingunit.ReportingUnitDetailsMapper;
@@ -174,7 +174,8 @@ class ReportingUnitServiceTest {
     when(projection.getSubmitter()).thenReturn("Sponsor Name");
     when(projection.getStatusCode()).thenReturn("APP");
     when(projection.getStatusName()).thenReturn("Approved");
-    when(projection.getLastUpdated()).thenReturn(java.time.LocalDateTime.parse("2025-08-11T10:19:56"));
+    when(projection.getLastUpdated())
+        .thenReturn(java.time.LocalDateTime.parse("2025-08-11T10:19:56"));
 
     List<ReportingUnitBlockDto> result = service.getReportingUnitBlocks(RU_ID);
 

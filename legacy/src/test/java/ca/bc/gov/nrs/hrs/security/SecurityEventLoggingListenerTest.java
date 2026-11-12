@@ -17,8 +17,8 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.authentication.event.AuthenticationFailureBadCredentialsEvent;
 import org.springframework.security.authorization.AuthorizationDecision;
 import org.springframework.security.authorization.event.AuthorizationDeniedEvent;
@@ -28,16 +28,17 @@ import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.security.web.access.intercept.RequestAuthorizationContext;
-import org.springframework.web.servlet.HandlerMapping;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
+import org.springframework.web.servlet.HandlerMapping;
 
 class SecurityEventLoggingListenerTest {
   private static final String ISSUER = "https://issuer.test.example/pool";
   private static final String SUBJECT = "synthetic-subject";
   private static final String SECRET_MARKER = "never-log-this-value";
 
-  private final Logger logger = (Logger) LoggerFactory.getLogger(SecurityEventLoggingListener.class);
+  private final Logger logger = (Logger) LoggerFactory
+      .getLogger(SecurityEventLoggingListener.class);
   private ListAppender<ILoggingEvent> appender;
   private SecurityEventLoggingListener listener;
 
@@ -251,7 +252,8 @@ class SecurityEventLoggingListenerTest {
 
   private static MockHttpServletRequest request(String method, String route) {
     MockHttpServletRequest request = new MockHttpServletRequest(method, route);
-    request.setAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE, route.replace("123", "{id}"));
+    request.setAttribute(
+        HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE, route.replace("123", "{id}"));
     request.addHeader("Authorization", "Bearer " + SECRET_MARKER);
     request.addHeader("X-Api-Key", SECRET_MARKER);
     request.setCookies(new Cookie("session", SECRET_MARKER));
