@@ -53,5 +53,5 @@ When('I toggle the {string} switch off', (label: string) => {
 });
 
 Then('no switch should be visible', () => {
-  cy.findAllByRole('switch').should('have.length', 0);
+  cy.get('[role="switch"]').should('not.exist');
 });
