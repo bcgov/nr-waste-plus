@@ -44,14 +44,14 @@ class JwtRoleCheckerIntegrationTest extends AbstractTestContainerIntegrationTest
   }
 
   @Test
-  void testHasRole_shouldMatchRoleContainedInAuthority() {
+  void testHasRole_shouldRejectRoleContainedInUnrelatedAuthority() {
     Authentication authentication = UsernamePasswordAuthenticationToken.authenticated(
         "user", "", AuthorityUtils.createAuthorityList("ROLE_SUPER_APPROVER"));
     SecurityContext context = SecurityContextHolder.createEmptyContext();
     context.setAuthentication(authentication);
     SecurityContextHolder.setContext(context);
 
-    assertTrue(new JwtRoleChecker().hasRole("Approver"));
+    assertFalse(new JwtRoleChecker().hasRole("Approver"));
   }
 
   @Test
