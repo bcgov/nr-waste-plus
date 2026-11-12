@@ -19,9 +19,11 @@ export type AdditionalRequirementsCardProps = {
   onAddAttachments?: () => void;
 };
 
-const PILE_BURN_QUESTION = 'Were any piles on this block burnt prior to submission?';
-const RATIONALE_QUESTION = 'Does this block require a rationale according to the Waste manual?';
-const CERTIFY_LABEL = 'I hereby certify that none of the above conditions apply to this block';
+export const PILE_BURN_QUESTION = 'Were any piles on this block burnt prior to submission?';
+export const RATIONALE_QUESTION =
+  'Does this block require a rationale according to the Waste manual?';
+export const CERTIFY_LABEL =
+  'I hereby certify that none of the above conditions apply to this block';
 
 const AdditionalRequirementsCard: FC<AdditionalRequirementsCardProps> = ({
   mode,

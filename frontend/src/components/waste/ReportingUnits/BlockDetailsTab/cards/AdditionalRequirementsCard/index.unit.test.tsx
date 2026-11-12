@@ -2,11 +2,11 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 
-import AdditionalRequirementsCard from './index';
-
-const PILE_BURN_QUESTION = 'Were any piles on this block burnt prior to submission?';
-const RATIONALE_QUESTION = 'Does this block require a rationale according to the Waste manual?';
-const CERTIFY_LABEL = 'I hereby certify that none of the above conditions apply to this block';
+import AdditionalRequirementsCard, {
+  CERTIFY_LABEL,
+  PILE_BURN_QUESTION,
+  RATIONALE_QUESTION,
+} from './index';
 
 describe('AdditionalRequirementsCard', () => {
   it('renders header, helper, and calls onAddAttachments', async () => {
