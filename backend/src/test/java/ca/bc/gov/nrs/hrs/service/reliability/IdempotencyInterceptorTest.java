@@ -347,7 +347,7 @@ class IdempotencyInterceptorTest {
                 String.valueOf(IdempotencyInterceptor.MAX_BODY_SIZE_BYTES + 1))
             .contentType(MediaType.APPLICATION_JSON)
             .content("{}"))
-        .andExpect(status().isPayloadTooLarge())
+        .andExpect(status().isContentTooLarge())
         .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
         .andExpect(jsonPath("$.title").value("Content Too Large"))
         .andExpect(jsonPath("$.detail").value(

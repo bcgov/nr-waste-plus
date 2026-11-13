@@ -106,7 +106,7 @@ class AttachmentControllerTest {
                 .content(
                     "{\"documentType\":\"FINAL_MAP\",\"fileName\":\"huge.pdf\","
                         + "\"mimeType\":\"application/pdf\",\"declaredSizeBytes\":999999999}"))
-        .andExpect(status().isPayloadTooLarge());
+        .andExpect(status().isContentTooLarge());
   }
 
   @Test
