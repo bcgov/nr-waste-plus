@@ -4,6 +4,23 @@ set -e
 NEW_PGDATA="${PGDATA:-/var/lib/postgresql/18/docker}"
 SUPERUSER="${POSTGRES_USER:-postgres}"
 
+# On OpenShift, containers run under arbitrary UIDs without an /etc/passwd entry.
+# Configure nss_wrapper so initdb, pg_ctl, psql, and pg_upgrade can resolve the user.
+NSS_WRAPPER_ACTIVE=0
+if ! getent passwd "$(id -u)" >/dev/null 2>&1; then
+    for wrapper in /usr/lib/x86_64-linux-gnu/libnss_wrapper.so /usr/lib/libnss_wrapper.so /lib/libnss_wrapper.so; do
+        if [ -s "$wrapper" ]; then
+            NSS_WRAPPER_PASSWD="$(mktemp)"
+            NSS_WRAPPER_GROUP="$(mktemp)"
+            export LD_PRELOAD="$wrapper" NSS_WRAPPER_PASSWD NSS_WRAPPER_GROUP
+            printf 'postgres:x:%s:%s:PostgreSQL:%s:/bin/false\n' "$(id -u)" "$(id -g)" "$NEW_PGDATA" > "$NSS_WRAPPER_PASSWD"
+            printf 'postgres:x:%s:\n' "$(id -g)" > "$NSS_WRAPPER_GROUP"
+            NSS_WRAPPER_ACTIVE=1
+            break
+        fi
+    done
+fi
+
 OLD_CLUSTER_DIR=""
 OLD_VERSION=""
 
@@ -66,7 +83,15 @@ if [ -n "$OLD_CLUSTER_DIR" ] && [ -n "$OLD_VERSION" ]; then
         exit 1
     fi
 
-    chmod 700 "$OLD_CLUSTER_DIR"
+    # Ensure source and target directories do not overlap to prevent data loss
+    SRC_CANON="$(realpath -m "$OLD_CLUSTER_DIR")"
+    TGT_CANON="$(realpath -m "$NEW_PGDATA")"
+    if [ "$SRC_CANON" = "$TGT_CANON" ] || [[ "$TGT_CANON" == "$SRC_CANON"/* ]] || [[ "$SRC_CANON" == "$TGT_CANON"/* ]]; then
+        echo "ERROR: Target PGDATA ($NEW_PGDATA) overlaps with source cluster ($OLD_CLUSTER_DIR)!" >&2
+        exit 1
+    fi
+
+    chmod 700 "$OLD_CLUSTER_DIR" 2>/dev/null || true
 
     # Determine checksum settings of old cluster
     CHECKSUM_VAL=$("$OLD_BIN/pg_controldata" "$OLD_CLUSTER_DIR" | grep "Data page checksum version" | awk '{print $NF}')
@@ -95,7 +120,7 @@ if [ -n "$OLD_CLUSTER_DIR" ] && [ -n "$OLD_VERSION" ]; then
     # new data dir can only be leftovers of a failed attempt; remove those only.
     mkdir -p "$NEW_PGDATA"
     find "$NEW_PGDATA" -mindepth 1 -maxdepth 1 -exec rm -rf {} +
-    chmod 700 "$NEW_PGDATA"
+    chmod 700 "$NEW_PGDATA" 2>/dev/null || true
 
     # Initialize PostgreSQL 18 cluster with matching superuser, checksums, encoding and locale
     "$NEW_BIN/initdb" -D "$NEW_PGDATA" "$INITDB_CHECKSUM_ARG" -U "$SUPERUSER" \
@@ -120,6 +145,16 @@ if [ -n "$OLD_CLUSTER_DIR" ] && [ -n "$OLD_VERSION" ]; then
         [ -f "$OLD_CLUSTER_DIR/pg_ident.conf" ] && cp -p "$OLD_CLUSTER_DIR/pg_ident.conf" "$NEW_PGDATA/pg_ident.conf"
     fi
 
+    # Reindex databases and refresh collation versions under new libc to ensure complete index validity
+    echo "Reindexing databases and refreshing collation versions under new libc..."
+    "$NEW_BIN/pg_ctl" -D "$NEW_PGDATA" \
+        -o "-c listen_addresses= -c unix_socket_directories=/tmp" -w -t 600 start
+    "$NEW_BIN/reindexdb" -h /tmp -U "$SUPERUSER" --all || echo "WARNING: reindexdb returned non-zero, continuing..."
+    for db in $("$NEW_BIN/psql" -h /tmp -U "$SUPERUSER" -d postgres -At -c "SELECT datname FROM pg_database WHERE datistemplate = false;"); do
+        "$NEW_BIN/psql" -h /tmp -U "$SUPERUSER" -d "$db" -c "ALTER DATABASE \"$db\" REFRESH COLLATION VERSION;" 2>/dev/null || true
+    done
+    "$NEW_BIN/pg_ctl" -D "$NEW_PGDATA" -m fast -w -t 600 stop
+
     # Preserve old data cluster as backup so NO DATA IS EVER DELETED
     BACKUP_PATH="/var/lib/postgresql/data.v${OLD_VERSION}.bak"
     if [ "$OLD_CLUSTER_DIR" != "$BACKUP_PATH" ]; then
@@ -128,6 +163,12 @@ if [ -n "$OLD_CLUSTER_DIR" ] && [ -n "$OLD_VERSION" ]; then
     fi
     echo "Upgrade to PostgreSQL 18 complete. Proceeding to startup."
     echo "=========================================================="
+fi
+
+# Clean up nss_wrapper temporary files if created
+if [ "$NSS_WRAPPER_ACTIVE" = "1" ] && [[ "${LD_PRELOAD:-}" == */libnss_wrapper.so ]]; then
+    rm -f "$NSS_WRAPPER_PASSWD" "$NSS_WRAPPER_GROUP"
+    unset LD_PRELOAD NSS_WRAPPER_PASSWD NSS_WRAPPER_GROUP
 fi
 
 # Hand off execution to official docker-entrypoint

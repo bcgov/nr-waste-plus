@@ -5,6 +5,9 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends postgresql-13 postgresql-17 \
     && rm -rf /var/lib/apt/lists/*
 
+# Ensure volume mount point has permissive permissions for arbitrary non-root UIDs in OpenShift
+RUN chmod 777 /var/lib/postgresql
+
 COPY upgrade-and-run.sh /usr/local/bin/upgrade-and-run.sh
 RUN chmod +x /usr/local/bin/upgrade-and-run.sh
 
