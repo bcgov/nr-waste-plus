@@ -5,7 +5,9 @@ import static java.util.stream.Collectors.toMap;
 import ca.bc.gov.nrs.hrs.configuration.FeatureFlagsConfiguration;
 import ca.bc.gov.nrs.hrs.dto.base.CodeDescriptionDto;
 import ca.bc.gov.nrs.hrs.dto.base.FeatureFlag;
+import ca.bc.gov.nrs.hrs.dto.reportingunit.ReportingUnitLegacyDetailsDto;
 import ca.bc.gov.nrs.hrs.dto.search.MyForestClientSearchResultDto;
+import ca.bc.gov.nrs.hrs.entity.block.ReportingUnitEntity;
 import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchExpandedDto;
 import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchParametersDto;
 import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchResultDto;
@@ -176,6 +178,38 @@ public class SearchService {
   private boolean isPostgresRow(Long reportingUnitId, Long blockId) {
     return blockId != null
         && reportingUnitSearchRepository.existsLiveBlock(reportingUnitId, blockId);
+  }
+
+  /**
+   * Search-expanded scope metadata: client number and geographic district code.
+   *
+   * @param clientNumber owning client number
+   * @param districtCode geographic district code
+   */
+  public record ReportingUnitSearchScopeDto(String clientNumber, String districtCode) {}
+
+  /**
+   * Resolves the owning client number and geographic district code for a reporting unit,
+   * routed to the correct source matching getSearchExpanded (DEC-019).
+   *
+   * @param reportingUnitId the reporting unit id
+   * @param wasteAssessmentAreaId the waste assessment area id (block id on PostgreSQL rows)
+   * @return the resolved scope data
+   */
+  @NewSpan
+  public ReportingUnitSearchScopeDto getSearchScope(
+      Long reportingUnitId, Long wasteAssessmentAreaId) {
+    if (isPostgresRow(reportingUnitId, wasteAssessmentAreaId)) {
+      ReportingUnitEntity entity =
+          reportingUnitSearchRepository
+              .findByIdAndDeletedFalse(reportingUnitId)
+              .orElseThrow(() -> new NotFoundGenericException("Reporting unit", String.valueOf(reportingUnitId)));
+      return new ReportingUnitSearchScopeDto(entity.getClientNumber(), entity.getGeographicCode());
+    }
+    ReportingUnitLegacyDetailsDto legacyRu =
+        legacyApiProvider.getReportingUnitDetails(reportingUnitId);
+    String districtCode = legacyRu.district() != null ? legacyRu.district().code() : null;
+    return new ReportingUnitSearchScopeDto(legacyRu.clientNumber(), districtCode);
   }
 
   /**

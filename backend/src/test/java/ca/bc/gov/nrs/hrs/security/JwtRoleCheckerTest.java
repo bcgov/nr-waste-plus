@@ -9,6 +9,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.authentication.TestingAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -56,7 +57,8 @@ class JwtRoleCheckerTest {
     @Test
     @DisplayName("null or unauthenticated principal is invalid")
     void unauthenticatedOrNullIsInvalid() {
-      assertThat(checker.isValidRouteGatePrincipal(null)).isFalse();
+      assertThat(checker.isValidRouteGatePrincipal((Authentication) null)).isFalse();
+      assertThat(checker.isValidRouteGatePrincipal((Jwt) null)).isFalse();
 
       TestingAuthenticationToken unauth = new TestingAuthenticationToken("user", "cred");
       unauth.setAuthenticated(false);
@@ -140,7 +142,9 @@ class JwtRoleCheckerTest {
               List.of("WASTE_PLUS_ADMIN", "WASTE_PLUS_AREA"),
               List.of("WASTE_PLUS_ADMIN", "WASTE_PLUS_DISTRICT_DKM"),
               List.of("WASTE_PLUS_DISTRICT_DKM", "WASTE_PLUS_VIEWER"),
-              List.of("WASTE_PLUS_AREA", "WASTE_PLUS_VIEWER"));
+              List.of("WASTE_PLUS_AREA", "WASTE_PLUS_VIEWER"),
+              List.of("WASTE_PLUS_VIEWER", "WASTE_PLUS_SUBMITTER_00012797"),
+              List.of("WASTE_PLUS_SUBMITTER_00012797"));
 
       for (List<String> groups : multiRoleCombinations) {
         Jwt jwt =

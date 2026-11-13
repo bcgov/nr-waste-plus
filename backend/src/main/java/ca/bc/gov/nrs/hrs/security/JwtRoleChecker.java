@@ -3,6 +3,7 @@ package ca.bc.gov.nrs.hrs.security;
 import ca.bc.gov.nrs.hrs.dto.base.IdentityProvider;
 import ca.bc.gov.nrs.hrs.dto.base.Role;
 import ca.bc.gov.nrs.hrs.util.JwtPrincipalUtil;
+import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -11,6 +12,7 @@ import java.util.function.Predicate;
 import java.util.stream.Stream;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
@@ -217,13 +219,33 @@ public class JwtRoleChecker {
     }
 
     if (IdentityProvider.IDIR == idp) {
+      if (roles.containsKey(Role.SUBMITTER) || hasRole(authentication, Role.SUBMITTER)) {
+        return false;
+      }
       long idirRoleCount = Stream.of(Role.ADMIN, Role.AREA, Role.DISTRICT, Role.VIEWER)
-          .filter(roles::containsKey)
+          .filter(r -> roles.containsKey(r) || hasRole(authentication, r))
           .count();
       return idirRoleCount == 1;
     }
 
     return false;
+  }
+
+  /**
+   * Checks whether the given JWT principal satisfies the route-gate rules.
+   *
+   * @param jwt the caller JWT
+   * @return true if the principal passes the route-gate checks, false otherwise
+   */
+  public boolean isValidRouteGatePrincipal(Jwt jwt) {
+    if (jwt == null) {
+      return false;
+    }
+    List<String> groups = jwt.getClaimAsStringList("cognito:groups");
+    Collection<SimpleGrantedAuthority> authorities = groups != null
+        ? groups.stream().map(SimpleGrantedAuthority::new).toList()
+        : List.of();
+    return isValidRouteGatePrincipal(new JwtAuthenticationToken(jwt, authorities));
   }
 
   private Jwt extractJwt(Authentication authentication) {

@@ -8,6 +8,7 @@ import static org.mockito.Mockito.when;
 import ca.bc.gov.nrs.hrs.dto.base.CodeDescriptionDto;
 import ca.bc.gov.nrs.hrs.dto.reportingunit.ReportingUnitLegacyDetailsDto;
 import ca.bc.gov.nrs.hrs.entity.block.ReportingUnitEntity;
+import ca.bc.gov.nrs.hrs.exception.NotFoundGenericException;
 import ca.bc.gov.nrs.hrs.exception.ReportingUnitNotFoundException;
 import ca.bc.gov.nrs.hrs.extensions.WithMockJwtSecurityContextFactory;
 import ca.bc.gov.nrs.hrs.provider.legacy.LegacyApiProvider;
@@ -517,6 +518,44 @@ class ResourceScopeGuardTest {
 
       assertThatThrownBy(() -> guard.verify(jwt, RU_ID, "GET"))
           .isInstanceOf(ReportingUnitNotFoundException.class);
+    }
+
+    @Test
+    @DisplayName("genuine legacy miss via NotFoundGenericException throws 404 ReportingUnitNotFoundException")
+    void genuineLegacyMissGenericNotFound_throws404() {
+      when(reportingUnitRepository.findByIdAndDeletedFalse(RU_ID)).thenReturn(Optional.empty());
+      when(legacyApiProvider.getReportingUnitDetails(RU_ID))
+          .thenThrow(new NotFoundGenericException("Reporting unit", String.valueOf(RU_ID)));
+
+      Jwt jwt =
+          WithMockJwtSecurityContextFactory.createJwt(
+              "sub_user",
+              List.of("WASTE_PLUS_SUBMITTER_" + CLIENT_IN_SCOPE),
+              "bceidbusiness",
+              "Submitter, User",
+              "sub@bceid.ca");
+
+      assertThatThrownBy(() -> guard.verify(jwt, RU_ID, "GET"))
+          .isInstanceOf(ReportingUnitNotFoundException.class);
+    }
+
+    @Test
+    @DisplayName("IDIR user carrying SUBMITTER role fails closed -> 403 Forbidden")
+    void idirWithSubmitterRole_throwsForbidden() {
+      Jwt jwt =
+          WithMockJwtSecurityContextFactory.createJwt(
+              "idir_user",
+              List.of("WASTE_PLUS_VIEWER_DKM", "WASTE_PLUS_SUBMITTER_00012797"),
+              "idir",
+              "Idir, User",
+              "idir@gov.bc.ca");
+
+      assertThatThrownBy(() -> guard.verify(jwt, RU_ID, "GET"))
+          .isInstanceOf(ResponseStatusException.class)
+          .satisfies(
+              ex ->
+                  assertThat(((ResponseStatusException) ex).getStatusCode())
+                      .isEqualTo(HttpStatus.FORBIDDEN));
     }
 
     @Test

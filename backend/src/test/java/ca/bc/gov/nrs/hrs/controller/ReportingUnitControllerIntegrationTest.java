@@ -288,7 +288,7 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
   }
 
   @Test
-  @WithMockJwt(idp = "bceidbusiness", cognitoGroups = {"WASTE_PLUS_ADMIN"})
+  @WithMockJwt(idp = "idir", cognitoGroups = {"WASTE_PLUS_ADMIN"})
   @DisplayName("Should allow an admin to create for a different client")
   void shouldAllowAdminCreateForCrossClient() throws Exception {
     String foreignClient = "00099999";

@@ -118,7 +118,9 @@ public class SearchController {
         JwtPrincipalUtil.getUserId(jwt));
 
     // Enforce resource-scope authorization (client number for BCeID, district for IDIR)
-    resourceScopeGuard.verify(jwt, reportingUnitId, "GET");
+    var targetScope = service.getSearchScope(reportingUnitId, wasteAssessmentAreaId);
+    resourceScopeGuard.verifyTargetScope(
+        jwt, reportingUnitId, targetScope.clientNumber(), targetScope.districtCode(), "GET");
 
     return service.getSearchExpanded(reportingUnitId, wasteAssessmentAreaId);
   }

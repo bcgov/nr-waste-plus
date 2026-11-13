@@ -349,7 +349,7 @@ class SearchControllerIntegrationTest extends AbstractTestContainerIntegrationTe
             302L,
             "99999999",
             okJson(ForestClientApiProviderTestConstants.REPORTING_UNIT_EXPANDED_MINIMAL),
-            403));
+            404));
   }
 
   private static Stream<Arguments> searchReportingUnit() {

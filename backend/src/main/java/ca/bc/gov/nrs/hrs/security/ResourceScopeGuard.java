@@ -4,6 +4,7 @@ import ca.bc.gov.nrs.hrs.dto.base.IdentityProvider;
 import ca.bc.gov.nrs.hrs.dto.base.Role;
 import ca.bc.gov.nrs.hrs.dto.reportingunit.ReportingUnitLegacyDetailsDto;
 import ca.bc.gov.nrs.hrs.entity.block.ReportingUnitEntity;
+import ca.bc.gov.nrs.hrs.exception.NotFoundGenericException;
 import ca.bc.gov.nrs.hrs.exception.ReportingUnitNotFoundException;
 import ca.bc.gov.nrs.hrs.provider.legacy.LegacyApiProvider;
 import ca.bc.gov.nrs.hrs.repository.block.ReportingUnitRepository;
@@ -56,16 +57,26 @@ public class ResourceScopeGuard {
 
   private final ReportingUnitRepository reportingUnitRepository;
   private final LegacyApiProvider legacyApiProvider;
+  private final JwtRoleChecker jwtRoleChecker;
   private final Tracer tracer;
 
   @Autowired
   public ResourceScopeGuard(
       ReportingUnitRepository reportingUnitRepository,
       LegacyApiProvider legacyApiProvider,
+      JwtRoleChecker jwtRoleChecker,
       @Autowired(required = false) Tracer tracer) {
     this.reportingUnitRepository = reportingUnitRepository;
     this.legacyApiProvider = legacyApiProvider;
+    this.jwtRoleChecker = jwtRoleChecker;
     this.tracer = tracer;
+  }
+
+  public ResourceScopeGuard(
+      ReportingUnitRepository reportingUnitRepository,
+      LegacyApiProvider legacyApiProvider,
+      @Autowired(required = false) Tracer tracer) {
+    this(reportingUnitRepository, legacyApiProvider, new JwtRoleChecker(), tracer);
   }
 
   /**
@@ -149,17 +160,9 @@ public class ResourceScopeGuard {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Reporting unit ID cannot be null");
     }
 
-    IdentityProvider idp = resolveIdentityProvider(jwt);
-    if (idp == null) {
-      logSecurityDenied(jwt, reportingUnitId, httpMethod, "Missing or unresolved identity provider");
-      throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unresolved identity provider");
-    }
-    if (idp != IdentityProvider.IDIR && idp != IdentityProvider.BUSINESS_BCEID) {
-      logSecurityDenied(jwt, reportingUnitId, httpMethod, "Unsupported identity provider: " + idp);
-      throw new ResponseStatusException(
-          HttpStatus.FORBIDDEN, "Unsupported identity provider: " + idp.name());
-    }
+    validatePrincipal(jwt, reportingUnitId, httpMethod);
 
+    IdentityProvider idp = resolveIdentityProvider(jwt);
     Map<Role, List<String>> roles = JwtPrincipalUtil.getRoles(jwt);
 
     // IDIR ADMIN and AREA carry cross-district privileges and are unrestricted by scope
@@ -169,33 +172,71 @@ public class ResourceScopeGuard {
       }
     }
 
-    // Resolve target reporting unit scope (clientNumber and districtCode)
     ReportingUnitScope targetScope = resolveTargetScope(reportingUnitId, jwt, httpMethod);
+    verifyTargetScope(
+        jwt,
+        reportingUnitId,
+        targetScope.clientNumber(),
+        targetScope.districtCode(),
+        httpMethod);
+  }
+
+  /**
+   * Verifies that the caller has access to the target reporting unit scope (client number and district code).
+   *
+   * @param jwt the caller's JWT
+   * @param reportingUnitId the target reporting unit identifier
+   * @param targetClientNumber the target RU client number
+   * @param targetDistrictCode the target RU geographic/district code
+   * @param httpMethod the HTTP method being executed
+   */
+  public void verifyTargetScope(
+      Jwt jwt,
+      Long reportingUnitId,
+      String targetClientNumber,
+      String targetDistrictCode,
+      String httpMethod) {
+    if (reportingUnitId == null) {
+      logSecurityDenied(jwt, null, httpMethod, "Reporting unit ID cannot be null");
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Reporting unit ID cannot be null");
+    }
+
+    validatePrincipal(jwt, reportingUnitId, httpMethod);
+
+    IdentityProvider idp = resolveIdentityProvider(jwt);
+    Map<Role, List<String>> roles = JwtPrincipalUtil.getRoles(jwt);
+
+    // IDIR ADMIN and AREA carry cross-district privileges and are unrestricted by scope
+    if (IdentityProvider.IDIR == idp) {
+      if (roles.containsKey(Role.ADMIN) || roles.containsKey(Role.AREA)) {
+        return;
+      }
+    }
 
     // Enforce resource scope
     if (IdentityProvider.BUSINESS_BCEID == idp) {
       List<String> userClientNumbers = JwtPrincipalUtil.getClientFromRoles(jwt);
-      if (!userClientNumbers.contains(targetScope.clientNumber())) {
+      if (!userClientNumbers.contains(targetClientNumber)) {
         logSecurityDenied(
             jwt,
             reportingUnitId,
             httpMethod,
             "BCeID user assigned clients " + userClientNumbers
-                + " does not match target RU client " + targetScope.clientNumber());
+                + " does not match target RU client " + targetClientNumber);
         throw new ReportingUnitNotFoundException(reportingUnitId);
       }
     } else if (IdentityProvider.IDIR == idp) {
       if (roles.containsKey(Role.DISTRICT)) {
         Set<String> assignedDistricts = extractAssignedDistricts(jwt);
         boolean matches = assignedDistricts.stream()
-            .anyMatch(d -> d.equalsIgnoreCase(targetScope.districtCode()));
+            .anyMatch(d -> d.equalsIgnoreCase(targetDistrictCode));
         if (!matches) {
           logSecurityDenied(
               jwt,
               reportingUnitId,
               httpMethod,
               "IDIR DISTRICT user assigned districts " + assignedDistricts
-                  + " does not match target RU district " + targetScope.districtCode());
+                  + " does not match target RU district " + targetDistrictCode);
           throw new ReportingUnitNotFoundException(reportingUnitId);
         }
       } else if (roles.containsKey(Role.VIEWER)) {
@@ -209,14 +250,14 @@ public class ResourceScopeGuard {
           throw new ReportingUnitNotFoundException(reportingUnitId);
         }
         boolean matches = assignedDistricts.stream()
-            .anyMatch(d -> d.equalsIgnoreCase(targetScope.districtCode()));
+            .anyMatch(d -> d.equalsIgnoreCase(targetDistrictCode));
         if (!matches) {
           logSecurityDenied(
               jwt,
               reportingUnitId,
               httpMethod,
               "IDIR VIEWER user assigned districts " + assignedDistricts
-                  + " does not match target RU district " + targetScope.districtCode());
+                  + " does not match target RU district " + targetDistrictCode);
           throw new ReportingUnitNotFoundException(reportingUnitId);
         }
       }
@@ -227,21 +268,20 @@ public class ResourceScopeGuard {
     if (isWrite) {
       if (IdentityProvider.BUSINESS_BCEID == idp) {
         boolean hasSubmitterOnClient =
-            JwtPrincipalUtil.hasAbstractRole(jwt, Role.SUBMITTER, targetScope.clientNumber());
+            JwtPrincipalUtil.hasAbstractRole(jwt, Role.SUBMITTER, targetClientNumber);
         if (!hasSubmitterOnClient) {
           logSecurityDenied(
               jwt,
               reportingUnitId,
               httpMethod,
-              "BCeID user lacks SUBMITTER role for target client " + targetScope.clientNumber());
+              "BCeID user lacks SUBMITTER role for target client " + targetClientNumber);
           throw new ResponseStatusException(
               HttpStatus.FORBIDDEN, "User lacks write permission for this client");
         }
       } else {
         boolean hasWriteRole = roles.containsKey(Role.ADMIN)
             || roles.containsKey(Role.AREA)
-            || roles.containsKey(Role.DISTRICT)
-            || roles.containsKey(Role.SUBMITTER);
+            || roles.containsKey(Role.DISTRICT);
         if (!hasWriteRole) {
           logSecurityDenied(
               jwt,
@@ -251,6 +291,25 @@ public class ResourceScopeGuard {
           throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Viewer role is read-only");
         }
       }
+    }
+  }
+
+  private void validatePrincipal(Jwt jwt, Long reportingUnitId, String httpMethod) {
+    IdentityProvider idp = resolveIdentityProvider(jwt);
+    if (idp == null) {
+      logSecurityDenied(jwt, reportingUnitId, httpMethod, "Missing or unresolved identity provider");
+      throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unresolved identity provider");
+    }
+    if (idp != IdentityProvider.IDIR && idp != IdentityProvider.BUSINESS_BCEID) {
+      logSecurityDenied(jwt, reportingUnitId, httpMethod, "Unsupported identity provider: " + idp);
+      throw new ResponseStatusException(
+          HttpStatus.FORBIDDEN, "Unsupported identity provider: " + idp.name());
+    }
+
+    if (!jwtRoleChecker.isValidRouteGatePrincipal(jwt)) {
+      logSecurityDenied(jwt, reportingUnitId, httpMethod, "Invalid principal or role combination");
+      throw new ResponseStatusException(
+          HttpStatus.FORBIDDEN, "Invalid principal or role combination");
     }
   }
 
@@ -304,9 +363,9 @@ public class ResourceScopeGuard {
         String districtCode = legacyRu.district() != null ? legacyRu.district().code() : null;
         return new ReportingUnitScope(legacyRu.clientNumber(), districtCode);
       }
-    } catch (ReportingUnitNotFoundException e) {
+    } catch (ReportingUnitNotFoundException | NotFoundGenericException e) {
       logSecurityDenied(jwt, reportingUnitId, httpMethod, "Target reporting unit does not exist");
-      throw e;
+      throw new ReportingUnitNotFoundException(reportingUnitId);
     } catch (Exception ex) {
       log.warn("Legacy reporting unit lookup failed for RU {}: {}", reportingUnitId, ex.getMessage(), ex);
       logSecurityDenied(jwt, reportingUnitId, httpMethod, "Legacy lookup error: " + ex.getMessage());
