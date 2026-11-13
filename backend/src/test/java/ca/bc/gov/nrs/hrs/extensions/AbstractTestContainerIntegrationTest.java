@@ -24,7 +24,7 @@ import org.testcontainers.postgresql.PostgreSQLContainer;
 public abstract class AbstractTestContainerIntegrationTest {
 
   static final PostgreSQLContainer postgres =
-      new PostgreSQLContainer("postgres:17")
+      new PostgreSQLContainer("postgres:18")
           .withDatabaseName("hrs")
           .withUsername("hrs")
           .withPassword(UUID.randomUUID().toString());

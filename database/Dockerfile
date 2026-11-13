@@ -1,6 +1,19 @@
-FROM postgres:18.7-alpine
+FROM postgres:18.7-bookworm
 
-HEALTHCHECK --interval=35s --timeout=4s CMD pg_isready -U "${POSTGRES_USER}" -d "${POSTGRES_DB}"
- 
+# Install postgresql-13 and postgresql-17 binaries to enable seamless in-place zero-data-loss upgrades
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends postgresql-13 postgresql-17 \
+    && rm -rf /var/lib/apt/lists/*
+
+# Ensure volume mount point has permissive permissions for arbitrary non-root UIDs in OpenShift
+RUN chmod 777 /var/lib/postgresql
+
+COPY upgrade-and-run.sh /usr/local/bin/upgrade-and-run.sh
+RUN chmod +x /usr/local/bin/upgrade-and-run.sh
+
+HEALTHCHECK --interval=35s --timeout=4s CMD pg_isready -U "${POSTGRES_USER:-postgres}"
+
+ENTRYPOINT ["/usr/local/bin/upgrade-and-run.sh"]
+
 # Non-privileged user
 USER postgres
