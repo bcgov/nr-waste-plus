@@ -73,7 +73,7 @@ objects:
             spec:
               containers:
                 - name: remove-pr-database
-                  image: postgres:18
+                  image: postgres:18.7-alpine
                   command: ["/bin/sh", "-c"]
                   args:
                     - |
@@ -142,7 +142,7 @@ objects:
             spec:
               containers:
                 - name: create-pr-database
-                  image: postgres:18
+                  image: postgres:18.7-alpine
                   command: ["/bin/sh", "-c"]
                   args:
                     - |

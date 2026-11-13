@@ -1,4 +1,4 @@
-FROM postgres:18
+FROM postgres:18.7-bookworm
 
 # Install postgresql-13 and postgresql-17 binaries to enable seamless in-place zero-data-loss upgrades
 RUN apt-get update \
@@ -9,7 +9,7 @@ COPY upgrade-and-run.sh /usr/local/bin/upgrade-and-run.sh
 RUN chmod +x /usr/local/bin/upgrade-and-run.sh
 
 HEALTHCHECK --interval=35s --timeout=4s CMD pg_isready -U "${POSTGRES_USER:-postgres}"
- 
+
 ENTRYPOINT ["/usr/local/bin/upgrade-and-run.sh"]
 
 # Non-privileged user

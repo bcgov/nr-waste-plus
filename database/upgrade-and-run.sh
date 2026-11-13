@@ -1,12 +1,6 @@
 #!/bin/bash
 set -e
 
-# If running as root, ensure postgres ownership and re-execute as postgres user
-if [ "$(id -u)" = '0' ]; then
-    chown -R postgres:postgres /var/lib/postgresql 2>/dev/null || true
-    exec gosu postgres "$BASH_SOURCE" "$@"
-fi
-
 NEW_PGDATA="${PGDATA:-/var/lib/postgresql/18/docker}"
 SUPERUSER="${POSTGRES_USER:-postgres}"
 
@@ -23,7 +17,7 @@ if [ -s "/var/lib/postgresql/PG_VERSION" ]; then
         OLD_DIR="/var/lib/postgresql/data.v${V}"
         mkdir -p "$OLD_DIR"
         find /var/lib/postgresql -maxdepth 1 -mindepth 1 \
-            ! -name "data.v${V}" \
+            ! -name "data.v*" \
             ! -name "18" \
             ! -name "lost+found" \
             ! -name "PG_VERSION" \
@@ -72,6 +66,8 @@ if [ -n "$OLD_CLUSTER_DIR" ] && [ -n "$OLD_VERSION" ]; then
         exit 1
     fi
 
+    chmod 700 "$OLD_CLUSTER_DIR"
+
     # Determine checksum settings of old cluster
     CHECKSUM_VAL=$("$OLD_BIN/pg_controldata" "$OLD_CLUSTER_DIR" | grep "Data page checksum version" | awk '{print $NF}')
     INITDB_CHECKSUM_ARG="--no-data-checksums"
@@ -80,13 +76,30 @@ if [ -n "$OLD_CLUSTER_DIR" ] && [ -n "$OLD_VERSION" ]; then
     fi
     echo "Preserving checksum setting: $INITDB_CHECKSUM_ARG"
 
-    mkdir -p "$NEW_PGDATA"
-    rm -rf "$NEW_PGDATA"/*
-    chmod 700 "$NEW_PGDATA"
-    chmod 700 "$OLD_CLUSTER_DIR"
+    # Start and stop the old cluster to guarantee a clean shutdown (runs crash recovery)
+    # and read its encoding/locale so the new cluster matches (pg_upgrade requires it).
+    echo "Starting old cluster for clean shutdown and settings discovery..."
+    "$OLD_BIN/pg_ctl" -D "$OLD_CLUSTER_DIR" \
+        -o "-c listen_addresses= -c unix_socket_directories=/tmp" -w -t 600 start
+    DB_INFO=$("$OLD_BIN/psql" -h /tmp -U "$SUPERUSER" -d postgres -AtF '|' \
+        -c "SELECT pg_encoding_to_char(encoding), datcollate, datctype FROM pg_database WHERE datname='template0'")
+    "$OLD_BIN/pg_ctl" -D "$OLD_CLUSTER_DIR" -m fast -w -t 600 stop
+    IFS='|' read -r OLD_ENCODING OLD_COLLATE OLD_CTYPE <<< "$DB_INFO"
+    if [ -z "$OLD_ENCODING" ] || [ -z "$OLD_COLLATE" ] || [ -z "$OLD_CTYPE" ]; then
+        echo "ERROR: could not determine encoding/locale of old cluster" >&2
+        exit 1
+    fi
+    echo "Preserving encoding=$OLD_ENCODING lc_collate=$OLD_COLLATE lc_ctype=$OLD_CTYPE"
 
-    # Initialize PostgreSQL 18 cluster with matching superuser and checksums
-    "$NEW_BIN/initdb" -D "$NEW_PGDATA" $INITDB_CHECKSUM_ARG -U "$SUPERUSER"
+    # Old cluster is still present and untouched (no --link), so any content in the
+    # new data dir can only be leftovers of a failed attempt; remove those only.
+    mkdir -p "$NEW_PGDATA"
+    find "$NEW_PGDATA" -mindepth 1 -maxdepth 1 -exec rm -rf {} +
+    chmod 700 "$NEW_PGDATA"
+
+    # Initialize PostgreSQL 18 cluster with matching superuser, checksums, encoding and locale
+    "$NEW_BIN/initdb" -D "$NEW_PGDATA" "$INITDB_CHECKSUM_ARG" -U "$SUPERUSER" \
+        -E "$OLD_ENCODING" --lc-collate="$OLD_COLLATE" --lc-ctype="$OLD_CTYPE"
 
     # Run pg_upgrade
     echo "Executing pg_upgrade..."
