@@ -1,4 +1,4 @@
-# syntax=docker/dockerfile:1.28
+# syntax=docker/dockerfile:1.29
 
 ### Builder
 # Use GraalVM Native Image with Java 25. Override jdk.tls.disabledAlgorithms to
