@@ -26,6 +26,7 @@ import ca.bc.gov.nrs.hrs.exception.ReportingUnitNotFoundException;
 import ca.bc.gov.nrs.hrs.exception.ReportingUnitStateConflictException;
 import ca.bc.gov.nrs.hrs.exception.ValidationProblemDetailsExceptionHandler;
 import ca.bc.gov.nrs.hrs.mapper.block.BlockMapper;
+import ca.bc.gov.nrs.hrs.security.ResourceScopeGuard;
 import ca.bc.gov.nrs.hrs.service.ReportingUnitBlockService;
 import ca.bc.gov.nrs.hrs.service.block.BlockCalculationService;
 import ca.bc.gov.nrs.hrs.service.block.BlockService;
@@ -74,6 +75,9 @@ class BlockControllerTest {
 
   @Mock
   private BlockMapper blockMapper;
+
+  @Mock
+  private ResourceScopeGuard resourceScopeGuard;
 
   @InjectMocks
   private BlockController blockController;

@@ -7,6 +7,7 @@ import ca.bc.gov.nrs.hrs.dto.base.Role;
 import ca.bc.gov.nrs.hrs.dto.reportingunit.CreateReportingUnitRequestDto;
 import ca.bc.gov.nrs.hrs.dto.reportingunit.ReportingUnitDetailsDto;
 import ca.bc.gov.nrs.hrs.exception.NotFoundGenericException;
+import ca.bc.gov.nrs.hrs.security.ResourceScopeGuard;
 import ca.bc.gov.nrs.hrs.service.ReportingUnitBlockService;
 import ca.bc.gov.nrs.hrs.service.ReportingUnitService;
 import ca.bc.gov.nrs.hrs.util.JwtPrincipalUtil;
@@ -14,6 +15,8 @@ import io.micrometer.observation.annotation.Observed;
 import jakarta.validation.Valid;
 import java.net.URI;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -53,6 +56,7 @@ public class ReportingUnitController {
   private final ReportingUnitService reportingUnitService;
   private final ReportingUnitBlockService reportingUnitBlockService;
   private final FeatureFlagsConfiguration featureFlagsConfiguration;
+  private final ResourceScopeGuard resourceScopeGuard;
 
   /**
    * Retrieve the full details of a reporting unit by its identifier.
@@ -64,7 +68,8 @@ public class ReportingUnitController {
    *
    * <p>Validates that the authenticated user has permission to access the specified reporting unit.
    * For BCeID users, validates that the reporting unit's client number matches one of the user's
-   * authorized client numbers. IDIR and BCSC users bypass the client-level check.
+   * authorized client numbers. For IDIR District users, validates the reporting unit's district
+   * matches their assigned district.
    *
    * @param jwt the JWT principal for the authenticated caller
    * @param reportingUnitId the unique identifier of the reporting unit to retrieve
@@ -80,26 +85,11 @@ public class ReportingUnitController {
       throw new NotFoundGenericException("reporting-unit-details");
     }
 
+    resourceScopeGuard.verify(jwt, reportingUnitId);
+
     log.info("Fetching reporting unit details for RU {}", reportingUnitId);
 
     ReportingUnitDetailsDto details = reportingUnitService.getReportingUnitDetails(reportingUnitId);
-
-    // Enforce client-based authorization only for BCeID business users
-    IdentityProvider idp = JwtPrincipalUtil.getIdentityProvider(jwt);
-    if (IdentityProvider.BUSINESS_BCEID == idp) {
-      String clientCode = details.client().code();
-      List<String> userClientNumbers = JwtPrincipalUtil.getClientFromRoles(jwt);
-
-      if (!userClientNumbers.contains(clientCode)) {
-        log.warn(
-            "SECURITY: BCeID user {} attempted unauthorized access to reporting unit {}",
-            JwtPrincipalUtil.getUserId(jwt),
-            reportingUnitId);
-        throw new ResponseStatusException(
-            HttpStatus.FORBIDDEN,
-            "User is not authorized to access reporting unit: " + reportingUnitId);
-      }
-    }
 
     return reportingUnitBlockService.enrichWithBlockMetadata(details);
   }
@@ -125,6 +115,19 @@ public class ReportingUnitController {
       throw new ResponseStatusException(
           HttpStatus.FORBIDDEN,
           "User is not authorized to create a reporting unit for client " + request.clientNumber());
+    }
+
+    if (IdentityProvider.IDIR.equals(JwtPrincipalUtil.getIdentityProvider(jwt))) {
+      Map<Role, List<String>> roles = JwtPrincipalUtil.getRoles(jwt);
+      if (roles.containsKey(Role.DISTRICT)) {
+        Set<String> assignedDistricts = resourceScopeGuard.extractAssignedDistricts(jwt);
+        if (request.districtCode() == null
+            || assignedDistricts.stream().noneMatch(d -> d.equalsIgnoreCase(request.districtCode()))) {
+          throw new ResponseStatusException(
+              HttpStatus.FORBIDDEN,
+              "User is not authorized to create a reporting unit for district " + request.districtCode());
+        }
+      }
     }
 
     Long createdId = reportingUnitService.createReportingUnit(request, idempotencyKey);

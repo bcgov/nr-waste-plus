@@ -391,12 +391,12 @@ class BlockControllerIntegrationTest extends AbstractTestContainerIntegrationTes
   }
 
   @Test
-  @DisplayName("Denies a BCeID caller reading another client's block details")
+  @DisplayName("Denies a BCeID caller reading another client's block details with 404")
   @WithMockJwt(idp = "bceidbusiness", cognitoGroups = {"WASTE_PLUS_VIEWER_00000000"})
   void deniesBceidCrossClientBlockDetails() throws Exception {
     mockMvc
         .perform(MockMvcRequestBuilders.get(detailsUrl(foreignReportingUnitId, foreignBlockId)))
-        .andExpect(status().isForbidden())
+        .andExpect(status().isNotFound())
         .andExpect(content().string(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("DISTRICT_AVERAGE"))));
   }
 
@@ -484,14 +484,14 @@ class BlockControllerIntegrationTest extends AbstractTestContainerIntegrationTes
   }
 
   @Test
-  @DisplayName("Denies a BCeID caller listing another client's blocks")
+  @DisplayName("Denies a BCeID caller listing another client's blocks with 404")
   @WithMockJwt(idp = "bceidbusiness", cognitoGroups = {"WASTE_PLUS_VIEWER_00000000"})
   void deniesBceidCrossClientBlockList() throws Exception {
     mockMvc
         .perform(
             MockMvcRequestBuilders.get(
-                "/api/reporting-units/{id}/blocks", foreignReportingUnitId))
-        .andExpect(status().isForbidden());
+                 "/api/reporting-units/{id}/blocks", foreignReportingUnitId))
+        .andExpect(status().isNotFound());
   }
 
   @Test
@@ -674,7 +674,7 @@ class BlockControllerIntegrationTest extends AbstractTestContainerIntegrationTes
 
     mockMvc
         .perform(MockMvcRequestBuilders.get(calculationUrl(foreignReportingUnitId, foreignBlockId)))
-        .andExpect(status().isForbidden())
+        .andExpect(status().isNotFound())
         .andExpect(
             content()
                 .string(
@@ -717,12 +717,12 @@ class BlockControllerIntegrationTest extends AbstractTestContainerIntegrationTes
   }
 
   @Test
-  @DisplayName("Denies a foreign parent reporting unit before probing the block")
+  @DisplayName("Denies a foreign parent reporting unit with 404 before probing the block")
   @WithMockJwt(idp = "bceidbusiness", cognitoGroups = {"WASTE_PLUS_VIEWER_00000000"})
   void forbidsForeignParentBeforeBlockProbe() throws Exception {
     mockMvc
         .perform(MockMvcRequestBuilders.get(calculationUrl(foreignReportingUnitId, blockId)))
-        .andExpect(status().isForbidden());
+        .andExpect(status().isNotFound());
   }
 
   @Test
@@ -994,13 +994,13 @@ class BlockControllerIntegrationTest extends AbstractTestContainerIntegrationTes
   }
 
   @Test
-  @DisplayName("Denies a BCeID caller reading another client's block details via alias path")
+  @DisplayName("Denies a BCeID caller reading another client's block details via alias path with 404")
   @WithMockJwt(idp = "bceidbusiness", cognitoGroups = {"WASTE_PLUS_VIEWER_00000000"})
   void deniesBceidCrossClientBlockDetailsViaAliasPath() throws Exception {
     mockMvc
         .perform(
             MockMvcRequestBuilders.get(
                 "/api/reporting-units/" + foreignReportingUnitId + "/blocks/" + foreignBlockId))
-        .andExpect(status().isForbidden());
+        .andExpect(status().isNotFound());
   }
 }

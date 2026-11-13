@@ -9,6 +9,7 @@ import ca.bc.gov.nrs.hrs.dto.block.BlockResponseDto;
 import ca.bc.gov.nrs.hrs.entity.block.BlockEntity;
 import ca.bc.gov.nrs.hrs.exception.NotFoundGenericException;
 import ca.bc.gov.nrs.hrs.mapper.block.BlockMapper;
+import ca.bc.gov.nrs.hrs.security.ResourceScopeGuard;
 import ca.bc.gov.nrs.hrs.service.ReportingUnitBlockService;
 import ca.bc.gov.nrs.hrs.service.block.BlockCalculationService;
 import ca.bc.gov.nrs.hrs.service.block.BlockService;
@@ -55,6 +56,7 @@ public class BlockController {
   private final BlockCalculationService blockCalculationService;
   private final FeatureFlagsConfiguration featureFlagsConfiguration;
   private final BlockMapper blockMapper;
+  private final ResourceScopeGuard resourceScopeGuard;
 
   /**
    * Creates a new submission block under the specified reporting unit.
@@ -69,6 +71,8 @@ public class BlockController {
       @AuthenticationPrincipal Jwt jwt,
       @PathVariable Long reportingUnitId,
       @RequestBody BlockCreateRequestDto request) {
+    resourceScopeGuard.verify(jwt, reportingUnitId);
+
     if (request == null || request.blockType() == null) {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Block type is required");
     }
@@ -124,6 +128,8 @@ public class BlockController {
       throw new NotFoundGenericException("reporting-unit-block-details");
     }
 
+    resourceScopeGuard.verify(jwt, reportingUnitId);
+
     log.info("Fetching details for block {} of RU {}", blockId, reportingUnitId);
 
     return blockService.getBlockDetails(reportingUnitId, blockId, jwt);
@@ -149,6 +155,8 @@ public class BlockController {
   @GetMapping("/{reportingUnitId}/blocks")
   public Page<BlockListItemDto> getReportingUnitBlocks(
       @AuthenticationPrincipal Jwt jwt, @PathVariable Long reportingUnitId) {
+    resourceScopeGuard.verify(jwt, reportingUnitId);
+
     log.info("Fetching blocks for reporting unit {}", reportingUnitId);
 
     return reportingUnitBlockService.getBlockList(reportingUnitId, jwt);
@@ -175,6 +183,8 @@ public class BlockController {
       @PathVariable Long reportingUnitId,
       @PathVariable Long blockId,
       @AuthenticationPrincipal Jwt jwt) {
+    resourceScopeGuard.verify(jwt, reportingUnitId);
+
     return blockCalculationService
         .findLatest(reportingUnitId, blockId, jwt)
         .map(ResponseEntity::ok)

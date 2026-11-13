@@ -7,6 +7,7 @@ import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchResultDto;
 import ca.bc.gov.nrs.hrs.exception.InvalidSelectedValueException;
 import ca.bc.gov.nrs.hrs.service.SearchService;
 import ca.bc.gov.nrs.hrs.util.JwtPrincipalUtil;
+import ca.bc.gov.nrs.hrs.security.ResourceScopeGuard;
 import io.micrometer.observation.annotation.Observed;
 import java.util.HashSet;
 import java.util.List;
@@ -44,6 +45,7 @@ import org.springframework.web.server.ResponseStatusException;
 public class SearchController {
 
   private final SearchService service;
+  private final ResourceScopeGuard resourceScopeGuard;
 
   /**
    * Search for reporting units (waste entries) using the provided filters and pageable information.
@@ -115,26 +117,10 @@ public class SearchController {
         reportingUnitId,
         JwtPrincipalUtil.getUserId(jwt));
 
-    // Look up the reporting unit's client number to enforce client-scoped authorization.
-    // Source-aware (DEC-019): the lookup reads the same source the expanded query will read, so a
-    // PostgreSQL-only reporting unit authorizes against PostgreSQL rather than a legacy miss.
-    String clientNumber =
-        service.getClientNumberForReportingUnit(reportingUnitId, wasteAssessmentAreaId);
-
-    // For BCeID callers, verify the reporting unit belongs to one of their clients
-    if (IdentityProvider.BUSINESS_BCEID.equals(JwtPrincipalUtil.getIdentityProvider(jwt))) {
-      List<String> userClientNumbers = JwtPrincipalUtil.getClientFromRoles(jwt);
-
-      if (!userClientNumbers.contains(clientNumber)) {
-        log.warn(
-            "SECURITY: BCeID user {} attempted unauthorized access to reporting unit {}",
-            JwtPrincipalUtil.getUserId(jwt),
-            reportingUnitId);
-        throw new ResponseStatusException(
-            HttpStatus.FORBIDDEN,
-            "User is not authorized to access reporting unit: " + reportingUnitId);
-      }
-    }
+    // Enforce resource-scope authorization (client number for BCeID, district for IDIR)
+    var targetScope = service.getSearchScope(reportingUnitId, wasteAssessmentAreaId);
+    resourceScopeGuard.verifyTargetScope(
+        jwt, reportingUnitId, targetScope.clientNumber(), targetScope.districtCode(), "GET");
 
     return service.getSearchExpanded(reportingUnitId, wasteAssessmentAreaId);
   }

@@ -21,7 +21,7 @@ public @interface WithMockJwt {
   String value() default "test";
 
   /** The Cognito groups assigned to the user. */
-  String[] cognitoGroups() default {};
+  String[] cognitoGroups() default {"WASTE_PLUS_ADMIN"};
 
   /** The user's email address. */
   String email() default "test@test.ca";

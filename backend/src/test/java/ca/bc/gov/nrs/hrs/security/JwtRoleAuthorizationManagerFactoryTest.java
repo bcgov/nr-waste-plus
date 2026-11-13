@@ -358,4 +358,101 @@ class JwtRoleAuthorizationManagerFactoryTest {
       }
     }
   }
+
+  // ── reportingUnitRouteGate & reportingUnitCreateGate ──────────────────────
+
+  @Nested
+  @DisplayName("reportingUnitRouteGate and reportingUnitCreateGate")
+  class ReportingUnitGateTests {
+
+    @Test
+    @DisplayName("reportingUnitRouteGate grants when isValidRouteGatePrincipal is true")
+    void routeGate_grantsWhenValid() {
+      org.springframework.security.core.Authentication auth =
+          org.mockito.Mockito.mock(org.springframework.security.core.Authentication.class);
+      when(roleChecker.isValidRouteGatePrincipal(auth)).thenReturn(true);
+
+      AuthorizationManager<RequestAuthorizationContext> manager =
+          factory.reportingUnitRouteGate();
+      AuthorizationResult result = manager.authorize(() -> auth, context);
+
+      assertTrue(result.isGranted());
+      verify(roleChecker).isValidRouteGatePrincipal(auth);
+    }
+
+    @Test
+    @DisplayName("reportingUnitRouteGate denies when isValidRouteGatePrincipal is false")
+    void routeGate_deniesWhenInvalid() {
+      org.springframework.security.core.Authentication auth =
+          org.mockito.Mockito.mock(org.springframework.security.core.Authentication.class);
+      when(roleChecker.isValidRouteGatePrincipal(auth)).thenReturn(false);
+
+      AuthorizationManager<RequestAuthorizationContext> manager =
+          factory.reportingUnitRouteGate();
+      AuthorizationResult result = manager.authorize(() -> auth, context);
+
+      assertFalse(result.isGranted());
+      verify(roleChecker).isValidRouteGatePrincipal(auth);
+    }
+
+    @Test
+    @DisplayName("reportingUnitCreateGate grants when principal is valid and has create role")
+    void createGate_grantsWhenValidAndHasCreateRole() {
+      org.springframework.security.core.Authentication auth =
+          org.mockito.Mockito.mock(org.springframework.security.core.Authentication.class);
+      when(roleChecker.isValidRouteGatePrincipal(auth)).thenReturn(true);
+      when(roleChecker.hasAnyWriteRole(auth)).thenReturn(true);
+
+      AuthorizationManager<RequestAuthorizationContext> manager =
+          factory.reportingUnitCreateGate();
+      AuthorizationResult result = manager.authorize(() -> auth, context);
+
+      assertTrue(result.isGranted());
+    }
+
+    @Test
+    @DisplayName("reportingUnitCreateGate denies when principal has no create role (e.g. VIEWER)")
+    void createGate_deniesWhenLacksCreateRole() {
+      org.springframework.security.core.Authentication auth =
+          org.mockito.Mockito.mock(org.springframework.security.core.Authentication.class);
+      when(roleChecker.isValidRouteGatePrincipal(auth)).thenReturn(true);
+      when(roleChecker.hasAnyWriteRole(auth)).thenReturn(false);
+
+      AuthorizationManager<RequestAuthorizationContext> manager =
+          factory.reportingUnitCreateGate();
+      AuthorizationResult result = manager.authorize(() -> auth, context);
+
+      assertFalse(result.isGranted());
+    }
+
+    @Test
+    @DisplayName("reportingUnitWriteGate grants when principal is valid and has write role")
+    void writeGate_grantsWhenValidAndHasWriteRole() {
+      org.springframework.security.core.Authentication auth =
+          org.mockito.Mockito.mock(org.springframework.security.core.Authentication.class);
+      when(roleChecker.isValidRouteGatePrincipal(auth)).thenReturn(true);
+      when(roleChecker.hasAnyWriteRole(auth)).thenReturn(true);
+
+      AuthorizationManager<RequestAuthorizationContext> manager =
+          factory.reportingUnitWriteGate();
+      AuthorizationResult result = manager.authorize(() -> auth, context);
+
+      assertTrue(result.isGranted());
+    }
+
+    @Test
+    @DisplayName("reportingUnitWriteGate denies when principal lacks write role")
+    void writeGate_deniesWhenLacksWriteRole() {
+      org.springframework.security.core.Authentication auth =
+          org.mockito.Mockito.mock(org.springframework.security.core.Authentication.class);
+      when(roleChecker.isValidRouteGatePrincipal(auth)).thenReturn(true);
+      when(roleChecker.hasAnyWriteRole(auth)).thenReturn(false);
+
+      AuthorizationManager<RequestAuthorizationContext> manager =
+          factory.reportingUnitWriteGate();
+      AuthorizationResult result = manager.authorize(() -> auth, context);
+
+      assertFalse(result.isGranted());
+    }
+  }
 }

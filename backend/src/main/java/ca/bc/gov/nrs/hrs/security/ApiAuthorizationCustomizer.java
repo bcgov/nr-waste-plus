@@ -104,15 +104,26 @@ public class ApiAuthorizationCustomizer
         .requestMatchers("/api/search/**")
         .authenticated()
 
-        .requestMatchers(HttpMethod.GET, "/api/reporting-units/**")
-        .authenticated()
-
         .requestMatchers(HttpMethod.OPTIONS, "/api/reporting-units/**")
         .authenticated()
 
+        .requestMatchers(HttpMethod.POST, "/api/reporting-units")
+        .access(roleCheck.reportingUnitCreateGate())
+
         .requestMatchers(HttpMethod.POST, "/api/reporting-units/**")
-        .access(
-            roleCheck.gotRoleMatching(Role.SUBMITTER, Role.AREA, Role.DISTRICT, Role.ADMIN))
+        .access(roleCheck.reportingUnitWriteGate())
+
+        .requestMatchers(HttpMethod.PUT, "/api/reporting-units/**")
+        .access(roleCheck.reportingUnitWriteGate())
+
+        .requestMatchers(HttpMethod.PATCH, "/api/reporting-units/**")
+        .access(roleCheck.reportingUnitWriteGate())
+
+        .requestMatchers(HttpMethod.DELETE, "/api/reporting-units/**")
+        .access(roleCheck.reportingUnitWriteGate())
+
+        .requestMatchers("/api/reporting-units/**")
+        .access(roleCheck.reportingUnitRouteGate())
 
         .requestMatchers(HttpMethod.PATCH, "/api/internal/attachments/**")
         .access(roleCheck.gotRoleMatching(Role.ADMIN))

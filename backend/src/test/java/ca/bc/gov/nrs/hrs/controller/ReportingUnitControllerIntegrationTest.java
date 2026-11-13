@@ -288,7 +288,7 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
   }
 
   @Test
-  @WithMockJwt(idp = "bceidbusiness", cognitoGroups = {"WASTE_PLUS_ADMIN"})
+  @WithMockJwt(idp = "idir", cognitoGroups = {"WASTE_PLUS_ADMIN"})
   @DisplayName("Should allow an admin to create for a different client")
   void shouldAllowAdminCreateForCrossClient() throws Exception {
     String foreignClient = "00099999";
@@ -720,8 +720,8 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
   @WithMockJwt(
       idp = "bceidbusiness",
       cognitoGroups = {"WASTE_PLUS_SUBMITTER_99999999"})
-  @DisplayName("Should Return 403 when Bceid User Has No Matching Client Role")
-  void shouldReturn403_whenBceidUserHasNoMatchingClientRole() throws Exception {
+  @DisplayName("Should Return 404 when Bceid User Has No Matching Client Role")
+  void shouldReturn404_whenBceidUserHasNoMatchingClientRole() throws Exception {
     legacyApiStub.stubFor(
         get(urlPathEqualTo("/api/reporting-units/12345")).willReturn(okJson(LEGACY_RU_DETAILS)));
 
@@ -733,6 +733,6 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
         .perform(
             MockMvcRequestBuilders.get("/api/reporting-units/{id}", 12345L)
                 .accept(MediaType.APPLICATION_JSON))
-        .andExpect(status().isForbidden());
+        .andExpect(status().isNotFound());
   }
 }
