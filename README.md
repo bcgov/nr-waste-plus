@@ -68,7 +68,7 @@ docker compose up -d database legacydb legacyflyway minio minio-init
 ```
 
 This starts dependencies only; each module guide documents its application
-commands and test setup. The PostgreSQL image is based on PostgreSQL 17.11.
+commands and test setup. The PostgreSQL image is based on PostgreSQL 18.
 
 ## Repository checks
 

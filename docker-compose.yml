@@ -31,7 +31,7 @@ services:
     build:
       context: database
       dockerfile: Dockerfile
-    #image: postgres:13.23
+    #image: postgres:18
     ports: [5432:5432]
     volumes: ["/pgdata"]
     healthcheck:
