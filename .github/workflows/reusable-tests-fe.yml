@@ -92,7 +92,7 @@ jobs:
       matrix:
         target: [idir, bceid]
     container:
-      image: mcr.microsoft.com/playwright:v1.65.0-noble
+      image: mcr.microsoft.com/playwright:v1.65.1-noble
     permissions:
       contents: write
       checks: write
