@@ -444,12 +444,12 @@
                                 </thead>
                                 <tbody>
                                 <tr>
-                                    <td>ck_reporting_unit_avg_requires_grade</td>
-                                    <td>((sampling_code &lt;&gt; &#39;AVG&#39;::text) OR (grade_code IS NOT NULL))</td>
-                                </tr>
-                                <tr>
                                     <td>ck_reporting_unit_grade_code_allowed</td>
                                     <td>((grade_code IS NULL) OR ((grade_code)::text &#61; ANY ((ARRAY[&#39;COASTAL&#39;::character varying, &#39;INTERIOR&#39;::character varying])::text[])))</td>
+                                </tr>
+                                <tr>
+                                    <td>ck_reporting_unit_avg_requires_grade</td>
+                                    <td>((sampling_code &lt;&gt; &#39;AVG&#39;::text) OR (grade_code IS NOT NULL))</td>
                                 </tr>
                                 </tbody>
                             </table>
