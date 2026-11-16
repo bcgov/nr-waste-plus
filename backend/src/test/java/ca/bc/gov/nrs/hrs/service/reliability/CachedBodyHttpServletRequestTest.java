@@ -40,7 +40,7 @@ class CachedBodyHttpServletRequestTest {
         .isInstanceOf(ResponseStatusException.class)
         .satisfies(ex -> {
           ResponseStatusException rse = (ResponseStatusException) ex;
-          assertThat(rse.getStatusCode()).isEqualTo(HttpStatus.PAYLOAD_TOO_LARGE);
+          assertThat(rse.getStatusCode()).isEqualTo(HttpStatus.CONTENT_TOO_LARGE);
           assertThat(rse.getReason()).contains("500 bytes");
         });
   }
@@ -56,7 +56,7 @@ class CachedBodyHttpServletRequestTest {
         .isInstanceOf(ResponseStatusException.class)
         .satisfies(ex -> {
           ResponseStatusException rse = (ResponseStatusException) ex;
-          assertThat(rse.getStatusCode()).isEqualTo(HttpStatus.PAYLOAD_TOO_LARGE);
+          assertThat(rse.getStatusCode()).isEqualTo(HttpStatus.CONTENT_TOO_LARGE);
           assertThat(rse.getReason()).contains("100 bytes");
         });
   }
