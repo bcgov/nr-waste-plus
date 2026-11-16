@@ -59,7 +59,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.0",
-    "@playwright/test": "1.65.0",
+    "@playwright/test": "1.65.1",
     "@tanstack/eslint-plugin-query": "^5.91.2",
     "@tanstack/react-devtools": "^0.10.13",
     "@tanstack/react-form-devtools": "^0.2.27",

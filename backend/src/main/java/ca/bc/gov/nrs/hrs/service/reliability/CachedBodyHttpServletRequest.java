@@ -53,7 +53,7 @@ public class CachedBodyHttpServletRequest extends HttpServletRequestWrapper {
     long contentLength = resolveContentLength(request);
     if (contentLength > maxBodySizeBytes) {
       throw new ResponseStatusException(
-          HttpStatus.PAYLOAD_TOO_LARGE,
+          HttpStatus.CONTENT_TOO_LARGE,
           "Request body exceeds maximum allowed size of " + maxBodySizeBytes + " bytes.");
     }
 
@@ -73,7 +73,7 @@ public class CachedBodyHttpServletRequest extends HttpServletRequestWrapper {
       totalBytes += bytesRead;
       if (totalBytes > maxBodySizeBytes) {
         throw new ResponseStatusException(
-            HttpStatus.PAYLOAD_TOO_LARGE,
+            HttpStatus.CONTENT_TOO_LARGE,
             "Request body exceeds maximum allowed size of " + maxBodySizeBytes + " bytes.");
       }
       outputStream.write(buffer, 0, bytesRead);
