@@ -15,6 +15,8 @@ import ca.bc.gov.nrs.hrs.dto.block.BlockCreateRequestDto;
 import ca.bc.gov.nrs.hrs.dto.block.BlockDetailDto;
 import ca.bc.gov.nrs.hrs.dto.block.BlockResponseDto;
 import ca.bc.gov.nrs.hrs.dto.block.BlockType;
+import ca.bc.gov.nrs.hrs.dto.block.LifecycleEventRequestDto;
+import ca.bc.gov.nrs.hrs.dto.block.LifecycleEventResponseDto;
 import ca.bc.gov.nrs.hrs.dto.client.ForestClientAutocompleteResultDto;
 import ca.bc.gov.nrs.hrs.dto.client.ForestClientDto;
 import ca.bc.gov.nrs.hrs.dto.client.ForestClientLocationDto;
@@ -45,6 +47,7 @@ import ca.bc.gov.nrs.hrs.exception.ForbiddenException;
 import ca.bc.gov.nrs.hrs.exception.ForestClientNotFoundException;
 import ca.bc.gov.nrs.hrs.exception.GlobalExceptionHandler;
 import ca.bc.gov.nrs.hrs.exception.IdempotencyConflictException;
+import ca.bc.gov.nrs.hrs.exception.IllegalTransitionException;
 import ca.bc.gov.nrs.hrs.exception.InvalidDocumentTypeException;
 import ca.bc.gov.nrs.hrs.exception.InvalidFileNameException;
 import ca.bc.gov.nrs.hrs.exception.NotFoundGenericException;
@@ -144,7 +147,10 @@ import tools.jackson.databind.json.JsonMapper.Builder;
   BlockResponseDto.class,
   BlockType.class,
   DuplicateBlockException.class,
-  ReportingUnitStateConflictException.class
+  ReportingUnitStateConflictException.class,
+  IllegalTransitionException.class,
+  LifecycleEventRequestDto.class,
+  LifecycleEventResponseDto.class
 })
 @EnableJpaAuditing(auditorAwareRef = "databaseAuditor")
 public class GlobalConfiguration {

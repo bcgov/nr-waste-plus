@@ -46,6 +46,9 @@ public class BlockEntity extends SoftDeletableAuditableEntity {
   @Column(name = "plc_date")
   private LocalDate plcDate;
 
+  @Column(name = "status_code", length = 10)
+  private String statusCode;
+
   @Version
   @Column(nullable = false)
   private Long revision;
