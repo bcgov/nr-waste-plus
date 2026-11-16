@@ -110,18 +110,6 @@ public class ApiAuthorizationCustomizer
         .requestMatchers(HttpMethod.POST, "/api/reporting-units")
         .access(roleCheck.reportingUnitCreateGate())
 
-        .requestMatchers(HttpMethod.POST, "/api/reporting-units/**")
-        .access(roleCheck.reportingUnitWriteGate())
-
-        .requestMatchers(HttpMethod.PUT, "/api/reporting-units/**")
-        .access(roleCheck.reportingUnitWriteGate())
-
-        .requestMatchers(HttpMethod.PATCH, "/api/reporting-units/**")
-        .access(roleCheck.reportingUnitWriteGate())
-
-        .requestMatchers(HttpMethod.DELETE, "/api/reporting-units/**")
-        .access(roleCheck.reportingUnitWriteGate())
-
         .requestMatchers("/api/reporting-units/**")
         .access(roleCheck.reportingUnitRouteGate())
 

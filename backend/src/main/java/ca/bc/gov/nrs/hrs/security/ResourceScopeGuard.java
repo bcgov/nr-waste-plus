@@ -37,13 +37,14 @@ import org.springframework.web.server.ResponseStatusException;
  *
  * <p>Enforces the following business rules:
  * <ul>
- *   <li>IDIR ADMIN and AREA callers carry cross-district privileges and are unrestricted by scope.</li>
+ *   <li>IDIR ADMIN and AREA callers carry cross-district privileges and are unrestricted.</li>
  *   <li>IDIR DISTRICT scope is restricted to their assigned district code.</li>
- *   <li>BCeID SUBMITTER and VIEWER scope is restricted to Reporting Units owned by their client number.</li>
- *   <li>Resources outside the requester's scope return HTTP 404, matching the "no existence disclosure"
- *       rule (never HTTP 403). Note: the route-level filter gate returns HTTP 403 for unauthorized roles or invalid principals.</li>
- *   <li>VIEWER role (either provider) is read-only: HTTP 200 on in-scope reads, HTTP 403 on in-scope
- *       writes, and HTTP 404 on out-of-scope resources.</li>
+ *   <li>BCeID SUBMITTER and VIEWER scope is restricted to Reporting Units owned by client.</li>
+ *   <li>Resources outside the requester's scope return HTTP 404, matching the "no existence
+ *       disclosure" rule (never HTTP 403). Note: the route-level filter gate returns HTTP 403
+ *       for unauthorized roles or invalid principals.</li>
+ *   <li>VIEWER role (either provider) is read-only: HTTP 200 on in-scope reads, HTTP 403 on
+ *       in-scope writes, and HTTP 404 on out-of-scope resources.</li>
  *   <li>IDIR VIEWER without an assigned district fails closed (HTTP 404).</li>
  *   <li>Unsupported or unresolved identity providers fail closed with HTTP 401/403.</li>
  *   <li>Every authorization failure is logged with a correlation ID for audit purposes.</li>
@@ -60,6 +61,14 @@ public class ResourceScopeGuard {
   private final JwtRoleChecker jwtRoleChecker;
   private final Tracer tracer;
 
+  /**
+   * Constructs a new ResourceScopeGuard with all dependencies.
+   *
+   * @param reportingUnitRepository the repository for reporting units
+   * @param legacyApiProvider the legacy API provider
+   * @param jwtRoleChecker the role checker utility
+   * @param tracer optional OpenTelemetry tracer for correlation ids
+   */
   @Autowired
   public ResourceScopeGuard(
       ReportingUnitRepository reportingUnitRepository,
@@ -72,6 +81,13 @@ public class ResourceScopeGuard {
     this.tracer = tracer;
   }
 
+  /**
+   * Constructs a new ResourceScopeGuard with default role checker.
+   *
+   * @param reportingUnitRepository the repository for reporting units
+   * @param legacyApiProvider the legacy API provider
+   * @param tracer optional OpenTelemetry tracer for correlation ids
+   */
   public ResourceScopeGuard(
       ReportingUnitRepository reportingUnitRepository,
       LegacyApiProvider legacyApiProvider,
@@ -81,7 +97,7 @@ public class ResourceScopeGuard {
 
   /**
    * Verifies that the authenticated caller has access to the specified reporting unit,
-   * inferring the HTTP method from the current request context. Fails closed if no request context exists.
+   * inferring the HTTP method from the current request context. Fails closed if no request exists.
    *
    * @param authentication the current Spring Security authentication
    * @param reportingUnitId the target reporting unit identifier
@@ -94,14 +110,15 @@ public class ResourceScopeGuard {
           reportingUnitId,
           "UNKNOWN",
           "Cannot infer HTTP method: no active request context");
-      throw new IllegalStateException("Cannot determine HTTP method: no active HTTP request context");
+      throw new IllegalStateException(
+          "Cannot determine HTTP method: no active HTTP request context");
     }
     verify(authentication, reportingUnitId, request.getMethod());
   }
 
   /**
    * Verifies that the JWT caller has access to the specified reporting unit,
-   * inferring the HTTP method from the current request context. Fails closed if no request context exists.
+   * inferring the HTTP method from the current request context. Fails closed if no request exists.
    *
    * @param jwt the caller's JWT token
    * @param reportingUnitId the target reporting unit identifier
@@ -109,8 +126,10 @@ public class ResourceScopeGuard {
   public void verify(Jwt jwt, Long reportingUnitId) {
     HttpServletRequest request = currentRequest();
     if (request == null) {
-      logSecurityDenied(jwt, reportingUnitId, "UNKNOWN", "Cannot infer HTTP method: no active request context");
-      throw new IllegalStateException("Cannot determine HTTP method: no active HTTP request context");
+      logSecurityDenied(
+          jwt, reportingUnitId, "UNKNOWN", "Cannot infer HTTP method: no active request context");
+      throw new IllegalStateException(
+          "Cannot determine HTTP method: no active HTTP request context");
     }
     verify(jwt, reportingUnitId, request.getMethod());
   }
@@ -148,7 +167,8 @@ public class ResourceScopeGuard {
   }
 
   /**
-   * Core verification logic enforcing role and provider scope rules against the target reporting unit.
+   * Core verification logic enforcing role and provider scope rules against the target reporting
+   * unit.
    *
    * @param jwt the caller's JWT
    * @param reportingUnitId the target reporting unit identifier
@@ -182,7 +202,7 @@ public class ResourceScopeGuard {
   }
 
   /**
-   * Verifies that the caller has access to the target reporting unit scope (client number and district code).
+   * Verifies that caller has access to the target reporting unit scope (client and district).
    *
    * @param jwt the caller's JWT
    * @param reportingUnitId the target reporting unit identifier
@@ -264,7 +284,8 @@ public class ResourceScopeGuard {
     }
 
     // The target resource is IN-SCOPE. Now check write permission:
-    boolean isWrite = httpMethod != null && WRITE_METHODS.contains(httpMethod.toUpperCase(Locale.ROOT));
+    boolean isWrite =
+        httpMethod != null && WRITE_METHODS.contains(httpMethod.toUpperCase(Locale.ROOT));
     if (isWrite) {
       if (IdentityProvider.BUSINESS_BCEID == idp) {
         boolean hasSubmitterOnClient =
@@ -297,7 +318,8 @@ public class ResourceScopeGuard {
   private void validatePrincipal(Jwt jwt, Long reportingUnitId, String httpMethod) {
     IdentityProvider idp = resolveIdentityProvider(jwt);
     if (idp == null) {
-      logSecurityDenied(jwt, reportingUnitId, httpMethod, "Missing or unresolved identity provider");
+      logSecurityDenied(
+          jwt, reportingUnitId, httpMethod, "Missing or unresolved identity provider");
       throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unresolved identity provider");
     }
     if (idp != IdentityProvider.IDIR && idp != IdentityProvider.BUSINESS_BCEID) {
@@ -310,6 +332,38 @@ public class ResourceScopeGuard {
       logSecurityDenied(jwt, reportingUnitId, httpMethod, "Invalid principal or role combination");
       throw new ResponseStatusException(
           HttpStatus.FORBIDDEN, "Invalid principal or role combination");
+    }
+  }
+
+  /**
+   * Verifies that an IDIR caller is authorized to create or access resources for the specified
+   * district code. Unrestricted for cross-district roles (ADMIN, AREA) and BCeID callers.
+   *
+   * @param jwt the caller's JWT
+   * @param districtCode the target district code
+   */
+  public void verifyDistrictScope(Jwt jwt, String districtCode) {
+    if (jwt == null) {
+      return;
+    }
+    IdentityProvider idp = resolveIdentityProvider(jwt);
+    if (IdentityProvider.IDIR == idp) {
+      Map<Role, List<String>> roles = JwtPrincipalUtil.getRoles(jwt);
+      if (roles.containsKey(Role.DISTRICT)) {
+        Set<String> assignedDistricts = extractAssignedDistricts(jwt);
+        if (districtCode == null
+            || assignedDistricts.stream().noneMatch(d -> d.equalsIgnoreCase(districtCode))) {
+          logSecurityDenied(
+              jwt,
+              null,
+              "POST",
+              "IDIR DISTRICT caller assigned districts " + assignedDistricts
+                  + " does not match target district " + districtCode);
+          throw new ResponseStatusException(
+              HttpStatus.FORBIDDEN,
+              "User is not authorized to create a reporting unit for district " + districtCode);
+        }
+      }
     }
   }
 
@@ -367,8 +421,13 @@ public class ResourceScopeGuard {
       logSecurityDenied(jwt, reportingUnitId, httpMethod, "Target reporting unit does not exist");
       throw new ReportingUnitNotFoundException(reportingUnitId);
     } catch (Exception ex) {
-      log.warn("Legacy reporting unit lookup failed for RU {}: {}", reportingUnitId, ex.getMessage(), ex);
-      logSecurityDenied(jwt, reportingUnitId, httpMethod, "Legacy lookup error: " + ex.getMessage());
+      log.warn(
+          "Legacy reporting unit lookup failed for RU {}: {}",
+          reportingUnitId,
+          ex.getMessage(),
+          ex);
+      logSecurityDenied(
+          jwt, reportingUnitId, httpMethod, "Legacy lookup error: " + ex.getMessage());
       throw new ResponseStatusException(
           HttpStatus.SERVICE_UNAVAILABLE, "Legacy reporting unit service unavailable", ex);
     }
@@ -381,8 +440,8 @@ public class ResourceScopeGuard {
     if (authentication instanceof JwtAuthenticationToken jwtAuth) {
       return jwtAuth.getToken();
     }
-    if (authentication != null && authentication.getPrincipal() instanceof Jwt pJwt) {
-      return pJwt;
+    if (authentication != null && authentication.getPrincipal() instanceof Jwt jwtPrincipal) {
+      return jwtPrincipal;
     }
     return null;
   }

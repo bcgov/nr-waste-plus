@@ -5,9 +5,9 @@ import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchExpandedDto;
 import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchParametersDto;
 import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchResultDto;
 import ca.bc.gov.nrs.hrs.exception.InvalidSelectedValueException;
+import ca.bc.gov.nrs.hrs.security.ResourceScopeGuard;
 import ca.bc.gov.nrs.hrs.service.SearchService;
 import ca.bc.gov.nrs.hrs.util.JwtPrincipalUtil;
-import ca.bc.gov.nrs.hrs.security.ResourceScopeGuard;
 import io.micrometer.observation.annotation.Observed;
 import java.util.HashSet;
 import java.util.List;
@@ -97,15 +97,15 @@ public class SearchController {
    *
    * <p>Validates that the authenticated user has permission to access the specified reporting unit.
    * For BCeID callers, the reporting unit's associated client number is compared against the
-   * caller's assigned client roles. IDIR callers (government users) are permitted without
-   * additional checks since they have system-level access.
+   * caller's assigned client roles. IDIR District callers are restricted to their assigned
+   * district; IDIR Admin and Area callers carry cross-district privileges.
    *
    * @param jwt the JWT principal for the authenticated caller
    * @param reportingUnitId the reporting unit ID
    * @param wasteAssessmentAreaId the waste assessment area ID
    * @return the expanded search entry as a {@link ReportingUnitSearchExpandedDto}
-   * @throws org.springframework.web.server.ResponseStatusException with HTTP 403 when the user is
-   *     not authorized to access the specified reporting unit
+   * @throws ca.bc.gov.nrs.hrs.exception.ReportingUnitNotFoundException with HTTP 404 when the
+   *     target reporting unit is out-of-scope or does not exist (no existence disclosure)
    */
   @GetMapping("/reporting-units/ex/{reportingUnitId}/{wasteAssessmentAreaId}")
   public ReportingUnitSearchExpandedDto getSearchExpandedEntry(

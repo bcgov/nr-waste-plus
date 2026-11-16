@@ -288,7 +288,8 @@ class JwtBearerFilterChainSecurityTest {
   }
 
   @Test
-  void reportingUnitWriteGate_enforcesWriteRolesOnNestedPaths() throws Exception {
+  void reportingUnitRouteGate_onNestedPaths_enforcesValidPrincipalsAndRejectsFakeRoles()
+      throws Exception {
     String idirViewerToken =
         token(
             "client-good",
@@ -298,15 +299,15 @@ class JwtBearerFilterChainSecurityTest {
             List.of("WASTE_PLUS_VIEWER"),
             "idir");
 
-    // VIEWER is rejected at the route filter gate for write operations
+    // VIEWER passes route filter gate to handler where ResourceScopeGuard checks scope and write rules
     mockMvc
         .perform(
             post("/api/reporting-units/100/blocks")
                 .with(csrf())
                 .header("Authorization", "Bearer " + idirViewerToken))
-        .andExpect(status().isForbidden());
+        .andExpect(status().isOk());
 
-    // Role prefix false positive (e.g. ADMINISTRATOR) is rejected
+    // Role prefix false positive (e.g. ADMINISTRATOR) is rejected by route gate
     String fakeAdminToken =
         token(
             "client-good",
@@ -323,7 +324,15 @@ class JwtBearerFilterChainSecurityTest {
                 .header("Authorization", "Bearer " + fakeAdminToken))
         .andExpect(status().isForbidden());
 
-    // Valid write role (ADMIN) passes the route write gate
+    // Role prefix false positive is also rejected by create gate
+    mockMvc
+        .perform(
+            post("/api/reporting-units")
+                .with(csrf())
+                .header("Authorization", "Bearer " + fakeAdminToken))
+        .andExpect(status().isForbidden());
+
+    // Valid role (ADMIN) passes the route gate
     String idirAdminToken =
         token(
             "client-good",

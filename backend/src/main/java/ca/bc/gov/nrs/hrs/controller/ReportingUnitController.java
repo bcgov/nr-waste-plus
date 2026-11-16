@@ -2,7 +2,6 @@ package ca.bc.gov.nrs.hrs.controller;
 
 import ca.bc.gov.nrs.hrs.configuration.FeatureFlagsConfiguration;
 import ca.bc.gov.nrs.hrs.dto.base.FeatureFlag;
-import ca.bc.gov.nrs.hrs.dto.base.IdentityProvider;
 import ca.bc.gov.nrs.hrs.dto.base.Role;
 import ca.bc.gov.nrs.hrs.dto.reportingunit.CreateReportingUnitRequestDto;
 import ca.bc.gov.nrs.hrs.dto.reportingunit.ReportingUnitDetailsDto;
@@ -14,9 +13,6 @@ import ca.bc.gov.nrs.hrs.util.JwtPrincipalUtil;
 import io.micrometer.observation.annotation.Observed;
 import jakarta.validation.Valid;
 import java.net.URI;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -117,18 +113,7 @@ public class ReportingUnitController {
           "User is not authorized to create a reporting unit for client " + request.clientNumber());
     }
 
-    if (IdentityProvider.IDIR.equals(JwtPrincipalUtil.getIdentityProvider(jwt))) {
-      Map<Role, List<String>> roles = JwtPrincipalUtil.getRoles(jwt);
-      if (roles.containsKey(Role.DISTRICT)) {
-        Set<String> assignedDistricts = resourceScopeGuard.extractAssignedDistricts(jwt);
-        if (request.districtCode() == null
-            || assignedDistricts.stream().noneMatch(d -> d.equalsIgnoreCase(request.districtCode()))) {
-          throw new ResponseStatusException(
-              HttpStatus.FORBIDDEN,
-              "User is not authorized to create a reporting unit for district " + request.districtCode());
-        }
-      }
-    }
+    resourceScopeGuard.verifyDistrictScope(jwt, request.districtCode());
 
     Long createdId = reportingUnitService.createReportingUnit(request, idempotencyKey);
 

@@ -47,7 +47,7 @@ public class JwtRoleAuthorizationManagerFactory {
    * @return an AuthorizationManager for request contexts
    */
   public AuthorizationManager<RequestAuthorizationContext> gotRoleMatching(Role... roles) {
-    final Set<String> requiredRolePrefixes =
+    final Set<String> normalizedRoleNames =
         Stream.of(roles)
             .map(Role::getRoleName)
             .map(name -> name.toUpperCase(Locale.ROOT))
@@ -56,7 +56,13 @@ public class JwtRoleAuthorizationManagerFactory {
     return gotRoleMatching(
         role -> {
           String upperRole = role.toUpperCase(Locale.ROOT);
-          return requiredRolePrefixes.stream().anyMatch(upperRole::startsWith);
+          return normalizedRoleNames.stream()
+              .anyMatch(
+                  r ->
+                      upperRole.equals(r)
+                          || upperRole.equals("WASTE_PLUS_" + r)
+                          || upperRole.startsWith(r + "_")
+                          || upperRole.startsWith("WASTE_PLUS_" + r + "_"));
         });
   }
 
@@ -116,12 +122,13 @@ public class JwtRoleAuthorizationManagerFactory {
    */
   public AuthorizationManager<RequestAuthorizationContext> reportingUnitRouteGate() {
     return (authenticationSupplier, context) ->
-        new AuthorizationDecision(roleChecker.isValidRouteGatePrincipal(authenticationSupplier.get()));
+        new AuthorizationDecision(
+            roleChecker.isValidRouteGatePrincipal(authenticationSupplier.get()));
   }
 
   /**
-   * AuthorizationManager for Reporting Unit creation: enforces route gate and requires create roles
-   * (SUBMITTER, AREA, DISTRICT, ADMIN).
+   * AuthorizationManager for Reporting Unit creation: enforces route gate and requires
+   * create roles (SUBMITTER, AREA, DISTRICT, ADMIN).
    *
    * @return an AuthorizationManager for request contexts
    */
@@ -137,7 +144,8 @@ public class JwtRoleAuthorizationManagerFactory {
   /**
    * AuthorizationManager for Reporting Unit write operations (POST, PUT, PATCH, DELETE under
    * {@code /api/reporting-units/**}): enforces route gate and requires write roles
-   * (SUBMITTER, AREA, DISTRICT, ADMIN), rejecting read-only roles such as VIEWER at the route gate.
+   * (SUBMITTER, AREA, DISTRICT, ADMIN), rejecting read-only roles such as VIEWER at the
+   * route gate.
    *
    * @return an AuthorizationManager for request contexts
    */

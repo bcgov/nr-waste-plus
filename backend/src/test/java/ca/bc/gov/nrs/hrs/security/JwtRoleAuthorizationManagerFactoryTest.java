@@ -184,6 +184,12 @@ class JwtRoleAuthorizationManagerFactoryTest {
       assertTrue(builtPredicate.test("WASTE_PLUS_ADMIN"), "Should match second role");
       assertFalse(
           builtPredicate.test("WASTE_PLUS_SUBMITTER"), "Should not match role not in the list");
+      assertFalse(
+          builtPredicate.test("WASTE_PLUS_ADMINISTRATOR"),
+          "Should not match prefix false positive");
+      assertFalse(
+          builtPredicate.test("ADMINISTRATOR"),
+          "Should not match raw prefix false positive");
     }
   }
 

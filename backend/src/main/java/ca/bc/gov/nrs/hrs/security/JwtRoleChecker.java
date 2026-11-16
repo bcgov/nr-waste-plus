@@ -77,8 +77,8 @@ public class JwtRoleChecker {
   }
 
   /**
-   * Checks whether the authenticated principal has any write role (SUBMITTER, AREA, DISTRICT, ADMIN)
-   * using boundary-aware matching.
+   * Checks whether the authenticated principal has any write role (SUBMITTER, AREA,
+   * DISTRICT, ADMIN) using boundary-aware matching.
    *
    * @param authentication the authentication to inspect
    * @return true if the principal has at least one write role
@@ -124,7 +124,8 @@ public class JwtRoleChecker {
   }
 
   /**
-   * Check roles of the supplied authentication using an arbitrary predicate against upper-cased authorities.
+   * Check roles of the supplied authentication using an arbitrary predicate against
+   * upper-cased authorities.
    *
    * @param authentication the authentication to check
    * @param matcher predicate to apply to each authority string
@@ -171,7 +172,8 @@ public class JwtRoleChecker {
   }
 
   /**
-   * Checks whether the authenticated principal satisfies the route-gate rules:
+   * Checks whether the authenticated principal satisfies the route-gate rules.
+   *
    * <ul>
    *   <li>Principal is authenticated and carries at least one recognized role.</li>
    *   <li>Only IDIR and BUSINESS_BCEID identity providers are permitted.</li>

@@ -3,6 +3,7 @@ package ca.bc.gov.nrs.hrs.security;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
 import ca.bc.gov.nrs.hrs.dto.base.CodeDescriptionDto;
@@ -61,18 +62,24 @@ class ResourceScopeGuardTest {
     entity.setClientNumber(clientNumber);
     entity.setGeographicCode(districtCode);
     entity.setDeleted(false);
-    when(reportingUnitRepository.findByIdAndDeletedFalse(RU_ID)).thenReturn(Optional.of(entity));
+    lenient()
+        .when(reportingUnitRepository.findByIdAndDeletedFalse(RU_ID))
+        .thenReturn(Optional.of(entity));
   }
 
   private void mockLegacyReportingUnit(String clientNumber, String districtCode) {
-    when(reportingUnitRepository.findByIdAndDeletedFalse(RU_ID)).thenReturn(Optional.empty());
+    lenient()
+        .when(reportingUnitRepository.findByIdAndDeletedFalse(RU_ID))
+        .thenReturn(Optional.empty());
     ReportingUnitLegacyDetailsDto legacyDto =
         new ReportingUnitLegacyDetailsDto(
             clientNumber,
             "00",
             null,
-            districtCode != null ? new CodeDescriptionDto(districtCode, districtCode + " Name") : null);
-    when(legacyApiProvider.getReportingUnitDetails(RU_ID)).thenReturn(legacyDto);
+            districtCode != null
+                ? new CodeDescriptionDto(districtCode, districtCode + " Name")
+                : null);
+    lenient().when(legacyApiProvider.getReportingUnitDetails(RU_ID)).thenReturn(legacyDto);
   }
 
   // ── IDIR ADMIN ─────────────────────────────────────────────────────────────
@@ -84,6 +91,7 @@ class ResourceScopeGuardTest {
     @Test
     @DisplayName("in-scope: matches district -> 200 OK")
     void inScope_returns200() {
+      mockPostgresReportingUnit(CLIENT_IN_SCOPE, DISTRICT_IN_SCOPE);
       Jwt jwt =
           WithMockJwtSecurityContextFactory.createJwt(
               "admin_user", List.of("WASTE_PLUS_ADMIN"), "idir", "Admin, User", "admin@idir.ca");
@@ -95,6 +103,7 @@ class ResourceScopeGuardTest {
     @Test
     @DisplayName("out-of-scope: other district -> 200 OK (unrestricted)")
     void outOfScope_returns200() {
+      mockPostgresReportingUnit(CLIENT_OUT_OF_SCOPE, DISTRICT_OUT_OF_SCOPE);
       Jwt jwt =
           WithMockJwtSecurityContextFactory.createJwt(
               "admin_user", List.of("WASTE_PLUS_ADMIN"), "idir", "Admin, User", "admin@idir.ca");
@@ -113,6 +122,7 @@ class ResourceScopeGuardTest {
     @Test
     @DisplayName("in-scope -> 200 OK")
     void inScope_returns200() {
+      mockPostgresReportingUnit(CLIENT_IN_SCOPE, DISTRICT_IN_SCOPE);
       Jwt jwt =
           WithMockJwtSecurityContextFactory.createJwt(
               "area_user", List.of("WASTE_PLUS_AREA"), "idir", "Area, User", "area@idir.ca");
@@ -124,6 +134,7 @@ class ResourceScopeGuardTest {
     @Test
     @DisplayName("out-of-scope -> 200 OK (unrestricted)")
     void outOfScope_returns200() {
+      mockPostgresReportingUnit(CLIENT_OUT_OF_SCOPE, DISTRICT_OUT_OF_SCOPE);
       Jwt jwt =
           WithMockJwtSecurityContextFactory.createJwt(
               "area_user", List.of("WASTE_PLUS_AREA"), "idir", "Area, User", "area@idir.ca");
@@ -579,6 +590,110 @@ class ResourceScopeGuardTest {
               ex ->
                   assertThat(((ResponseStatusException) ex).getStatusCode())
                       .isEqualTo(HttpStatus.SERVICE_UNAVAILABLE));
+    }
+  }
+
+  // ── verifyDistrictScope ─────────────────────────────────────────────────────
+
+  @Nested
+  @DisplayName("verifyDistrictScope")
+  class DistrictScopeValidation {
+
+    @Test
+    @DisplayName("IDIR DISTRICT matching assigned district succeeds")
+    void idirDistrict_matchingAssignedDistrict_succeeds() {
+      Jwt jwt =
+          WithMockJwtSecurityContextFactory.createJwt(
+              "district_user",
+              List.of("WASTE_PLUS_DISTRICT_" + DISTRICT_IN_SCOPE),
+              "idir",
+              "District, User",
+              "district@idir.ca");
+
+      assertThatCode(() -> guard.verifyDistrictScope(jwt, DISTRICT_IN_SCOPE))
+          .doesNotThrowAnyException();
+    }
+
+    @Test
+    @DisplayName("IDIR DISTRICT mismatching assigned district throws 403 Forbidden")
+    void idirDistrict_mismatchingAssignedDistrict_throwsForbidden() {
+      Jwt jwt =
+          WithMockJwtSecurityContextFactory.createJwt(
+              "district_user",
+              List.of("WASTE_PLUS_DISTRICT_" + DISTRICT_IN_SCOPE),
+              "idir",
+              "District, User",
+              "district@idir.ca");
+
+      assertThatThrownBy(() -> guard.verifyDistrictScope(jwt, DISTRICT_OUT_OF_SCOPE))
+          .isInstanceOf(ResponseStatusException.class)
+          .satisfies(
+              ex ->
+                  assertThat(((ResponseStatusException) ex).getStatusCode())
+                      .isEqualTo(HttpStatus.FORBIDDEN));
+    }
+
+    @Test
+    @DisplayName("IDIR DISTRICT with null target district throws 403 Forbidden")
+    void idirDistrict_nullTargetDistrict_throwsForbidden() {
+      Jwt jwt =
+          WithMockJwtSecurityContextFactory.createJwt(
+              "district_user",
+              List.of("WASTE_PLUS_DISTRICT_" + DISTRICT_IN_SCOPE),
+              "idir",
+              "District, User",
+              "district@idir.ca");
+
+      assertThatThrownBy(() -> guard.verifyDistrictScope(jwt, null))
+          .isInstanceOf(ResponseStatusException.class)
+          .satisfies(
+              ex ->
+                  assertThat(((ResponseStatusException) ex).getStatusCode())
+                      .isEqualTo(HttpStatus.FORBIDDEN));
+    }
+
+    @Test
+    @DisplayName("IDIR ADMIN is unrestricted by district scope")
+    void idirAdmin_unrestrictedByDistrictScope() {
+      Jwt jwt =
+          WithMockJwtSecurityContextFactory.createJwt(
+              "admin_user", List.of("WASTE_PLUS_ADMIN"), "idir", "Admin, User", "admin@idir.ca");
+
+      assertThatCode(() -> guard.verifyDistrictScope(jwt, DISTRICT_OUT_OF_SCOPE))
+          .doesNotThrowAnyException();
+    }
+
+    @Test
+    @DisplayName("IDIR AREA is unrestricted by district scope")
+    void idirArea_unrestrictedByDistrictScope() {
+      Jwt jwt =
+          WithMockJwtSecurityContextFactory.createJwt(
+              "area_user", List.of("WASTE_PLUS_AREA"), "idir", "Area, User", "area@idir.ca");
+
+      assertThatCode(() -> guard.verifyDistrictScope(jwt, DISTRICT_OUT_OF_SCOPE))
+          .doesNotThrowAnyException();
+    }
+
+    @Test
+    @DisplayName("BCeID caller bypasses district scope verification")
+    void bceid_bypassesDistrictScopeVerification() {
+      Jwt jwt =
+          WithMockJwtSecurityContextFactory.createJwt(
+              "sub_user",
+              List.of("WASTE_PLUS_SUBMITTER_" + CLIENT_IN_SCOPE),
+              "bceidbusiness",
+              "Submitter, User",
+              "sub@bceid.ca");
+
+      assertThatCode(() -> guard.verifyDistrictScope(jwt, DISTRICT_OUT_OF_SCOPE))
+          .doesNotThrowAnyException();
+    }
+
+    @Test
+    @DisplayName("null JWT does not throw")
+    void nullJwt_doesNotThrow() {
+      assertThatCode(() -> guard.verifyDistrictScope(null, DISTRICT_IN_SCOPE))
+          .doesNotThrowAnyException();
     }
   }
 }
