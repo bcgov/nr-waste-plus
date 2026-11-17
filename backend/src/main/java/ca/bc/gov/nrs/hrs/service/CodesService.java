@@ -7,8 +7,10 @@ import ca.bc.gov.nrs.hrs.entity.block.ReportingUnitEntity;
 import ca.bc.gov.nrs.hrs.provider.legacy.LegacyApiProvider;
 import ca.bc.gov.nrs.hrs.repository.block.BlockRepository;
 import ca.bc.gov.nrs.hrs.repository.block.ReportingUnitRepository;
+import ca.bc.gov.nrs.hrs.repository.codes.DistrictAverageCriteriaCodeRepository;
 import io.micrometer.observation.annotation.Observed;
 import io.micrometer.tracing.annotation.NewSpan;
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
@@ -45,6 +47,7 @@ public class CodesService {
   private final CodesProperties codesProperties;
   private final ReportingUnitRepository reportingUnitRepository;
   private final BlockRepository blockRepository;
+  private final DistrictAverageCriteriaCodeRepository districtAverageCriteriaCodeRepository;
 
   /**
    * Retrieves district codes from the legacy API, enriched with geographic area information.
@@ -138,6 +141,24 @@ public class CodesService {
   public List<CodeDescriptionDto> getMaturityTypeCodes() {
     log.info("Fetching maturity type codes from legacy API");
     return legacyApiProvider.getMaturityTypeCodes();
+  }
+
+  /**
+   * Retrieves currently effective district average criteria codes from Postgres.
+   *
+   * <p>Codes are ordered by numeric criterion (1..11). Descriptions are returned as stored without a
+   * numeric prefix; the frontend appends the criterion number.
+   *
+   * @return list of district average criteria {@link CodeDescriptionDto}
+   */
+  @NewSpan
+  public List<CodeDescriptionDto> getDistrictAverageCriteriaCodes() {
+    log.info("Fetching district average criteria codes from postgres");
+    return districtAverageCriteriaCodeRepository
+        .findEffectiveOrderedByCode(LocalDateTime.now())
+        .stream()
+        .map(code -> new CodeDescriptionDto(code.getCode(), code.getDescription()))
+        .toList();
   }
 
   private String resolveHarvestStatusVariant(Long reportingUnitId, Long blockId) {

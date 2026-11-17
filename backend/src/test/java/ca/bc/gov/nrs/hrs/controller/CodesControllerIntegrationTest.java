@@ -239,4 +239,30 @@ class CodesControllerIntegrationTest extends AbstractTestContainerIntegrationTes
         .andExpect(content().contentType("application/json;charset=UTF-8"))
         .andExpect(jsonPath("$.length()").value(0));
   }
+
+  @Test
+  @DisplayName("Get district average criteria codes should return effective codes ordered by criterion")
+  void getDistrictAverageCriteriaCodes_happyPath_shouldSucceed() throws Exception {
+    mockMvc
+        .perform(
+            get("/api/codes/district-average-criteria")
+                .header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
+                .accept(MediaType.APPLICATION_JSON))
+        .andExpect(status().isOk())
+        .andExpect(content().contentType("application/json;charset=UTF-8"))
+        .andExpect(jsonPath("$.length()").value(11))
+        .andExpect(jsonPath("$[0].code").value("1"))
+        .andExpect(
+            jsonPath("$[0].description")
+                .value(
+                    "Forestry Licence to Cut with a volume limit of 2,000 m3 or less, written in the licence agreement."))
+        .andExpect(jsonPath("$[0].areas.length()").value(0))
+        .andExpect(jsonPath("$[1].code").value("2"))
+        .andExpect(jsonPath("$[9].code").value("10"))
+        .andExpect(jsonPath("$[10].code").value("11"))
+        .andExpect(
+            jsonPath("$[10].description")
+                .value(
+                    "A submission for a late waste assessment where a field survey is no longer feasible. This criterion can only be used under the direction of the District Manager and the Area Director."));
+  }
 }

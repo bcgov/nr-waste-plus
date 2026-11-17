@@ -1,6 +1,7 @@
 package ca.bc.gov.nrs.hrs.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -8,9 +9,12 @@ import ca.bc.gov.nrs.hrs.configuration.CodesProperties;
 import ca.bc.gov.nrs.hrs.dto.base.CodeDescriptionDto;
 import ca.bc.gov.nrs.hrs.entity.block.BlockEntity;
 import ca.bc.gov.nrs.hrs.entity.block.ReportingUnitEntity;
+import ca.bc.gov.nrs.hrs.entity.codes.DistrictAverageCriteriaCodeEntity;
 import ca.bc.gov.nrs.hrs.provider.legacy.LegacyApiProvider;
 import ca.bc.gov.nrs.hrs.repository.block.BlockRepository;
 import ca.bc.gov.nrs.hrs.repository.block.ReportingUnitRepository;
+import ca.bc.gov.nrs.hrs.repository.codes.DistrictAverageCriteriaCodeRepository;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -36,6 +40,7 @@ class CodesServiceTest {
   @Mock private CodesProperties codesProperties;
   @Mock private ReportingUnitRepository reportingUnitRepository;
   @Mock private BlockRepository blockRepository;
+  @Mock private DistrictAverageCriteriaCodeRepository districtAverageCriteriaCodeRepository;
 
   @InjectMocks private CodesService codesService;
 
@@ -288,6 +293,52 @@ class CodesServiceTest {
     var result = codesService.getHarvestStatusCodes(10L, null);
 
     assertThat(result).extracting(CodeDescriptionDto::code).containsExactly("C", "I", "NA");
+  }
+
+  @Test
+  @DisplayName("getDistrictAverageCriteriaCodes returns effective codes ordered by repository")
+  void getDistrictAverageCriteriaCodes_shouldReturnMappedCodesInOrder() {
+    when(districtAverageCriteriaCodeRepository.findEffectiveOrderedByCode(any(LocalDateTime.class)))
+        .thenReturn(
+            List.of(
+                districtAverageCriteriaCode("1", "First criterion"),
+                districtAverageCriteriaCode("2", "Second criterion"),
+                districtAverageCriteriaCode("11", "Eleventh criterion")));
+
+    var result = codesService.getDistrictAverageCriteriaCodes();
+
+    assertThat(result)
+        .extracting(CodeDescriptionDto::code, CodeDescriptionDto::description, CodeDescriptionDto::areas)
+        .containsExactly(
+            org.assertj.core.groups.Tuple.tuple("1", "First criterion", List.of()),
+            org.assertj.core.groups.Tuple.tuple("2", "Second criterion", List.of()),
+            org.assertj.core.groups.Tuple.tuple("11", "Eleventh criterion", List.of()));
+    verify(districtAverageCriteriaCodeRepository)
+        .findEffectiveOrderedByCode(any(LocalDateTime.class));
+  }
+
+  @Test
+  @DisplayName("getDistrictAverageCriteriaCodes returns empty list when no effective codes exist")
+  void getDistrictAverageCriteriaCodes_whenNone_shouldReturnEmptyList() {
+    when(districtAverageCriteriaCodeRepository.findEffectiveOrderedByCode(any(LocalDateTime.class)))
+        .thenReturn(List.of());
+
+    var result = codesService.getDistrictAverageCriteriaCodes();
+
+    assertThat(result).isEmpty();
+    verify(districtAverageCriteriaCodeRepository)
+        .findEffectiveOrderedByCode(any(LocalDateTime.class));
+  }
+
+  private static DistrictAverageCriteriaCodeEntity districtAverageCriteriaCode(
+      String code, String description) {
+    DistrictAverageCriteriaCodeEntity entity = new DistrictAverageCriteriaCodeEntity();
+    entity.setCode(code);
+    entity.setDescription(description);
+    entity.setEffectiveDate(LocalDateTime.of(2026, 1, 1, 0, 0));
+    entity.setExpiryDate(LocalDateTime.of(9999, 12, 31, 0, 0));
+    entity.setUpdateTimestamp(LocalDateTime.of(2026, 1, 1, 0, 0));
+    return entity;
   }
 
   private static ReportingUnitEntity reportingUnit(Long id, String gradeCode) {

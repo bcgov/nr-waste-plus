@@ -104,4 +104,18 @@ public class CodesController {
     log.info("Listing maturity type codes");
     return service.getMaturityTypeCodes();
   }
+
+  /**
+   * Retrieve district average criteria codes.
+   *
+   * <p>Returns currently effective district average criteria options (Waste manual section 4.5)
+   * ordered by criterion number. Descriptions are returned without a numeric prefix.
+   *
+   * @return list of district average criteria code descriptions
+   */
+  @GetMapping("/district-average-criteria")
+  public List<CodeDescriptionDto> getDistrictAverageCriteriaCodes() {
+    log.info("Listing district average criteria codes");
+    return service.getDistrictAverageCriteriaCodes();
+  }
 }
