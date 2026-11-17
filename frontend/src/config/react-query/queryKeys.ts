@@ -69,6 +69,19 @@ export const queryKeys = {
       ['codes', 'district-options', notificationTarget] as const,
     statusOptions: (notificationTarget?: string) =>
       ['codes', 'status-options', notificationTarget] as const,
+    harvestStatusOptions: (
+      params?: { reportingUnitId?: number; blockId?: number },
+      notificationTarget?: string,
+    ) =>
+      [
+        'codes',
+        'harvest-status-options',
+        params?.reportingUnitId ?? null,
+        params?.blockId ?? null,
+        notificationTarget,
+      ] as const,
+    maturityTypeOptions: (notificationTarget?: string) =>
+      ['codes', 'maturity-type-options', notificationTarget] as const,
   },
   preference: {
     userPreference: (userId?: string) => ['preference', 'user', userId] as const,

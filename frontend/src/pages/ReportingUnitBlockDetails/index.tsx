@@ -23,7 +23,12 @@ import UnderConstructionTag from '@/components/core/Tags/UnderConstructionTag';
 import BlockDetailsSkeleton from '@/components/waste/ReportingUnits/BlockDetailsSkeleton';
 import BlockDetailsSummary from '@/components/waste/ReportingUnits/BlockDetailsSummary';
 import BlockDetailsTab from '@/components/waste/ReportingUnits/BlockDetailsTab';
-import { useBlockDetailsQuery, useReportingUnitDetailsQuery } from '@/config/react-query/hooks';
+import {
+  useBlockDetailsQuery,
+  useHarvestStatusCodesQuery,
+  useMaturityTypeCodesQuery,
+  useReportingUnitDetailsQuery,
+} from '@/config/react-query/hooks';
 import useDelayedFlag from '@/hooks/useDelayedFlag';
 
 import './index.scss';
@@ -77,6 +82,14 @@ const ReportingUnitBlockDetailsPage: FC = () => {
     isError: isBlockError,
     refetch: refetchBlock,
   } = useBlockDetailsQuery(ruId, blockId, {
+    notificationTarget: EVENT_TARGET,
+  });
+
+  const { data: harvestStatuses = [] } = useHarvestStatusCodesQuery(
+    { reportingUnitId: ruId, blockId },
+    { notificationTarget: EVENT_TARGET },
+  );
+  const { data: maturityOptions = [] } = useMaturityTypeCodesQuery({
     notificationTarget: EVENT_TARGET,
   });
 
@@ -252,10 +265,10 @@ const ReportingUnitBlockDetailsPage: FC = () => {
                 initialValues={{
                   primaryLoggingCompleteDate: blockData.plcDate ?? '',
                 }}
-                harvestStatuses={[]}
+                harvestStatuses={harvestStatuses}
                 becZones={[]}
                 becSubzoneVariants={[]}
-                maturityOptions={[]}
+                maturityOptions={maturityOptions}
                 districtAverageCriteria={[]}
                 onNavigateTab={setSelectedTabIndex}
               />

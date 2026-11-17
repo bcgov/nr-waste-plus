@@ -36,6 +36,18 @@ const blockDetailsPayload = {
 };
 
 test.describe('Reporting Unit Block Details', () => {
+  const setupCodeMocks = async (page: Parameters<typeof mockApiResponses>[0]) => {
+    await mockApiResponses(page, 'codes/harvest-statuses*', 200, 'application/json', [
+      { code: 'COM', description: 'Complete' },
+      { code: 'INC', description: 'Incomplete' },
+      { code: 'NOA', description: 'N/A' },
+    ]);
+    await mockApiResponses(page, 'codes/maturity-types', 200, 'application/json', [
+      { code: 'IM', description: 'Immature' },
+      { code: 'MAT', description: 'Mature' },
+    ]);
+  };
+
   test.beforeEach(async ({ page }, testInfo) => {
     await setupAppShellMocks(page, testInfo.project.metadata.userType);
     await mockJwt(page, testInfo.project.metadata);
@@ -102,6 +114,7 @@ test.describe('Reporting Unit Block Details', () => {
       'application/json',
       blockDetailsPayload,
     );
+    await setupCodeMocks(page);
     await page.goto(ROUTE_PATH);
     await page.waitForLoadState('domcontentloaded');
 
@@ -135,6 +148,7 @@ test.describe('Reporting Unit Block Details', () => {
       'application/json',
       blockDetailsPayload,
     );
+    await setupCodeMocks(page);
     await page.goto(ROUTE_PATH);
 
     const heading = page.getByRole('heading', { level: 1, name: `Block ID ${BLOCK_ID}` });
@@ -160,6 +174,7 @@ test.describe('Reporting Unit Block Details', () => {
       'application/json',
       blockDetailsPayload,
     );
+    await setupCodeMocks(page);
 
     await mockApi(page, `reporting-units/${RU_ID}`, async (route) => {
       await route.fulfill({
@@ -201,6 +216,7 @@ test.describe('Reporting Unit Block Details', () => {
     await mockApiResponses(page, `reporting-units/${RU_ID}`, 200, 'application/json', {
       ...reportingUnitPayload,
     });
+    await setupCodeMocks(page);
 
     let attempts = 0;
     await mockApi(page, `reporting-units/${RU_ID}/${BLOCK_ID}`, async (route) => {
@@ -242,5 +258,64 @@ test.describe('Reporting Unit Block Details', () => {
     ).toBeVisible();
     await expect(page.getByTestId('block-details-summary')).toBeVisible();
     expect(attempts).toBeGreaterThan(1);
+  });
+
+  test('fetches and exposes harvest status and maturity code options on block details', async ({
+    page,
+  }) => {
+    test.skip(
+      test.info().project.metadata.userType === 'bceid',
+      'This scenario is validated on IDIR to avoid BCeID role-rule redirects.',
+    );
+
+    const maturityRequests: string[] = [];
+    const harvestRequests: string[] = [];
+
+    await mockApiResponses(page, `reporting-units/${RU_ID}`, 200, 'application/json', {
+      ...reportingUnitPayload,
+    });
+    await mockApiResponses(
+      page,
+      `reporting-units/${RU_ID}/${BLOCK_ID}`,
+      200,
+      'application/json',
+      blockDetailsPayload,
+    );
+    await mockApi(page, 'codes/harvest-statuses*', async (route) => {
+      harvestRequests.push(route.request().url());
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify([
+          { code: 'COM', description: 'Complete' },
+          { code: 'INC', description: 'Incomplete' },
+          { code: 'NOA', description: 'N/A' },
+        ]),
+      });
+    });
+    await mockApi(page, 'codes/maturity-types', async (route) => {
+      maturityRequests.push(route.request().url());
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify([
+          { code: 'IM', description: 'Immature' },
+          { code: 'MAT', description: 'Mature' },
+        ]),
+      });
+    });
+
+    await page.goto(ROUTE_PATH);
+    await page.waitForLoadState('domcontentloaded');
+
+    await expect(
+      page.getByRole('heading', { level: 1, name: `Block ID ${BLOCK_ID}` }),
+    ).toBeVisible();
+    await expect(page.getByLabelText('Harvest status')).toBeVisible();
+
+    await expect.poll(() => harvestRequests.length).toBeGreaterThan(0);
+    await expect.poll(() => maturityRequests.length).toBeGreaterThan(0);
+    expect(harvestRequests[0]).toContain('reportingUnitId=468');
+    expect(harvestRequests[0]).toContain('blockId=12');
   });
 });

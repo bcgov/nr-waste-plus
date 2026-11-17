@@ -299,6 +299,90 @@ export const useDistrictOptionsQuery = <TData = CodeDescriptionDto[]>(
 };
 
 /**
+ * Fetches harvest status code options for block details.
+ *
+ * The backend may resolve coast/interior variants and apply allowlists when
+ * `reportingUnitId` and/or `blockId` are provided. When context is unresolved
+ * or unavailable, the backend falls back to unfiltered options.
+ *
+ * @param params - Optional reporting-unit/block context for variant resolution.
+ * @param options - Optional TanStack Query overrides plus an optional `notificationTarget`.
+ * @returns The TanStack Query result containing harvest status code descriptions.
+ */
+export const useHarvestStatusCodesQuery = <TData = CodeDescriptionDto[]>(
+  params?: { reportingUnitId?: number; blockId?: number },
+  options?: Omit<
+    UseQueryOptions<
+      CodeDescriptionDto[],
+      Error,
+      TData,
+      ReturnType<typeof queryKeys.codes.harvestStatusOptions>
+    >,
+    'queryKey' | 'queryFn'
+  > &
+    QueryNotificationOptions,
+) => {
+  const { notificationTarget, ...queryOptions } = options ?? {};
+
+  const query = useQuery({
+    queryKey: queryKeys.codes.harvestStatusOptions(params, notificationTarget),
+    queryFn: () => API.codes.getHarvestStatusCodes(params, { notificationTarget }),
+    ...REFERENCE_DATA_QUERY_CONFIG,
+    ...queryOptions,
+  });
+
+  useEffect(() => {
+    if (!notificationTarget || !query.isError || !query.error) {
+      return;
+    }
+
+    notifyProblemDetailsError(query.error, notificationTarget);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [notificationTarget, query.errorUpdatedAt]);
+
+  return query;
+};
+
+/**
+ * Fetches maturity type code options for block details.
+ *
+ * @param options - Optional TanStack Query overrides plus an optional `notificationTarget`.
+ * @returns The TanStack Query result containing maturity type code descriptions.
+ */
+export const useMaturityTypeCodesQuery = <TData = CodeDescriptionDto[]>(
+  options?: Omit<
+    UseQueryOptions<
+      CodeDescriptionDto[],
+      Error,
+      TData,
+      ReturnType<typeof queryKeys.codes.maturityTypeOptions>
+    >,
+    'queryKey' | 'queryFn'
+  > &
+    QueryNotificationOptions,
+) => {
+  const { notificationTarget, ...queryOptions } = options ?? {};
+
+  const query = useQuery({
+    queryKey: queryKeys.codes.maturityTypeOptions(notificationTarget),
+    queryFn: () => API.codes.getMaturityTypeCodes({ notificationTarget }),
+    ...REFERENCE_DATA_QUERY_CONFIG,
+    ...queryOptions,
+  });
+
+  useEffect(() => {
+    if (!notificationTarget || !query.isError || !query.error) {
+      return;
+    }
+
+    notifyProblemDetailsError(query.error, notificationTarget);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [notificationTarget, query.errorUpdatedAt]);
+
+  return query;
+};
+
+/**
  * Fetches full forest client records for a given list of client numbers.
  *
  * The query is disabled automatically when `clientNumbers` is empty, preventing

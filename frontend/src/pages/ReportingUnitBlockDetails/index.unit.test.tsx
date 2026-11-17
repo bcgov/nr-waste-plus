@@ -2,7 +2,12 @@ import { act, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { useBlockDetailsQuery, useReportingUnitDetailsQuery } from '@/config/react-query/hooks';
+import {
+  useBlockDetailsQuery,
+  useHarvestStatusCodesQuery,
+  useMaturityTypeCodesQuery,
+  useReportingUnitDetailsQuery,
+} from '@/config/react-query/hooks';
 import { renderWithApp } from '@/config/tests/renderWithApp';
 import { SKELETON_DELAY_MS } from '@/hooks/useDelayedFlag';
 import { sendEvent } from '@/hooks/useNotificationEvents/eventHandler';
@@ -25,6 +30,8 @@ vi.mock('@/config/react-query/hooks', async (importOriginal) => {
     ...actual,
     useReportingUnitDetailsQuery: vi.fn(),
     useBlockDetailsQuery: vi.fn(),
+    useHarvestStatusCodesQuery: vi.fn(),
+    useMaturityTypeCodesQuery: vi.fn(),
   };
 });
 
@@ -82,6 +89,18 @@ function mockBlockQuery(result: BlockQueryResult) {
   } as ReturnType<typeof useBlockDetailsQuery>);
 }
 
+function mockCodeQueries() {
+  vi.mocked(useHarvestStatusCodesQuery).mockReturnValue({
+    data: [
+      { code: 'COM', description: 'Complete' },
+      { code: 'INC', description: 'Incomplete' },
+    ],
+  } as ReturnType<typeof useHarvestStatusCodesQuery>);
+  vi.mocked(useMaturityTypeCodesQuery).mockReturnValue({
+    data: [{ code: 'IM', description: 'Immature' }],
+  } as ReturnType<typeof useMaturityTypeCodesQuery>);
+}
+
 /**
  * Renders the page and flushes the in-memory router's initial load so the
  * route component is mounted before assertions run.
@@ -103,6 +122,7 @@ describe('ReportingUnitBlockDetailsPage', () => {
     mockParams = { ruId: '468', blockId: '12' };
     mockQuery({ data: defaultData });
     mockBlockQuery({ data: defaultBlockData });
+    mockCodeQueries();
   });
 
   afterEach(() => {
@@ -433,6 +453,27 @@ describe('ReportingUnitBlockDetailsPage', () => {
 
       await waitFor(() =>
         expect(vi.mocked(useBlockDetailsQuery)).toHaveBeenCalledWith(468, 12, {
+          notificationTarget: EVENT_TARGET,
+        }),
+      );
+    });
+
+    it('shouldFetchHarvestStatusCodesWithReportingUnitAndBlockContext', async () => {
+      await renderPage();
+
+      await waitFor(() =>
+        expect(vi.mocked(useHarvestStatusCodesQuery)).toHaveBeenCalledWith(
+          { reportingUnitId: 468, blockId: 12 },
+          { notificationTarget: EVENT_TARGET },
+        ),
+      );
+    });
+
+    it('shouldFetchMaturityTypeCodesWithNotificationTarget', async () => {
+      await renderPage();
+
+      await waitFor(() =>
+        expect(vi.mocked(useMaturityTypeCodesQuery)).toHaveBeenCalledWith({
           notificationTarget: EVENT_TARGET,
         }),
       );
