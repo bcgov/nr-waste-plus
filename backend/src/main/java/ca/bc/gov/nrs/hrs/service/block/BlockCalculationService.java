@@ -44,6 +44,9 @@ public class BlockCalculationService {
             .findByIdAndDeletedFalse(reportingUnitId)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND))
             .getClientNumber();
+    // Defense-in-depth: client scope check for internal/service-layer callers.
+    // Primary request-level access control (including IDIR district and write checks)
+    // is enforced upstream by ResourceScopeGuard before controller execution.
     if (IdentityProvider.BUSINESS_BCEID.equals(JwtPrincipalUtil.getIdentityProvider(jwt))
         && !hasClientRole(jwt, clientNumber)) {
       throw new ResponseStatusException(HttpStatus.NOT_FOUND);

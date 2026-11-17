@@ -16,6 +16,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
+import org.springframework.web.context.request.RequestAttributes;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 /**
  * Facade provider for calls to the legacy backend API.
@@ -144,6 +147,19 @@ public class LegacyApiProvider implements ReportingUnitSearchProvider {
    *     never null
    */
   public ReportingUnitLegacyDetailsDto getReportingUnitDetails(Long reportingUnitId) {
+    RequestAttributes attrs = RequestContextHolder.getRequestAttributes();
+    if (attrs instanceof ServletRequestAttributes servletAttrs && reportingUnitId != null) {
+      String cacheKey = "CACHED_LEGACY_RU_" + reportingUnitId;
+      Object cached = servletAttrs.getRequest().getAttribute(cacheKey);
+      if (cached instanceof ReportingUnitLegacyDetailsDto dto) {
+        return dto;
+      }
+      ReportingUnitLegacyDetailsDto details = reportingUnitClient.getReportingUnitDetails(reportingUnitId);
+      if (details != null) {
+        servletAttrs.getRequest().setAttribute(cacheKey, details);
+      }
+      return details;
+    }
     return reportingUnitClient.getReportingUnitDetails(reportingUnitId);
   }
 

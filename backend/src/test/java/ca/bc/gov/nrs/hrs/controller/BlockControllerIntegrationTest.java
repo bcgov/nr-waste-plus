@@ -25,6 +25,7 @@ import ca.bc.gov.nrs.hrs.entity.block.StatusEventEntity;
 import ca.bc.gov.nrs.hrs.extensions.AbstractTestContainerIntegrationTest;
 import ca.bc.gov.nrs.hrs.extensions.WiremockLogNotifier;
 import ca.bc.gov.nrs.hrs.extensions.WithMockJwt;
+import ca.bc.gov.nrs.hrs.extensions.WithMockJwt;
 import ca.bc.gov.nrs.hrs.repository.block.BlockCalculationSnapshotRepository;
 import ca.bc.gov.nrs.hrs.repository.block.BlockRepository;
 import ca.bc.gov.nrs.hrs.repository.block.ReportingUnitRepository;
@@ -55,6 +56,7 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.transaction.support.TransactionTemplate;
 
 @AutoConfigureMockMvc(print = SYSTEM_OUT)
+@WithMockJwt(cognitoGroups = {"WASTE_PLUS_ADMIN"})
 @DisplayName("Integrated Test | Block Controller")
 class BlockControllerIntegrationTest extends AbstractTestContainerIntegrationTest {
 
@@ -933,6 +935,36 @@ class BlockControllerIntegrationTest extends AbstractTestContainerIntegrationTes
       cognitoGroups = {"WASTE_PLUS_SUBMITTER_99999999"},
       idp = "bceidbusiness")
   void create_whenOtherClientBceid_returns404() throws Exception {
+    mockMvc
+        .perform(
+            post("/api/reporting-units/{reportingUnitId}/blocks", reportingUnitId)
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"blockType\":\"DISTRICT_AVERAGE\"}"))
+        .andExpect(status().isNotFound());
+  }
+
+  @Test
+  @DisplayName("POST /blocks returns 404 for VIEWER on out-of-scope RU")
+  @WithMockJwt(
+      cognitoGroups = {"WASTE_PLUS_VIEWER_99999999"},
+      idp = "bceidbusiness")
+  void create_whenOutOfScopeViewer_returns404() throws Exception {
+    mockMvc
+        .perform(
+            post("/api/reporting-units/{reportingUnitId}/blocks", reportingUnitId)
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"blockType\":\"DISTRICT_AVERAGE\"}"))
+        .andExpect(status().isNotFound());
+  }
+
+  @Test
+  @DisplayName("POST /blocks returns 404 for IDIR VIEWER on out-of-district RU")
+  @WithMockJwt(
+      cognitoGroups = {"WASTE_PLUS_VIEWER_DCC"},
+      idp = "idir")
+  void create_whenOutOfDistrictIdirViewer_returns404() throws Exception {
     mockMvc
         .perform(
             post("/api/reporting-units/{reportingUnitId}/blocks", reportingUnitId)

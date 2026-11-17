@@ -1,6 +1,5 @@
 package ca.bc.gov.nrs.hrs.service.reliability;
 
-import ca.bc.gov.nrs.hrs.dto.base.IdentityProvider;
 import ca.bc.gov.nrs.hrs.dto.base.Role;
 import ca.bc.gov.nrs.hrs.exception.ForbiddenException;
 import ca.bc.gov.nrs.hrs.security.ResourceScopeGuard;
@@ -10,7 +9,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import lombok.RequiredArgsConstructor;
@@ -18,6 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Component;
+import org.springframework.web.server.ResponseStatusException;
 
 /**
  * Validates endpoint resource authorization before replaying cached idempotent responses.
@@ -97,22 +96,14 @@ public class DefaultEndpointAuthorizationChecker implements EndpointAuthorizatio
             "User is not authorized to create a reporting unit for client " + clientNumber);
       }
 
-      IdentityProvider idp =
-          IdentityProvider.fromClaim(JwtPrincipalUtil.getProvider(jwt)).orElse(null);
-      if (IdentityProvider.IDIR == idp) {
-        Map<Role, List<String>> roles = JwtPrincipalUtil.getRoles(jwt);
-        if (roles.containsKey(Role.DISTRICT)) {
-          String districtCode = extractDistrictCode(request);
-          Set<String> assignedDistricts = resourceScopeGuard.extractAssignedDistricts(jwt);
-          if (districtCode == null
-              || assignedDistricts.stream().noneMatch(d -> d.equalsIgnoreCase(districtCode))) {
-            log.warn(
-                "SECURITY: IDIR DISTRICT caller {} attempted unauthorized replay creation for district {}",
-                JwtPrincipalUtil.getUserId(jwt),
-                districtCode);
-            throw new ForbiddenException(
-                "User is not authorized to create a reporting unit for district " + districtCode);
-          }
+      Map<Role, List<String>> roles = JwtPrincipalUtil.getRoles(jwt);
+      if (roles.containsKey(Role.DISTRICT)) {
+        String districtCode = extractDistrictCode(request);
+        try {
+          resourceScopeGuard.verifyDistrictScope(jwt, districtCode);
+        } catch (ResponseStatusException ex) {
+          throw new ForbiddenException(
+              "User is not authorized to create a reporting unit for district " + districtCode);
         }
       }
     } else {
@@ -129,17 +120,7 @@ public class DefaultEndpointAuthorizationChecker implements EndpointAuthorizatio
               + reportingUnitId);
     }
 
-    try {
-      resourceScopeGuard.verify(authentication, reportingUnitId, httpMethod);
-    } catch (ForbiddenException ex) {
-      throw ex;
-    } catch (Exception ex) {
-      log.warn(
-          "SECURITY: Authorization failed for replay on reporting unit {}: {}",
-          reportingUnitId,
-          ex.getMessage());
-      throw ex;
-    }
+    resourceScopeGuard.verify(authentication, reportingUnitId, httpMethod);
   }
 
   private byte[] extractBodyBytes(HttpServletRequest request) throws Exception {

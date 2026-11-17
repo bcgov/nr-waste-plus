@@ -47,7 +47,7 @@ import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequ
 import org.springframework.test.web.servlet.MockMvc;
 
 @AutoConfigureMockMvc(print = SYSTEM_OUT)
-@WithMockJwt
+@WithMockJwt(cognitoGroups = {"WASTE_PLUS_ADMIN"})
 @DisplayName("Integrated Test | Search Controller")
 class SearchControllerIntegrationTest extends AbstractTestContainerIntegrationTest {
 

@@ -53,6 +53,7 @@ import org.springframework.transaction.support.TransactionTemplate;
 import tools.jackson.databind.json.JsonMapper;
 
 @AutoConfigureMockMvc(print = SYSTEM_OUT)
+@WithMockJwt(cognitoGroups = {"WASTE_PLUS_ADMIN"})
 @DisplayName("Integrated Test | Reporting Unit Controller")
 class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegrationTest {
 

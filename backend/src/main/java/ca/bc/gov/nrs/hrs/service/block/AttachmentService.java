@@ -504,6 +504,9 @@ public class AttachmentService {
     }
   }
 
+  // Retained as defense-in-depth for service-layer callers; primary resource-scope
+  // authorization (covering both BCeID client and IDIR district boundaries) is enforced
+  // upstream by ResourceScopeGuard before controller execution.
   private void validateClientAccess(Jwt jwt, ReportingUnitEntity reportingUnit) {
     if (jwt == null) {
       return;

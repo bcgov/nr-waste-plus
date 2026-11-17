@@ -274,6 +274,10 @@ public class BlockService {
    * endpoint applies the same rule: BUSINESS_BCEID callers must hold a viewer or submitter role
    * for the owning client number; IDIR and BCSC callers are unrestricted.
    *
+   * <p>Retained as defense-in-depth for service-layer callers; primary resource-scope
+   * authorization (covering both BCeID client and IDIR district boundaries) is enforced
+   * upstream by {@link ca.bc.gov.nrs.hrs.security.ResourceScopeGuard}.
+   *
    * @param jwt the authenticated caller's token
    * @param reportingUnitId the reporting unit being read
    * @param clientNumber the owning client number resolved by the caller

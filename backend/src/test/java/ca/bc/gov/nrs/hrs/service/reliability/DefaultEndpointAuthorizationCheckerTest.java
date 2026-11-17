@@ -20,10 +20,12 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.web.server.ResponseStatusException;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("Default endpoint authorization checker")
@@ -138,7 +140,7 @@ class DefaultEndpointAuthorizationCheckerTest {
         "District User",
         "district@example.com");
     Authentication auth = new UsernamePasswordAuthenticationToken(jwt, "n/a", List.of());
-    when(resourceScopeGuard.extractAssignedDistricts(jwt)).thenReturn(Set.of("DKM"));
+    doNothing().when(resourceScopeGuard).verifyDistrictScope(jwt, "DKM");
 
     MockHttpServletRequest rawRequest =
         new MockHttpServletRequest("POST", "/api/reporting-units");
@@ -159,7 +161,12 @@ class DefaultEndpointAuthorizationCheckerTest {
         "District User",
         "district@example.com");
     Authentication auth = new UsernamePasswordAuthenticationToken(jwt, "n/a", List.of());
-    when(resourceScopeGuard.extractAssignedDistricts(jwt)).thenReturn(Set.of("DKM"));
+    doThrow(
+            new ResponseStatusException(
+                HttpStatus.FORBIDDEN,
+                "User is not authorized to create a reporting unit for district DCC"))
+        .when(resourceScopeGuard)
+        .verifyDistrictScope(jwt, "DCC");
 
     MockHttpServletRequest rawRequest =
         new MockHttpServletRequest("POST", "/api/reporting-units");
