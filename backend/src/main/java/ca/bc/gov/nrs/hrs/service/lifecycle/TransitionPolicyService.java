@@ -167,14 +167,14 @@ public class TransitionPolicyService {
     // Submitter may only edit while DRAFT or REJECTED
     if (role == null || role == Role.VIEWER) {
       log.debug("Transition denied: viewer role is read-only.");
-      return TransitionEvaluationResult.denied("Viewer role is read-only in every state.");
+      return TransitionEvaluationResult.forbidden("Viewer role is read-only in every state.");
     }
 
     // BCeID users cannot perform internal IDIR roles
     if (provider == IdentityProvider.BUSINESS_BCEID
         && (role == Role.ADMIN || role == Role.AREA || role == Role.DISTRICT)) {
       log.warn("Transition denied: BCeID caller claimed internal role {}", role);
-      return TransitionEvaluationResult.denied(
+      return TransitionEvaluationResult.forbidden(
           "BCeID callers cannot exercise administrative or ministry roles.");
     }
 
@@ -209,7 +209,7 @@ public class TransitionPolicyService {
           role,
           normalizedEvent,
           normalizedCurrentState);
-      return TransitionEvaluationResult.denied(
+      return TransitionEvaluationResult.forbidden(
           String.format(
               "Role '%s' is not permitted to trigger event '%s' from state '%s'.",
               role, normalizedEvent, normalizedCurrentState));

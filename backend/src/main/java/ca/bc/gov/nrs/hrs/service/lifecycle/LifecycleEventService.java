@@ -23,13 +23,15 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.micrometer.observation.annotation.Observed;
 import io.micrometer.tracing.annotation.NewSpan;
 import jakarta.persistence.EntityManager;
-import jakarta.persistence.LockModeType;
 import jakarta.servlet.http.HttpServletRequest;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -58,7 +60,7 @@ public class LifecycleEventService {
   private final BlockCommentRepository blockCommentRepository;
   private final TransitionPolicyService transitionPolicyService;
   private final EntityManager entityManager;
-  private final ObjectMapper objectMapper = new ObjectMapper();
+  private final ObjectMapper objectMapper;
 
   /**
    * Applies a lifecycle event to a submission block.
@@ -93,9 +95,7 @@ public class LifecycleEventService {
             .findByIdAndReportingUnitIdAndDeletedFalse(blockId, reportingUnitId)
             .orElseThrow(() -> new BlockNotFoundException(blockId, reportingUnitId));
 
-    if (block.getRevision() != null) {
-      ConditionalRequestSupport.requireMatch(servletRequest, block.getRevision());
-    }
+    ConditionalRequestSupport.requireMatch(servletRequest, block.getRevision());
 
     String currentState = resolveBlockState(blockId, block.isDraft());
     Role role = resolveActorRole(jwt, reportingUnit.getClientNumber());
@@ -107,16 +107,18 @@ public class LifecycleEventService {
 
     if (!result.allowed()) {
       log.warn(
-          "Illegal block transition attempt for block {} in RU {}: {}",
+          "Transition denied for block {} in RU {}: {}",
           blockId,
           reportingUnitId,
           result.reason());
+      if (result.denialReason() == TransitionEvaluationResult.DenialReason.FORBIDDEN_ROLE) {
+        throw new ResponseStatusException(HttpStatus.FORBIDDEN, result.reason());
+      }
       throw new IllegalTransitionException(result.reason());
     }
 
     final String targetState = result.targetState();
     updateBlockState(block, targetState);
-    entityManager.lock(block, LockModeType.OPTIMISTIC_FORCE_INCREMENT);
     block = blockRepository.saveAndFlush(block);
 
     StatusEventEntity statusEvent = new StatusEventEntity();
@@ -181,9 +183,7 @@ public class LifecycleEventService {
 
     validateTenantAccess(jwt, reportingUnit);
 
-    if (reportingUnit.getRevision() != null) {
-      ConditionalRequestSupport.requireMatch(servletRequest, reportingUnit.getRevision());
-    }
+    ConditionalRequestSupport.requireMatch(servletRequest, reportingUnit.getRevision());
 
     String currentState = resolveReportingUnitState(reportingUnitId);
     Role role = resolveActorRole(jwt, reportingUnit.getClientNumber());
@@ -195,14 +195,17 @@ public class LifecycleEventService {
 
     if (!result.allowed()) {
       log.warn(
-          "Illegal reporting unit transition attempt for RU {}: {}",
+          "Transition denied for RU {}: {}",
           reportingUnitId,
           result.reason());
+      if (result.denialReason() == TransitionEvaluationResult.DenialReason.FORBIDDEN_ROLE) {
+        throw new ResponseStatusException(HttpStatus.FORBIDDEN, result.reason());
+      }
       throw new IllegalTransitionException(result.reason());
     }
 
     final String targetState = result.targetState();
-    entityManager.lock(reportingUnit, LockModeType.OPTIMISTIC_FORCE_INCREMENT);
+    reportingUnit.setUpdatedAt(Instant.now());
     reportingUnit = reportingUnitRepository.saveAndFlush(reportingUnit);
 
     StatusEventEntity statusEvent = new StatusEventEntity();
@@ -251,7 +254,39 @@ public class LifecycleEventService {
             reportingUnit.getId());
         throw new ReportingUnitNotFoundException(reportingUnit.getId());
       }
+    } else if (IdentityProvider.IDIR == idp) {
+      if (JwtPrincipalUtil.hasConcreteRole(jwt, Role.DISTRICT)) {
+        Set<String> assignedDistricts = extractAssignedDistricts(jwt);
+        String targetDistrict = reportingUnit.getGeographicCode();
+        if (targetDistrict == null
+            || assignedDistricts.stream().noneMatch(d -> d.equalsIgnoreCase(targetDistrict))) {
+          log.warn(
+              "SECURITY: IDIR DISTRICT user {} unauthorized access to RU {} in district {}",
+              JwtPrincipalUtil.getUserId(jwt),
+              reportingUnit.getId(),
+              targetDistrict);
+          throw new ReportingUnitNotFoundException(reportingUnit.getId());
+        }
+      }
     }
+  }
+
+  private Set<String> extractAssignedDistricts(Jwt jwt) {
+    Set<String> districts = new HashSet<>();
+    if (jwt == null) {
+      return districts;
+    }
+    Map<Role, List<String>> roles = JwtPrincipalUtil.getRoles(jwt);
+    if (roles.containsKey(Role.DISTRICT)) {
+      districts.addAll(roles.get(Role.DISTRICT));
+    }
+    for (String key : List.of("custom:idp_district", "custom:district")) {
+      Object val = jwt.getClaims().get(key);
+      if (val instanceof String s && !s.isBlank()) {
+        districts.add(s.trim());
+      }
+    }
+    return districts;
   }
 
   private Role resolveActorRole(Jwt jwt, String clientNumber) {
@@ -276,7 +311,7 @@ public class LifecycleEventService {
 
   private String resolveBlockState(Long blockId, boolean isDraft) {
     return statusEventRepository
-        .findFirstByBlockIdOrderByCreatedAtDesc(blockId)
+        .findFirstByBlockIdOrderByCreatedAtDescIdDesc(blockId)
         .map(StatusEventEntity::getStatus)
         .orElse(
             isDraft
@@ -332,7 +367,7 @@ public class LifecycleEventService {
       block.setDraft(false);
       block.setStatusCode("RTB");
     } else if (TransitionPolicyService.STATE_CANCELLED.equalsIgnoreCase(targetState)) {
-      block.setDraft(false);
+      // When cancelled, preserve existing draft flag and statusCode; status_event records state
     }
   }
 }

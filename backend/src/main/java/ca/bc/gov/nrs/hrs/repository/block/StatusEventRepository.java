@@ -15,6 +15,9 @@ public interface StatusEventRepository
   /** Returns the most recent status event recorded for a block, if any. */
   java.util.Optional<StatusEventEntity> findFirstByBlockIdOrderByCreatedAtDesc(Long blockId);
 
+  /** Returns the most recent status event recorded for a block with id tiebreaker. */
+  java.util.Optional<StatusEventEntity> findFirstByBlockIdOrderByCreatedAtDescIdDesc(Long blockId);
+
   /** Returns the most recent status event recorded for a reporting unit, if any. */
   java.util.Optional<StatusEventEntity> findFirstByReportingUnitIdOrderByCreatedAtDescIdDesc(
       Long reportingUnitId);

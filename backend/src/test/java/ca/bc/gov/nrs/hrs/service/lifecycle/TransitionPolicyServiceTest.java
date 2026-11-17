@@ -86,6 +86,8 @@ class TransitionPolicyServiceTest {
               TransitionContext.empty());
 
       assertThat(result.allowed()).isFalse();
+      assertThat(result.denialReason())
+          .isEqualTo(TransitionEvaluationResult.DenialReason.ILLEGAL_STATE);
       assertThat(result.reason()).contains("Illegal transition");
     }
 
@@ -101,6 +103,8 @@ class TransitionPolicyServiceTest {
               TransitionContext.empty());
 
       assertThat(result.allowed()).isFalse();
+      assertThat(result.denialReason())
+          .isEqualTo(TransitionEvaluationResult.DenialReason.ILLEGAL_STATE);
       assertThat(result.reason()).contains("Illegal transition");
     }
   }
@@ -320,6 +324,8 @@ class TransitionPolicyServiceTest {
               TransitionContext.empty());
 
       assertThat(result.allowed()).isFalse();
+      assertThat(result.denialReason())
+          .isEqualTo(TransitionEvaluationResult.DenialReason.FORBIDDEN_ROLE);
       assertThat(result.reason()).contains("read-only");
     }
 
@@ -335,7 +341,26 @@ class TransitionPolicyServiceTest {
               TransitionContext.empty());
 
       assertThat(result.allowed()).isFalse();
+      assertThat(result.denialReason())
+          .isEqualTo(TransitionEvaluationResult.DenialReason.FORBIDDEN_ROLE);
       assertThat(result.reason()).contains("BCeID callers cannot exercise");
+    }
+
+    @Test
+    @DisplayName("Role not permitted for event returns FORBIDDEN_ROLE denial")
+    void roleNotPermitted_returnsForbiddenRole() {
+      TransitionEvaluationResult result =
+          transitionPolicyService.evaluate(
+              TransitionPolicyService.STATE_SUBMITTED,
+              TransitionPolicyService.EVENT_APPROVE,
+              Role.SUBMITTER,
+              IdentityProvider.BUSINESS_BCEID,
+              TransitionContext.empty());
+
+      assertThat(result.allowed()).isFalse();
+      assertThat(result.denialReason())
+          .isEqualTo(TransitionEvaluationResult.DenialReason.FORBIDDEN_ROLE);
+      assertThat(result.reason()).contains("is not permitted");
     }
 
     @Test

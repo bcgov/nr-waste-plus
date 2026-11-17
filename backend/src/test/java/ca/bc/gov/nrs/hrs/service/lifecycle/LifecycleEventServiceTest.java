@@ -26,6 +26,7 @@ import ca.bc.gov.nrs.hrs.repository.block.BlockRepository;
 import ca.bc.gov.nrs.hrs.repository.block.BlockRequirementRepository;
 import ca.bc.gov.nrs.hrs.repository.block.ReportingUnitRepository;
 import ca.bc.gov.nrs.hrs.repository.block.StatusEventRepository;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.EntityManager;
 import jakarta.servlet.http.HttpServletRequest;
 import java.time.Instant;
@@ -43,9 +44,12 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.web.server.ResponseStatusException;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("Unit Test | Lifecycle Event Service")
@@ -75,6 +79,9 @@ class LifecycleEventServiceTest {
 
   @Mock
   private EntityManager entityManager;
+
+  @Spy
+  private ObjectMapper objectMapper = new ObjectMapper();
 
   @InjectMocks
   private LifecycleEventService lifecycleEventService;
@@ -123,7 +130,7 @@ class LifecycleEventServiceTest {
           .thenReturn(Optional.of(reportingUnit));
       when(blockRepository.findByIdAndReportingUnitIdAndDeletedFalse(BLOCK_ID, RU_ID))
           .thenReturn(Optional.of(block));
-      when(statusEventRepository.findFirstByBlockIdOrderByCreatedAtDesc(BLOCK_ID))
+      when(statusEventRepository.findFirstByBlockIdOrderByCreatedAtDescIdDesc(BLOCK_ID))
           .thenReturn(Optional.empty());
       when(blockRequirementRepository.findByBlockIdAndDeletedFalse(BLOCK_ID))
           .thenReturn(Collections.emptyList());
@@ -192,7 +199,7 @@ class LifecycleEventServiceTest {
           .thenReturn(Optional.of(reportingUnit));
       when(blockRepository.findByIdAndReportingUnitIdAndDeletedFalse(BLOCK_ID, RU_ID))
           .thenReturn(Optional.of(block));
-      when(statusEventRepository.findFirstByBlockIdOrderByCreatedAtDesc(BLOCK_ID))
+      when(statusEventRepository.findFirstByBlockIdOrderByCreatedAtDescIdDesc(BLOCK_ID))
           .thenReturn(Optional.empty());
       when(blockRequirementRepository.findByBlockIdAndDeletedFalse(BLOCK_ID))
           .thenReturn(Collections.emptyList());
@@ -254,6 +261,183 @@ class LifecycleEventServiceTest {
                   lifecycleEventService.recordBlockLifecycleEvent(
                       request, submitterJwt, RU_ID, BLOCK_ID, requestDto))
           .isInstanceOf(BlockNotFoundException.class);
+    }
+
+    @Test
+    @DisplayName("Cancel transition preserves draft and statusCode on block")
+    void recordBlockLifecycleEvent_cancel_preservesDraftAndStatusCode() {
+      MockHttpServletRequest request = new MockHttpServletRequest();
+      request.addHeader("If-Match", "\"5\"");
+
+      block.setDraft(true);
+      block.setStatusCode("DFT");
+
+      LifecycleEventRequestDto requestDto = new LifecycleEventRequestDto("CANCEL", null);
+
+      when(reportingUnitRepository.findByIdAndDeletedFalse(RU_ID))
+          .thenReturn(Optional.of(reportingUnit));
+      when(blockRepository.findByIdAndReportingUnitIdAndDeletedFalse(BLOCK_ID, RU_ID))
+          .thenReturn(Optional.of(block));
+      when(statusEventRepository.findFirstByBlockIdOrderByCreatedAtDescIdDesc(BLOCK_ID))
+          .thenReturn(Optional.empty());
+      when(blockRequirementRepository.findByBlockIdAndDeletedFalse(BLOCK_ID))
+          .thenReturn(Collections.emptyList());
+
+      when(transitionPolicyService.evaluate(
+              eq("DRAFT"), eq("CANCEL"), eq(Role.SUBMITTER),
+              eq(IdentityProvider.BUSINESS_BCEID), any()))
+          .thenReturn(TransitionEvaluationResult.allowed("CANCELLED"));
+
+      when(blockRepository.saveAndFlush(any(BlockEntity.class)))
+          .thenAnswer(invocation -> invocation.getArgument(0));
+
+      StatusEventEntity savedEvent = new StatusEventEntity();
+      savedEvent.setId(998L);
+      savedEvent.setBlockId(BLOCK_ID);
+      savedEvent.setStatus("CANCELLED");
+      savedEvent.setEventType("CANCEL");
+      when(statusEventRepository.save(any(StatusEventEntity.class))).thenReturn(savedEvent);
+
+      LifecycleEventResponseDto response =
+          lifecycleEventService.recordBlockLifecycleEvent(
+              request, submitterJwt, RU_ID, BLOCK_ID, requestDto);
+
+      assertThat(response.state()).isEqualTo("CANCELLED");
+      assertThat(block.isDraft()).isTrue();
+      assertThat(block.getStatusCode()).isEqualTo("DFT");
+    }
+
+    @Test
+    @DisplayName("Forbidden role denial throws 403 ResponseStatusException")
+    void recordBlockLifecycleEvent_forbiddenRole_throws403() {
+      MockHttpServletRequest request = new MockHttpServletRequest();
+      request.addHeader("If-Match", "\"5\"");
+
+      LifecycleEventRequestDto requestDto = new LifecycleEventRequestDto("APPROVE", null);
+
+      when(reportingUnitRepository.findByIdAndDeletedFalse(RU_ID))
+          .thenReturn(Optional.of(reportingUnit));
+      when(blockRepository.findByIdAndReportingUnitIdAndDeletedFalse(BLOCK_ID, RU_ID))
+          .thenReturn(Optional.of(block));
+      when(statusEventRepository.findFirstByBlockIdOrderByCreatedAtDescIdDesc(BLOCK_ID))
+          .thenReturn(Optional.empty());
+      when(blockRequirementRepository.findByBlockIdAndDeletedFalse(BLOCK_ID))
+          .thenReturn(Collections.emptyList());
+
+      when(transitionPolicyService.evaluate(any(), any(), any(), any(), any()))
+          .thenReturn(TransitionEvaluationResult.forbidden("Viewer role is read-only"));
+
+      assertThatThrownBy(
+              () ->
+                  lifecycleEventService.recordBlockLifecycleEvent(
+                      request, submitterJwt, RU_ID, BLOCK_ID, requestDto))
+          .isInstanceOf(ResponseStatusException.class)
+          .satisfies(
+              ex -> {
+                ResponseStatusException rse = (ResponseStatusException) ex;
+                assertThat(rse.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+              });
+
+      verify(statusEventRepository, never()).save(any());
+      verify(blockRepository, never()).saveAndFlush(any());
+    }
+
+    @Test
+    @DisplayName("IDIR DISTRICT user in matching district succeeds")
+    void recordBlockLifecycleEvent_idirDistrictUser_inScope_success() {
+      MockHttpServletRequest request = new MockHttpServletRequest();
+      request.addHeader("If-Match", "\"5\"");
+
+      reportingUnit.setGeographicCode("DKA");
+
+      Jwt districtJwt =
+          Jwt.withTokenValue("idir-token")
+              .header("alg", "none")
+              .claim("custom:idp_name", "idir")
+              .claim("cognito:groups", List.of("WASTE_PLUS_DISTRICT_DKA"))
+              .build();
+
+      LifecycleEventRequestDto requestDto = new LifecycleEventRequestDto("APPROVE", null);
+
+      when(reportingUnitRepository.findByIdAndDeletedFalse(RU_ID))
+          .thenReturn(Optional.of(reportingUnit));
+      when(blockRepository.findByIdAndReportingUnitIdAndDeletedFalse(BLOCK_ID, RU_ID))
+          .thenReturn(Optional.of(block));
+      when(statusEventRepository.findFirstByBlockIdOrderByCreatedAtDescIdDesc(BLOCK_ID))
+          .thenReturn(Optional.empty());
+      when(blockRequirementRepository.findByBlockIdAndDeletedFalse(BLOCK_ID))
+          .thenReturn(Collections.emptyList());
+
+      when(transitionPolicyService.evaluate(
+              any(), any(), eq(Role.DISTRICT), eq(IdentityProvider.IDIR), any()))
+          .thenReturn(TransitionEvaluationResult.allowed("APPROVED"));
+      when(blockRepository.saveAndFlush(any(BlockEntity.class)))
+          .thenAnswer(invocation -> invocation.getArgument(0));
+
+      StatusEventEntity savedEvent = new StatusEventEntity();
+      savedEvent.setId(997L);
+      savedEvent.setBlockId(BLOCK_ID);
+      savedEvent.setStatus("APPROVED");
+      savedEvent.setEventType("APPROVE");
+      when(statusEventRepository.save(any(StatusEventEntity.class))).thenReturn(savedEvent);
+
+      LifecycleEventResponseDto response =
+          lifecycleEventService.recordBlockLifecycleEvent(
+              request, districtJwt, RU_ID, BLOCK_ID, requestDto);
+
+      assertThat(response.state()).isEqualTo("APPROVED");
+    }
+
+    @Test
+    @DisplayName("IDIR DISTRICT user in different district throws 404 Not Found")
+    void recordBlockLifecycleEvent_idirDistrictUser_outOfScope_throws404() {
+      MockHttpServletRequest request = new MockHttpServletRequest();
+      request.addHeader("If-Match", "\"5\"");
+
+      reportingUnit.setGeographicCode("DND");
+
+      Jwt districtJwt =
+          Jwt.withTokenValue("idir-token")
+              .header("alg", "none")
+              .claim("custom:idp_name", "idir")
+              .claim("cognito:groups", List.of("WASTE_PLUS_DISTRICT_DKA"))
+              .build();
+
+      LifecycleEventRequestDto requestDto = new LifecycleEventRequestDto("APPROVE", null);
+
+      when(reportingUnitRepository.findByIdAndDeletedFalse(RU_ID))
+          .thenReturn(Optional.of(reportingUnit));
+
+      assertThatThrownBy(
+              () ->
+                  lifecycleEventService.recordBlockLifecycleEvent(
+                      request, districtJwt, RU_ID, BLOCK_ID, requestDto))
+          .isInstanceOf(ReportingUnitNotFoundException.class);
+
+      verify(blockRepository, never()).findByIdAndReportingUnitIdAndDeletedFalse(any(), any());
+      verify(statusEventRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("BCeID user with unowned client number throws 404 Not Found")
+    void recordBlockLifecycleEvent_bceidUnauthorizedClient_throws404() {
+      MockHttpServletRequest request = new MockHttpServletRequest();
+      request.addHeader("If-Match", "\"5\"");
+
+      reportingUnit.setClientNumber("99999999");
+
+      LifecycleEventRequestDto requestDto = new LifecycleEventRequestDto("SUBMIT", null);
+
+      when(reportingUnitRepository.findByIdAndDeletedFalse(RU_ID))
+          .thenReturn(Optional.of(reportingUnit));
+
+      assertThatThrownBy(
+              () ->
+                  lifecycleEventService.recordBlockLifecycleEvent(
+                      request, submitterJwt, RU_ID, BLOCK_ID, requestDto))
+          .isInstanceOf(ReportingUnitNotFoundException.class);
+
+      verify(blockRepository, never()).findByIdAndReportingUnitIdAndDeletedFalse(any(), any());
     }
   }
 

@@ -28,11 +28,13 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.json.JacksonJsonHttpMessageConverter;
 import org.springframework.security.web.method.annotation.AuthenticationPrincipalArgumentResolver;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.server.ResponseStatusException;
 import tools.jackson.databind.SerializationFeature;
 import tools.jackson.databind.json.JsonMapper;
 
@@ -50,6 +52,8 @@ class LifecycleEventControllerTest {
 
   @InjectMocks
   private LifecycleEventController lifecycleEventController;
+
+  private static final String IDEMPOTENCY_KEY = "test-idempotency-key";
 
   @BeforeEach
   void setUp() {
@@ -73,7 +77,8 @@ class LifecycleEventControllerTest {
   void submitBlockLifecycleEvent_returnsOkWithETag() throws Exception {
     Instant occurredAt = Instant.parse("2026-08-24T12:00:00Z");
     LifecycleEventResponseDto responseDto =
-        new LifecycleEventResponseDto(RU_ID, BLOCK_ID, "DRAFT", "SUBMITTED", "SUBMIT", 15L, occurredAt);
+        new LifecycleEventResponseDto(
+            RU_ID, BLOCK_ID, "DRAFT", "SUBMITTED", "SUBMIT", 15L, occurredAt);
 
     when(lifecycleEventService.recordBlockLifecycleEvent(
             any(), isNull(), eq(RU_ID), eq(BLOCK_ID), any(LifecycleEventRequestDto.class)))
@@ -83,6 +88,7 @@ class LifecycleEventControllerTest {
         .perform(
             post("/api/reporting-units/{ruId}/{blockId}/lifecycle-events", RU_ID, BLOCK_ID)
                 .contentType(MediaType.APPLICATION_JSON)
+                .header("Idempotency-Key", IDEMPOTENCY_KEY)
                 .header(HttpHeaders.IF_MATCH, "\"14\"")
                 .content("""
                     { "event": "SUBMIT", "comment": null }
@@ -106,7 +112,8 @@ class LifecycleEventControllerTest {
   void submitBlockLifecycleEvent_blocksAliasPath_returnsOk() throws Exception {
     Instant occurredAt = Instant.parse("2026-08-24T12:00:00Z");
     LifecycleEventResponseDto responseDto =
-        new LifecycleEventResponseDto(RU_ID, BLOCK_ID, "DRAFT", "SUBMITTED", "SUBMIT", 15L, occurredAt);
+        new LifecycleEventResponseDto(
+            RU_ID, BLOCK_ID, "DRAFT", "SUBMITTED", "SUBMIT", 15L, occurredAt);
 
     when(lifecycleEventService.recordBlockLifecycleEvent(
             any(), isNull(), eq(RU_ID), eq(BLOCK_ID), any(LifecycleEventRequestDto.class)))
@@ -116,6 +123,7 @@ class LifecycleEventControllerTest {
         .perform(
             post("/api/reporting-units/{ruId}/blocks/{blockId}/lifecycle-events", RU_ID, BLOCK_ID)
                 .contentType(MediaType.APPLICATION_JSON)
+                .header("Idempotency-Key", IDEMPOTENCY_KEY)
                 .header(HttpHeaders.IF_MATCH, "\"14\"")
                 .content("""
                     { "event": "SUBMIT", "comment": "Ready for review" }
@@ -130,7 +138,8 @@ class LifecycleEventControllerTest {
   void submitReportingUnitLifecycleEvent_returnsOkWithETag() throws Exception {
     Instant occurredAt = Instant.parse("2026-08-24T12:00:00Z");
     LifecycleEventResponseDto responseDto =
-        new LifecycleEventResponseDto(RU_ID, null, "SUBMISSION", "SUBMITTED", "SUBMIT", 8L, occurredAt);
+        new LifecycleEventResponseDto(
+            RU_ID, null, "SUBMISSION", "SUBMITTED", "SUBMIT", 8L, occurredAt);
 
     when(lifecycleEventService.recordReportingUnitLifecycleEvent(
             any(), isNull(), eq(RU_ID), any(LifecycleEventRequestDto.class)))
@@ -140,6 +149,7 @@ class LifecycleEventControllerTest {
         .perform(
             post("/api/reporting-units/{ruId}/lifecycle-events", RU_ID)
                 .contentType(MediaType.APPLICATION_JSON)
+                .header("Idempotency-Key", IDEMPOTENCY_KEY)
                 .header(HttpHeaders.IF_MATCH, "\"7\"")
                 .content("""
                     { "event": "SUBMIT", "comment": null }
@@ -159,11 +169,41 @@ class LifecycleEventControllerTest {
         .perform(
             post("/api/reporting-units/{ruId}/{blockId}/lifecycle-events", RU_ID, BLOCK_ID)
                 .contentType(MediaType.APPLICATION_JSON)
+                .header("Idempotency-Key", IDEMPOTENCY_KEY)
                 .header(HttpHeaders.IF_MATCH, "\"14\"")
                 .content("""
                     { "event": "", "comment": "Empty event" }
                     """))
         .andExpect(status().isUnprocessableEntity());
+  }
+
+  @Test
+  @DisplayName("Missing Idempotency-Key header returns 400 Bad Request")
+  void submit_missingIdempotencyKey_returns400() throws Exception {
+    mockMvc
+        .perform(
+            post("/api/reporting-units/{ruId}/{blockId}/lifecycle-events", RU_ID, BLOCK_ID)
+                .contentType(MediaType.APPLICATION_JSON)
+                .header(HttpHeaders.IF_MATCH, "\"14\"")
+                .content("""
+                    { "event": "SUBMIT", "comment": null }
+                    """))
+        .andExpect(status().isBadRequest());
+  }
+
+  @Test
+  @DisplayName("Blank Idempotency-Key header returns 400 Bad Request")
+  void submit_blankIdempotencyKey_returns400() throws Exception {
+    mockMvc
+        .perform(
+            post("/api/reporting-units/{ruId}/{blockId}/lifecycle-events", RU_ID, BLOCK_ID)
+                .contentType(MediaType.APPLICATION_JSON)
+                .header("Idempotency-Key", "   ")
+                .header(HttpHeaders.IF_MATCH, "\"14\"")
+                .content("""
+                    { "event": "SUBMIT", "comment": null }
+                    """))
+        .andExpect(status().isBadRequest());
   }
 
   @Test
@@ -177,6 +217,7 @@ class LifecycleEventControllerTest {
         .perform(
             post("/api/reporting-units/{ruId}/{blockId}/lifecycle-events", RU_ID, BLOCK_ID)
                 .contentType(MediaType.APPLICATION_JSON)
+                .header("Idempotency-Key", IDEMPOTENCY_KEY)
                 .content("""
                     { "event": "SUBMIT", "comment": null }
                     """))
@@ -188,17 +229,39 @@ class LifecycleEventControllerTest {
   void submit_illegalTransition_returns409() throws Exception {
     when(lifecycleEventService.recordBlockLifecycleEvent(
             any(), isNull(), eq(RU_ID), eq(BLOCK_ID), any(LifecycleEventRequestDto.class)))
-        .thenThrow(new IllegalTransitionException("Illegal transition: event SUBMIT is not permitted from SUBMITTED"));
+        .thenThrow(
+            new IllegalTransitionException(
+                "Illegal transition: event SUBMIT is not permitted from SUBMITTED"));
 
     mockMvc
         .perform(
             post("/api/reporting-units/{ruId}/{blockId}/lifecycle-events", RU_ID, BLOCK_ID)
                 .contentType(MediaType.APPLICATION_JSON)
+                .header("Idempotency-Key", IDEMPOTENCY_KEY)
                 .header(HttpHeaders.IF_MATCH, "\"14\"")
                 .content("""
                     { "event": "SUBMIT", "comment": null }
                     """))
         .andExpect(status().isConflict());
+  }
+
+  @Test
+  @DisplayName("Forbidden role returns 403 Forbidden")
+  void submit_forbiddenRole_returns403() throws Exception {
+    when(lifecycleEventService.recordBlockLifecycleEvent(
+            any(), isNull(), eq(RU_ID), eq(BLOCK_ID), any(LifecycleEventRequestDto.class)))
+        .thenThrow(new ResponseStatusException(HttpStatus.FORBIDDEN, "Viewer role is read-only"));
+
+    mockMvc
+        .perform(
+            post("/api/reporting-units/{ruId}/{blockId}/lifecycle-events", RU_ID, BLOCK_ID)
+                .contentType(MediaType.APPLICATION_JSON)
+                .header("Idempotency-Key", IDEMPOTENCY_KEY)
+                .header(HttpHeaders.IF_MATCH, "\"14\"")
+                .content("""
+                    { "event": "SUBMIT", "comment": null }
+                    """))
+        .andExpect(status().isForbidden());
   }
 
   @Test
@@ -212,6 +275,7 @@ class LifecycleEventControllerTest {
         .perform(
             post("/api/reporting-units/{ruId}/{blockId}/lifecycle-events", RU_ID, BLOCK_ID)
                 .contentType(MediaType.APPLICATION_JSON)
+                .header("Idempotency-Key", IDEMPOTENCY_KEY)
                 .header(HttpHeaders.IF_MATCH, "\"14\"")
                 .content("""
                     { "event": "SUBMIT", "comment": null }
@@ -230,6 +294,7 @@ class LifecycleEventControllerTest {
         .perform(
             post("/api/reporting-units/{ruId}/lifecycle-events", RU_ID)
                 .contentType(MediaType.APPLICATION_JSON)
+                .header("Idempotency-Key", IDEMPOTENCY_KEY)
                 .header(HttpHeaders.IF_MATCH, "\"7\"")
                 .content("""
                     { "event": "SUBMIT", "comment": null }
