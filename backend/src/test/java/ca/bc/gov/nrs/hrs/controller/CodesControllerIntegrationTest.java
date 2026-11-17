@@ -127,6 +127,58 @@ class CodesControllerIntegrationTest extends AbstractTestContainerIntegrationTes
         .andReturn();
   }
 
+  @Test
+  @DisplayName("Get harvest status codes without context should return unfiltered list")
+  void getHarvestStatusCodes_withoutContext_shouldSucceed() throws Exception {
+    String harvestStatusResponse =
+        """
+        [{"code":"C","description":"Complete"},
+         {"code":"I","description":"Incomplete"},
+         {"code":"NA","description":"N/A - Not applicable"}]
+        """;
+
+    clientApiStub.stubFor(
+        WireMock.get(urlPathEqualTo("/api/codes/harvest-statuses"))
+            .willReturn(okJson(harvestStatusResponse)));
+
+    mockMvc
+        .perform(
+            get("/api/codes/harvest-statuses")
+                .header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
+                .accept(MediaType.APPLICATION_JSON))
+        .andExpect(status().isOk())
+        .andExpect(content().contentType("application/json;charset=UTF-8"))
+        .andExpect(jsonPath("$.length()").value(3))
+        .andExpect(jsonPath("$[0].code").value("C"))
+        .andExpect(jsonPath("$[1].code").value("I"))
+        .andExpect(jsonPath("$[2].code").value("NA"));
+  }
+
+  @Test
+  @DisplayName("Get harvest status codes with unknown context should return unfiltered list")
+  void getHarvestStatusCodes_withUnknownContext_shouldReturnUnfiltered() throws Exception {
+    String harvestStatusResponse =
+        """
+        [{"code":"C","description":"Complete"},
+         {"code":"I","description":"Incomplete"}]
+        """;
+
+    clientApiStub.stubFor(
+        WireMock.get(urlPathEqualTo("/api/codes/harvest-statuses"))
+            .willReturn(okJson(harvestStatusResponse)));
+
+    mockMvc
+        .perform(
+            get("/api/codes/harvest-statuses")
+                .param("reportingUnitId", "999999999")
+                .header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
+                .accept(MediaType.APPLICATION_JSON))
+        .andExpect(status().isOk())
+        .andExpect(content().contentType("application/json;charset=UTF-8"))
+        .andExpect(jsonPath("$.length()").value(2))
+        .andExpect(jsonPath("$[0].code").value("C"))
+        .andExpect(jsonPath("$[1].code").value("I"));
+  }
 
   @Test
   @DisplayName("Get maturity type codes should succeed")

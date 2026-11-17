@@ -81,6 +81,37 @@ class LegacyCodesClientIntegrationTest extends AbstractTestContainerIntegrationT
     assertEquals(23, legacyCodesClient.getDistrictCodes().size());
   }
 
+  @Test
+  @DisplayName("Should fetch harvest status codes successfully")
+  void shouldFetchHarvestStatusCodes() {
+    clientApiStub.stubFor(
+        get(urlPathEqualTo("/api/codes/harvest-statuses"))
+            .willReturn(
+                okJson(
+                    """
+                    [{"code":"C","description":"Complete"},
+                     {"code":"I","description":"Incomplete"},
+                     {"code":"NA","description":"N/A - Not applicable"}]
+                    """)));
+
+    var result = legacyCodesClient.getHarvestStatusCodes();
+
+    assertNotNull(result);
+    assertEquals(3, result.size());
+    assertEquals("C", result.get(0).code());
+  }
+
+  @Test
+  @DisplayName("Fallback to empty list when harvest status service is unavailable")
+  void shouldFallbackHarvestStatusCodesWhenUnavailable() {
+    clientApiStub.stubFor(
+        get(urlPathEqualTo("/api/codes/harvest-statuses")).willReturn(serviceUnavailable()));
+
+    var result = legacyCodesClient.getHarvestStatusCodes();
+
+    assertNotNull(result);
+    assertEquals(0, result.size());
+  }
 
   @Test
   @DisplayName("Should fetch maturity type codes successfully")

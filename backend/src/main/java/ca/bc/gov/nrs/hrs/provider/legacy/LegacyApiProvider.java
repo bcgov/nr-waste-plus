@@ -83,10 +83,23 @@ public class LegacyApiProvider implements ReportingUnitSearchProvider {
   }
 
   /**
+   * Retrieve harvest status codes from the legacy API.
+   *
+   * <p>Delegates to {@link LegacyCodesClient} to fetch a list of all available harvest status
+   * codes. If the legacy API is unavailable, returns an empty list.
+   *
+   * @return a list of {@link CodeDescriptionDto} containing harvest status codes and descriptions;
+   *     never null, may be empty if API call fails or no codes are available
+   */
+  public List<CodeDescriptionDto> getHarvestStatusCodes() {
+    return codesClient.getHarvestStatusCodes();
+  }
+
+  /**
    * Retrieve waste maturity type codes from the legacy API.
    *
-   * <p>Delegates to {@link LegacyCodesClient} to fetch a list of all available maturity type
-   * codes. If the legacy API is unavailable, returns an empty list.
+   * <p>Delegates to {@link LegacyCodesClient} to fetch a list of all available maturity type codes.
+   * If the legacy API is unavailable, returns an empty list.
    *
    * @return a list of {@link CodeDescriptionDto} containing maturity type codes and descriptions;
    *     never null, may be empty if API call fails or no codes are available

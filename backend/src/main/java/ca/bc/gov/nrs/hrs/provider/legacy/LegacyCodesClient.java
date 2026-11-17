@@ -15,8 +15,9 @@ import org.springframework.web.client.RestClient;
  * Client responsible for legacy code-list endpoints.
  *
  * <p>This component handles all communication with legacy API code endpoints, including district,
- * sampling, assessment area status, and maturity type codes. It implements resilience patterns
- * via circuit breaker to gracefully handle failures by returning fallback values.
+ * sampling, assessment area status, harvest status, and maturity type codes. It implements
+ * resilience patterns via circuit breaker to gracefully handle failures by returning fallback
+ * values.
  *
  * <p>All methods are annotated with {@link
  * io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker} to provide automatic fault
@@ -114,11 +115,35 @@ public class LegacyCodesClient {
   }
 
   /**
+   * Retrieve all harvest status codes from the legacy API.
+   *
+   * <p>Fetches a list of all available harvest status codes with their descriptions. This method is
+   * protected by a circuit breaker that will return an empty list if the API is unavailable or
+   * fails.
+   *
+   * <p>The legacy API endpoint is: {@code GET /api/codes/harvest-statuses}
+   *
+   * @return a list of {@link CodeDescriptionDto} representing all available harvest status codes;
+   *     never null, defaults to empty list if API fails
+   * @see LegacyApiConstants#CODE_LIST
+   */
+  @CircuitBreaker(name = "breaker", fallbackMethod = "fallbackEmptyList")
+  @NewSpan
+  public List<CodeDescriptionDto> getHarvestStatusCodes() {
+    log.info("Starting {} request to /codes/harvest-statuses", PROVIDER);
+    return restClient
+        .get()
+        .uri("/api/codes/harvest-statuses")
+        .retrieve()
+        .body(new ParameterizedTypeReference<>() {});
+  }
+
+  /**
    * Retrieve all waste maturity type codes from the legacy API.
    *
-   * <p>Fetches a list of all available maturity type codes with their descriptions. This method
-   * is protected by a circuit breaker that will return an empty list if the API is unavailable
-   * or fails.
+   * <p>Fetches a list of all available maturity type codes with their descriptions. This method is
+   * protected by a circuit breaker that will return an empty list if the API is unavailable or
+   * fails.
    *
    * <p>The legacy API endpoint is: {@code GET /api/codes/maturity-types}
    *
@@ -129,7 +154,7 @@ public class LegacyCodesClient {
   @CircuitBreaker(name = "breaker", fallbackMethod = "fallbackEmptyList")
   @NewSpan
   public List<CodeDescriptionDto> getMaturityTypeCodes() {
-    log.info("Starting {} request to /codes/maturity-types", PROVIDER);
+    log.info("Starting {} request to /api/codes/maturity-types", PROVIDER);
     return restClient
         .get()
         .uri("/api/codes/maturity-types")
@@ -156,7 +181,7 @@ public class LegacyCodesClient {
    * Fallback method invoked when the legacy API fails to provide any code list.
    *
    * <p>Returns an empty list to allow the application to continue operating when the API is
-   * unavailable for sampling, status, or maturity type codes.
+   * unavailable for sampling, status, harvest status, or maturity type codes.
    *
    * @param throwable the exception that triggered the fallback, may be null
    * @return an empty list from {@link LegacyApiConstants#CODE_LIST}
