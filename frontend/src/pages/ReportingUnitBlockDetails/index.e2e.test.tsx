@@ -318,4 +318,59 @@ test.describe('Reporting Unit Block Details', () => {
     expect(harvestRequests[0]).toContain('reportingUnitId=468');
     expect(harvestRequests[0]).toContain('blockId=12');
   });
+
+  test('fetches and exposes district average criteria code options on block details', async ({
+    page,
+  }) => {
+    test.skip(
+      test.info().project.metadata.userType === 'bceid',
+      'This scenario is validated on IDIR to avoid BCeID role-rule redirects.',
+    );
+
+    const districtAverageCriteriaRequests: string[] = [];
+
+    await mockApiResponses(page, `reporting-units/${RU_ID}`, 200, 'application/json', {
+      ...reportingUnitPayload,
+    });
+    await mockApiResponses(
+      page,
+      `reporting-units/${RU_ID}/${BLOCK_ID}`,
+      200,
+      'application/json',
+      blockDetailsPayload,
+    );
+    await mockApiResponses(page, 'codes/harvest-statuses*', 200, 'application/json', [
+      { code: 'COM', description: 'Complete' },
+    ]);
+    await mockApiResponses(page, 'codes/maturity-types', 200, 'application/json', [
+      { code: 'IM', description: 'Immature' },
+    ]);
+    await mockApi(page, 'codes/district-average-criteria*', async (route) => {
+      districtAverageCriteriaRequests.push(route.request().url());
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify([
+          {
+            code: '1',
+            description:
+              'Forestry Licence to Cut with a volume limit of 2,000 m3 or less, written in the licence agreement.',
+            areas: [],
+          },
+          { code: '7', description: 'A cutblock smaller than 2.0 ha.', areas: [] },
+        ]),
+      });
+    });
+
+    await page.goto(ROUTE_PATH);
+    await page.waitForLoadState('domcontentloaded');
+
+    await expect(
+      page.getByRole('heading', { level: 1, name: `Block ID ${BLOCK_ID}` }),
+    ).toBeVisible();
+    await expect(page.getByLabelText('District average criteria')).toBeVisible();
+
+    await expect.poll(() => districtAverageCriteriaRequests.length).toBeGreaterThan(0);
+    expect(districtAverageCriteriaRequests[0]).toContain('/api/codes/district-average-criteria');
+  });
 });

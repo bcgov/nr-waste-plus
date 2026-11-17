@@ -82,6 +82,8 @@ export const queryKeys = {
       ] as const,
     maturityTypeOptions: (notificationTarget?: string) =>
       ['codes', 'maturity-type-options', notificationTarget] as const,
+    districtAverageCriteriaCodes: (notificationTarget?: string) =>
+      ['codes', 'district-average-criteria-codes', notificationTarget] as const,
   },
   preference: {
     userPreference: (userId?: string) => ['preference', 'user', userId] as const,

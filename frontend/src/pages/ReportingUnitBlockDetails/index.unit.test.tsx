@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
   useBlockDetailsQuery,
+  useDistrictAverageCriteriaCodesQuery,
   useHarvestStatusCodesQuery,
   useMaturityTypeCodesQuery,
   useReportingUnitDetailsQuery,
@@ -30,6 +31,7 @@ vi.mock('@/config/react-query/hooks', async (importOriginal) => {
     ...actual,
     useReportingUnitDetailsQuery: vi.fn(),
     useBlockDetailsQuery: vi.fn(),
+    useDistrictAverageCriteriaCodesQuery: vi.fn(),
     useHarvestStatusCodesQuery: vi.fn(),
     useMaturityTypeCodesQuery: vi.fn(),
   };
@@ -99,6 +101,9 @@ function mockCodeQueries() {
   vi.mocked(useMaturityTypeCodesQuery).mockReturnValue({
     data: [{ code: 'IM', description: 'Immature' }],
   } as ReturnType<typeof useMaturityTypeCodesQuery>);
+  vi.mocked(useDistrictAverageCriteriaCodesQuery).mockReturnValue({
+    data: [{ code: '1', description: 'Criterion 1', areas: [] }],
+  } as ReturnType<typeof useDistrictAverageCriteriaCodesQuery>);
 }
 
 /**
@@ -474,6 +479,16 @@ describe('ReportingUnitBlockDetailsPage', () => {
 
       await waitFor(() =>
         expect(vi.mocked(useMaturityTypeCodesQuery)).toHaveBeenCalledWith({
+          notificationTarget: EVENT_TARGET,
+        }),
+      );
+    });
+
+    it('shouldFetchDistrictAverageCriteriaCodesWithNotificationTarget', async () => {
+      await renderPage();
+
+      await waitFor(() =>
+        expect(vi.mocked(useDistrictAverageCriteriaCodesQuery)).toHaveBeenCalledWith({
           notificationTarget: EVENT_TARGET,
         }),
       );

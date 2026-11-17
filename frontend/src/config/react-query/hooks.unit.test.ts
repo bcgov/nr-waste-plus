@@ -14,6 +14,7 @@ import {
   useClientLookupQuery,
   useCodesQuery,
   useCreateBlock,
+  useDistrictAverageCriteriaCodesQuery,
   useDistrictOptionsQuery,
   useDistrictVolumeListQuery,
   useDistrictVolumeTableCreateMutation,
@@ -49,6 +50,9 @@ vi.mock('@/services/APIs', () => ({
       getAssessAreaStatuses: vi.fn().mockResolvedValue([{ code: 'APP', description: 'Approved' }]),
       getHarvestStatusCodes: vi.fn().mockResolvedValue([{ code: 'COM', description: 'Complete' }]),
       getMaturityTypeCodes: vi.fn().mockResolvedValue([{ code: 'IM', description: 'Immature' }]),
+      getDistrictAverageCriteriaCodes: vi
+        .fn()
+        .mockResolvedValue([{ code: '1', description: 'Criterion 1', areas: [] }]),
     },
     search: {
       searchReportingUnit: vi.fn().mockResolvedValue({
@@ -324,6 +328,48 @@ describe('react-query hooks', () => {
           eventType: 'error',
           eventTarget: 'panel',
           description: 'Unable to load maturity types',
+        }),
+      );
+    });
+  });
+
+  describe('useDistrictAverageCriteriaCodesQuery', () => {
+    it('should fetch district average criteria codes', async () => {
+      const { result } = renderHook(
+        () =>
+          useDistrictAverageCriteriaCodesQuery({
+            notificationTarget: 'reporting-unit-block-details',
+          }),
+        { wrapper: createWrapper() },
+      );
+
+      await waitFor(() => expect(result.current.isSuccess).toBe(true));
+
+      expect(API.codes.getDistrictAverageCriteriaCodes).toHaveBeenCalledWith({
+        notificationTarget: 'reporting-unit-block-details',
+      });
+      expect(result.current.data).toEqual([{ code: '1', description: 'Criterion 1', areas: [] }]);
+    });
+
+    it('should dispatch error notification when notificationTarget is provided', async () => {
+      const mockError = new Error('District average criteria failed');
+      (mockError as unknown as { body: { detail: string; title: string } }).body = {
+        detail: 'Unable to load district average criteria',
+        title: 'Request failed',
+      };
+      vi.mocked(API.codes.getDistrictAverageCriteriaCodes).mockRejectedValueOnce(mockError);
+
+      const { result } = renderHook(
+        () => useDistrictAverageCriteriaCodesQuery({ notificationTarget: 'panel' }),
+        { wrapper: createWrapper() },
+      );
+
+      await waitFor(() => expect(result.current.isError).toBe(true));
+      expect(sendEvent).toHaveBeenCalledWith(
+        expect.objectContaining({
+          eventType: 'error',
+          eventTarget: 'panel',
+          description: 'Unable to load district average criteria',
         }),
       );
     });

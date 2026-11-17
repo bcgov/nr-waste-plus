@@ -25,6 +25,7 @@ import BlockDetailsSummary from '@/components/waste/ReportingUnits/BlockDetailsS
 import BlockDetailsTab from '@/components/waste/ReportingUnits/BlockDetailsTab';
 import {
   useBlockDetailsQuery,
+  useDistrictAverageCriteriaCodesQuery,
   useHarvestStatusCodesQuery,
   useMaturityTypeCodesQuery,
   useReportingUnitDetailsQuery,
@@ -90,6 +91,9 @@ const ReportingUnitBlockDetailsPage: FC = () => {
     { notificationTarget: EVENT_TARGET },
   );
   const { data: maturityOptions = [] } = useMaturityTypeCodesQuery({
+    notificationTarget: EVENT_TARGET,
+  });
+  const { data: districtAverageCriteria = [] } = useDistrictAverageCriteriaCodesQuery({
     notificationTarget: EVENT_TARGET,
   });
 
@@ -269,7 +273,7 @@ const ReportingUnitBlockDetailsPage: FC = () => {
                 becZones={[]}
                 becSubzoneVariants={[]}
                 maturityOptions={maturityOptions}
-                districtAverageCriteria={[]}
+                districtAverageCriteria={districtAverageCriteria}
                 onNavigateTab={setSelectedTabIndex}
               />
             </TabPanel>

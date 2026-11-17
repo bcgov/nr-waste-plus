@@ -47,6 +47,22 @@ describe('queryKeys', () => {
         'panel',
       ]);
     });
+
+    it('should build districtAverageCriteriaCodes key without notificationTarget', () => {
+      expect(queryKeys.codes.districtAverageCriteriaCodes()).toEqual([
+        'codes',
+        'district-average-criteria-codes',
+        undefined,
+      ]);
+    });
+
+    it('should include notificationTarget in districtAverageCriteriaCodes key', () => {
+      expect(queryKeys.codes.districtAverageCriteriaCodes('panel')).toEqual([
+        'codes',
+        'district-average-criteria-codes',
+        'panel',
+      ]);
+    });
   });
 
   describe('preference', () => {

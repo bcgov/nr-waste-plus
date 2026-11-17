@@ -383,6 +383,45 @@ export const useMaturityTypeCodesQuery = <TData = CodeDescriptionDto[]>(
 };
 
 /**
+ * Fetches district average criteria code options for block details.
+ *
+ * @param options - Optional TanStack Query overrides plus an optional `notificationTarget`.
+ * @returns The TanStack Query result containing district average criteria code descriptions.
+ */
+export const useDistrictAverageCriteriaCodesQuery = <TData = CodeDescriptionDto[]>(
+  options?: Omit<
+    UseQueryOptions<
+      CodeDescriptionDto[],
+      Error,
+      TData,
+      ReturnType<typeof queryKeys.codes.districtAverageCriteriaCodes>
+    >,
+    'queryKey' | 'queryFn'
+  > &
+    QueryNotificationOptions,
+) => {
+  const { notificationTarget, ...queryOptions } = options ?? {};
+
+  const query = useQuery({
+    queryKey: queryKeys.codes.districtAverageCriteriaCodes(notificationTarget),
+    queryFn: () => API.codes.getDistrictAverageCriteriaCodes({ notificationTarget }),
+    ...REFERENCE_DATA_QUERY_CONFIG,
+    ...queryOptions,
+  });
+
+  useEffect(() => {
+    if (!notificationTarget || !query.isError || !query.error) {
+      return;
+    }
+
+    notifyProblemDetailsError(query.error, notificationTarget);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [notificationTarget, query.errorUpdatedAt]);
+
+  return query;
+};
+
+/**
  * Fetches full forest client records for a given list of client numbers.
  *
  * The query is disabled automatically when `clientNumbers` is empty, preventing

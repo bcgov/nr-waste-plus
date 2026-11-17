@@ -112,4 +112,20 @@ export class CodesService extends HttpClient {
       ...(meta !== undefined ? { meta } : {}),
     });
   }
+
+  /**
+   * Loads district average criteria code options for block details.
+   *
+   * @param meta Optional metadata to pass through the request pipeline.
+   * @returns The district average criteria code descriptions.
+   */
+  getDistrictAverageCriteriaCodes(
+    meta?: Record<string, unknown>,
+  ): CancelablePromise<CodeDescriptionDto[]> {
+    return this.doRequest<CodeDescriptionDto[]>(this.config, {
+      method: 'GET',
+      url: '/api/codes/district-average-criteria',
+      ...(meta !== undefined ? { meta } : {}),
+    });
+  }
 }

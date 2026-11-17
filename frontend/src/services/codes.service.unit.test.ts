@@ -143,4 +143,30 @@ describe('CodesService', () => {
       meta,
     });
   });
+
+  it('getDistrictAverageCriteriaCodes should call API and return district average criteria codes', async () => {
+    const mockData = [{ code: '1', description: 'Criterion 1', areas: [] }];
+    (service as any).doRequest = vi.fn().mockResolvedValue(mockData);
+
+    const result = await service.getDistrictAverageCriteriaCodes();
+
+    expect((service as any).doRequest).toHaveBeenCalledWith(mockConfig, {
+      method: 'GET',
+      url: '/api/codes/district-average-criteria',
+    });
+    expect(result).toEqual(mockData);
+  });
+
+  it('getDistrictAverageCriteriaCodes should include meta when provided', async () => {
+    const meta = { notificationTarget: 'reporting-unit-block-details' };
+    (service as any).doRequest = vi.fn().mockResolvedValue([]);
+
+    await service.getDistrictAverageCriteriaCodes(meta);
+
+    expect((service as any).doRequest).toHaveBeenCalledWith(mockConfig, {
+      method: 'GET',
+      url: '/api/codes/district-average-criteria',
+      meta,
+    });
+  });
 });
