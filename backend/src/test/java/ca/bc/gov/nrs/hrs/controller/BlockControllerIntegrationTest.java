@@ -286,7 +286,7 @@ class BlockControllerIntegrationTest extends AbstractTestContainerIntegrationTes
         .andExpect(jsonPath("$.reportingUnitId").value(legacyReportingUnitId))
         .andExpect(jsonPath("$.blockType").isEmpty())
         .andExpect(jsonPath("$.draft").value(true))
-        .andExpect(jsonPath("$.plcDate").isEmpty())
+        .andExpect(jsonPath("$.plcDate").value(LocalDate.now().minusDays(1).toString()))
         .andExpect(jsonPath("$.revision").isEmpty())
         .andExpect(jsonPath("$.isLegacy").value(true));
   }

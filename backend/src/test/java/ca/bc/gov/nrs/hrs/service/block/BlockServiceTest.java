@@ -22,6 +22,10 @@ import ca.bc.gov.nrs.hrs.repository.block.BlockRepository;
 import ca.bc.gov.nrs.hrs.repository.block.ReportingUnitRepository;
 import ca.bc.gov.nrs.hrs.repository.block.StatusEventRepository;
 import java.sql.SQLException;
+import java.time.Clock;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Optional;
 import org.hibernate.exception.ConstraintViolationException;
@@ -462,5 +466,110 @@ class BlockServiceTest {
         .isInstanceOf(ReportingUnitNotFoundException.class)
         .matches(ex -> ((ResponseStatusException) ex).getStatusCode().value() == 404);
   }
-}
 
+
+  @Test
+  @DisplayName("getBlockDetails returns postgres block with stored plcDate unchanged")
+  void getBlockDetails_whenPostgresBlockHasPlcDate_returnsStoredPlcDate() {
+    blockService.setClock(Clock.fixed(Instant.parse("2026-11-17T12:00:00Z"), ZoneOffset.UTC));
+    when(reportingUnitRepository.findByIdAndDeletedFalse(RU_ID))
+        .thenReturn(Optional.of(reportingUnit));
+
+    BlockEntity block = new BlockEntity();
+    block.setId(BLOCK_ID);
+    block.setReportingUnitId(RU_ID);
+    block.setPlcDate(LocalDate.of(2026, 3, 15));
+    when(blockRepository.findByIdAndReportingUnitIdAndDeletedFalse(BLOCK_ID, RU_ID))
+        .thenReturn(Optional.of(block));
+
+    var mapped =
+        new ca.bc.gov.nrs.hrs.dto.block.BlockResponseDto(
+            BLOCK_ID,
+            RU_ID,
+            "DISTRICT_AVERAGE",
+            "DRAFT",
+            true,
+            LocalDate.of(2026, 3, 15),
+            0L,
+            0L,
+            false,
+            null,
+            null);
+    when(blockMapper.toResponseDto(block)).thenReturn(mapped);
+
+    var result = blockService.getBlockDetails(RU_ID, BLOCK_ID, idirJwt);
+
+    assertThat(result.plcDate()).isEqualTo(LocalDate.of(2026, 3, 15));
+    assertThat(result.isLegacy()).isFalse();
+  }
+
+  @Test
+  @DisplayName("getBlockDetails returns postgres block with default plcDate when stored value is missing")
+  void getBlockDetails_whenPostgresBlockMissingPlcDate_returnsDefaultPlcDate() {
+    blockService.setClock(Clock.fixed(Instant.parse("2026-11-17T12:00:00Z"), ZoneOffset.UTC));
+    when(reportingUnitRepository.findByIdAndDeletedFalse(RU_ID))
+        .thenReturn(Optional.of(reportingUnit));
+
+    BlockEntity block = new BlockEntity();
+    block.setId(BLOCK_ID);
+    block.setReportingUnitId(RU_ID);
+    when(blockRepository.findByIdAndReportingUnitIdAndDeletedFalse(BLOCK_ID, RU_ID))
+        .thenReturn(Optional.of(block));
+
+    var mapped =
+        new ca.bc.gov.nrs.hrs.dto.block.BlockResponseDto(
+            BLOCK_ID,
+            RU_ID,
+            "DISTRICT_AVERAGE",
+            "DRAFT",
+            true,
+            null,
+            0L,
+            0L,
+            false,
+            null,
+            null);
+    when(blockMapper.toResponseDto(block)).thenReturn(mapped);
+
+    var result = blockService.getBlockDetails(RU_ID, BLOCK_ID, idirJwt);
+
+    assertThat(result.plcDate()).isEqualTo(LocalDate.of(2026, 11, 16));
+    assertThat(result.isLegacy()).isFalse();
+  }
+
+  @Test
+  @DisplayName("getBlockDetails returns legacy block with default plcDate when no stored value exists")
+  void getBlockDetails_whenLegacyBlockMissingPlcDate_returnsDefaultPlcDate() {
+    blockService.setClock(Clock.fixed(Instant.parse("2026-11-17T12:00:00Z"), ZoneOffset.UTC));
+    when(reportingUnitRepository.findByIdAndDeletedFalse(RU_ID)).thenReturn(Optional.empty());
+
+    var legacyRu =
+        new ca.bc.gov.nrs.hrs.dto.reportingunit.ReportingUnitLegacyDetailsDto(
+            CLIENT_NUMBER,
+            "00",
+            new ca.bc.gov.nrs.hrs.dto.base.CodeDescriptionDto("AVG", "Average"),
+            new ca.bc.gov.nrs.hrs.dto.base.CodeDescriptionDto("DND", "Nadina"));
+    when(legacyApiProvider.getReportingUnitDetails(RU_ID)).thenReturn(legacyRu);
+
+    var legacyRow =
+        new ca.bc.gov.nrs.hrs.dto.block.BlockListItemDto(
+            BLOCK_ID,
+            "FILE",
+            "CP",
+            "CUT",
+            "TM",
+            null,
+            null,
+            "sub",
+            new ca.bc.gov.nrs.hrs.dto.block.BlockListItemDto.Status("DFT", "Draft"),
+            null,
+            null);
+    when(legacyApiProvider.getReportingUnitBlocksStrict(RU_ID)).thenReturn(List.of(legacyRow));
+
+    var result = blockService.getBlockDetails(RU_ID, BLOCK_ID, idirJwt);
+
+    assertThat(result.plcDate()).isEqualTo(LocalDate.of(2026, 11, 16));
+    assertThat(result.isLegacy()).isTrue();
+  }
+
+}

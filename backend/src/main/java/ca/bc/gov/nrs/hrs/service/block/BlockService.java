@@ -23,6 +23,8 @@ import ca.bc.gov.nrs.hrs.util.JwtPrincipalUtil;
 import io.micrometer.observation.annotation.Observed;
 import io.micrometer.tracing.annotation.NewSpan;
 import java.sql.SQLException;
+import java.time.Clock;
+import java.time.LocalDate;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -50,6 +52,12 @@ public class BlockService {
   private final StatusEventRepository statusEventRepository;
   private final LegacyApiProvider legacyApiProvider;
   private final BlockMapper blockMapper;
+
+  private Clock clock = Clock.systemDefaultZone();
+
+  void setClock(Clock clock) {
+    this.clock = clock;
+  }
 
   /**
    * Creates a new submission block under the specified reporting unit, validating the expected
@@ -250,7 +258,7 @@ public class BlockService {
 
     enforceClientScope(jwt, reportingUnitId, clientNumber);
 
-    return blockMapper.toResponseDto(block);
+    return withResolvedPlcDate(blockMapper.toResponseDto(block));
   }
 
   private BlockResponseDto getLegacyBlockDetails(Long reportingUnitId, Long blockId, Jwt jwt) {
@@ -408,11 +416,34 @@ public class BlockService {
         null,
         state,
         draft,
-        null,
+        resolvePlcDate(null),
         null,
         null,
         true,
         null,
         null);
+  }
+
+  BlockResponseDto withResolvedPlcDate(BlockResponseDto dto) {
+    LocalDate resolvedPlcDate = resolvePlcDate(dto.plcDate());
+    if (resolvedPlcDate == dto.plcDate()) {
+      return dto;
+    }
+    return new BlockResponseDto(
+        dto.id(),
+        dto.reportingUnitId(),
+        dto.blockType(),
+        dto.state(),
+        dto.draft(),
+        resolvedPlcDate,
+        dto.version(),
+        dto.revision(),
+        dto.isLegacy(),
+        dto.createdAt(),
+        dto.updatedAt());
+  }
+
+  private LocalDate resolvePlcDate(LocalDate storedPlcDate) {
+    return storedPlcDate != null ? storedPlcDate : LocalDate.now(clock).minusDays(1);
   }
 }
