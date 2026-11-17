@@ -15,8 +15,8 @@ import org.springframework.web.client.RestClient;
  * Client responsible for legacy code-list endpoints.
  *
  * <p>This component handles all communication with legacy API code endpoints, including district,
- * sampling, and assessment area status codes. It implements resilience patterns via circuit breaker
- * to gracefully handle failures by returning fallback values.
+ * sampling, assessment area status, and maturity type codes. It implements resilience patterns
+ * via circuit breaker to gracefully handle failures by returning fallback values.
  *
  * <p>All methods are annotated with {@link
  * io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker} to provide automatic fault
@@ -114,6 +114,30 @@ public class LegacyCodesClient {
   }
 
   /**
+   * Retrieve all waste maturity type codes from the legacy API.
+   *
+   * <p>Fetches a list of all available maturity type codes with their descriptions. This method
+   * is protected by a circuit breaker that will return an empty list if the API is unavailable
+   * or fails.
+   *
+   * <p>The legacy API endpoint is: {@code GET /api/codes/maturity-types}
+   *
+   * @return a list of {@link CodeDescriptionDto} representing all available maturity type codes;
+   *     never null, defaults to empty list if API fails
+   * @see LegacyApiConstants#CODE_LIST
+   */
+  @CircuitBreaker(name = "breaker", fallbackMethod = "fallbackEmptyList")
+  @NewSpan
+  public List<CodeDescriptionDto> getMaturityTypeCodes() {
+    log.info("Starting {} request to /codes/maturity-types", PROVIDER);
+    return restClient
+        .get()
+        .uri("/api/codes/maturity-types")
+        .retrieve()
+        .body(new ParameterizedTypeReference<>() {});
+  }
+
+  /**
    * Fallback method invoked when the legacy API fails to provide district codes.
    *
    * <p>Returns a predefined list of default districts to ensure the application continues operating
@@ -132,7 +156,7 @@ public class LegacyCodesClient {
    * Fallback method invoked when the legacy API fails to provide any code list.
    *
    * <p>Returns an empty list to allow the application to continue operating when the API is
-   * unavailable for sampling codes or status codes.
+   * unavailable for sampling, status, or maturity type codes.
    *
    * @param throwable the exception that triggered the fallback, may be null
    * @return an empty list from {@link LegacyApiConstants#CODE_LIST}

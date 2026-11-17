@@ -83,6 +83,19 @@ public class LegacyApiProvider implements ReportingUnitSearchProvider {
   }
 
   /**
+   * Retrieve waste maturity type codes from the legacy API.
+   *
+   * <p>Delegates to {@link LegacyCodesClient} to fetch a list of all available maturity type
+   * codes. If the legacy API is unavailable, returns an empty list.
+   *
+   * @return a list of {@link CodeDescriptionDto} containing maturity type codes and descriptions;
+   *     never null, may be empty if API call fails or no codes are available
+   */
+  public List<CodeDescriptionDto> getMaturityTypeCodes() {
+    return codesClient.getMaturityTypeCodes();
+  }
+
+  /**
    * Search reporting units in the legacy API using provided filters and pageable information.
    *
    * <p>The legacy API responds with a paged payload; the delegated client converts the content into

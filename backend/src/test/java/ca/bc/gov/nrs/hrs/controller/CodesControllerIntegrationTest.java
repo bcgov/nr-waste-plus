@@ -126,4 +126,31 @@ class CodesControllerIntegrationTest extends AbstractTestContainerIntegrationTes
         .andExpect(jsonPath("$[0].description").value(category.description()))
         .andReturn();
   }
+
+
+  @Test
+  @DisplayName("Get maturity type codes should succeed")
+  void getMaturityTypeCodes_happyPath_shouldSucceed() throws Exception {
+    String maturityResponse =
+        """
+        [{"code":"MAT","description":"Mature"},
+         {"code":"IMM","description":"Immature"}]
+        """;
+
+    clientApiStub.stubFor(
+        WireMock.get(urlPathEqualTo("/api/codes/maturity-types"))
+            .willReturn(okJson(maturityResponse)));
+
+    mockMvc
+        .perform(
+            get("/api/codes/maturity-types")
+                .header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
+                .accept(MediaType.APPLICATION_JSON))
+        .andExpect(status().isOk())
+        .andExpect(content().contentType("application/json;charset=UTF-8"))
+        .andExpect(jsonPath("$.length()").value(2))
+        .andExpect(jsonPath("$[0].code").value("MAT"))
+        .andExpect(jsonPath("$[0].description").value("Mature"))
+        .andExpect(jsonPath("$[1].code").value("IMM"));
+  }
 }

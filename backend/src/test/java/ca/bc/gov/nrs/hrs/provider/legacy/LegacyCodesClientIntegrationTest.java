@@ -80,4 +80,36 @@ class LegacyCodesClientIntegrationTest extends AbstractTestContainerIntegrationT
     assertFalse(legacyCodesClient.getDistrictCodes().isEmpty());
     assertEquals(23, legacyCodesClient.getDistrictCodes().size());
   }
+
+
+  @Test
+  @DisplayName("Should fetch maturity type codes successfully")
+  void shouldFetchMaturityTypeCodes() {
+    clientApiStub.stubFor(
+        get(urlPathEqualTo("/api/codes/maturity-types"))
+            .willReturn(
+                okJson(
+                    """
+                    [{"code":"MAT","description":"Mature"},
+                     {"code":"IMM","description":"Immature"}]
+                    """)));
+
+    var result = legacyCodesClient.getMaturityTypeCodes();
+
+    assertNotNull(result);
+    assertEquals(2, result.size());
+    assertEquals("MAT", result.get(0).code());
+  }
+
+  @Test
+  @DisplayName("Fallback to empty list when maturity type service is unavailable")
+  void shouldFallbackMaturityTypeCodesWhenUnavailable() {
+    clientApiStub.stubFor(
+        get(urlPathEqualTo("/api/codes/maturity-types")).willReturn(serviceUnavailable()));
+
+    var result = legacyCodesClient.getMaturityTypeCodes();
+
+    assertNotNull(result);
+    assertEquals(0, result.size());
+  }
 }

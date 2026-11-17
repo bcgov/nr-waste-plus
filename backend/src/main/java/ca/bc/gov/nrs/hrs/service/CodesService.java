@@ -13,8 +13,8 @@ import org.springframework.stereotype.Service;
  * Service that exposes various code lists retrieved from the legacy API.
  *
  * <p>Acts as a thin adapter over {@link LegacyApiProvider} and provides methods to fetch district,
- * sampling, and status code lists used by the UI. Enriches district codes with geographic area
- * information from {@link DistrictVolumeService}.
+ * sampling, status, and maturity type code lists used by the UI. Enriches district codes with
+ * geographic area information from {@link DistrictVolumeService}.
  */
 @Slf4j
 @Service
@@ -65,5 +65,19 @@ public class CodesService {
   public List<CodeDescriptionDto> getStatusCodes() {
     log.info("Fetching assess area statuses from legacy API");
     return legacyApiProvider.getStatusCodes();
+  }
+
+
+  /**
+   * Retrieves waste maturity type codes from the legacy API.
+   *
+   * <p>Maturity options are returned as a stable, unfiltered set.
+   *
+   * @return list of maturity type {@link CodeDescriptionDto}
+   */
+  @NewSpan
+  public List<CodeDescriptionDto> getMaturityTypeCodes() {
+    log.info("Fetching maturity type codes from legacy API");
+    return legacyApiProvider.getMaturityTypeCodes();
   }
 }
