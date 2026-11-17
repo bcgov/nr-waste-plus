@@ -107,6 +107,21 @@ test('validateAllowlistSchema enforces required fields and format', () => {
     /"folders" must be a non-empty array/
   );
 
+  assert.throws(
+    () =>
+      validateAllowlistSchema([
+        {
+          id: 'GHSA-vfj7-8cjw-p6xm',
+          url: 'https://example.com',
+          package: 'braces',
+          owner: 'Team',
+          reviewBy: '2026-12-01',
+          allowBuildOnly: 'not-a-boolean',
+        },
+      ]),
+    /"allowBuildOnly" must be a boolean/
+  );
+
   // Valid schema passes without error
   assert.doesNotThrow(() =>
     validateAllowlistSchema([
@@ -159,6 +174,60 @@ test('validateProdAuditReport ensures zero high/critical vulns in prod and fails
   );
   assert.throws(
     () => validateProdAuditReport({ vulnerabilities: { braces: { severity: 'critical' } } }),
+    /Allowlist only applies to devDependencies/
+  );
+
+  // With explicit allowBuildOnly allowlist, permitted build-only exception passes
+  const buildOnlyAllowlist = [
+    {
+      id: 'GHSA-fc5q-39xc-vjpf',
+      url: 'https://github.com/advisories/GHSA-fc5q-39xc-vjpf',
+      package: 'picomatch',
+      owner: 'Team',
+      reviewBy: '2099-01-01',
+      allowBuildOnly: true,
+      folders: ['frontend'],
+    },
+  ];
+
+  const prodReportWithPicomatch = {
+    vulnerabilities: {
+      '@parcel/watcher': {
+        name: '@parcel/watcher',
+        severity: 'high',
+        via: ['picomatch'],
+      },
+      picomatch: {
+        name: 'picomatch',
+        severity: 'high',
+        via: [{ url: 'https://github.com/advisories/GHSA-fc5q-39xc-vjpf' }],
+      },
+    },
+  };
+
+  assert.doesNotThrow(() =>
+    validateProdAuditReport(prodReportWithPicomatch, '{}', buildOnlyAllowlist, 'frontend')
+  );
+
+  // Throws if scoped to a different folder
+  assert.throws(
+    () => validateProdAuditReport(prodReportWithPicomatch, '{}', buildOnlyAllowlist, 'cypress'),
+    /Allowlist only applies to devDependencies/
+  );
+
+  // Throws if allowBuildOnly is false or omitted
+  const nonBuildOnlyAllowlist = [
+    {
+      id: 'GHSA-fc5q-39xc-vjpf',
+      url: 'https://github.com/advisories/GHSA-fc5q-39xc-vjpf',
+      package: 'picomatch',
+      owner: 'Team',
+      reviewBy: '2099-01-01',
+      folders: ['frontend'],
+    },
+  ];
+  assert.throws(
+    () => validateProdAuditReport(prodReportWithPicomatch, '{}', nonBuildOnlyAllowlist, 'frontend'),
     /Allowlist only applies to devDependencies/
   );
 });
@@ -411,6 +480,62 @@ test('run() fails when production audit detects high/critical vulnerabilities', 
       }),
     /Allowlist only applies to devDependencies/
   );
+});
+
+test('run() passes when production audit has high/critical vulnerability covered by allowBuildOnly exception', () => {
+  const allowlist = [
+    {
+      id: 'GHSA-fc5q-39xc-vjpf',
+      url: 'https://github.com/advisories/GHSA-fc5q-39xc-vjpf',
+      package: 'picomatch',
+      owner: 'Team',
+      reviewBy: '2099-01-01',
+      allowBuildOnly: true,
+      folders: ['frontend'],
+    },
+  ];
+
+  const fullAuditJson = JSON.stringify({
+    vulnerabilities: {
+      picomatch: {
+        name: 'picomatch',
+        severity: 'high',
+        via: [{ url: 'https://github.com/advisories/GHSA-fc5q-39xc-vjpf', name: 'picomatch' }],
+      },
+    },
+  });
+
+  const prodAuditJson = JSON.stringify({
+    vulnerabilities: {
+      picomatch: {
+        name: 'picomatch',
+        severity: 'high',
+        via: [{ url: 'https://github.com/advisories/GHSA-fc5q-39xc-vjpf', name: 'picomatch' }],
+      },
+    },
+  });
+
+  let exitCode = null;
+  const logs = [];
+
+  run({
+    allowlist,
+    args: ['--folder', 'frontend'],
+    execSync: (cmd) => {
+      if (cmd.includes('--omit=dev')) return prodAuditJson;
+      return fullAuditJson;
+    },
+    logger: {
+      log: (msg) => logs.push(msg),
+      error: (msg) => logs.push(`ERR: ${msg}`),
+    },
+    onExit: (code) => {
+      exitCode = code;
+    },
+  });
+
+  assert.equal(exitCode, 0);
+  assert.ok(logs.some((l) => l.includes('build-only exception matched for production audit')));
 });
 
 test('run() exits with 1 when unhandled vulnerability exists in full audit', () => {

@@ -16,7 +16,8 @@
     "owner": "Team Alliance",
     "reviewBy": "2027-01-01",
     "folders": ["cypress", "frontend"],
+    "allowBuildOnly": true,
     "trackingIssue": "https://github.com/micromatch/picomatch/issues",
-    "notes": "CVE-2026-112366: picomatch vulnerable to ReDoS through single-branch repeated extglobs. Transitive devDependency in frontend and cypress. No upstream fix available yet (<= 4.0.7 affected)."
+    "notes": "CVE-2026-112366: picomatch vulnerable to ReDoS through single-branch repeated extglobs. Transitive devDependency in cypress, and transitive build-only optional dependency via @carbon/react -> sass -> @parcel/watcher in frontend. Static build output only; not executed in production container. No upstream fix available yet (<= 4.0.7 affected)."
   }
 ]

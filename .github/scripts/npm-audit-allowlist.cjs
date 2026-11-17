@@ -64,6 +64,12 @@ function validateAllowlistSchema(allowlist) {
         throw new Error(`${prefix} (${entry.id}) "folders" must be a non-empty array of strings.`);
       }
     }
+    if (entry.allowBuildOnly !== undefined && typeof entry.allowBuildOnly !== 'boolean') {
+      throw new Error(`${prefix} (${entry.id}) "allowBuildOnly" must be a boolean.`);
+    }
+    if (entry.buildOnly !== undefined && typeof entry.buildOnly !== 'boolean') {
+      throw new Error(`${prefix} (${entry.id}) "buildOnly" must be a boolean.`);
+    }
   }
 }
 
@@ -93,7 +99,27 @@ function validateAuditReport(report, rawOutput) {
   }
 }
 
-function validateProdAuditReport(prodReport, rawProdOutput) {
+function getAdvisoryKeys(name, vulns, visited = new Set()) {
+  if (!vulns || visited.has(name)) return [];
+  visited.add(name);
+  const v = vulns[name];
+  if (!v) return [];
+  const keys = [];
+  for (const item of (v.via || [])) {
+    if (typeof item === 'object') {
+      if (item.url) {
+        keys.push(item.url);
+        const ghsaMatch = item.url.match(/GHSA-[\w-]+/);
+        if (ghsaMatch) keys.push(ghsaMatch[0]);
+      }
+    } else if (typeof item === 'string') {
+      keys.push(...getAdvisoryKeys(item, vulns, visited));
+    }
+  }
+  return keys;
+}
+
+function validateProdAuditReport(prodReport, rawProdOutput, allowlist = [], currentFolder = null) {
   if (!prodReport || typeof prodReport !== 'object') {
     throw new Error(`npm audit (prod) returned non-object response: ${String(rawProdOutput).slice(0, 500)}`);
   }
@@ -108,10 +134,52 @@ function validateProdAuditReport(prodReport, rawProdOutput) {
   const prodVulns = Object.entries(prodReport.vulnerabilities).filter(([_, v]) => {
     return v.severity === 'high' || v.severity === 'critical';
   });
-  if (prodVulns.length > 0) {
-    const names = prodVulns.map(([name, v]) => `${name} (${v.severity})`).join(', ');
-    throw new Error(`Allowlist only applies to devDependencies, but high/critical vulnerabilities were found in production dependencies: ${names}`);
+  if (prodVulns.length === 0) {
+    return [];
   }
+
+  // Filter allowlist to entries explicitly scoped as allowBuildOnly for currentFolder
+  const buildOnlyAllowlistMap = new Map();
+  for (const entry of allowlist) {
+    if (!entry.allowBuildOnly && !entry.buildOnly) {
+      continue;
+    }
+    if (entry.folders && currentFolder && !entry.folders.includes(currentFolder)) {
+      continue;
+    }
+    buildOnlyAllowlistMap.set(entry.url, entry);
+    if (entry.id) {
+      buildOnlyAllowlistMap.set(entry.id, entry);
+    }
+  }
+
+  const unhandledProdVulns = [];
+  const matchedBuildOnlyEntries = new Map();
+
+  for (const [name, v] of prodVulns) {
+    const keys = getAdvisoryKeys(name, prodReport.vulnerabilities);
+    if (keys.length === 0) {
+      unhandledProdVulns.push(`${name} (${v.severity})`);
+      continue;
+    }
+    const allAllowed = keys.every(key => buildOnlyAllowlistMap.has(key));
+    if (!allAllowed) {
+      unhandledProdVulns.push(`${name} (${v.severity})`);
+    } else {
+      for (const key of keys) {
+        const entry = buildOnlyAllowlistMap.get(key);
+        if (entry) {
+          matchedBuildOnlyEntries.set(entry.id || entry.url, entry);
+        }
+      }
+    }
+  }
+
+  if (unhandledProdVulns.length > 0) {
+    throw new Error(`Allowlist only applies to devDependencies, but high/critical vulnerabilities were found in production dependencies: ${unhandledProdVulns.join(', ')}`);
+  }
+
+  return Array.from(matchedBuildOnlyEntries.values());
 }
 
 function checkAllowlistExpirations(allowlist, currentDate = new Date(), currentFolder = null) {
@@ -146,26 +214,6 @@ function evaluateAudit(report, allowlist, currentFolder = null) {
     }
   }
 
-  function getAdvisoryKeys(name, visited = new Set()) {
-    if (visited.has(name)) return [];
-    visited.add(name);
-    const v = vulns[name];
-    if (!v) return [];
-    const keys = [];
-    for (const item of (v.via || [])) {
-      if (typeof item === 'object') {
-        if (item.url) {
-          keys.push(item.url);
-          const ghsaMatch = item.url.match(/GHSA-[\w-]+/);
-          if (ghsaMatch) keys.push(ghsaMatch[0]);
-        }
-      } else if (typeof item === 'string') {
-        keys.push(...getAdvisoryKeys(item, visited));
-      }
-    }
-    return keys;
-  }
-
   const matchedEntries = new Map();
   const unhandled = [];
 
@@ -173,7 +221,7 @@ function evaluateAudit(report, allowlist, currentFolder = null) {
     if (v.severity !== 'high' && v.severity !== 'critical') {
       continue;
     }
-    const keys = getAdvisoryKeys(name);
+    const keys = getAdvisoryKeys(name, vulns);
     if (keys.length === 0) {
       unhandled.push({ name, severity: v.severity, reason: 'No advisory source found in "via" chain' });
       continue;
@@ -239,10 +287,10 @@ function run(overrides = {}) {
   validateAuditReport(fullReport, rawAuditOutput);
 
   // 3. Confirm production dependencies are 100% clean of high/critical vulnerabilities (fails closed)
-  logger.log('Checking production dependencies with npm audit --package-lock-only --omit=dev --omit=optional --json...');
+  logger.log('Checking production dependencies with npm audit --package-lock-only --omit=dev --json...');
   let rawProdOutput = '';
   try {
-    rawProdOutput = exec('npm audit --package-lock-only --omit=dev --omit=optional --json', {
+    rawProdOutput = exec('npm audit --package-lock-only --omit=dev --json', {
       encoding: 'utf8',
       maxBuffer: MAX_BUFFER,
     });
@@ -264,7 +312,14 @@ function run(overrides = {}) {
     throw new Error(`Failed to parse npm audit (prod) JSON output: ${e.message}\nRaw output: ${rawProdOutput.slice(0, 500)}`);
   }
 
-  validateProdAuditReport(prodReport, rawProdOutput);
+  const buildOnlyMatches = validateProdAuditReport(prodReport, rawProdOutput, allowlist, options.folder);
+  if (buildOnlyMatches && buildOnlyMatches.length > 0) {
+    for (const entry of buildOnlyMatches) {
+      const warningMsg = `Active audit allowlist build-only exception matched for production audit: ${entry.id} (${entry.package}). Review by: ${entry.reviewBy}. Tracking: ${entry.trackingIssue}`;
+      logger.log(`::warning::${warningMsg}`);
+      logger.log(`  - [${entry.id}] ${entry.package}: ${entry.url} (build-only exception, Review by: ${entry.reviewBy})`);
+    }
+  }
 
   // 4. Evaluate against allowlist
   const { ok, unhandled, matchedEntries } = evaluateAudit(fullReport, allowlist, options.folder);
@@ -311,5 +366,6 @@ module.exports = {
   validateProdAuditReport,
   checkAllowlistExpirations,
   evaluateAudit,
+  getAdvisoryKeys,
   run,
 };
