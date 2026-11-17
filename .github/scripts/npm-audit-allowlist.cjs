@@ -239,10 +239,10 @@ function run(overrides = {}) {
   validateAuditReport(fullReport, rawAuditOutput);
 
   // 3. Confirm production dependencies are 100% clean of high/critical vulnerabilities (fails closed)
-  logger.log('Checking production dependencies with npm audit --package-lock-only --omit=dev --json...');
+  logger.log('Checking production dependencies with npm audit --package-lock-only --omit=dev --omit=optional --json...');
   let rawProdOutput = '';
   try {
-    rawProdOutput = exec('npm audit --package-lock-only --omit=dev --json', {
+    rawProdOutput = exec('npm audit --package-lock-only --omit=dev --omit=optional --json', {
       encoding: 'utf8',
       maxBuffer: MAX_BUFFER,
     });

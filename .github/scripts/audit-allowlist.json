@@ -8,5 +8,15 @@
     "folders": ["frontend"],
     "trackingIssue": "https://github.com/micromatch/braces/issues/70",
     "notes": "CVE-2026-93687: Uncontrolled recursion stack overflow in braces <= 3.0.3 AST walkers. Upstream issue micromatch/braces#70 tracks the vulnerability. Transitive devDependency via stylelint in frontend. No upstream fix available yet."
+  },
+  {
+    "id": "GHSA-fc5q-39xc-vjpf",
+    "url": "https://github.com/advisories/GHSA-fc5q-39xc-vjpf",
+    "package": "picomatch",
+    "owner": "Team Alliance",
+    "reviewBy": "2027-01-01",
+    "folders": ["cypress", "frontend"],
+    "trackingIssue": "https://github.com/micromatch/picomatch/issues",
+    "notes": "CVE-2026-112366: picomatch vulnerable to ReDoS through single-branch repeated extglobs. Transitive devDependency in frontend and cypress. No upstream fix available yet (<= 4.0.7 affected)."
   }
 ]
