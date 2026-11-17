@@ -168,6 +168,90 @@ class CodesServiceTest {
   }
 
   @Test
+  @DisplayName("getHarvestStatusCodes returns unfiltered codes when block is soft-deleted")
+  void getHarvestStatusCodes_whenBlockDeleted_shouldReturnUnfiltered() {
+    when(legacyApiProvider.getHarvestStatusCodes()).thenReturn(HARVEST_STATUSES);
+    when(blockRepository.findById(100L)).thenReturn(Optional.of(block(100L, 10L, true)));
+
+    var result = codesService.getHarvestStatusCodes(null, 100L);
+
+    assertThat(result).containsExactlyElementsOf(HARVEST_STATUSES);
+  }
+
+  @Test
+  @DisplayName("getHarvestStatusCodes resolves COAST grade alias to coastal variant")
+  void getHarvestStatusCodes_whenGradeIsCoastAlias_shouldFilterAsCoastal() {
+    when(legacyApiProvider.getHarvestStatusCodes()).thenReturn(HARVEST_STATUSES);
+    when(reportingUnitRepository.findByIdAndDeletedFalse(11L))
+        .thenReturn(Optional.of(reportingUnit(11L, "COAST")));
+    when(codesProperties.getHarvestStatusVariants())
+        .thenReturn(Map.of("COASTAL", List.of("C", "I", "NA")));
+
+    var result = codesService.getHarvestStatusCodes(11L, null);
+
+    assertThat(result).extracting(CodeDescriptionDto::code).containsExactly("C", "I", "NA");
+  }
+
+  @Test
+  @DisplayName("getHarvestStatusCodes matches configured COAST alias key for coastal variant")
+  void getHarvestStatusCodes_whenConfigKeyIsCoastAlias_shouldFilter() {
+    when(legacyApiProvider.getHarvestStatusCodes()).thenReturn(HARVEST_STATUSES);
+    when(reportingUnitRepository.findByIdAndDeletedFalse(11L))
+        .thenReturn(Optional.of(reportingUnit(11L, "COASTAL")));
+    when(codesProperties.getHarvestStatusVariants())
+        .thenReturn(Map.of("COAST", List.of("C", "I", "NA")));
+
+    var result = codesService.getHarvestStatusCodes(11L, null);
+
+    assertThat(result).extracting(CodeDescriptionDto::code).containsExactly("C", "I", "NA");
+  }
+
+  @Test
+  @DisplayName("getHarvestStatusCodes returns unfiltered codes when allowlist config is null")
+  void getHarvestStatusCodes_whenAllowlistNull_shouldReturnUnfiltered() {
+    when(legacyApiProvider.getHarvestStatusCodes()).thenReturn(HARVEST_STATUSES);
+    when(reportingUnitRepository.findByIdAndDeletedFalse(10L))
+        .thenReturn(Optional.of(reportingUnit(10L, "INTERIOR")));
+    when(codesProperties.getHarvestStatusVariants()).thenReturn(null);
+
+    var result = codesService.getHarvestStatusCodes(10L, null);
+
+    assertThat(result).containsExactlyElementsOf(HARVEST_STATUSES);
+  }
+
+  @Test
+  @DisplayName("getHarvestStatusCodes returns unfiltered codes when block's reporting unit is not in postgres")
+  void getHarvestStatusCodes_whenBlockReportingUnitNotInPostgres_shouldReturnUnfiltered() {
+    when(legacyApiProvider.getHarvestStatusCodes()).thenReturn(HARVEST_STATUSES);
+    when(blockRepository.findById(100L)).thenReturn(Optional.of(block(100L, 10L, false)));
+    when(reportingUnitRepository.findByIdAndDeletedFalse(10L)).thenReturn(Optional.empty());
+
+    var result = codesService.getHarvestStatusCodes(null, 100L);
+
+    assertThat(result).containsExactlyElementsOf(HARVEST_STATUSES);
+  }
+
+  @Test
+  @DisplayName("getHarvestStatusCodes ignores null and blank-code entries when filtering")
+  void getHarvestStatusCodes_whenFiltering_shouldIgnoreNullAndBlankCodeEntries() {
+    var statusesWithNulls =
+        java.util.Arrays.asList(
+            null,
+            new CodeDescriptionDto(null, "No code"),
+            new CodeDescriptionDto("C", "Complete"),
+            new CodeDescriptionDto("I", "Incomplete"));
+    when(legacyApiProvider.getHarvestStatusCodes()).thenReturn(statusesWithNulls);
+    when(reportingUnitRepository.findByIdAndDeletedFalse(10L))
+        .thenReturn(Optional.of(reportingUnit(10L, "INTERIOR")));
+    when(codesProperties.getHarvestStatusVariants())
+        .thenReturn(Map.of("INTERIOR", List.of("C", "I")));
+
+    var result = codesService.getHarvestStatusCodes(10L, null);
+
+    assertThat(result).extracting(CodeDescriptionDto::code).containsExactly("C", "I");
+  }
+
+  @Test
   @DisplayName("getHarvestStatusCodes returns unfiltered codes when allowlist config is empty")
   void getHarvestStatusCodes_whenAllowlistEmpty_shouldReturnUnfiltered() {
     when(legacyApiProvider.getHarvestStatusCodes()).thenReturn(HARVEST_STATUSES);
@@ -186,8 +270,6 @@ class CodesServiceTest {
     when(legacyApiProvider.getHarvestStatusCodes()).thenReturn(HARVEST_STATUSES);
     when(reportingUnitRepository.findByIdAndDeletedFalse(10L))
         .thenReturn(Optional.of(reportingUnit(10L, "UNKNOWN")));
-    when(codesProperties.getHarvestStatusVariants())
-        .thenReturn(Map.of("INTERIOR", List.of("C", "I")));
 
     var result = codesService.getHarvestStatusCodes(10L, null);
 

@@ -205,4 +205,38 @@ class CodesControllerIntegrationTest extends AbstractTestContainerIntegrationTes
         .andExpect(jsonPath("$[0].description").value("Mature"))
         .andExpect(jsonPath("$[1].code").value("IMM"));
   }
+
+  @Test
+  @DisplayName("Get maturity type codes returns empty list when legacy is unavailable")
+  void getMaturityTypeCodes_whenLegacyUnavailable_shouldReturnEmptyList() throws Exception {
+    clientApiStub.stubFor(
+        WireMock.get(urlPathEqualTo("/api/codes/maturity-types"))
+            .willReturn(WireMock.serviceUnavailable()));
+
+    mockMvc
+        .perform(
+            get("/api/codes/maturity-types")
+                .header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
+                .accept(MediaType.APPLICATION_JSON))
+        .andExpect(status().isOk())
+        .andExpect(content().contentType("application/json;charset=UTF-8"))
+        .andExpect(jsonPath("$.length()").value(0));
+  }
+
+  @Test
+  @DisplayName("Get harvest status codes returns empty list when legacy is unavailable")
+  void getHarvestStatusCodes_whenLegacyUnavailable_shouldReturnEmptyList() throws Exception {
+    clientApiStub.stubFor(
+        WireMock.get(urlPathEqualTo("/api/codes/harvest-statuses"))
+            .willReturn(WireMock.serviceUnavailable()));
+
+    mockMvc
+        .perform(
+            get("/api/codes/harvest-statuses")
+                .header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
+                .accept(MediaType.APPLICATION_JSON))
+        .andExpect(status().isOk())
+        .andExpect(content().contentType("application/json;charset=UTF-8"))
+        .andExpect(jsonPath("$.length()").value(0));
+  }
 }

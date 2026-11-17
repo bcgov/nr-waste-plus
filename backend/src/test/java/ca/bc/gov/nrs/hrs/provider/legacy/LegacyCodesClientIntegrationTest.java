@@ -143,4 +143,30 @@ class LegacyCodesClientIntegrationTest extends AbstractTestContainerIntegrationT
     assertNotNull(result);
     assertEquals(0, result.size());
   }
+
+  @Test
+  @DisplayName("Fallback to empty list when maturity type service returns 404")
+  void shouldFallbackMaturityTypeCodesWhenNotFound() {
+    clientApiStub.stubFor(
+        get(urlPathEqualTo("/api/codes/maturity-types"))
+            .willReturn(com.github.tomakehurst.wiremock.client.WireMock.notFound()));
+
+    var result = legacyCodesClient.getMaturityTypeCodes();
+
+    assertNotNull(result);
+    assertEquals(0, result.size());
+  }
+
+  @Test
+  @DisplayName("Fallback to empty list when harvest status service returns 404")
+  void shouldFallbackHarvestStatusCodesWhenNotFound() {
+    clientApiStub.stubFor(
+        get(urlPathEqualTo("/api/codes/harvest-statuses"))
+            .willReturn(com.github.tomakehurst.wiremock.client.WireMock.notFound()));
+
+    var result = legacyCodesClient.getHarvestStatusCodes();
+
+    assertNotNull(result);
+    assertEquals(0, result.size());
+  }
 }
