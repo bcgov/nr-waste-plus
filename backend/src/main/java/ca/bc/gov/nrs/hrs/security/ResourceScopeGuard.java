@@ -38,7 +38,8 @@ import org.springframework.web.server.ResponseStatusException;
  * <p>Enforces the following business rules:
  * <ul>
  *   <li>IDIR ADMIN and AREA callers carry cross-district privileges and are unrestricted.</li>
- *   <li>IDIR DISTRICT scope is restricted to their assigned district code.</li>
+ *   <li>IDIR DISTRICT scope is restricted to their assigned district code (resolved from
+ *       {@code custom:idp_district}, {@code custom:district}, or FAM group role suffixes).</li>
  *   <li>BCeID SUBMITTER and VIEWER scope is restricted to Reporting Units owned by client.</li>
  *   <li>Resources outside the requester's scope return HTTP 404, matching the "no existence
  *       disclosure" rule (never HTTP 403). Note: the route-level filter gate returns HTTP 403
@@ -46,7 +47,8 @@ import org.springframework.web.server.ResponseStatusException;
  *   <li>VIEWER role (either provider) is read-only: HTTP 200 on in-scope reads, HTTP 403 on
  *       in-scope writes, and HTTP 404 on out-of-scope resources.</li>
  *   <li>IDIR VIEWER without an assigned district fails closed (HTTP 404).</li>
- *   <li>Unsupported or unresolved identity providers fail closed with HTTP 401/403.</li>
+ *   <li>Unresolved or missing identity provider results in HTTP 401 Unauthorized.</li>
+ *   <li>Unsupported identity providers or invalid role combinations result in HTTP 403 Forbidden.</li>
  *   <li>Every authorization failure is logged with a correlation ID for audit purposes.</li>
  * </ul>
  */
@@ -213,12 +215,14 @@ public class ResourceScopeGuard {
     }
 
     ReportingUnitScope targetScope = resolveTargetScope(reportingUnitId, jwt, httpMethod);
-    verifyTargetScope(
+    enforceResourceScopeAndWrite(
         jwt,
         reportingUnitId,
         targetScope.clientNumber(),
         targetScope.districtCode(),
-        httpMethod);
+        httpMethod,
+        idp,
+        roles);
   }
 
   /**
@@ -252,6 +256,25 @@ public class ResourceScopeGuard {
         return;
       }
     }
+
+    enforceResourceScopeAndWrite(
+        jwt,
+        reportingUnitId,
+        targetClientNumber,
+        targetDistrictCode,
+        httpMethod,
+        idp,
+        roles);
+  }
+
+  private void enforceResourceScopeAndWrite(
+      Jwt jwt,
+      Long reportingUnitId,
+      String targetClientNumber,
+      String targetDistrictCode,
+      String httpMethod,
+      IdentityProvider idp,
+      Map<Role, List<String>> roles) {
 
     // Enforce resource scope
     if (IdentityProvider.BUSINESS_BCEID == idp) {
@@ -387,7 +410,8 @@ public class ResourceScopeGuard {
    */
   public void verifyDistrictScope(Jwt jwt, String districtCode) {
     if (jwt == null) {
-      return;
+      logSecurityDenied(null, null, "POST", 401, "Unauthenticated request");
+      throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Authentication is required");
     }
     IdentityProvider idp = resolveIdentityProvider(jwt);
     if (IdentityProvider.IDIR == idp) {

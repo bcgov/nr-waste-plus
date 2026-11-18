@@ -690,10 +690,14 @@ class ResourceScopeGuardTest {
     }
 
     @Test
-    @DisplayName("null JWT does not throw")
-    void nullJwt_doesNotThrow() {
-      assertThatCode(() -> guard.verifyDistrictScope(null, DISTRICT_IN_SCOPE))
-          .doesNotThrowAnyException();
+    @DisplayName("null JWT throws 401 Unauthorized")
+    void nullJwt_throws401() {
+      assertThatThrownBy(() -> guard.verifyDistrictScope(null, DISTRICT_IN_SCOPE))
+          .isInstanceOf(ResponseStatusException.class)
+          .satisfies(
+              ex ->
+                  assertThat(((ResponseStatusException) ex).getStatusCode())
+                      .isEqualTo(HttpStatus.UNAUTHORIZED));
     }
   }
 }
