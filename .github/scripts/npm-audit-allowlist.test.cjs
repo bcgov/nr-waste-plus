@@ -107,6 +107,69 @@ test('validateAllowlistSchema enforces required fields and format', () => {
     /"folders" must be a non-empty array/
   );
 
+  assert.throws(
+    () =>
+      validateAllowlistSchema([
+        {
+          id: 'GHSA-vfj7-8cjw-p6xm',
+          url: 'https://example.com',
+          package: 'braces',
+          owner: 'Team',
+          reviewBy: '2026-12-01',
+          allowBuildOnly: 'not-a-boolean',
+        },
+      ]),
+    /"allowBuildOnly" must be a boolean/
+  );
+
+  // allowBuildOnly requires non-empty folders
+  assert.throws(
+    () =>
+      validateAllowlistSchema([
+        {
+          id: 'GHSA-vfj7-8cjw-p6xm',
+          url: 'https://example.com',
+          package: 'braces',
+          owner: 'Team',
+          reviewBy: '2026-12-01',
+          allowBuildOnly: true,
+        },
+      ]),
+    /must specify a non-empty "folders" array when "allowBuildOnly" is true/
+  );
+
+  assert.throws(
+    () =>
+      validateAllowlistSchema([
+        {
+          id: 'GHSA-vfj7-8cjw-p6xm',
+          url: 'https://example.com',
+          package: 'braces',
+          owner: 'Team',
+          reviewBy: '2026-12-01',
+          allowBuildOnly: true,
+          folders: [],
+        },
+      ]),
+    /"folders" must be a non-empty array/
+  );
+
+  // allowedParents validation
+  assert.throws(
+    () =>
+      validateAllowlistSchema([
+        {
+          id: 'GHSA-vfj7-8cjw-p6xm',
+          url: 'https://example.com',
+          package: 'braces',
+          owner: 'Team',
+          reviewBy: '2026-12-01',
+          allowedParents: 'invalid',
+        },
+      ]),
+    /"allowedParents" must be a non-empty array of strings/
+  );
+
   // Valid schema passes without error
   assert.doesNotThrow(() =>
     validateAllowlistSchema([
@@ -159,6 +222,136 @@ test('validateProdAuditReport ensures zero high/critical vulns in prod and fails
   );
   assert.throws(
     () => validateProdAuditReport({ vulnerabilities: { braces: { severity: 'critical' } } }),
+    /Allowlist only applies to devDependencies/
+  );
+
+  // With explicit allowBuildOnly allowlist, permitted build-only exception passes
+  const buildOnlyAllowlist = [
+    {
+      id: 'GHSA-fc5q-39xc-vjpf',
+      url: 'https://github.com/advisories/GHSA-fc5q-39xc-vjpf',
+      package: 'picomatch',
+      owner: 'Team',
+      reviewBy: '2099-01-01',
+      allowBuildOnly: true,
+      folders: ['frontend'],
+    },
+  ];
+
+  const prodReportWithPicomatch = {
+    vulnerabilities: {
+      '@parcel/watcher': {
+        name: '@parcel/watcher',
+        severity: 'high',
+        via: ['picomatch'],
+      },
+      picomatch: {
+        name: 'picomatch',
+        severity: 'high',
+        via: [{ url: 'https://github.com/advisories/GHSA-fc5q-39xc-vjpf' }],
+      },
+    },
+  };
+
+  assert.doesNotThrow(() =>
+    validateProdAuditReport(prodReportWithPicomatch, '{}', buildOnlyAllowlist, 'frontend')
+  );
+
+  // Throws if scoped to a different folder
+  assert.throws(
+    () => validateProdAuditReport(prodReportWithPicomatch, '{}', buildOnlyAllowlist, 'cypress'),
+    /Allowlist only applies to devDependencies/
+  );
+
+  // Throws if allowBuildOnly entry has no folders
+  const folderlessAllowlist = [
+    {
+      id: 'GHSA-fc5q-39xc-vjpf',
+      url: 'https://github.com/advisories/GHSA-fc5q-39xc-vjpf',
+      package: 'picomatch',
+      owner: 'Team',
+      reviewBy: '2099-01-01',
+      allowBuildOnly: true,
+    },
+  ];
+  assert.throws(
+    () => validateProdAuditReport(prodReportWithPicomatch, '{}', folderlessAllowlist, 'backend'),
+    /Allowlist only applies to devDependencies/
+  );
+
+  // Parent pinning with allowedParents:
+  const pinnedAllowlist = [
+    {
+      id: 'GHSA-fc5q-39xc-vjpf',
+      url: 'https://github.com/advisories/GHSA-fc5q-39xc-vjpf',
+      package: 'picomatch',
+      owner: 'Team',
+      reviewBy: '2099-01-01',
+      allowBuildOnly: true,
+      allowedParents: ['@parcel/watcher'],
+      folders: ['frontend'],
+    },
+  ];
+
+  // Passes when parent is @parcel/watcher
+  assert.doesNotThrow(() =>
+    validateProdAuditReport(prodReportWithPicomatch, '{}', pinnedAllowlist, 'frontend')
+  );
+
+  // Fails when a hypothetical runtime package reaches picomatch
+  const prodReportWithHypotheticalRuntimePkg = {
+    vulnerabilities: {
+      hypotheticalRuntimePkg: {
+        name: 'hypotheticalRuntimePkg',
+        severity: 'high',
+        via: ['picomatch'],
+      },
+      picomatch: {
+        name: 'picomatch',
+        severity: 'high',
+        via: [{ url: 'https://github.com/advisories/GHSA-fc5q-39xc-vjpf' }],
+      },
+    },
+  };
+  assert.throws(
+    () => validateProdAuditReport(prodReportWithHypotheticalRuntimePkg, '{}', pinnedAllowlist, 'frontend'),
+    /Allowlist only applies to devDependencies/
+  );
+
+  // Fails when picomatch has an unexpected effect/dependent
+  const prodReportWithUnexpectedEffect = {
+    vulnerabilities: {
+      '@parcel/watcher': {
+        name: '@parcel/watcher',
+        severity: 'high',
+        via: ['picomatch'],
+      },
+      picomatch: {
+        name: 'picomatch',
+        severity: 'high',
+        effects: ['@parcel/watcher', 'someOtherPkg'],
+        via: [{ url: 'https://github.com/advisories/GHSA-fc5q-39xc-vjpf' }],
+      },
+    },
+  };
+  assert.throws(
+    () => validateProdAuditReport(prodReportWithUnexpectedEffect, '{}', pinnedAllowlist, 'frontend'),
+    /Allowlist only applies to devDependencies/
+  );
+
+  // Throws if allowBuildOnly is false or omitted
+  const nonBuildOnlyAllowlist = [
+    {
+      id: 'GHSA-fc5q-39xc-vjpf',
+      url: 'https://github.com/advisories/GHSA-fc5q-39xc-vjpf',
+      package: 'picomatch',
+      owner: 'Team',
+      reviewBy: '2099-01-01',
+      folders: ['frontend'],
+    },
+  ];
+  assert.throws(
+    () => validateProdAuditReport(prodReportWithPicomatch, '{}', nonBuildOnlyAllowlist, 'frontend'),
     /Allowlist only applies to devDependencies/
   );
 });
@@ -411,6 +604,62 @@ test('run() fails when production audit detects high/critical vulnerabilities', 
       }),
     /Allowlist only applies to devDependencies/
   );
+});
+
+test('run() passes when production audit has high/critical vulnerability covered by allowBuildOnly exception', () => {
+  const allowlist = [
+    {
+      id: 'GHSA-fc5q-39xc-vjpf',
+      url: 'https://github.com/advisories/GHSA-fc5q-39xc-vjpf',
+      package: 'picomatch',
+      owner: 'Team',
+      reviewBy: '2099-01-01',
+      allowBuildOnly: true,
+      folders: ['frontend'],
+    },
+  ];
+
+  const fullAuditJson = JSON.stringify({
+    vulnerabilities: {
+      picomatch: {
+        name: 'picomatch',
+        severity: 'high',
+        via: [{ url: 'https://github.com/advisories/GHSA-fc5q-39xc-vjpf', name: 'picomatch' }],
+      },
+    },
+  });
+
+  const prodAuditJson = JSON.stringify({
+    vulnerabilities: {
+      picomatch: {
+        name: 'picomatch',
+        severity: 'high',
+        via: [{ url: 'https://github.com/advisories/GHSA-fc5q-39xc-vjpf', name: 'picomatch' }],
+      },
+    },
+  });
+
+  let exitCode = null;
+  const logs = [];
+
+  run({
+    allowlist,
+    args: ['--folder', 'frontend'],
+    execSync: (cmd) => {
+      if (cmd.includes('--omit=dev')) return prodAuditJson;
+      return fullAuditJson;
+    },
+    logger: {
+      log: (msg) => logs.push(msg),
+      error: (msg) => logs.push(`ERR: ${msg}`),
+    },
+    onExit: (code) => {
+      exitCode = code;
+    },
+  });
+
+  assert.equal(exitCode, 0);
+  assert.ok(logs.some((l) => l.includes('build-only exception matched for production audit')));
 });
 
 test('run() exits with 1 when unhandled vulnerability exists in full audit', () => {
