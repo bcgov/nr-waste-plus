@@ -101,19 +101,19 @@ public final class ReportingUnitQueryConstants {
         )
         AND (
           NVL(:#{#filter.timberMark}, 'NOVALUE') = 'NOVALUE'
-          OR (
-            UPPER(waa.draft_timber_mark) = :#{#filter.timberMark}
-            OR UPPER(waa.timber_mark) = :#{#filter.timberMark}
-            OR (
-                EXISTS (
-                  SELECT 1 FROM WASTE_ASSESSMENT_AREA waa_child
-                  WHERE waa_child.parent_waa_id = waa.waste_assessment_area_id
-                  AND (
-                    UPPER(waa_child.draft_timber_mark) = :#{#filter.timberMark}
-                    OR UPPER(waa_child.TIMBER_MARK) = :#{#filter.timberMark}
-                  )
-                )
-            )
+          OR waa.waste_assessment_area_id IN (
+            SELECT tm_waa.waste_assessment_area_id
+            FROM WASTE_ASSESSMENT_AREA tm_waa
+            WHERE UPPER(tm_waa.timber_mark) = UPPER(:#{#filter.timberMark})
+               OR UPPER(tm_waa.draft_timber_mark) = UPPER(:#{#filter.timberMark})
+            UNION ALL
+            SELECT tm_c.parent_waa_id
+            FROM WASTE_ASSESSMENT_AREA tm_c
+            WHERE tm_c.parent_waa_id IS NOT NULL
+              AND (
+                UPPER(tm_c.timber_mark) = UPPER(:#{#filter.timberMark})
+                OR UPPER(tm_c.draft_timber_mark) = UPPER(:#{#filter.timberMark})
+              )
           )
         )
         AND (
@@ -143,12 +143,15 @@ public final class ReportingUnitQueryConstants {
       + SEARCH_REPORTING_UNIT_FROM_JOIN
       + SEARCH_REPORTING_UNIT_WHERE;
 
+  /**
+   * Count query for search pagination. Uses a direct COUNT(1) over the same FROM/JOIN and WHERE
+   * clauses as {@link #SEARCH_REPORTING_UNIT_QUERY}; this is equivalent because the search query
+   * select list contains no DISTINCT or row-multiplying aggregates.
+   */
   public static final String SEARCH_REPORTING_UNIT_COUNT =
-      "WITH DistinctResults AS ("
-      + SEARCH_REPORTING_UNIT_SELECT
+      "SELECT COUNT(1) "
       + SEARCH_REPORTING_UNIT_FROM_JOIN
-      + SEARCH_REPORTING_UNIT_WHERE
-      + ") SELECT COUNT(1) OVER () AS total FROM DistinctResults ";
+      + SEARCH_REPORTING_UNIT_WHERE;
 
   private static final String GET_BLOCK_COUNT = """
       SELECT
