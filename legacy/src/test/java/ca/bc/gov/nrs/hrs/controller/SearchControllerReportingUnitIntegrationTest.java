@@ -318,6 +318,81 @@ class SearchControllerReportingUnitIntegrationTest
   }
 
   @Test
+  @DisplayName("Should search for primary timber mark ER9210")
+  void shouldSearchForPrimary() throws Exception {
+    mockMvc
+        .perform(
+            get(SEARCH_URL)
+                .header(HttpHeaders.CONTENT_TYPE, CONTENT_TYPE_JSON)
+                .param("page", "0")
+                .param("size", "1")
+                .param("timberMark", "ER9210")
+                .accept(CONTENT_TYPE_JSON))
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(CONTENT_TYPE_JSON))
+        .andExpect(jsonPath("$.content.length()").value(Matchers.equalTo(1)))
+        .andExpect(jsonPath("$.content[0].ruNumber").value(36301))
+        .andExpect(jsonPath("$.page.totalElements").value(Matchers.equalTo(1)))
+        .andReturn();
+  }
+
+  @Test
+  @DisplayName("Should search for primary with lowercase timber mark jy1009")
+  void shouldSearchForPrimaryWithLowerCase() throws Exception {
+    mockMvc
+        .perform(
+            get(SEARCH_URL)
+                .header(HttpHeaders.CONTENT_TYPE, CONTENT_TYPE_JSON)
+                .param("page", "0")
+                .param("size", "1")
+                .param("timberMark", "jy1009")
+                .accept(CONTENT_TYPE_JSON))
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(CONTENT_TYPE_JSON))
+        .andExpect(jsonPath("$.content.length()").value(Matchers.equalTo(1)))
+        .andExpect(jsonPath("$.content[0].ruNumber").value(879))
+        .andExpect(jsonPath("$.page.totalElements").value(Matchers.equalTo(1)))
+        .andReturn();
+  }
+
+  @Test
+  @DisplayName("Should search for secondary with lowercase timber mark")
+  void shouldSearchForSecondaryWithLowerCase() throws Exception {
+    mockMvc
+        .perform(
+            get(SEARCH_URL)
+                .header(HttpHeaders.CONTENT_TYPE, CONTENT_TYPE_JSON)
+                .param("page", "0")
+                .param("size", "1")
+                .param("timberMark", "em30r1")
+                .accept(CONTENT_TYPE_JSON))
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(CONTENT_TYPE_JSON))
+        .andExpect(jsonPath("$.content.length()").value(Matchers.equalTo(1)))
+        .andExpect(jsonPath("$.content[0].ruNumber").value(879))
+        .andExpect(jsonPath("$.page.totalElements").value(Matchers.equalTo(1)))
+        .andReturn();
+  }
+
+  @Test
+  @DisplayName("Should search for timber mark with no matching results")
+  void shouldSearchForTimberMarkNoResults() throws Exception {
+    mockMvc
+        .perform(
+            get(SEARCH_URL)
+                .header(HttpHeaders.CONTENT_TYPE, CONTENT_TYPE_JSON)
+                .param("page", "0")
+                .param("size", "10")
+                .param("timberMark", "NONEXISTENT")
+                .accept(CONTENT_TYPE_JSON))
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(CONTENT_TYPE_JSON))
+        .andExpect(jsonPath("$.content.length()").value(Matchers.equalTo(0)))
+        .andExpect(jsonPath("$.page.totalElements").value(Matchers.equalTo(0)))
+        .andReturn();
+  }
+
+  @Test
   @DisplayName("Should get expanded with secondary mark")
   void shouldGetExtendedWithSecondaryMark() throws Exception {
     mockMvc
