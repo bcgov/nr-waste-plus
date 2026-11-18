@@ -18,6 +18,7 @@ import java.util.List;
  *   <li>{@code isLegacy}: true when served from the legacy API, false when served from postgres
  *   <li>{@code secondaryTimberMarks}: secondary timber marks associated with the block
  *   <li>{@code roadPermitTimberMarks}: road permit timber marks associated with the block
+ *   <li>{@code wasteAssessmentAreaSummary}: precomputed waste assessment area summary
  * </ul>
  */
 public record BlockDetailDto(
@@ -29,15 +30,18 @@ public record BlockDetailDto(
     Long revision,
     boolean isLegacy,
     List<BlockMarkDto> secondaryTimberMarks,
-    List<BlockMarkDto> roadPermitTimberMarks) {
+    List<BlockMarkDto> roadPermitTimberMarks,
+    WasteAssessmentAreaSummaryDto wasteAssessmentAreaSummary) {
 
   /** Canonical constructor ensuring mark lists are never null. */
   public BlockDetailDto {
-    secondaryTimberMarks = secondaryTimberMarks == null ? List.of() : List.copyOf(secondaryTimberMarks);
-    roadPermitTimberMarks = roadPermitTimberMarks == null ? List.of() : List.copyOf(roadPermitTimberMarks);
+    secondaryTimberMarks =
+        secondaryTimberMarks == null ? List.of() : List.copyOf(secondaryTimberMarks);
+    roadPermitTimberMarks =
+        roadPermitTimberMarks == null ? List.of() : List.copyOf(roadPermitTimberMarks);
   }
 
-  /** Backward-compatible constructor without timber mark payload. */
+  /** Backward-compatible constructor without timber mark payload or summary. */
   public BlockDetailDto(
       Long id,
       Long reportingUnitId,
@@ -46,6 +50,40 @@ public record BlockDetailDto(
       LocalDate plcDate,
       Long revision,
       boolean isLegacy) {
-    this(id, reportingUnitId, blockType, draft, plcDate, revision, isLegacy, List.of(), List.of());
+    this(
+        id,
+        reportingUnitId,
+        blockType,
+        draft,
+        plcDate,
+        revision,
+        isLegacy,
+        List.of(),
+        List.of(),
+        null);
+  }
+
+  /** Backward-compatible constructor without waste assessment area summary. */
+  public BlockDetailDto(
+      Long id,
+      Long reportingUnitId,
+      String blockType,
+      boolean draft,
+      LocalDate plcDate,
+      Long revision,
+      boolean isLegacy,
+      List<BlockMarkDto> secondaryTimberMarks,
+      List<BlockMarkDto> roadPermitTimberMarks) {
+    this(
+        id,
+        reportingUnitId,
+        blockType,
+        draft,
+        plcDate,
+        revision,
+        isLegacy,
+        secondaryTimberMarks,
+        roadPermitTimberMarks,
+        null);
   }
 }

@@ -9,5 +9,13 @@
   "revision" : 1,
   "isLegacy" : false,
   "createdAt" : null,
-  "updatedAt" : null
+  "updatedAt" : null,
+  "wasteAssessmentAreaSummary" : {
+    "primary" : {
+      "timberMarkId" : "TM-TEST",
+      "netWasteAreaHa" : null
+    },
+    "secondary" : [ ],
+    "totalNetWasteAreaHa" : 0
+  }
 }

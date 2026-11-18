@@ -12,6 +12,10 @@ import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchExpandedDto;
 import ca.bc.gov.nrs.hrs.dto.search.SearchExpandedSecondaryDto;
 import ca.bc.gov.nrs.hrs.dto.base.CodeDescriptionDto;
 import ca.bc.gov.nrs.hrs.dto.block.BlockType;
+import ca.bc.gov.nrs.hrs.dto.block.WasteAssessmentAreaMarkDto;
+import ca.bc.gov.nrs.hrs.dto.block.WasteAssessmentAreaSummaryDto;
+import ca.bc.gov.nrs.hrs.entity.block.BlockAreaSegmentEntity;
+import java.math.BigDecimal;
 import ca.bc.gov.nrs.hrs.entity.block.BlockEntity;
 import ca.bc.gov.nrs.hrs.entity.block.BlockMarkEntity;
 import ca.bc.gov.nrs.hrs.entity.block.ReportingUnitEntity;
@@ -23,6 +27,7 @@ import ca.bc.gov.nrs.hrs.exception.NotFoundGenericException;
 import ca.bc.gov.nrs.hrs.exception.ReportingUnitNotFoundException;
 import ca.bc.gov.nrs.hrs.exception.ReportingUnitStateConflictException;
 import ca.bc.gov.nrs.hrs.extensions.WithMockJwtSecurityContextFactory;
+import ca.bc.gov.nrs.hrs.repository.block.BlockAreaSegmentRepository;
 import ca.bc.gov.nrs.hrs.repository.block.BlockRepository;
 import ca.bc.gov.nrs.hrs.repository.block.ReportingUnitRepository;
 import ca.bc.gov.nrs.hrs.repository.block.StatusEventRepository;
@@ -74,6 +79,9 @@ class BlockServiceTest {
 
   @Mock
   private ca.bc.gov.nrs.hrs.mapper.block.BlockMarkMapper blockMarkMapper;
+
+  @Mock
+  private BlockAreaSegmentRepository blockAreaSegmentRepository;
 
   @InjectMocks
   private BlockService blockService;
@@ -682,11 +690,274 @@ class BlockServiceTest {
     assertThat(result.secondaryTimberMarks().get(0).mark()).isEqualTo("SEC2");
     assertThat(result.secondaryTimberMarks().get(0).markType()).isEqualTo("SECONDARY");
     assertThat(result.secondaryTimberMarks().get(0).sequenceNo()).isEqualTo(1);
-    assertThat(result.roadPermitTimberMarks()).extracting(BlockMarkDto::mark)
+    assertThat(result.roadPermitTimberMarks())
+        .extracting(BlockMarkDto::mark)
         .containsExactly("RPRIMARY", "RSEC");
     assertThat(result.roadPermitTimberMarks()).allMatch(m -> "ROAD_PERMIT".equals(m.markType()));
-    assertThat(result.roadPermitTimberMarks()).extracting(BlockMarkDto::sequenceNo)
+    assertThat(result.roadPermitTimberMarks())
+        .extracting(BlockMarkDto::sequenceNo)
         .containsExactly(1, 2);
+    assertThat(result.wasteAssessmentAreaSummary()).isNotNull();
+    assertThat(result.wasteAssessmentAreaSummary().primary())
+        .isEqualTo(new WasteAssessmentAreaMarkDto("RPRIMARY", BigDecimal.valueOf(0.0)));
+    assertThat(result.wasteAssessmentAreaSummary().secondary())
+        .containsExactly(new WasteAssessmentAreaMarkDto("SEC2", BigDecimal.valueOf(1.0)));
+    assertThat(result.wasteAssessmentAreaSummary().totalNetWasteAreaHa())
+        .isEqualByComparingTo("1.0");
+  }
+
+
+  @Test
+  @DisplayName("getBlockDetails returns postgres waste assessment area summary with per-mark attributed net areas")
+  void getBlockDetails_whenPostgresBlockHasMarksAndSegments_returnsWasteAssessmentAreaSummary() {
+    blockService.setClock(Clock.fixed(Instant.parse("2026-11-17T12:00:00Z"), ZoneOffset.UTC));
+    when(reportingUnitRepository.findByIdAndDeletedFalse(RU_ID))
+        .thenReturn(Optional.of(reportingUnit));
+
+    BlockEntity block = new BlockEntity();
+    block.setId(BLOCK_ID);
+    block.setReportingUnitId(RU_ID);
+    block.setPlcDate(LocalDate.of(2026, 3, 15));
+    when(blockRepository.findByIdAndReportingUnitIdAndDeletedFalse(BLOCK_ID, RU_ID))
+        .thenReturn(Optional.of(block));
+
+    var mapped =
+        new ca.bc.gov.nrs.hrs.dto.block.BlockResponseDto(
+            BLOCK_ID,
+            RU_ID,
+            "DISTRICT_AVERAGE",
+            "DRAFT",
+            true,
+            LocalDate.of(2026, 3, 15),
+            0L,
+            0L,
+            false,
+            null,
+            null);
+    when(blockMapper.toResponseDto(block)).thenReturn(mapped);
+
+    BlockMarkEntity primary = new BlockMarkEntity();
+    primary.setId(1L);
+    primary.setBlockId(BLOCK_ID);
+    primary.setMarkType("PRIMARY");
+    primary.setSequenceNo(0);
+    primary.setMark("M1");
+    primary.setTimberMark(" TM-PRIMARY ");
+
+    BlockMarkEntity secondary = new BlockMarkEntity();
+    secondary.setId(2L);
+    secondary.setBlockId(BLOCK_ID);
+    secondary.setMarkType("SECONDARY");
+    secondary.setSequenceNo(1);
+    secondary.setMark("SEC-MARK");
+    secondary.setTimberMark(null);
+
+    BlockMarkEntity secondaryNoArea = new BlockMarkEntity();
+    secondaryNoArea.setId(3L);
+    secondaryNoArea.setBlockId(BLOCK_ID);
+    secondaryNoArea.setMarkType("SECONDARY");
+    secondaryNoArea.setSequenceNo(2);
+    secondaryNoArea.setMark("SEC-NO-AREA");
+
+    when(blockMarkRepository.findByBlockIdAndMarkTypeAndDeletedFalseOrderBySequenceNo(
+            BLOCK_ID, "PRIMARY"))
+        .thenReturn(List.of(primary));
+    when(blockMarkRepository.findByBlockIdAndMarkTypeAndDeletedFalseOrderBySequenceNo(
+            BLOCK_ID, "SECONDARY"))
+        .thenReturn(List.of(secondary, secondaryNoArea));
+    when(blockMarkRepository.findByBlockIdAndMarkTypeAndDeletedFalseOrderBySequenceNo(
+            BLOCK_ID, "ROAD_PERMIT"))
+        .thenReturn(List.of());
+
+    BlockAreaSegmentEntity segPrimaryA = new BlockAreaSegmentEntity();
+    segPrimaryA.setBlockMarkId(1L);
+    segPrimaryA.setNetWasteAreaHa(new BigDecimal("1.25"));
+    BlockAreaSegmentEntity segPrimaryB = new BlockAreaSegmentEntity();
+    segPrimaryB.setBlockMarkId(1L);
+    segPrimaryB.setNetWasteAreaHa(new BigDecimal("0.75"));
+    BlockAreaSegmentEntity segSecondaryNull = new BlockAreaSegmentEntity();
+    segSecondaryNull.setBlockMarkId(2L);
+    segSecondaryNull.setNetWasteAreaHa(null);
+    BlockAreaSegmentEntity segUnlinked = new BlockAreaSegmentEntity();
+    segUnlinked.setBlockMarkId(null);
+    segUnlinked.setNetWasteAreaHa(new BigDecimal("99.99"));
+    when(blockAreaSegmentRepository.findByBlockIdAndDeletedFalse(BLOCK_ID))
+        .thenReturn(List.of(segPrimaryA, segPrimaryB, segSecondaryNull, segUnlinked));
+
+    var result = blockService.getBlockDetails(RU_ID, BLOCK_ID, idirJwt);
+
+    WasteAssessmentAreaSummaryDto summary = result.wasteAssessmentAreaSummary();
+    assertThat(summary).isNotNull();
+    assertThat(summary.primary())
+        .isEqualTo(new WasteAssessmentAreaMarkDto("TM-PRIMARY", new BigDecimal("2.00")));
+    assertThat(summary.secondary())
+        .containsExactly(
+            new WasteAssessmentAreaMarkDto("SEC-MARK", null),
+            new WasteAssessmentAreaMarkDto("SEC-NO-AREA", null));
+    assertThat(summary.totalNetWasteAreaHa()).isEqualByComparingTo("2.00");
+  }
+
+  @Test
+  @DisplayName("getBlockDetails returns postgres summary with null primary and zero total when no marks exist")
+  void getBlockDetails_whenPostgresBlockHasNoMarks_returnsEmptyWasteAssessmentAreaSummary() {
+    blockService.setClock(Clock.fixed(Instant.parse("2026-11-17T12:00:00Z"), ZoneOffset.UTC));
+    when(reportingUnitRepository.findByIdAndDeletedFalse(RU_ID))
+        .thenReturn(Optional.of(reportingUnit));
+
+    BlockEntity block = new BlockEntity();
+    block.setId(BLOCK_ID);
+    block.setReportingUnitId(RU_ID);
+    when(blockRepository.findByIdAndReportingUnitIdAndDeletedFalse(BLOCK_ID, RU_ID))
+        .thenReturn(Optional.of(block));
+
+    var mapped =
+        new ca.bc.gov.nrs.hrs.dto.block.BlockResponseDto(
+            BLOCK_ID, RU_ID, "DISTRICT_AVERAGE", "DRAFT", true, null, 0L, 0L, false, null, null);
+    when(blockMapper.toResponseDto(block)).thenReturn(mapped);
+    when(blockMarkRepository.findByBlockIdAndMarkTypeAndDeletedFalseOrderBySequenceNo(
+            BLOCK_ID, "SECONDARY"))
+        .thenReturn(List.of());
+    when(blockMarkRepository.findByBlockIdAndMarkTypeAndDeletedFalseOrderBySequenceNo(
+            BLOCK_ID, "ROAD_PERMIT"))
+        .thenReturn(List.of());
+    when(blockMarkRepository.findByBlockIdAndMarkTypeAndDeletedFalseOrderBySequenceNo(
+            BLOCK_ID, "PRIMARY"))
+        .thenReturn(List.of());
+    when(blockAreaSegmentRepository.findByBlockIdAndDeletedFalse(BLOCK_ID)).thenReturn(List.of());
+
+    var result = blockService.getBlockDetails(RU_ID, BLOCK_ID, idirJwt);
+
+    assertThat(result.wasteAssessmentAreaSummary()).isNotNull();
+    assertThat(result.wasteAssessmentAreaSummary().primary()).isNull();
+    assertThat(result.wasteAssessmentAreaSummary().secondary()).isEmpty();
+    assertThat(result.wasteAssessmentAreaSummary().totalNetWasteAreaHa())
+        .isEqualByComparingTo("0");
+  }
+
+  @Test
+  @DisplayName("getBlockDetails returns legacy waste assessment area summary derived from expanded search")
+  void getBlockDetails_whenLegacyExpandedHasAreas_returnsWasteAssessmentAreaSummary() {
+    blockService.setClock(Clock.fixed(Instant.parse("2026-11-17T12:00:00Z"), ZoneOffset.UTC));
+    when(reportingUnitRepository.findByIdAndDeletedFalse(RU_ID)).thenReturn(Optional.empty());
+
+    var legacyRu =
+        new ca.bc.gov.nrs.hrs.dto.reportingunit.ReportingUnitLegacyDetailsDto(
+            CLIENT_NUMBER,
+            "00",
+            new CodeDescriptionDto("AVG", "Average"),
+            new CodeDescriptionDto("DND", "Nadina"));
+    when(legacyApiProvider.getReportingUnitDetails(RU_ID)).thenReturn(legacyRu);
+
+    var legacyRow =
+        new ca.bc.gov.nrs.hrs.dto.block.BlockListItemDto(
+            BLOCK_ID,
+            "FILE",
+            "CP",
+            "CUT",
+            "TM-PRI",
+            null,
+            null,
+            "sub",
+            new ca.bc.gov.nrs.hrs.dto.block.BlockListItemDto.Status("DFT", "Draft"),
+            null,
+            null);
+    when(legacyApiProvider.getReportingUnitBlocksStrict(RU_ID)).thenReturn(List.of(legacyRow));
+
+    var expanded =
+        new ReportingUnitSearchExpandedDto(
+            BLOCK_ID,
+            "FILE",
+            "CP",
+            "TM-PRI",
+            false,
+            true,
+            null,
+            java.util.Arrays.asList(
+                new SearchExpandedSecondaryDto(
+                    "SEC2", new CodeDescriptionDto("APP", "Approved"), 1.5),
+                new SearchExpandedSecondaryDto(
+                    "RSEC", new CodeDescriptionDto("DFT", "Draft"), 2.0),
+                new SearchExpandedSecondaryDto(
+                    "SEC3", new CodeDescriptionDto("DFT", "Draft"), null),
+                new SearchExpandedSecondaryDto("", null, null),
+                null),
+            3.0,
+            0.0,
+            null,
+            null,
+            null,
+            0L,
+            0L);
+    when(legacyApiProvider.getSearchExpanded(RU_ID, BLOCK_ID)).thenReturn(expanded);
+
+    var result = blockService.getBlockDetails(RU_ID, BLOCK_ID, idirJwt);
+
+    WasteAssessmentAreaSummaryDto summary = result.wasteAssessmentAreaSummary();
+    assertThat(summary).isNotNull();
+    assertThat(summary.primary())
+        .isEqualTo(new WasteAssessmentAreaMarkDto("TM-PRI", BigDecimal.valueOf(3.0)));
+    assertThat(summary.secondary())
+        .containsExactly(
+            new WasteAssessmentAreaMarkDto("SEC2", BigDecimal.valueOf(1.5)),
+            new WasteAssessmentAreaMarkDto("SEC3", null));
+    assertThat(summary.totalNetWasteAreaHa()).isEqualByComparingTo("4.5");
+  }
+
+  @Test
+  @DisplayName("getBlockDetails returns legacy summary with zero total when expanded areas are null")
+  void getBlockDetails_whenLegacyExpandedHasNullAreas_returnsSummaryWithZeroTotal() {
+    blockService.setClock(Clock.fixed(Instant.parse("2026-11-17T12:00:00Z"), ZoneOffset.UTC));
+    when(reportingUnitRepository.findByIdAndDeletedFalse(RU_ID)).thenReturn(Optional.empty());
+
+    var legacyRu =
+        new ca.bc.gov.nrs.hrs.dto.reportingunit.ReportingUnitLegacyDetailsDto(
+            CLIENT_NUMBER,
+            "00",
+            new CodeDescriptionDto("AVG", "Average"),
+            new CodeDescriptionDto("DND", "Nadina"));
+    when(legacyApiProvider.getReportingUnitDetails(RU_ID)).thenReturn(legacyRu);
+
+    var legacyRow =
+        new ca.bc.gov.nrs.hrs.dto.block.BlockListItemDto(
+            BLOCK_ID,
+            "FILE",
+            "CP",
+            "CUT",
+            "TM-PRI",
+            null,
+            null,
+            "sub",
+            new ca.bc.gov.nrs.hrs.dto.block.BlockListItemDto.Status("DFT", "Draft"),
+            null,
+            null);
+    when(legacyApiProvider.getReportingUnitBlocksStrict(RU_ID)).thenReturn(List.of(legacyRow));
+    when(legacyApiProvider.getSearchExpanded(RU_ID, BLOCK_ID))
+        .thenReturn(
+            new ReportingUnitSearchExpandedDto(
+                BLOCK_ID,
+                "FILE",
+                "CP",
+                "TM-PRI",
+                false,
+                false,
+                null,
+                List.of(new SearchExpandedSecondaryDto("SEC2", null, null)),
+                null,
+                null,
+                null,
+                null,
+                null,
+                0L,
+                0L));
+
+    var result = blockService.getBlockDetails(RU_ID, BLOCK_ID, idirJwt);
+
+    assertThat(result.wasteAssessmentAreaSummary().primary())
+        .isEqualTo(new WasteAssessmentAreaMarkDto("TM-PRI", null));
+    assertThat(result.wasteAssessmentAreaSummary().secondary())
+        .containsExactly(new WasteAssessmentAreaMarkDto("SEC2", null));
+    assertThat(result.wasteAssessmentAreaSummary().totalNetWasteAreaHa())
+        .isEqualByComparingTo("0");
   }
 
 }
