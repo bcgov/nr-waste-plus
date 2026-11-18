@@ -64,11 +64,28 @@ function validateAllowlistSchema(allowlist) {
         throw new Error(`${prefix} (${entry.id}) "folders" must be a non-empty array of strings.`);
       }
     }
-    if (entry.allowBuildOnly !== undefined && typeof entry.allowBuildOnly !== 'boolean') {
-      throw new Error(`${prefix} (${entry.id}) "allowBuildOnly" must be a boolean.`);
+    if (entry.allowBuildOnly !== undefined) {
+      if (typeof entry.allowBuildOnly !== 'boolean') {
+        throw new Error(`${prefix} (${entry.id}) "allowBuildOnly" must be a boolean.`);
+      }
+      if (entry.allowBuildOnly === true) {
+        if (
+          !Array.isArray(entry.folders) ||
+          entry.folders.length === 0 ||
+          !entry.folders.every(f => typeof f === 'string' && f.trim().length > 0)
+        ) {
+          throw new Error(`${prefix} (${entry.id}) must specify a non-empty "folders" array when "allowBuildOnly" is true.`);
+        }
+      }
     }
-    if (entry.buildOnly !== undefined && typeof entry.buildOnly !== 'boolean') {
-      throw new Error(`${prefix} (${entry.id}) "buildOnly" must be a boolean.`);
+    if (entry.allowedParents !== undefined) {
+      if (
+        !Array.isArray(entry.allowedParents) ||
+        entry.allowedParents.length === 0 ||
+        !entry.allowedParents.every(p => typeof p === 'string' && p.trim().length > 0)
+      ) {
+        throw new Error(`${prefix} (${entry.id}) "allowedParents" must be a non-empty array of strings.`);
+      }
     }
   }
 }
@@ -141,10 +158,10 @@ function validateProdAuditReport(prodReport, rawProdOutput, allowlist = [], curr
   // Filter allowlist to entries explicitly scoped as allowBuildOnly for currentFolder
   const buildOnlyAllowlistMap = new Map();
   for (const entry of allowlist) {
-    if (!entry.allowBuildOnly && !entry.buildOnly) {
+    if (!entry.allowBuildOnly) {
       continue;
     }
-    if (entry.folders && currentFolder && !entry.folders.includes(currentFolder)) {
+    if (!Array.isArray(entry.folders) || !currentFolder || !entry.folders.includes(currentFolder)) {
       continue;
     }
     buildOnlyAllowlistMap.set(entry.url, entry);
@@ -162,15 +179,36 @@ function validateProdAuditReport(prodReport, rawProdOutput, allowlist = [], curr
       unhandledProdVulns.push(`${name} (${v.severity})`);
       continue;
     }
-    const allAllowed = keys.every(key => buildOnlyAllowlistMap.has(key));
+
+    const matchingEntries = keys.map(k => buildOnlyAllowlistMap.get(k));
+    const allAllowed = matchingEntries.every(entry => Boolean(entry));
     if (!allAllowed) {
       unhandledProdVulns.push(`${name} (${v.severity})`);
-    } else {
-      for (const key of keys) {
-        const entry = buildOnlyAllowlistMap.get(key);
-        if (entry) {
-          matchedBuildOnlyEntries.set(entry.id || entry.url, entry);
+      continue;
+    }
+
+    let packagePinned = true;
+    for (const entry of matchingEntries) {
+      if (entry.allowedParents && Array.isArray(entry.allowedParents)) {
+        if (name === entry.package) {
+          const effects = v.effects || [];
+          const allEffectsAllowed = effects.every(eff => entry.allowedParents.includes(eff));
+          if (!allEffectsAllowed) {
+            packagePinned = false;
+            break;
+          }
+        } else if (!entry.allowedParents.includes(name)) {
+          packagePinned = false;
+          break;
         }
+      }
+    }
+
+    if (!packagePinned) {
+      unhandledProdVulns.push(`${name} (${v.severity})`);
+    } else {
+      for (const entry of matchingEntries) {
+        matchedBuildOnlyEntries.set(entry.id || entry.url, entry);
       }
     }
   }

@@ -122,6 +122,54 @@ test('validateAllowlistSchema enforces required fields and format', () => {
     /"allowBuildOnly" must be a boolean/
   );
 
+  // allowBuildOnly requires non-empty folders
+  assert.throws(
+    () =>
+      validateAllowlistSchema([
+        {
+          id: 'GHSA-vfj7-8cjw-p6xm',
+          url: 'https://example.com',
+          package: 'braces',
+          owner: 'Team',
+          reviewBy: '2026-12-01',
+          allowBuildOnly: true,
+        },
+      ]),
+    /must specify a non-empty "folders" array when "allowBuildOnly" is true/
+  );
+
+  assert.throws(
+    () =>
+      validateAllowlistSchema([
+        {
+          id: 'GHSA-vfj7-8cjw-p6xm',
+          url: 'https://example.com',
+          package: 'braces',
+          owner: 'Team',
+          reviewBy: '2026-12-01',
+          allowBuildOnly: true,
+          folders: [],
+        },
+      ]),
+    /"folders" must be a non-empty array/
+  );
+
+  // allowedParents validation
+  assert.throws(
+    () =>
+      validateAllowlistSchema([
+        {
+          id: 'GHSA-vfj7-8cjw-p6xm',
+          url: 'https://example.com',
+          package: 'braces',
+          owner: 'Team',
+          reviewBy: '2026-12-01',
+          allowedParents: 'invalid',
+        },
+      ]),
+    /"allowedParents" must be a non-empty array of strings/
+  );
+
   // Valid schema passes without error
   assert.doesNotThrow(() =>
     validateAllowlistSchema([
@@ -212,6 +260,82 @@ test('validateProdAuditReport ensures zero high/critical vulns in prod and fails
   // Throws if scoped to a different folder
   assert.throws(
     () => validateProdAuditReport(prodReportWithPicomatch, '{}', buildOnlyAllowlist, 'cypress'),
+    /Allowlist only applies to devDependencies/
+  );
+
+  // Throws if allowBuildOnly entry has no folders
+  const folderlessAllowlist = [
+    {
+      id: 'GHSA-fc5q-39xc-vjpf',
+      url: 'https://github.com/advisories/GHSA-fc5q-39xc-vjpf',
+      package: 'picomatch',
+      owner: 'Team',
+      reviewBy: '2099-01-01',
+      allowBuildOnly: true,
+    },
+  ];
+  assert.throws(
+    () => validateProdAuditReport(prodReportWithPicomatch, '{}', folderlessAllowlist, 'backend'),
+    /Allowlist only applies to devDependencies/
+  );
+
+  // Parent pinning with allowedParents:
+  const pinnedAllowlist = [
+    {
+      id: 'GHSA-fc5q-39xc-vjpf',
+      url: 'https://github.com/advisories/GHSA-fc5q-39xc-vjpf',
+      package: 'picomatch',
+      owner: 'Team',
+      reviewBy: '2099-01-01',
+      allowBuildOnly: true,
+      allowedParents: ['@parcel/watcher'],
+      folders: ['frontend'],
+    },
+  ];
+
+  // Passes when parent is @parcel/watcher
+  assert.doesNotThrow(() =>
+    validateProdAuditReport(prodReportWithPicomatch, '{}', pinnedAllowlist, 'frontend')
+  );
+
+  // Fails when a hypothetical runtime package reaches picomatch
+  const prodReportWithHypotheticalRuntimePkg = {
+    vulnerabilities: {
+      hypotheticalRuntimePkg: {
+        name: 'hypotheticalRuntimePkg',
+        severity: 'high',
+        via: ['picomatch'],
+      },
+      picomatch: {
+        name: 'picomatch',
+        severity: 'high',
+        via: [{ url: 'https://github.com/advisories/GHSA-fc5q-39xc-vjpf' }],
+      },
+    },
+  };
+  assert.throws(
+    () => validateProdAuditReport(prodReportWithHypotheticalRuntimePkg, '{}', pinnedAllowlist, 'frontend'),
+    /Allowlist only applies to devDependencies/
+  );
+
+  // Fails when picomatch has an unexpected effect/dependent
+  const prodReportWithUnexpectedEffect = {
+    vulnerabilities: {
+      '@parcel/watcher': {
+        name: '@parcel/watcher',
+        severity: 'high',
+        via: ['picomatch'],
+      },
+      picomatch: {
+        name: 'picomatch',
+        severity: 'high',
+        effects: ['@parcel/watcher', 'someOtherPkg'],
+        via: [{ url: 'https://github.com/advisories/GHSA-fc5q-39xc-vjpf' }],
+      },
+    },
+  };
+  assert.throws(
+    () => validateProdAuditReport(prodReportWithUnexpectedEffect, '{}', pinnedAllowlist, 'frontend'),
     /Allowlist only applies to devDependencies/
   );
 
