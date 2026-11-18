@@ -1,5 +1,5 @@
 -- ============================================================================
--- V1.3.10__block_mark_road_permit_sequence_check.sql
+-- V1.4.0__block_mark_road_permit_sequence_check.sql
 -- Align road permit timber marks with secondary timber marks sequencing rules
 -- (1..5) in block_mark, fitting legacy "R*" road marks into the new model.
 -- ============================================================================
