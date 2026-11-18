@@ -2,6 +2,7 @@ package ca.bc.gov.nrs.hrs.controller;
 
 import ca.bc.gov.nrs.hrs.dto.block.LifecycleEventRequestDto;
 import ca.bc.gov.nrs.hrs.dto.block.LifecycleEventResponseDto;
+import ca.bc.gov.nrs.hrs.security.ResourceScopeGuard;
 import ca.bc.gov.nrs.hrs.service.lifecycle.LifecycleEventService;
 import ca.bc.gov.nrs.hrs.util.ConditionalRequestSupport;
 import io.micrometer.observation.annotation.Observed;
@@ -34,6 +35,7 @@ import org.springframework.web.server.ResponseStatusException;
 public class LifecycleEventController {
 
   private final LifecycleEventService lifecycleEventService;
+  private final ResourceScopeGuard resourceScopeGuard;
 
   /**
    * Applies a lifecycle event transition to a submission block.
@@ -62,6 +64,8 @@ public class LifecycleEventController {
       throw new ResponseStatusException(
           HttpStatus.BAD_REQUEST, "Idempotency-Key header is required and cannot be blank");
     }
+
+    resourceScopeGuard.verify(jwt, reportingUnitId, "POST");
 
     String normalizedEvent =
         request.event() != null ? request.event().trim().toUpperCase(Locale.ROOT) : "";
@@ -106,6 +110,8 @@ public class LifecycleEventController {
       throw new ResponseStatusException(
           HttpStatus.BAD_REQUEST, "Idempotency-Key header is required and cannot be blank");
     }
+
+    resourceScopeGuard.verify(jwt, reportingUnitId, "POST");
 
     String normalizedEvent =
         request.event() != null ? request.event().trim().toUpperCase(Locale.ROOT) : "";

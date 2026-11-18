@@ -21,6 +21,7 @@ import ca.bc.gov.nrs.hrs.exception.BlockNotFoundException;
 import ca.bc.gov.nrs.hrs.exception.ConditionalRequestException;
 import ca.bc.gov.nrs.hrs.exception.IllegalTransitionException;
 import ca.bc.gov.nrs.hrs.exception.ReportingUnitNotFoundException;
+import ca.bc.gov.nrs.hrs.repository.block.BlockAttachmentRepository;
 import ca.bc.gov.nrs.hrs.repository.block.BlockCommentRepository;
 import ca.bc.gov.nrs.hrs.repository.block.BlockRepository;
 import ca.bc.gov.nrs.hrs.repository.block.BlockRequirementRepository;
@@ -70,6 +71,9 @@ class LifecycleEventServiceTest {
 
   @Mock
   private BlockRequirementRepository blockRequirementRepository;
+
+  @Mock
+  private BlockAttachmentRepository blockAttachmentRepository;
 
   @Mock
   private BlockCommentRepository blockCommentRepository;
@@ -305,6 +309,53 @@ class LifecycleEventServiceTest {
       assertThat(response.state()).isEqualTo("CANCELLED");
       assertThat(block.isDraft()).isTrue();
       assertThat(block.getStatusCode()).isEqualTo("DFT");
+    }
+
+    @Test
+    @DisplayName("Submit without plcDate throws IllegalTransitionException")
+    void recordBlockLifecycleEvent_submitWithoutPlcDate_throws() {
+      MockHttpServletRequest request = new MockHttpServletRequest();
+      request.addHeader("If-Match", "\"5\"");
+
+      block.setPlcDate(null);
+      LifecycleEventRequestDto requestDto = new LifecycleEventRequestDto("SUBMIT", null);
+
+      when(reportingUnitRepository.findByIdAndDeletedFalse(RU_ID))
+          .thenReturn(Optional.of(reportingUnit));
+      when(blockRepository.findByIdAndReportingUnitIdAndDeletedFalse(BLOCK_ID, RU_ID))
+          .thenReturn(Optional.of(block));
+
+      assertThatThrownBy(
+              () ->
+                  lifecycleEventService.recordBlockLifecycleEvent(
+                      request, submitterJwt, RU_ID, BLOCK_ID, requestDto))
+          .isInstanceOf(IllegalTransitionException.class)
+          .hasMessageContaining("planned completion date (plcDate) is required");
+    }
+
+    @Test
+    @DisplayName("Submit with unfinalized or unclean attachments throws IllegalTransitionException")
+    void recordBlockLifecycleEvent_submitWithInvalidAttachment_throws() {
+      MockHttpServletRequest request = new MockHttpServletRequest();
+      request.addHeader("If-Match", "\"5\"");
+
+      LifecycleEventRequestDto requestDto = new LifecycleEventRequestDto("SUBMIT", null);
+
+      when(reportingUnitRepository.findByIdAndDeletedFalse(RU_ID))
+          .thenReturn(Optional.of(reportingUnit));
+      when(blockRepository.findByIdAndReportingUnitIdAndDeletedFalse(BLOCK_ID, RU_ID))
+          .thenReturn(Optional.of(block));
+      when(blockAttachmentRepository.countByBlockIdAndDeletedFalse(BLOCK_ID)).thenReturn(2L);
+      when(blockAttachmentRepository.countByBlockIdAndStatusAndScanStatusAndDeletedFalse(
+              BLOCK_ID, "FINALIZED", "CLEAN"))
+          .thenReturn(1L);
+
+      assertThatThrownBy(
+              () ->
+                  lifecycleEventService.recordBlockLifecycleEvent(
+                      request, submitterJwt, RU_ID, BLOCK_ID, requestDto))
+          .isInstanceOf(IllegalTransitionException.class)
+          .hasMessageContaining("all attachments must be finalized and clean");
     }
 
     @Test

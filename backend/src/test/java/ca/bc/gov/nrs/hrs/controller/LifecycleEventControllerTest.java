@@ -18,6 +18,7 @@ import ca.bc.gov.nrs.hrs.exception.GlobalExceptionHandler;
 import ca.bc.gov.nrs.hrs.exception.IllegalTransitionException;
 import ca.bc.gov.nrs.hrs.exception.ReportingUnitNotFoundException;
 import ca.bc.gov.nrs.hrs.exception.ValidationProblemDetailsExceptionHandler;
+import ca.bc.gov.nrs.hrs.security.ResourceScopeGuard;
 import ca.bc.gov.nrs.hrs.service.lifecycle.LifecycleEventService;
 import java.time.Instant;
 import org.junit.jupiter.api.BeforeEach;
@@ -31,6 +32,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.json.JacksonJsonHttpMessageConverter;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.web.method.annotation.AuthenticationPrincipalArgumentResolver;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -49,6 +51,9 @@ class LifecycleEventControllerTest {
 
   @Mock
   private LifecycleEventService lifecycleEventService;
+
+  @Mock
+  private ResourceScopeGuard resourceScopeGuard;
 
   @InjectMocks
   private LifecycleEventController lifecycleEventController;
@@ -105,6 +110,7 @@ class LifecycleEventControllerTest {
     verify(lifecycleEventService)
         .recordBlockLifecycleEvent(
             any(), isNull(), eq(RU_ID), eq(BLOCK_ID), any(LifecycleEventRequestDto.class));
+    verify(resourceScopeGuard).verify(isNull(Jwt.class), eq(RU_ID), eq("POST"));
   }
 
   @Test
@@ -160,6 +166,8 @@ class LifecycleEventControllerTest {
         .andExpect(jsonPath("$.blockId").doesNotExist())
         .andExpect(jsonPath("$.state").value("SUBMITTED"))
         .andExpect(jsonPath("$.version").value(8));
+
+    verify(resourceScopeGuard).verify(isNull(Jwt.class), eq(RU_ID), eq("POST"));
   }
 
   @Test

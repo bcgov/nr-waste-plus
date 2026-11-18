@@ -108,12 +108,15 @@ public class TransitionPolicyService {
             STATE_REJECTED, EVENT_CANCEL, submitterAndAdmin, ctx -> STATE_CANCELLED));
 
     // APPROVED / SUBMISSION_APPROVED transitions
+    Function<TransitionContext, String> autoApproveBillingResolver =
+        context -> isAutoApproveBillingEligible(context) ? STATE_BILLING_APPROVED : null;
+
     matrix.add(
         new MatrixEntry(
             STATE_SUBMISSION_APPROVED,
             EVENT_AUTO_APPROVE_BILLING,
             Set.of(Role.ADMIN),
-            ctx -> STATE_BILLING_APPROVED));
+            autoApproveBillingResolver));
     matrix.add(
         new MatrixEntry(
             STATE_SUBMISSION_APPROVED,
@@ -125,7 +128,7 @@ public class TransitionPolicyService {
             STATE_APPROVED,
             EVENT_AUTO_APPROVE_BILLING,
             Set.of(Role.ADMIN),
-            ctx -> STATE_BILLING_APPROVED));
+            autoApproveBillingResolver));
     matrix.add(
         new MatrixEntry(
             STATE_APPROVED,
@@ -216,6 +219,17 @@ public class TransitionPolicyService {
     }
 
     String targetState = matchedEntry.targetStateResolver().apply(context);
+    if (targetState == null) {
+      log.debug(
+          "Transition denied: precondition not met for event '{}' from state '{}'",
+          normalizedEvent,
+          normalizedCurrentState);
+      return TransitionEvaluationResult.denied(
+          String.format(
+              "Precondition not met for event '%s' from state '%s'.",
+              normalizedEvent, normalizedCurrentState));
+    }
+
     log.info(
         "Transition allowed: {} -> {} via {} by role {}",
         normalizedCurrentState,
@@ -223,6 +237,21 @@ public class TransitionPolicyService {
         normalizedEvent,
         role);
     return TransitionEvaluationResult.allowed(targetState);
+  }
+
+  /**
+   * Checks whether the 12-month elapsed time requirement from submission has been met
+   * for system auto-approval of billing.
+   *
+   * @param context transition context carrying submission date
+   * @return true if at least 12 months have elapsed since submission, false otherwise
+   */
+  public boolean isAutoApproveBillingEligible(TransitionContext context) {
+    if (context == null || context.submissionDate() == null) {
+      return false;
+    }
+    LocalDate now = LocalDate.now(ZoneOffset.UTC);
+    return !now.isBefore(context.submissionDate().plusMonths(DEFAULT_AUTO_APPROVE_MONTHS));
   }
 
   /**

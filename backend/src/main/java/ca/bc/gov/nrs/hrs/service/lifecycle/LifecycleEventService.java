@@ -2,6 +2,8 @@ package ca.bc.gov.nrs.hrs.service.lifecycle;
 
 import ca.bc.gov.nrs.hrs.dto.base.IdentityProvider;
 import ca.bc.gov.nrs.hrs.dto.base.Role;
+import ca.bc.gov.nrs.hrs.dto.block.AttachmentScanStatus;
+import ca.bc.gov.nrs.hrs.dto.block.AttachmentStatus;
 import ca.bc.gov.nrs.hrs.dto.block.LifecycleEventRequestDto;
 import ca.bc.gov.nrs.hrs.dto.block.LifecycleEventResponseDto;
 import ca.bc.gov.nrs.hrs.entity.block.BlockCommentEntity;
@@ -12,6 +14,7 @@ import ca.bc.gov.nrs.hrs.entity.block.StatusEventEntity;
 import ca.bc.gov.nrs.hrs.exception.BlockNotFoundException;
 import ca.bc.gov.nrs.hrs.exception.IllegalTransitionException;
 import ca.bc.gov.nrs.hrs.exception.ReportingUnitNotFoundException;
+import ca.bc.gov.nrs.hrs.repository.block.BlockAttachmentRepository;
 import ca.bc.gov.nrs.hrs.repository.block.BlockCommentRepository;
 import ca.bc.gov.nrs.hrs.repository.block.BlockRepository;
 import ca.bc.gov.nrs.hrs.repository.block.BlockRequirementRepository;
@@ -57,6 +60,7 @@ public class LifecycleEventService {
   private final BlockRepository blockRepository;
   private final StatusEventRepository statusEventRepository;
   private final BlockRequirementRepository blockRequirementRepository;
+  private final BlockAttachmentRepository blockAttachmentRepository;
   private final BlockCommentRepository blockCommentRepository;
   private final TransitionPolicyService transitionPolicyService;
   private final EntityManager entityManager;
@@ -97,6 +101,10 @@ public class LifecycleEventService {
 
     ConditionalRequestSupport.requireMatch(servletRequest, block.getRevision());
 
+    if (TransitionPolicyService.EVENT_SUBMIT.equalsIgnoreCase(request.event())) {
+      validateBlockSubmissionReadiness(block);
+    }
+
     String currentState = resolveBlockState(blockId, block.isDraft());
     Role role = resolveActorRole(jwt, reportingUnit.getClientNumber());
     IdentityProvider provider = JwtPrincipalUtil.getIdentityProvider(jwt);
@@ -119,6 +127,7 @@ public class LifecycleEventService {
 
     final String targetState = result.targetState();
     updateBlockState(block, targetState);
+    block.setUpdatedAt(Instant.now());
     block = blockRepository.saveAndFlush(block);
 
     StatusEventEntity statusEvent = new StatusEventEntity();
@@ -342,8 +351,37 @@ public class LifecycleEventService {
                     REQ_BURNT_PILES.equalsIgnoreCase(r.getRequirementCode())
                         && Boolean.TRUE.equals(r.getAnsweredYes()));
 
+    LocalDate submissionDate = resolveSubmissionDate(blockId);
+
     return new TransitionContext(
-        plcDate, LocalDate.now(ZoneOffset.UTC), rationaleRequired, burntPiles);
+        plcDate, submissionDate, rationaleRequired, burntPiles);
+  }
+
+  private void validateBlockSubmissionReadiness(BlockEntity block) {
+    if (block.getPlcDate() == null) {
+      throw new IllegalTransitionException(
+          "Cannot submit block: planned completion date (plcDate) is required.");
+    }
+    long totalAttachments =
+        blockAttachmentRepository.countByBlockIdAndDeletedFalse(block.getId());
+    long validAttachments =
+        blockAttachmentRepository.countByBlockIdAndStatusAndScanStatusAndDeletedFalse(
+            block.getId(),
+            AttachmentStatus.FINALIZED.name(),
+            AttachmentScanStatus.CLEAN.name());
+    if (totalAttachments != validAttachments) {
+      throw new IllegalTransitionException(
+          "Cannot submit block: all attachments must be finalized and clean of malware.");
+    }
+  }
+
+  private LocalDate resolveSubmissionDate(Long blockId) {
+    return statusEventRepository
+        .findFirstByBlockIdAndStatusOrderByCreatedAtAsc(
+            blockId, TransitionPolicyService.STATE_SUBMITTED)
+        .map(StatusEventEntity::getCreatedAt)
+        .map(instant -> LocalDate.ofInstant(instant, ZoneOffset.UTC))
+        .orElse(LocalDate.now(ZoneOffset.UTC));
   }
 
   private void updateBlockState(BlockEntity block, String targetState) {

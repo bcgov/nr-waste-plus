@@ -101,7 +101,11 @@ public final class ReportingUnitSearchQueryConstants {
                                       case upper(nullif(btrim(coalesce(evs.status, '')), ''))
                                           when 'DRAFT' then 'DFT'
                                           when 'SUBMITTED' then 'SUB'
+                                          when 'HOLD' then 'HLD'
+                                          when 'SUBMISSION_APPROVED' then 'APP'
                                           when 'APPROVED' then 'APP'
+                                          when 'REJECTED' then 'REJ'
+                                          when 'BILLING_APPROVED' then 'RTB'
                                           else upper(nullif(btrim(coalesce(evs.status, '')), ''))
                                       end,
                                       'DFT')
@@ -307,7 +311,11 @@ public final class ReportingUnitSearchQueryConstants {
                          case upper(nullif(btrim(coalesce(evs.status, '')), ''))
                              when 'DRAFT' then 'DFT'
                              when 'SUBMITTED' then 'SUB'
+                             when 'HOLD' then 'HLD'
+                             when 'SUBMISSION_APPROVED' then 'APP'
                              when 'APPROVED' then 'APP'
+                             when 'REJECTED' then 'REJ'
+                             when 'BILLING_APPROVED' then 'RTB'
                              else upper(nullif(btrim(coalesce(evs.status, '')), ''))
                          end,
                          'DFT') as code
