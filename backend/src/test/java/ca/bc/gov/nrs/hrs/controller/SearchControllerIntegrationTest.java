@@ -47,7 +47,7 @@ import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequ
 import org.springframework.test.web.servlet.MockMvc;
 
 @AutoConfigureMockMvc(print = SYSTEM_OUT)
-@WithMockJwt
+@WithMockJwt(cognitoGroups = {"WASTE_PLUS_ADMIN"})
 @DisplayName("Integrated Test | Search Controller")
 class SearchControllerIntegrationTest extends AbstractTestContainerIntegrationTest {
 
@@ -195,6 +195,46 @@ class SearchControllerIntegrationTest extends AbstractTestContainerIntegrationTe
                 .header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
                 .accept(MediaType.APPLICATION_JSON))
         .andExpect(status().is(expectedStatus));
+  }
+
+  @Test
+  @DisplayName("Expanded search returns 403 for BCeID user claiming ADMIN role on existing RU")
+  @WithMockJwt(
+      idp = "bceidbusiness",
+      cognitoGroups = {"WASTE_PLUS_ADMIN"})
+  void getSearchExpanded_whenBceidWithAdminRole_returns403_forExistingRu() throws Exception {
+    long ruId = 12345L;
+    long waaId = 1L;
+    legacyApiStub.stubFor(
+        WireMock.get(urlPathEqualTo("/api/reporting-units/" + ruId))
+            .willReturn(okJson("{\"clientNumber\": \"00010002\", \"clientLocnCode\": \"00\"}")));
+
+    mockMvc
+        .perform(
+            get("/api/search/reporting-units/ex/" + ruId + "/" + waaId)
+                .header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
+                .accept(MediaType.APPLICATION_JSON))
+        .andExpect(status().isForbidden());
+  }
+
+  @Test
+  @DisplayName("Expanded search returns 403 for BCeID user claiming ADMIN role on missing RU (no disclosure)")
+  @WithMockJwt(
+      idp = "bceidbusiness",
+      cognitoGroups = {"WASTE_PLUS_ADMIN"})
+  void getSearchExpanded_whenBceidWithAdminRole_returns403_forMissingRu() throws Exception {
+    long missingRuId = 999999L;
+    long waaId = 1L;
+    legacyApiStub.stubFor(
+        WireMock.get(urlPathEqualTo("/api/reporting-units/" + missingRuId))
+            .willReturn(WireMock.notFound()));
+
+    mockMvc
+        .perform(
+            get("/api/search/reporting-units/ex/" + missingRuId + "/" + waaId)
+                .header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
+                .accept(MediaType.APPLICATION_JSON))
+        .andExpect(status().isForbidden());
   }
 
   @ParameterizedTest
@@ -349,7 +389,7 @@ class SearchControllerIntegrationTest extends AbstractTestContainerIntegrationTe
             302L,
             "99999999",
             okJson(ForestClientApiProviderTestConstants.REPORTING_UNIT_EXPANDED_MINIMAL),
-            403));
+            404));
   }
 
   private static Stream<Arguments> searchReportingUnit() {

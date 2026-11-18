@@ -504,6 +504,9 @@ public class AttachmentService {
     }
   }
 
+  // Retained as defense-in-depth for service-layer callers; primary resource-scope
+  // authorization (covering both BCeID client and IDIR district boundaries) is enforced
+  // upstream by ResourceScopeGuard before controller execution.
   private void validateClientAccess(Jwt jwt, ReportingUnitEntity reportingUnit) {
     if (jwt == null) {
       return;
@@ -517,8 +520,7 @@ public class AttachmentService {
             "SECURITY: BCeID user {} attempted unauthorized access to reporting unit {}",
             JwtPrincipalUtil.getUserId(jwt),
             reportingUnit.getId());
-        throw new ForbiddenException(
-            "User is not authorized to access reporting unit: " + reportingUnit.getId());
+        throw new ReportingUnitNotFoundException(reportingUnit.getId());
       }
     }
   }

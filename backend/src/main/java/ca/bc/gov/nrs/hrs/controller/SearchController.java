@@ -5,6 +5,7 @@ import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchExpandedDto;
 import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchParametersDto;
 import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchResultDto;
 import ca.bc.gov.nrs.hrs.exception.InvalidSelectedValueException;
+import ca.bc.gov.nrs.hrs.security.ResourceScopeGuard;
 import ca.bc.gov.nrs.hrs.service.SearchService;
 import ca.bc.gov.nrs.hrs.util.JwtPrincipalUtil;
 import io.micrometer.observation.annotation.Observed;
@@ -44,6 +45,7 @@ import org.springframework.web.server.ResponseStatusException;
 public class SearchController {
 
   private final SearchService service;
+  private final ResourceScopeGuard resourceScopeGuard;
 
   /**
    * Search for reporting units (waste entries) using the provided filters and pageable information.
@@ -95,15 +97,15 @@ public class SearchController {
    *
    * <p>Validates that the authenticated user has permission to access the specified reporting unit.
    * For BCeID callers, the reporting unit's associated client number is compared against the
-   * caller's assigned client roles. IDIR callers (government users) are permitted without
-   * additional checks since they have system-level access.
+   * caller's assigned client roles. IDIR District callers are restricted to their assigned
+   * district; IDIR Admin and Area callers carry cross-district privileges.
    *
    * @param jwt the JWT principal for the authenticated caller
    * @param reportingUnitId the reporting unit ID
    * @param wasteAssessmentAreaId the waste assessment area ID
    * @return the expanded search entry as a {@link ReportingUnitSearchExpandedDto}
-   * @throws org.springframework.web.server.ResponseStatusException with HTTP 403 when the user is
-   *     not authorized to access the specified reporting unit
+   * @throws ca.bc.gov.nrs.hrs.exception.ReportingUnitNotFoundException with HTTP 404 when the
+   *     target reporting unit is out-of-scope or does not exist (no existence disclosure)
    */
   @GetMapping("/reporting-units/ex/{reportingUnitId}/{wasteAssessmentAreaId}")
   public ReportingUnitSearchExpandedDto getSearchExpandedEntry(
@@ -115,26 +117,13 @@ public class SearchController {
         reportingUnitId,
         JwtPrincipalUtil.getUserId(jwt));
 
-    // Look up the reporting unit's client number to enforce client-scoped authorization.
-    // Source-aware (DEC-019): the lookup reads the same source the expanded query will read, so a
-    // PostgreSQL-only reporting unit authorizes against PostgreSQL rather than a legacy miss.
-    String clientNumber =
-        service.getClientNumberForReportingUnit(reportingUnitId, wasteAssessmentAreaId);
+    // Validate caller principal before resolving target scope to prevent existence disclosure
+    resourceScopeGuard.validatePrincipal(jwt, "GET");
 
-    // For BCeID callers, verify the reporting unit belongs to one of their clients
-    if (IdentityProvider.BUSINESS_BCEID.equals(JwtPrincipalUtil.getIdentityProvider(jwt))) {
-      List<String> userClientNumbers = JwtPrincipalUtil.getClientFromRoles(jwt);
-
-      if (!userClientNumbers.contains(clientNumber)) {
-        log.warn(
-            "SECURITY: BCeID user {} attempted unauthorized access to reporting unit {}",
-            JwtPrincipalUtil.getUserId(jwt),
-            reportingUnitId);
-        throw new ResponseStatusException(
-            HttpStatus.FORBIDDEN,
-            "User is not authorized to access reporting unit: " + reportingUnitId);
-      }
-    }
+    // Enforce resource-scope authorization (client number for BCeID, district for IDIR)
+    var targetScope = service.getSearchScope(reportingUnitId, wasteAssessmentAreaId);
+    resourceScopeGuard.verifyTargetScope(
+        jwt, reportingUnitId, targetScope.clientNumber(), targetScope.districtCode(), "GET");
 
     return service.getSearchExpanded(reportingUnitId, wasteAssessmentAreaId);
   }
