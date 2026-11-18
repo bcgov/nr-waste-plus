@@ -332,4 +332,32 @@ public final class ReportingUnitQueryConstants {
         )
       ORDER BY waa.WASTE_ASSESSMENT_AREA_ID
       """;
+
+  public static final String GET_RU_BLOCK_DISTRICT_AVERAGE_VOLUMES = """
+      SELECT
+        stc.DESCRIPTION AS population_type,
+        wtc.DESCRIPTION AS waste_type,
+        whmc.WASTE_HARVEST_METHOD_CODE AS harvest_method_code,
+        whmc.DESCRIPTION AS harvest_method_description,
+        wamc.DESCRIPTION AS assessment_method,
+        wlc.DESCRIPTION AS waste_level,
+        ws.STRATUM_AREA AS net_waste_area_ha,
+        ws.TOTAL_ESTIMATED_VOLUME AS total_estimated_volume_m3
+      FROM WASTE_STRATUM ws
+      INNER JOIN WASTE_ASSESSMENT_AREA waa
+        ON waa.WASTE_ASSESSMENT_AREA_ID = ws.WASTE_ASSESSMENT_AREA_ID
+      LEFT JOIN WASTE_STRATUM_TYPE_CODE stc
+        ON stc.WASTE_STRATUM_TYPE_CODE = ws.WASTE_STRATUM_TYPE_CODE
+      LEFT JOIN WASTE_TYPE_CODE wtc
+        ON wtc.WASTE_TYPE_CODE = ws.WASTE_TYPE_CODE
+      LEFT JOIN WASTE_HARVEST_METHOD_CODE whmc
+        ON whmc.WASTE_HARVEST_METHOD_CODE = ws.WASTE_HARVEST_METHOD_CODE
+      LEFT JOIN WASTE_ASSESSMENT_METHOD_CODE wamc
+        ON wamc.WASTE_ASSESSMENT_METHOD_CODE = ws.WASTE_ASSESSMENT_METHOD_CODE
+      LEFT JOIN WASTE_LEVEL_CODE wlc
+        ON wlc.WASTE_LEVEL_CODE = ws.WASTE_LEVEL_CODE
+      WHERE waa.REPORTING_UNIT_ID = :reportingUnit
+        AND ws.WASTE_ASSESSMENT_AREA_ID = :wasteAssessmentAreaId
+      ORDER BY ws.WASTE_STRATUM_ID
+      """;
 }

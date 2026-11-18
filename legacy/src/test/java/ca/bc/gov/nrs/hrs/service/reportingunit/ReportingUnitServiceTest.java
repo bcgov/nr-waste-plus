@@ -500,4 +500,65 @@ class ReportingUnitServiceTest {
       verify(ruRepository, never()).save(ArgumentMatchers.any());
     }
   }
+
+  @Nested
+  @DisplayName("getDistrictAverageVolumes")
+  class GetDistrictAverageVolumes {
+
+    @Test
+    @DisplayName("shouldReturnMappedRows_whenReportingUnitExists")
+    void shouldReturnMappedRows_whenReportingUnitExists() {
+      Long blockId = 1906L;
+      when(ruRepository.existsById(RU_ID)).thenReturn(true);
+      ca.bc.gov.nrs.hrs.entity.reportingunit.DistrictAverageVolumeProjection projection =
+          mock(ca.bc.gov.nrs.hrs.entity.reportingunit.DistrictAverageVolumeProjection.class);
+      when(projection.getPopulationType()).thenReturn("Dispersed");
+      when(projection.getWasteType()).thenReturn("Sawdust");
+      when(projection.getHarvestMethodCode()).thenReturn("O");
+      when(projection.getHarvestMethodDescription()).thenReturn("Other");
+      when(projection.getAssessmentMethod()).thenReturn("S");
+      when(projection.getWasteLevel()).thenReturn("X");
+      when(projection.getNetWasteAreaHa()).thenReturn(new java.math.BigDecimal("27.02"));
+      when(projection.getTotalEstimatedVolumeM3()).thenReturn(null);
+      when(ruRepository.getDistrictAverageVolumes(RU_ID, blockId)).thenReturn(List.of(projection));
+
+      List<ca.bc.gov.nrs.hrs.dto.reportingunit.DistrictAverageVolumeDto> result =
+          service.getDistrictAverageVolumes(RU_ID, blockId);
+
+      assertThat(result).hasSize(1);
+      ca.bc.gov.nrs.hrs.dto.reportingunit.DistrictAverageVolumeDto row = result.getFirst();
+      assertThat(row.populationType()).isEqualTo("Dispersed");
+      assertThat(row.wasteType()).isEqualTo("Sawdust");
+      assertThat(row.harvestMethodCode()).isEqualTo("O");
+      assertThat(row.harvestMethodDescription()).isEqualTo("Other");
+      assertThat(row.assessmentMethod()).isEqualTo("S");
+      assertThat(row.wasteLevel()).isEqualTo("X");
+      assertThat(row.netWasteAreaHa()).isEqualByComparingTo("27.02");
+      assertThat(row.totalEstimatedVolumeM3()).isNull();
+      verify(ruRepository).existsById(RU_ID);
+      verify(ruRepository).getDistrictAverageVolumes(RU_ID, blockId);
+    }
+
+    @Test
+    @DisplayName("shouldReturnEmptyList_whenReportingUnitExistsWithoutRows")
+    void shouldReturnEmptyList_whenReportingUnitExistsWithoutRows() {
+      Long blockId = 1905L;
+      when(ruRepository.existsById(RU_ID)).thenReturn(true);
+      when(ruRepository.getDistrictAverageVolumes(RU_ID, blockId)).thenReturn(List.of());
+
+      assertThat(service.getDistrictAverageVolumes(RU_ID, blockId)).isEmpty();
+      verify(ruRepository).getDistrictAverageVolumes(RU_ID, blockId);
+    }
+
+    @Test
+    @DisplayName("shouldThrowWasteReportingUnitNotFound_whenReportingUnitMissing")
+    void shouldThrowWasteReportingUnitNotFound_whenReportingUnitMissing() {
+      when(ruRepository.existsById(RU_ID)).thenReturn(false);
+
+      assertThatThrownBy(() -> service.getDistrictAverageVolumes(RU_ID, 1906L))
+          .isInstanceOf(WasteReportingUnitNotFound.class);
+      verify(ruRepository, never())
+          .getDistrictAverageVolumes(ArgumentMatchers.anyLong(), ArgumentMatchers.anyLong());
+    }
+  }
 }

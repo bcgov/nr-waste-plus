@@ -1,6 +1,7 @@
 package ca.bc.gov.nrs.hrs.controller;
 
 import ca.bc.gov.nrs.hrs.dto.reportingunit.CreateReportingUnitRequestDto;
+import ca.bc.gov.nrs.hrs.dto.reportingunit.DistrictAverageVolumeDto;
 import ca.bc.gov.nrs.hrs.dto.reportingunit.ReportingUnitBlockDto;
 import ca.bc.gov.nrs.hrs.dto.reportingunit.ReportingUnitDetailsDto;
 import ca.bc.gov.nrs.hrs.service.reportingunit.ReportingUnitService;
@@ -80,6 +81,25 @@ public class ReportingUnitController {
     log.info("Fetching blocks for reporting unit {}", reportingUnitId);
 
     return service.getReportingUnitBlocks(reportingUnitId);
+  }
+
+
+  /**
+   * Retrieve district average volume/stratum rows for a block within the reporting unit.
+   *
+   * @param reportingUnitId the reporting unit identifier
+   * @param wasteAssessmentAreaId the block/waste assessment area identifier
+   * @return district average volume rows for the block, empty when none exist
+   */
+  @GetMapping("/{reportingUnitId}/blocks/{wasteAssessmentAreaId}/district-average-volumes")
+  public List<DistrictAverageVolumeDto> getDistrictAverageVolumes(
+      @PathVariable Long reportingUnitId,
+      @PathVariable Long wasteAssessmentAreaId) {
+    log.info(
+        "Fetching district average volumes for reporting unit {} block {}",
+        reportingUnitId,
+        wasteAssessmentAreaId);
+    return service.getDistrictAverageVolumes(reportingUnitId, wasteAssessmentAreaId);
   }
 
   /**

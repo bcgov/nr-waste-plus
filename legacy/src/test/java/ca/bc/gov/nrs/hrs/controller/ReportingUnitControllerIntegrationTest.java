@@ -208,4 +208,41 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
         .andReturn();
   }
 
+  @Test
+  @DisplayName("shouldReturnDistrictAverageVolumes_whenBlockHasStrata")
+  void shouldReturnDistrictAverageVolumes_whenBlockHasStrata() throws Exception {
+    mockMvc
+        .perform(
+            get("/api/reporting-units/{id}/blocks/{blockId}/district-average-volumes", 879, 1906)
+                .accept(MediaType.APPLICATION_JSON))
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(jsonPath("$.length()").value(1))
+        .andExpect(jsonPath("$[0].harvestMethodCode").value("O"))
+        .andExpect(jsonPath("$[0].netWasteAreaHa").value(27.02))
+        .andExpect(jsonPath("$[0].totalEstimatedVolumeM3").isEmpty());
+  }
+
+  @Test
+  @DisplayName("shouldReturnEmptyDistrictAverageVolumes_whenBlockHasNoStrata")
+  void shouldReturnEmptyDistrictAverageVolumes_whenBlockHasNoStrata() throws Exception {
+    mockMvc
+        .perform(
+            get("/api/reporting-units/{id}/blocks/{blockId}/district-average-volumes", 879, 1905)
+                .accept(MediaType.APPLICATION_JSON))
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(jsonPath("$.length()").value(0));
+  }
+
+  @Test
+  @DisplayName("shouldReturn404DistrictAverageVolumes_whenReportingUnitNotFound")
+  void shouldReturn404DistrictAverageVolumes_whenReportingUnitNotFound() throws Exception {
+    mockMvc
+        .perform(
+            get("/api/reporting-units/{id}/blocks/{blockId}/district-average-volumes", 999999999, 1)
+                .accept(MediaType.APPLICATION_JSON))
+        .andExpect(status().isNotFound());
+  }
+
 }

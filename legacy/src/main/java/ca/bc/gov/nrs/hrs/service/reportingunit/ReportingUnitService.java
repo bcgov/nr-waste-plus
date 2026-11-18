@@ -3,8 +3,10 @@ package ca.bc.gov.nrs.hrs.service.reportingunit;
 import ca.bc.gov.nrs.hrs.LegacyConstants;
 import ca.bc.gov.nrs.hrs.dto.base.CodeDescriptionDto;
 import ca.bc.gov.nrs.hrs.dto.reportingunit.CreateReportingUnitRequestDto;
+import ca.bc.gov.nrs.hrs.dto.reportingunit.DistrictAverageVolumeDto;
 import ca.bc.gov.nrs.hrs.dto.reportingunit.ReportingUnitBlockDto;
 import ca.bc.gov.nrs.hrs.dto.reportingunit.ReportingUnitDetailsDto;
+import ca.bc.gov.nrs.hrs.entity.reportingunit.DistrictAverageVolumeProjection;
 import ca.bc.gov.nrs.hrs.entity.reportingunit.ReportingUnitBlockProjection;
 import ca.bc.gov.nrs.hrs.entity.reportingunit.ReportingUnitEntity;
 import ca.bc.gov.nrs.hrs.exception.WasteReportingUnitNotFound;
@@ -93,6 +95,35 @@ public class ReportingUnitService {
     return ruRepository.getReportingUnitBlocks(reportingUnitId).stream()
         .map(ReportingUnitService::toBlockDto)
         .toList();
+  }
+
+
+  /**
+   * Retrieves district average volume/stratum rows for a block (waste assessment area).
+   *
+   * @param reportingUnitId the owning reporting unit identifier
+   * @param wasteAssessmentAreaId the block/waste assessment area identifier
+   * @return stratum rows for the block, empty when none exist
+   */
+  public List<DistrictAverageVolumeDto> getDistrictAverageVolumes(
+      Long reportingUnitId, Long wasteAssessmentAreaId) {
+    verifyReportingUnitExists(reportingUnitId);
+    return ruRepository.getDistrictAverageVolumes(reportingUnitId, wasteAssessmentAreaId).stream()
+        .map(ReportingUnitService::toDistrictAverageVolumeDto)
+        .toList();
+  }
+
+  private static DistrictAverageVolumeDto toDistrictAverageVolumeDto(
+      DistrictAverageVolumeProjection projection) {
+    return new DistrictAverageVolumeDto(
+        projection.getPopulationType(),
+        projection.getWasteType(),
+        projection.getHarvestMethodCode(),
+        projection.getHarvestMethodDescription(),
+        projection.getAssessmentMethod(),
+        projection.getWasteLevel(),
+        projection.getNetWasteAreaHa(),
+        projection.getTotalEstimatedVolumeM3());
   }
 
   private void verifyReportingUnitExists(Long reportingUnitId) {

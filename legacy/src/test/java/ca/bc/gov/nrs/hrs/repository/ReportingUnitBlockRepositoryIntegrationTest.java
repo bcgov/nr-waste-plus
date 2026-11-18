@@ -39,4 +39,27 @@ class ReportingUnitBlockRepositoryIntegrationTest extends AbstractTestContainerI
     Long reportingUnitId = 900000L;
     assertThat(reportingUnitRepository.getReportingUnitBlocks(reportingUnitId)).isEmpty();
   }
+
+  @Test
+  @DisplayName("shouldReturnDistrictAverageVolumeRows_whenBlockHasStrata")
+  void shouldReturnDistrictAverageVolumeRows_whenBlockHasStrata() {
+    var result = reportingUnitRepository.getDistrictAverageVolumes(SEEDED_REPORTING_UNIT_ID, 1906L);
+
+    assertThat(result).hasSize(1);
+    var row = result.getFirst();
+    assertThat(row.getHarvestMethodCode()).isEqualTo("O");
+    assertThat(row.getNetWasteAreaHa()).isEqualByComparingTo("27.02");
+    assertThat(row.getTotalEstimatedVolumeM3()).isNull();
+    assertThat(row.getPopulationType()).isNotBlank();
+    assertThat(row.getWasteType()).isNotBlank();
+    assertThat(row.getAssessmentMethod()).isNotBlank();
+    assertThat(row.getWasteLevel()).isNotBlank();
+  }
+
+  @Test
+  @DisplayName("shouldReturnNoDistrictAverageVolumeRows_whenBlockHasNoStrata")
+  void shouldReturnNoDistrictAverageVolumeRows_whenBlockHasNoStrata() {
+    assertThat(reportingUnitRepository.getDistrictAverageVolumes(SEEDED_REPORTING_UNIT_ID, 1905L))
+        .isEmpty();
+  }
 }
