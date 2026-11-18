@@ -25,6 +25,7 @@ import ca.bc.gov.nrs.hrs.entity.block.StatusEventEntity;
 import ca.bc.gov.nrs.hrs.extensions.AbstractTestContainerIntegrationTest;
 import ca.bc.gov.nrs.hrs.extensions.WiremockLogNotifier;
 import ca.bc.gov.nrs.hrs.extensions.WithMockJwt;
+import ca.bc.gov.nrs.hrs.extensions.WithMockJwt;
 import ca.bc.gov.nrs.hrs.repository.block.BlockCalculationSnapshotRepository;
 import ca.bc.gov.nrs.hrs.repository.block.BlockRepository;
 import ca.bc.gov.nrs.hrs.repository.block.ReportingUnitRepository;
@@ -237,7 +238,7 @@ class BlockControllerIntegrationTest extends AbstractTestContainerIntegrationTes
 
   @Test
   @DisplayName("Returns 404 when block details feature flag is disabled")
-  @WithMockJwt
+  @WithMockJwt(cognitoGroups = {"WASTE_PLUS_ADMIN"})
   void returns404WhenBlockDetailsFlagDisabled() throws Exception {
     doReturn(false)
         .when(featureFlagsConfiguration)
@@ -250,7 +251,7 @@ class BlockControllerIntegrationTest extends AbstractTestContainerIntegrationTes
 
   @Test
   @DisplayName("Returns postgres block details with isLegacy false")
-  @WithMockJwt
+  @WithMockJwt(cognitoGroups = {"WASTE_PLUS_ADMIN"})
   void returnsPostgresBlockDetailsWithIsLegacyFalse() throws Exception {
     mockMvc
         .perform(MockMvcRequestBuilders.get(detailsUrl(reportingUnitId, blockId)))
@@ -266,7 +267,7 @@ class BlockControllerIntegrationTest extends AbstractTestContainerIntegrationTes
 
   @Test
   @DisplayName("Returns legacy block details with isLegacy true and unknown blockType")
-  @WithMockJwt
+  @WithMockJwt(cognitoGroups = {"WASTE_PLUS_ADMIN"})
   void returnsLegacyBlockDetailsWithIsLegacyTrue() throws Exception {
     long legacyReportingUnitId = 555L;
     long legacyBlockId = 777L;
@@ -292,7 +293,7 @@ class BlockControllerIntegrationTest extends AbstractTestContainerIntegrationTes
 
   @Test
   @DisplayName("Returns 404 when the legacy block list has no row matching the block id")
-  @WithMockJwt
+  @WithMockJwt(cognitoGroups = {"WASTE_PLUS_ADMIN"})
   void returns404WhenLegacyBlockListHasNoMatchingId() throws Exception {
     long legacyReportingUnitId = 556L;
 
@@ -305,7 +306,7 @@ class BlockControllerIntegrationTest extends AbstractTestContainerIntegrationTes
 
   @Test
   @DisplayName("Returns 404 when every legacy block row has a null id")
-  @WithMockJwt
+  @WithMockJwt(cognitoGroups = {"WASTE_PLUS_ADMIN"})
   void returns404WhenLegacyBlockRowsHaveNullId() throws Exception {
     long legacyReportingUnitId = 557L;
 
@@ -318,7 +319,7 @@ class BlockControllerIntegrationTest extends AbstractTestContainerIntegrationTes
 
   @Test
   @DisplayName("Maps a legacy block with a missing status to draft false")
-  @WithMockJwt
+  @WithMockJwt(cognitoGroups = {"WASTE_PLUS_ADMIN"})
   void mapsLegacyBlockWithNullStatusToDraftFalse() throws Exception {
     long legacyReportingUnitId = 558L;
 
@@ -334,7 +335,7 @@ class BlockControllerIntegrationTest extends AbstractTestContainerIntegrationTes
 
   @Test
   @DisplayName("Maps a legacy block with a non-draft status to draft false")
-  @WithMockJwt
+  @WithMockJwt(cognitoGroups = {"WASTE_PLUS_ADMIN"})
   void mapsLegacyBlockWithNonDraftStatusToDraftFalse() throws Exception {
     long legacyReportingUnitId = 559L;
 
@@ -350,7 +351,7 @@ class BlockControllerIntegrationTest extends AbstractTestContainerIntegrationTes
 
   @Test
   @DisplayName("Returns 503 when the legacy block list call fails")
-  @WithMockJwt
+  @WithMockJwt(cognitoGroups = {"WASTE_PLUS_ADMIN"})
   void returns503WhenLegacyBlockListFails() throws Exception {
     long legacyReportingUnitId = 561L;
 
@@ -368,7 +369,7 @@ class BlockControllerIntegrationTest extends AbstractTestContainerIntegrationTes
 
   @Test
   @DisplayName("Returns 404 when block is not found in postgres")
-  @WithMockJwt
+  @WithMockJwt(cognitoGroups = {"WASTE_PLUS_ADMIN"})
   void returns404WhenBlockNotFoundInPostgres() throws Exception {
     mockMvc
         .perform(MockMvcRequestBuilders.get(detailsUrl(reportingUnitId, 999999L)))
@@ -377,7 +378,7 @@ class BlockControllerIntegrationTest extends AbstractTestContainerIntegrationTes
 
   @Test
   @DisplayName("Returns 404 when reporting unit is not found")
-  @WithMockJwt
+  @WithMockJwt(cognitoGroups = {"WASTE_PLUS_ADMIN"})
   void returns404WhenReportingUnitNotFound() throws Exception {
     legacyApiStub.stubFor(
         get(urlPathEqualTo("/api/reporting-units/999999999")).willReturn(notFound()));
@@ -391,12 +392,12 @@ class BlockControllerIntegrationTest extends AbstractTestContainerIntegrationTes
   }
 
   @Test
-  @DisplayName("Denies a BCeID caller reading another client's block details")
+  @DisplayName("Denies a BCeID caller reading another client's block details with 404")
   @WithMockJwt(idp = "bceidbusiness", cognitoGroups = {"WASTE_PLUS_VIEWER_00000000"})
   void deniesBceidCrossClientBlockDetails() throws Exception {
     mockMvc
         .perform(MockMvcRequestBuilders.get(detailsUrl(foreignReportingUnitId, foreignBlockId)))
-        .andExpect(status().isForbidden())
+        .andExpect(status().isNotFound())
         .andExpect(content().string(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("DISTRICT_AVERAGE"))));
   }
 
@@ -444,7 +445,7 @@ class BlockControllerIntegrationTest extends AbstractTestContainerIntegrationTes
 
   @Test
   @DisplayName("Keeps IDIR unrestricted on block details for a foreign reporting unit")
-  @WithMockJwt(idp = "idir")
+  @WithMockJwt(idp = "idir", cognitoGroups = {"WASTE_PLUS_ADMIN"})
   void allowsIdirBlockDetailsForForeignReportingUnit() throws Exception {
     mockMvc
         .perform(MockMvcRequestBuilders.get(detailsUrl(foreignReportingUnitId, foreignBlockId)))
@@ -465,7 +466,7 @@ class BlockControllerIntegrationTest extends AbstractTestContainerIntegrationTes
 
   @Test
   @DisplayName("Routes the literal /blocks path to the list handler, not the details handler")
-  @WithMockJwt
+  @WithMockJwt(cognitoGroups = {"WASTE_PLUS_ADMIN"})
   void routesBlocksLiteralToListHandler() throws Exception {
     mockMvc
         .perform(
@@ -484,14 +485,14 @@ class BlockControllerIntegrationTest extends AbstractTestContainerIntegrationTes
   }
 
   @Test
-  @DisplayName("Denies a BCeID caller listing another client's blocks")
+  @DisplayName("Denies a BCeID caller listing another client's blocks with 404")
   @WithMockJwt(idp = "bceidbusiness", cognitoGroups = {"WASTE_PLUS_VIEWER_00000000"})
   void deniesBceidCrossClientBlockList() throws Exception {
     mockMvc
         .perform(
             MockMvcRequestBuilders.get(
-                "/api/reporting-units/{id}/blocks", foreignReportingUnitId))
-        .andExpect(status().isForbidden());
+                 "/api/reporting-units/{id}/blocks", foreignReportingUnitId))
+        .andExpect(status().isNotFound());
   }
 
   @Test
@@ -508,7 +509,7 @@ class BlockControllerIntegrationTest extends AbstractTestContainerIntegrationTes
 
   @Test
   @DisplayName("Keeps IDIR unrestricted on the block list for a foreign reporting unit")
-  @WithMockJwt(idp = "idir")
+  @WithMockJwt(idp = "idir", cognitoGroups = {"WASTE_PLUS_ADMIN"})
   void allowsIdirBlockListForForeignReportingUnit() throws Exception {
     mockMvc
         .perform(
@@ -524,7 +525,7 @@ class BlockControllerIntegrationTest extends AbstractTestContainerIntegrationTes
 
   @Test
   @DisplayName("Returns 200 with latest snapshot when one exists")
-  @WithMockJwt
+  @WithMockJwt(cognitoGroups = {"WASTE_PLUS_ADMIN"})
   void returnsOkWithLatestSnapshot() throws Exception {
     Instant t1 = Instant.parse("2025-07-01T08:00:00Z");
     Instant t2 = Instant.parse("2025-07-01T12:00:00Z");
@@ -577,7 +578,7 @@ class BlockControllerIntegrationTest extends AbstractTestContainerIntegrationTes
 
   @Test
   @DisplayName("Returns 404 when no snapshot exists for block")
-  @WithMockJwt
+  @WithMockJwt(cognitoGroups = {"WASTE_PLUS_ADMIN"})
   void returns404WhenNoSnapshot() throws Exception {
     mockMvc
         .perform(MockMvcRequestBuilders.get(calculationUrl(reportingUnitId, blockId)))
@@ -586,7 +587,7 @@ class BlockControllerIntegrationTest extends AbstractTestContainerIntegrationTes
 
   @Test
   @DisplayName("Returns 404 for non-existent block id")
-  @WithMockJwt
+  @WithMockJwt(cognitoGroups = {"WASTE_PLUS_ADMIN"})
   void returns404ForNonExistentBlock() throws Exception {
     mockMvc.perform(MockMvcRequestBuilders.get(calculationUrl(reportingUnitId, 999999L))).andExpect(status().isNotFound());
   }
@@ -620,7 +621,7 @@ class BlockControllerIntegrationTest extends AbstractTestContainerIntegrationTes
 
   @Test
   @DisplayName("Returns the snapshot through the original blocks-scoped calculation URL")
-  @WithMockJwt
+  @WithMockJwt(cognitoGroups = {"WASTE_PLUS_ADMIN"})
   void returnsSnapshotThroughOriginalBlocksScopedUrl() throws Exception {
     String marker = "ORIGINAL_BLOCKS_CALC_URL";
     snapshotRepository.save(
@@ -674,7 +675,7 @@ class BlockControllerIntegrationTest extends AbstractTestContainerIntegrationTes
 
     mockMvc
         .perform(MockMvcRequestBuilders.get(calculationUrl(foreignReportingUnitId, foreignBlockId)))
-        .andExpect(status().isForbidden())
+        .andExpect(status().isNotFound())
         .andExpect(
             content()
                 .string(
@@ -683,7 +684,7 @@ class BlockControllerIntegrationTest extends AbstractTestContainerIntegrationTes
 
   @Test
   @DisplayName("Keeps IDIR unrestricted on the reporting-unit-scoped calculation URL")
-  @WithMockJwt(idp = "idir")
+  @WithMockJwt(idp = "idir", cognitoGroups = {"WASTE_PLUS_ADMIN"})
   void allowsIdirCalculationSnapshotRead() throws Exception {
     snapshotRepository.save(
         new BlockCalculationSnapshotEntity(
@@ -717,12 +718,12 @@ class BlockControllerIntegrationTest extends AbstractTestContainerIntegrationTes
   }
 
   @Test
-  @DisplayName("Denies a foreign parent reporting unit before probing the block")
+  @DisplayName("Denies a foreign parent reporting unit with 404 before probing the block")
   @WithMockJwt(idp = "bceidbusiness", cognitoGroups = {"WASTE_PLUS_VIEWER_00000000"})
   void forbidsForeignParentBeforeBlockProbe() throws Exception {
     mockMvc
         .perform(MockMvcRequestBuilders.get(calculationUrl(foreignReportingUnitId, blockId)))
-        .andExpect(status().isForbidden());
+        .andExpect(status().isNotFound());
   }
 
   @Test
@@ -787,8 +788,8 @@ class BlockControllerIntegrationTest extends AbstractTestContainerIntegrationTes
   }
 
   @Test
-  @DisplayName("POST /blocks returns 403 when role is VIEWER")
-  @WithMockJwt(cognitoGroups = {"WASTE_PLUS_VIEWER_00000000"})
+  @DisplayName("POST /blocks returns 403 when role is VIEWER on in-scope RU")
+  @WithMockJwt(idp = "idir", cognitoGroups = {"WASTE_PLUS_VIEWER_DKM"})
   void create_whenViewer_returns403() throws Exception {
     mockMvc
         .perform(
@@ -943,8 +944,47 @@ class BlockControllerIntegrationTest extends AbstractTestContainerIntegrationTes
   }
 
   @Test
+  @DisplayName("POST /blocks returns 404 for VIEWER on out-of-scope RU")
+  @WithMockJwt(
+      cognitoGroups = {"WASTE_PLUS_VIEWER_99999999"},
+      idp = "bceidbusiness")
+  void create_whenOutOfScopeViewer_returns404() throws Exception {
+    mockMvc
+        .perform(
+            post("/api/reporting-units/{reportingUnitId}/blocks", reportingUnitId)
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"blockType\":\"DISTRICT_AVERAGE\"}"))
+        .andExpect(status().isNotFound());
+  }
+
+  @Test
+  @DisplayName("POST /blocks returns 404 for IDIR VIEWER on out-of-district RU")
+  @WithMockJwt(
+      cognitoGroups = {"WASTE_PLUS_VIEWER_DCC"},
+      idp = "idir")
+  void create_whenOutOfDistrictIdirViewer_returns404() throws Exception {
+    mockMvc
+        .perform(
+            post("/api/reporting-units/{reportingUnitId}/blocks", reportingUnitId)
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"blockType\":\"DISTRICT_AVERAGE\"}"))
+        .andExpect(status().isNotFound());
+  }
+
+  @Test
+  @DisplayName("GET /blocks returns 404 for IDIR DISTRICT user on other-district unit")
+  @WithMockJwt(idp = "idir", cognitoGroups = {"WASTE_PLUS_DISTRICT_DCC"})
+  void getBlocks_whenDistrictUserOnOtherDistrictUnit_returns404() throws Exception {
+    mockMvc
+        .perform(MockMvcRequestBuilders.get(detailsUrl(reportingUnitId, blockId)))
+        .andExpect(status().isNotFound());
+  }
+
+  @Test
   @DisplayName("GET /blocks/{blockId} returns block details via alias path")
-  @WithMockJwt
+  @WithMockJwt(cognitoGroups = {"WASTE_PLUS_ADMIN"})
   void returnsBlockDetailsViaBlocksAliasPath() throws Exception {
     mockMvc
         .perform(MockMvcRequestBuilders.get("/api/reporting-units/" + reportingUnitId + "/blocks/" + blockId))
@@ -994,13 +1034,13 @@ class BlockControllerIntegrationTest extends AbstractTestContainerIntegrationTes
   }
 
   @Test
-  @DisplayName("Denies a BCeID caller reading another client's block details via alias path")
+  @DisplayName("Denies a BCeID caller reading another client's block details via alias path with 404")
   @WithMockJwt(idp = "bceidbusiness", cognitoGroups = {"WASTE_PLUS_VIEWER_00000000"})
   void deniesBceidCrossClientBlockDetailsViaAliasPath() throws Exception {
     mockMvc
         .perform(
             MockMvcRequestBuilders.get(
                 "/api/reporting-units/" + foreignReportingUnitId + "/blocks/" + foreignBlockId))
-        .andExpect(status().isForbidden());
+        .andExpect(status().isNotFound());
   }
 }

@@ -1,15 +1,14 @@
 package ca.bc.gov.nrs.hrs.service.reliability;
 
-import ca.bc.gov.nrs.hrs.dto.base.IdentityProvider;
 import ca.bc.gov.nrs.hrs.dto.base.Role;
-import ca.bc.gov.nrs.hrs.entity.block.ReportingUnitEntity;
 import ca.bc.gov.nrs.hrs.exception.ForbiddenException;
-import ca.bc.gov.nrs.hrs.repository.block.ReportingUnitRepository;
+import ca.bc.gov.nrs.hrs.security.ResourceScopeGuard;
 import ca.bc.gov.nrs.hrs.util.JwtPrincipalUtil;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import lombok.RequiredArgsConstructor;
@@ -17,6 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Component;
+import org.springframework.web.server.ResponseStatusException;
 
 /**
  * Validates endpoint resource authorization before replaying cached idempotent responses.
@@ -36,7 +36,7 @@ public class DefaultEndpointAuthorizationChecker implements EndpointAuthorizatio
 
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
-  private final ReportingUnitRepository reportingUnitRepository;
+  private final ResourceScopeGuard resourceScopeGuard;
 
   @Override
   public void checkAuthorization(HttpServletRequest request, Authentication authentication) {
@@ -52,7 +52,7 @@ public class DefaultEndpointAuthorizationChecker implements EndpointAuthorizatio
     if ("POST".equalsIgnoreCase(request.getMethod())
         && REPORTING_UNIT_COLLECTION_PATTERN.matcher(path).matches()) {
       String clientNumber = extractClientNumber(request);
-      validateReportingUnitCreationAccess(clientNumber, authentication);
+      validateReportingUnitCreationAccess(request, clientNumber, authentication);
       return;
     }
 
@@ -66,12 +66,12 @@ public class DefaultEndpointAuthorizationChecker implements EndpointAuthorizatio
         throw new ForbiddenException(
             "Invalid reporting unit identifier: " + matcher.group(1));
       }
-      validateReportingUnitAccess(reportingUnitId, authentication);
+      validateReportingUnitAccess(reportingUnitId, authentication, request.getMethod());
     }
   }
 
   private void validateReportingUnitCreationAccess(
-      String clientNumber, Authentication authentication) {
+      HttpServletRequest request, String clientNumber, Authentication authentication) {
     if (authentication == null || !authentication.isAuthenticated()) {
       throw new ForbiddenException(
           "Unauthenticated caller is not authorized to create a reporting unit");
@@ -95,6 +95,17 @@ public class DefaultEndpointAuthorizationChecker implements EndpointAuthorizatio
         throw new ForbiddenException(
             "User is not authorized to create a reporting unit for client " + clientNumber);
       }
+
+      Map<Role, List<String>> roles = JwtPrincipalUtil.getRoles(jwt);
+      if (roles.containsKey(Role.DISTRICT)) {
+        String districtCode = extractDistrictCode(request);
+        try {
+          resourceScopeGuard.verifyDistrictScope(jwt, districtCode);
+        } catch (ResponseStatusException ex) {
+          throw new ForbiddenException(
+              "User is not authorized to create a reporting unit for district " + districtCode);
+        }
+      }
     } else {
       throw new ForbiddenException(
           "Authenticated caller is not authorized to create a reporting unit");
@@ -102,44 +113,26 @@ public class DefaultEndpointAuthorizationChecker implements EndpointAuthorizatio
   }
 
   private void validateReportingUnitAccess(
-      Long reportingUnitId, Authentication authentication) {
+      Long reportingUnitId, Authentication authentication, String httpMethod) {
     if (authentication == null || !authentication.isAuthenticated()) {
       throw new ForbiddenException(
           "Unauthenticated caller is not authorized to access reporting unit: "
               + reportingUnitId);
     }
 
-    Object principal = authentication.getPrincipal();
-    if (principal instanceof Jwt jwt) {
-      IdentityProvider idp =
-          IdentityProvider.fromClaim(JwtPrincipalUtil.getProvider(jwt)).orElse(null);
-      if (IdentityProvider.BUSINESS_BCEID == idp) {
-        ReportingUnitEntity reportingUnit = reportingUnitRepository
-            .findByIdAndDeletedFalse(reportingUnitId)
-            .orElseThrow(() -> new ForbiddenException(
-                "User is not authorized to access reporting unit: " + reportingUnitId));
+    resourceScopeGuard.verify(authentication, reportingUnitId, httpMethod);
+  }
 
-        List<String> userClientNumbers = JwtPrincipalUtil.getClientFromRoles(jwt);
-        if (!userClientNumbers.contains(reportingUnit.getClientNumber())) {
-          log.warn(
-              "SECURITY: BCeID user {} attempted unauthorized replay access to reporting unit {}",
-              JwtPrincipalUtil.getUserId(jwt),
-              reportingUnitId);
-          throw new ForbiddenException(
-              "User is not authorized to access reporting unit: " + reportingUnitId);
-        }
-      }
+  private byte[] extractBodyBytes(HttpServletRequest request) throws Exception {
+    if (request instanceof CachedBodyHttpServletRequest cachedRequest) {
+      return cachedRequest.getCachedBody();
     }
+    return request.getInputStream().readAllBytes();
   }
 
   private String extractClientNumber(HttpServletRequest request) {
     try {
-      byte[] bodyBytes;
-      if (request instanceof CachedBodyHttpServletRequest cachedRequest) {
-        bodyBytes = cachedRequest.getCachedBody();
-      } else {
-        bodyBytes = request.getInputStream().readAllBytes();
-      }
+      byte[] bodyBytes = extractBodyBytes(request);
       if (bodyBytes == null || bodyBytes.length == 0) {
         return null;
       }
@@ -152,6 +145,26 @@ public class DefaultEndpointAuthorizationChecker implements EndpointAuthorizatio
     } catch (Exception ex) {
       log.warn(
           "Failed to extract clientNumber from create reporting unit request body: {}",
+          ex.getMessage());
+      return null;
+    }
+  }
+
+  private String extractDistrictCode(HttpServletRequest request) {
+    try {
+      byte[] bodyBytes = extractBodyBytes(request);
+      if (bodyBytes == null || bodyBytes.length == 0) {
+        return null;
+      }
+      JsonNode node = OBJECT_MAPPER.readTree(bodyBytes);
+      JsonNode districtNode = node.get("districtCode");
+      if (districtNode != null && !districtNode.isNull() && !districtNode.asText().isBlank()) {
+        return districtNode.asText().trim();
+      }
+      return null;
+    } catch (Exception ex) {
+      log.warn(
+          "Failed to extract districtCode from create reporting unit request body: {}",
           ex.getMessage());
       return null;
     }

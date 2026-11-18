@@ -439,8 +439,8 @@ class BlockServiceTest {
   }
 
   @Test
-  @DisplayName("getBlockDetails throws ResponseStatusException 403 when block found in postgres but caller lacks client scope")
-  void getBlockDetails_whenBlockFoundInPostgresButUnauthorized_throws403() {
+  @DisplayName("getBlockDetails throws ReportingUnitNotFoundException 404 when block found in postgres but caller lacks client scope")
+  void getBlockDetails_whenBlockFoundInPostgresButUnauthorized_throws404() {
     Jwt crossClientBceidJwt =
         WithMockJwtSecurityContextFactory.createJwt(
             "other-user",
@@ -459,8 +459,8 @@ class BlockServiceTest {
         .thenReturn(Optional.of(block));
 
     assertThatThrownBy(() -> blockService.getBlockDetails(RU_ID, BLOCK_ID, crossClientBceidJwt))
-        .isInstanceOf(ResponseStatusException.class)
-        .matches(ex -> ((ResponseStatusException) ex).getStatusCode().value() == 403);
+        .isInstanceOf(ReportingUnitNotFoundException.class)
+        .matches(ex -> ((ResponseStatusException) ex).getStatusCode().value() == 404);
   }
 }
 

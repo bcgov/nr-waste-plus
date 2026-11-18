@@ -288,7 +288,7 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
   }
 
   @Test
-  @WithMockJwt(idp = "bceidbusiness", cognitoGroups = {"WASTE_PLUS_ADMIN"})
+  @WithMockJwt(idp = "idir", cognitoGroups = {"WASTE_PLUS_ADMIN"})
   @DisplayName("Should allow an admin to create for a different client")
   void shouldAllowAdminCreateForCrossClient() throws Exception {
     String foreignClient = "00099999";
@@ -303,6 +303,50 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
     trackCreatedReportingUnitFromLocation(response.getResponse().getHeader("Location"));
 
     verifyLegacyDuplicateSearchWithoutCreate();
+  }
+
+  @Test
+  @WithMockJwt(idp = "idir", cognitoGroups = {"WASTE_PLUS_DISTRICT_DKM"})
+  @DisplayName("Should allow an IDIR district user to create in their assigned district")
+  void shouldAllowDistrictUserToCreateInAssignedDistrict() throws Exception {
+    stubCreateDependencies();
+
+    var requestJson =
+        """
+        {"clientNumber":"00012797","districtCode":"DKM","samplingCode":"AVG","gradeCode":"COASTAL"}
+        """;
+
+    var response =
+        mockMvc
+            .perform(
+                MockMvcRequestBuilders.post("/api/reporting-units")
+                    .with(SecurityMockMvcRequestPostProcessors.csrf())
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(requestJson))
+            .andExpect(status().isCreated())
+            .andExpect(header().exists("Location"))
+            .andReturn();
+    trackCreatedReportingUnitFromLocation(response.getResponse().getHeader("Location"));
+  }
+
+  @Test
+  @WithMockJwt(idp = "idir", cognitoGroups = {"WASTE_PLUS_DISTRICT_DCC"})
+  @DisplayName("Should forbid an IDIR district user from creating in a different district")
+  void shouldForbidDistrictUserFromCreatingInDifferentDistrict() throws Exception {
+    stubCreateDependencies();
+
+    var requestJson =
+        """
+        {"clientNumber":"00012797","districtCode":"DKM","samplingCode":"AVG","gradeCode":"COASTAL"}
+        """;
+
+    mockMvc
+        .perform(
+            MockMvcRequestBuilders.post("/api/reporting-units")
+                .with(SecurityMockMvcRequestPostProcessors.csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(requestJson))
+        .andExpect(status().isForbidden());
   }
 
   private void assertSuccessfulCreate() throws Exception {
@@ -425,7 +469,7 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
   }
 
   @Test
-  @WithMockJwt
+  @WithMockJwt(cognitoGroups = {"WASTE_PLUS_ADMIN"})
   @DisplayName("Should Return 404 for an Unknown Legacy Reporting Unit Block List")
   void shouldReturn404_whenBlockListReportingUnitDoesNotExist() throws Exception {
     mockMvc
@@ -440,7 +484,7 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
   }
 
   @Test
-  @WithMockJwt
+  @WithMockJwt(cognitoGroups = {"WASTE_PLUS_ADMIN"})
   @DisplayName("Should Return Postgres Block Rows with Aggregates and Latest Status")
   void shouldReturnPostgresBlocks_whenReportingUnitHasBlocks() throws Exception {
     mockMvc
@@ -474,7 +518,7 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
   }
 
   @Test
-  @WithMockJwt
+  @WithMockJwt(cognitoGroups = {"WASTE_PLUS_ADMIN"})
   @DisplayName("Golden | Blocks list pins the VIA_DTO page envelope")
   void golden_blocksList_pinsViaDtoPageEnvelope() throws Exception {
     String body =
@@ -500,7 +544,7 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
   }
 
   @Test
-  @WithMockJwt
+  @WithMockJwt(cognitoGroups = {"WASTE_PLUS_ADMIN"})
   @DisplayName("Golden | Block details pins the BlockResponseDto shape")
   void golden_blockDetails_pinsBlockDetailShape() throws Exception {
     String body =
@@ -525,7 +569,7 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
   }
 
   @Test
-  @WithMockJwt
+  @WithMockJwt(cognitoGroups = {"WASTE_PLUS_ADMIN"})
   @DisplayName("Should Return Empty Blocks Page for Postgres Reporting Unit Without Blocks")
   void shouldReturnEmptyPage_whenPostgresReportingUnitHasNoBlocks() throws Exception {
     mockMvc
@@ -541,7 +585,7 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
   }
 
   @Test
-  @WithMockJwt
+  @WithMockJwt(cognitoGroups = {"WASTE_PLUS_ADMIN"})
   @DisplayName("Should Return Reporting Unit Details when Both APIs Succeed")
   void shouldReturnReportingUnitDetails_whenBothApisSucceed() throws Exception {
     legacyApiStub.stubFor(
@@ -580,7 +624,7 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
   }
 
   @Test
-  @WithMockJwt
+  @WithMockJwt(cognitoGroups = {"WASTE_PLUS_ADMIN"})
   @DisplayName("Should Return Details with Postgres Sampling when Local Record Exists")
   void shouldReturnReportingUnitDetails_withPostgresSampling_whenLocalRecordExists()
       throws Exception {
@@ -633,7 +677,7 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
   }
 
   @Test
-  @WithMockJwt
+  @WithMockJwt(cognitoGroups = {"WASTE_PLUS_ADMIN"})
   @DisplayName("Should Return 404 when Forest Client Not Found")
   void shouldReturn404_whenForestClientNotFound() throws Exception {
     legacyApiStub.stubFor(
@@ -650,7 +694,7 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
   }
 
   @Test
-  @WithMockJwt
+  @WithMockJwt(cognitoGroups = {"WASTE_PLUS_ADMIN"})
   @DisplayName("Should Return 404 when Reporting Unit Details Feature Flag Is Disabled")
   void shouldReturn404_whenReportingUnitDetailsFeatureFlagIsDisabled() throws Exception {
     doReturn(false)
@@ -665,7 +709,7 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
   }
 
   @Test
-  @WithMockJwt
+  @WithMockJwt(cognitoGroups = {"WASTE_PLUS_ADMIN"})
   @DisplayName("Should Keep Block List Available when Reporting Unit Details Flag Is Disabled")
   void shouldReturnBlocks_whenReportingUnitDetailsFeatureFlagIsDisabled() throws Exception {
     doReturn(false)
@@ -720,8 +764,8 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
   @WithMockJwt(
       idp = "bceidbusiness",
       cognitoGroups = {"WASTE_PLUS_SUBMITTER_99999999"})
-  @DisplayName("Should Return 403 when Bceid User Has No Matching Client Role")
-  void shouldReturn403_whenBceidUserHasNoMatchingClientRole() throws Exception {
+  @DisplayName("Should Return 404 when Bceid User Has No Matching Client Role")
+  void shouldReturn404_whenBceidUserHasNoMatchingClientRole() throws Exception {
     legacyApiStub.stubFor(
         get(urlPathEqualTo("/api/reporting-units/12345")).willReturn(okJson(LEGACY_RU_DETAILS)));
 
@@ -733,6 +777,6 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
         .perform(
             MockMvcRequestBuilders.get("/api/reporting-units/{id}", 12345L)
                 .accept(MediaType.APPLICATION_JSON))
-        .andExpect(status().isForbidden());
+        .andExpect(status().isNotFound());
   }
 }
