@@ -109,7 +109,11 @@ describe('reporting-unit block contracts', () => {
       futureField: 'preserved',
     };
 
-    expect(blockDetailsSchema.parse(details)).toEqual(details);
+    expect(blockDetailsSchema.parse(details)).toEqual({
+      ...details,
+      secondaryTimberMarks: [],
+      roadPermitTimberMarks: [],
+    });
   });
 
   it('shouldParseBlockDetailsWithNullOptionalFields', () => {
@@ -123,7 +127,11 @@ describe('reporting-unit block contracts', () => {
       isLegacy: true,
     };
 
-    expect(blockDetailsSchema.parse(details)).toEqual(details);
+    expect(blockDetailsSchema.parse(details)).toEqual({
+      ...details,
+      secondaryTimberMarks: [],
+      roadPermitTimberMarks: [],
+    });
   });
 
   it.each(['id', 'reportingUnitId', 'blockType', 'draft', 'plcDate', 'revision', 'isLegacy'])(

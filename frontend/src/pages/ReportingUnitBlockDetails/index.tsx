@@ -268,14 +268,28 @@ const ReportingUnitBlockDetailsPage: FC = () => {
                 mode={blockData.isLegacy ? 'read-only' : 'form'}
                 initialValues={{
                   primaryLoggingCompleteDate: blockData.plcDate ?? '',
-                  secondaryTimberMarks: blockData.secondaryTimberMarks ?? [],
-                  roadPermitTimberMarks: blockData.roadPermitTimberMarks ?? [],
+                  secondaryTimberMarks: (blockData.secondaryTimberMarks ?? []).map(
+                    (mark) => mark.mark ?? mark.timberMark ?? '',
+                  ),
+                  roadPermitTimberMarks: (blockData.roadPermitTimberMarks ?? []).map(
+                    (mark) => mark.mark ?? mark.timberMark ?? '',
+                  ),
                 }}
                 harvestStatuses={harvestStatuses}
                 becZones={[]}
                 becSubzoneVariants={[]}
                 maturityOptions={maturityOptions}
                 districtAverageCriteria={districtAverageCriteria}
+                wasteAssessmentArea={
+                  blockData.wasteAssessmentAreaSummary
+                    ? {
+                        primary: blockData.wasteAssessmentAreaSummary.primary ?? null,
+                        secondary: blockData.wasteAssessmentAreaSummary.secondary ?? [],
+                        totalNetWasteAreaHa:
+                          blockData.wasteAssessmentAreaSummary.totalNetWasteAreaHa ?? null,
+                      }
+                    : undefined
+                }
                 onNavigateTab={setSelectedTabIndex}
               />
             </TabPanel>

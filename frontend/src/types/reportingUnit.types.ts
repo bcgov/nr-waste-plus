@@ -116,6 +116,37 @@ export const blockMarkDetailSchema = z.looseObject({
 export type BlockMarkDetailDto = z.infer<typeof blockMarkDetailSchema>;
 
 /**
+ * One mark row in the waste assessment area summary payload
+ * (`WasteAssessmentAreaMarkDto`).
+ *
+ * `timberMarkId` and `netWasteAreaHa` may be null/absent depending on
+ * availability; parsed tolerantly at the API boundary.
+ */
+export const wasteAssessmentAreaMarkSchema = z.looseObject({
+  timberMarkId: z.string().nullish(),
+  netWasteAreaHa: z.number().nullish(),
+});
+
+/** TypeScript representation of a waste assessment area mark row. */
+export type WasteAssessmentAreaMarkDto = z.infer<typeof wasteAssessmentAreaMarkSchema>;
+
+/**
+ * Waste assessment area summary returned with block details
+ * (`WasteAssessmentAreaSummaryDto`).
+ *
+ * `primary` is the single primary timber mark (or null). `secondary` contains
+ * secondary marks only. `totalNetWasteAreaHa` is the backend-precomputed total.
+ */
+export const wasteAssessmentAreaSummarySchema = z.looseObject({
+  primary: wasteAssessmentAreaMarkSchema.nullish(),
+  secondary: z.array(wasteAssessmentAreaMarkSchema).optional().default([]),
+  totalNetWasteAreaHa: z.number().nullish(),
+});
+
+/** TypeScript representation of the waste assessment area summary. */
+export type WasteAssessmentAreaSummaryDto = z.infer<typeof wasteAssessmentAreaSummarySchema>;
+
+/**
  * Block-details response
  * (`GET /api/reporting-units/{reportingUnitId}/{blockId}`, Java
  * `BlockResponseDto`).
@@ -138,6 +169,7 @@ export const blockDetailsSchema = z.looseObject({
   isLegacy: z.boolean(),
   secondaryTimberMarks: z.array(blockMarkDetailSchema).optional().default([]),
   roadPermitTimberMarks: z.array(blockMarkDetailSchema).optional().default([]),
+  wasteAssessmentAreaSummary: wasteAssessmentAreaSummarySchema.nullish(),
 });
 
 /** TypeScript representation of a block-details response. */

@@ -33,6 +33,14 @@ const blockDetailsPayload = {
   plcDate: null,
   revision: 1,
   isLegacy: false,
+  wasteAssessmentAreaSummary: {
+    primary: {
+      timberMarkId: 'TM-PRIMARY',
+      netWasteAreaHa: null,
+    },
+    secondary: [{ timberMarkId: 'TM-SEC', netWasteAreaHa: 1.23 }],
+    totalNetWasteAreaHa: 1.23,
+  },
 };
 
 test.describe('Reporting Unit Block Details', () => {
@@ -92,6 +100,22 @@ test.describe('Reporting Unit Block Details', () => {
       'DA - District Average',
     );
     await expect(page.getByTestId('card-item-content-created-on')).toHaveText('-');
+
+    const wasteAssessmentCard = page.getByRole('region', {
+      name: 'Waste assessment area summary',
+    });
+    await expect(wasteAssessmentCard).toBeVisible();
+    await expect(wasteAssessmentCard.getByText('Primary mark')).toBeVisible();
+    await expect(wasteAssessmentCard.getByText('TM-PRIMARY')).toBeVisible();
+    await expect(wasteAssessmentCard.getByText('Secondary mark')).toBeVisible();
+    await expect(wasteAssessmentCard.getByText('TM-SEC')).toBeVisible();
+    await expect(wasteAssessmentCard.getByText('1.23').first()).toBeVisible();
+    const totalRow = wasteAssessmentCard.getByRole('row').filter({
+      hasText: 'Total net waste area (ha)',
+    });
+    await expect(totalRow).toContainText('1.23');
+    const primaryRow = wasteAssessmentCard.getByRole('row').filter({ hasText: 'TM-PRIMARY' });
+    await expect(primaryRow).toContainText('-');
 
     // No edit controls in the read-only design.
     await expect(page.getByRole('button', { name: /edit/i })).toHaveCount(0);

@@ -17,31 +17,72 @@ describe('WasteAssessmentAreaSummaryCard', () => {
     expect(screen.getByText('Net waste area (ha)')).toBeTruthy();
   });
 
-  it('renders hardcoded primary mark row and default total when undefined', () => {
+  it('renders no hardcoded placeholder mark when summary data is absent', () => {
     render(<WasteAssessmentAreaSummaryCard />);
 
-    expect(screen.getByText('Primary mark')).toBeTruthy();
-    expect(screen.getByText('74/1AD')).toBeTruthy();
-    const totalLabel = screen.getByText('Total net waste area (ha)');
-    const totalRow = totalLabel.closest('[role="row"]');
-    expect(totalRow).not.toBeNull();
-    expect(within(totalRow as HTMLElement).getByText('0.0')).toBeTruthy();
+    expect(screen.queryByText('Primary mark')).toBeNull();
+    expect(screen.queryByText('Secondary mark')).toBeNull();
+    expect(screen.queryByText('74/1AD')).toBeNull();
+    const totalRow = screen
+      .getAllByRole('row')
+      .find((row) => within(row).queryByText('Total net waste area (ha)'));
+    expect(totalRow).toBeTruthy();
+    expect(within(totalRow as HTMLElement).getByText('-')).toBeTruthy();
   });
 
-  it('renders supplied rows and explicit null total as empty-safe', () => {
+  it('renders primary and secondary rows with missing values as - and backend total', () => {
     render(
       <WasteAssessmentAreaSummaryCard
-        rows={[{ markType: 'Secondary mark', timberMarkId: null, netWasteAreaHa: '   ' }]}
-        totalNetWasteAreaHa={null}
+        primary={{ timberMarkId: 'TM-PRIMARY', netWasteAreaHa: null }}
+        secondary={[
+          { timberMarkId: 'TM-SEC-1', netWasteAreaHa: 1.23 },
+          { timberMarkId: null, netWasteAreaHa: undefined },
+        ]}
+        totalNetWasteAreaHa={1.23}
       />,
     );
 
-    expect(screen.getByText('Secondary mark')).toBeTruthy();
-    const totalLabel = screen.getByText('Total net waste area (ha)');
-    const totalRow = totalLabel.closest('[role="row"]');
-    expect(totalRow).not.toBeNull();
-    expect(within(totalRow as HTMLElement).getByText('-')).toBeTruthy();
-    expect(within(totalRow as HTMLElement).queryByText('0.0')).toBeNull();
+    expect(screen.getByText('Primary mark')).toBeTruthy();
+    expect(screen.getByText('TM-PRIMARY')).toBeTruthy();
+    expect(screen.getAllByText('Secondary mark')).toHaveLength(2);
+    expect(screen.getByText('TM-SEC-1')).toBeTruthy();
+
+    const rows = screen.getAllByRole('row');
+    const primaryRow = rows.find((row) => within(row).queryByText('TM-PRIMARY'));
+    expect(primaryRow).toBeTruthy();
+    expect(within(primaryRow as HTMLElement).getByText('-')).toBeTruthy();
+
+    const secondaryRowWithArea = rows.find((row) => within(row).queryByText('TM-SEC-1'));
+    expect(secondaryRowWithArea).toBeTruthy();
+    expect(within(secondaryRowWithArea as HTMLElement).getByText('1.23')).toBeTruthy();
+
+    const secondSecondaryRow = rows.find(
+      (row) =>
+        within(row).queryAllByText('Secondary mark').length === 1 &&
+        !within(row).queryByText('TM-SEC-1'),
+    );
+    expect(secondSecondaryRow).toBeTruthy();
+    expect(within(secondSecondaryRow as HTMLElement).getAllByText('-').length).toBeGreaterThan(0);
+
+    const totalRow = rows.find((row) => within(row).queryByText('Total net waste area (ha)'));
+    expect(totalRow).toBeTruthy();
+    expect(within(totalRow as HTMLElement).getByText('1.23')).toBeTruthy();
+  });
+
+  it('renders backend-precomputed zero total when provided', () => {
+    render(
+      <WasteAssessmentAreaSummaryCard
+        primary={{ timberMarkId: 'TM-TEST', netWasteAreaHa: null }}
+        secondary={[]}
+        totalNetWasteAreaHa={0}
+      />,
+    );
+
+    const totalRow = screen
+      .getAllByRole('row')
+      .find((row) => within(row).queryByText('Total net waste area (ha)'));
+    expect(totalRow).toBeTruthy();
+    expect(within(totalRow as HTMLElement).getByText('0')).toBeTruthy();
   });
 
   it('calls onGoToAreaCalculator when button is clicked', async () => {

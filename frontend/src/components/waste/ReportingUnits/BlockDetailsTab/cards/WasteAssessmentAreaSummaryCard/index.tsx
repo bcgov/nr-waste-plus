@@ -6,9 +6,15 @@ import {
   StructuredListRow,
   StructuredListWrapper,
 } from '@carbon/react';
+
 import type { FC } from 'react';
 
 import './index.scss';
+
+export type WasteAssessmentAreaMark = {
+  timberMarkId?: string | null;
+  netWasteAreaHa?: string | number | null;
+};
 
 export type WasteAssessmentAreaRow = {
   markType?: string | null;
@@ -17,7 +23,8 @@ export type WasteAssessmentAreaRow = {
 };
 
 export type WasteAssessmentAreaSummaryCardProps = {
-  rows?: readonly WasteAssessmentAreaRow[];
+  primary?: WasteAssessmentAreaMark | null;
+  secondary?: readonly WasteAssessmentAreaMark[] | null;
   totalNetWasteAreaHa?: string | number | null;
   onGoToAreaCalculator?: () => void;
 };
@@ -28,20 +35,36 @@ const toDisplayValue = (value?: string | number | null): string => {
   return stringValue.trim() === '' ? '-' : stringValue;
 };
 
+/**
+ * Displays the waste assessment area summary (primary/secondary timber marks and
+ * backend-precomputed total net waste area). Renders missing values as `-` and
+ * never injects hardcoded placeholder marks.
+ */
 const WasteAssessmentAreaSummaryCard: FC<WasteAssessmentAreaSummaryCardProps> = ({
-  rows,
+  primary,
+  secondary,
   totalNetWasteAreaHa,
   onGoToAreaCalculator,
 }) => {
-  // Temporary hardcoded primary mark row (S7) until area-calculator data is wired.
-  const primaryMarkRow: WasteAssessmentAreaRow = {
-    markType: 'Primary mark',
-    timberMarkId: '74/1AD',
-    netWasteAreaHa: '-',
-  };
+  const displayRows: WasteAssessmentAreaRow[] = [];
 
-  const displayRows = [primaryMarkRow, ...(rows ?? [])];
-  const total = toDisplayValue(totalNetWasteAreaHa === undefined ? '0.0' : totalNetWasteAreaHa);
+  if (primary) {
+    displayRows.push({
+      markType: 'Primary mark',
+      timberMarkId: primary.timberMarkId,
+      netWasteAreaHa: primary.netWasteAreaHa,
+    });
+  }
+
+  for (const mark of secondary ?? []) {
+    displayRows.push({
+      markType: 'Secondary mark',
+      timberMarkId: mark.timberMarkId,
+      netWasteAreaHa: mark.netWasteAreaHa,
+    });
+  }
+
+  const total = toDisplayValue(totalNetWasteAreaHa);
 
   return (
     <section
