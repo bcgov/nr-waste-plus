@@ -526,6 +526,12 @@ class BlockServiceTest {
     assertThat(result.isLegacy()).isFalse();
     assertThat(result.secondaryTimberMarks()).isEmpty();
     assertThat(result.roadPermitTimberMarks()).isEmpty();
+    assertThat(result.districtAverageVolumesSummary()).isNotNull();
+    assertThat(result.districtAverageVolumesSummary().rows()).isEmpty();
+    assertThat(result.districtAverageVolumesSummary().totals().totalBillableVolumeM3())
+        .isEqualByComparingTo("0");
+    assertThat(result.districtAverageVolumesSummary().totals().totalCutControlVolumeM3())
+        .isEqualByComparingTo("0");
   }
 
   @Test
@@ -566,6 +572,12 @@ class BlockServiceTest {
     assertThat(result.isLegacy()).isFalse();
     assertThat(result.secondaryTimberMarks()).isEmpty();
     assertThat(result.roadPermitTimberMarks()).isEmpty();
+    assertThat(result.districtAverageVolumesSummary()).isNotNull();
+    assertThat(result.districtAverageVolumesSummary().rows()).isEmpty();
+    assertThat(result.districtAverageVolumesSummary().totals().totalBillableVolumeM3())
+        .isEqualByComparingTo("0");
+    assertThat(result.districtAverageVolumesSummary().totals().totalCutControlVolumeM3())
+        .isEqualByComparingTo("0");
   }
 
   @Test
@@ -607,6 +619,12 @@ class BlockServiceTest {
     assertThat(result.isLegacy()).isTrue();
     assertThat(result.secondaryTimberMarks()).isEmpty();
     assertThat(result.roadPermitTimberMarks()).isEmpty();
+    assertThat(result.districtAverageVolumesSummary()).isNotNull();
+    assertThat(result.districtAverageVolumesSummary().rows()).isEmpty();
+    assertThat(result.districtAverageVolumesSummary().totals().totalBillableVolumeM3())
+        .isEqualByComparingTo("0");
+    assertThat(result.districtAverageVolumesSummary().totals().totalCutControlVolumeM3())
+        .isEqualByComparingTo("0");
   }
 
 
@@ -651,6 +669,12 @@ class BlockServiceTest {
 
     assertThat(result.secondaryTimberMarks()).containsExactly(secDto);
     assertThat(result.roadPermitTimberMarks()).containsExactly(roadDto);
+    assertThat(result.districtAverageVolumesSummary()).isNotNull();
+    assertThat(result.districtAverageVolumesSummary().rows()).isEmpty();
+    assertThat(result.districtAverageVolumesSummary().totals().totalBillableVolumeM3())
+        .isEqualByComparingTo("0");
+    assertThat(result.districtAverageVolumesSummary().totals().totalCutControlVolumeM3())
+        .isEqualByComparingTo("0");
   }
 
   @Test
@@ -683,6 +707,7 @@ class BlockServiceTest {
             null),
         0.0, 0.0, null, null, null, 0L, 0L);
     when(legacyApiProvider.getSearchExpanded(RU_ID, BLOCK_ID)).thenReturn(expanded);
+    when(legacyApiProvider.getDistrictAverageVolumes(RU_ID, BLOCK_ID)).thenReturn(List.of());
 
     var result = blockService.getBlockDetails(RU_ID, BLOCK_ID, idirJwt);
 
@@ -704,6 +729,12 @@ class BlockServiceTest {
         .containsExactly(new WasteAssessmentAreaMarkDto("SEC2", BigDecimal.valueOf(1.0)));
     assertThat(result.wasteAssessmentAreaSummary().totalNetWasteAreaHa())
         .isEqualByComparingTo("1.0");
+    assertThat(result.districtAverageVolumesSummary()).isNotNull();
+    assertThat(result.districtAverageVolumesSummary().rows()).isEmpty();
+    assertThat(result.districtAverageVolumesSummary().totals().totalBillableVolumeM3())
+        .isEqualByComparingTo("0");
+    assertThat(result.districtAverageVolumesSummary().totals().totalCutControlVolumeM3())
+        .isEqualByComparingTo("0");
   }
 
 
@@ -795,6 +826,12 @@ class BlockServiceTest {
             new WasteAssessmentAreaMarkDto("SEC-MARK", null),
             new WasteAssessmentAreaMarkDto("SEC-NO-AREA", null));
     assertThat(summary.totalNetWasteAreaHa()).isEqualByComparingTo("2.00");
+    assertThat(result.districtAverageVolumesSummary()).isNotNull();
+    assertThat(result.districtAverageVolumesSummary().rows()).isEmpty();
+    assertThat(result.districtAverageVolumesSummary().totals().totalBillableVolumeM3())
+        .isEqualByComparingTo("0");
+    assertThat(result.districtAverageVolumesSummary().totals().totalCutControlVolumeM3())
+        .isEqualByComparingTo("0");
   }
 
   @Test
@@ -831,6 +868,12 @@ class BlockServiceTest {
     assertThat(result.wasteAssessmentAreaSummary().primary()).isNull();
     assertThat(result.wasteAssessmentAreaSummary().secondary()).isEmpty();
     assertThat(result.wasteAssessmentAreaSummary().totalNetWasteAreaHa())
+        .isEqualByComparingTo("0");
+    assertThat(result.districtAverageVolumesSummary()).isNotNull();
+    assertThat(result.districtAverageVolumesSummary().rows()).isEmpty();
+    assertThat(result.districtAverageVolumesSummary().totals().totalBillableVolumeM3())
+        .isEqualByComparingTo("0");
+    assertThat(result.districtAverageVolumesSummary().totals().totalCutControlVolumeM3())
         .isEqualByComparingTo("0");
   }
 
@@ -889,6 +932,7 @@ class BlockServiceTest {
             0L,
             0L);
     when(legacyApiProvider.getSearchExpanded(RU_ID, BLOCK_ID)).thenReturn(expanded);
+    when(legacyApiProvider.getDistrictAverageVolumes(RU_ID, BLOCK_ID)).thenReturn(List.of());
 
     var result = blockService.getBlockDetails(RU_ID, BLOCK_ID, idirJwt);
 
@@ -901,6 +945,12 @@ class BlockServiceTest {
             new WasteAssessmentAreaMarkDto("SEC2", BigDecimal.valueOf(1.5)),
             new WasteAssessmentAreaMarkDto("SEC3", null));
     assertThat(summary.totalNetWasteAreaHa()).isEqualByComparingTo("4.5");
+    assertThat(result.districtAverageVolumesSummary()).isNotNull();
+    assertThat(result.districtAverageVolumesSummary().rows()).isEmpty();
+    assertThat(result.districtAverageVolumesSummary().totals().totalBillableVolumeM3())
+        .isEqualByComparingTo("0");
+    assertThat(result.districtAverageVolumesSummary().totals().totalCutControlVolumeM3())
+        .isEqualByComparingTo("0");
   }
 
   @Test
@@ -949,6 +999,7 @@ class BlockServiceTest {
                 null,
                 0L,
                 0L));
+    when(legacyApiProvider.getDistrictAverageVolumes(RU_ID, BLOCK_ID)).thenReturn(List.of());
 
     var result = blockService.getBlockDetails(RU_ID, BLOCK_ID, idirJwt);
 
@@ -957,6 +1008,93 @@ class BlockServiceTest {
     assertThat(result.wasteAssessmentAreaSummary().secondary())
         .containsExactly(new WasteAssessmentAreaMarkDto("SEC2", null));
     assertThat(result.wasteAssessmentAreaSummary().totalNetWasteAreaHa())
+        .isEqualByComparingTo("0");
+    assertThat(result.districtAverageVolumesSummary()).isNotNull();
+    assertThat(result.districtAverageVolumesSummary().rows()).isEmpty();
+    assertThat(result.districtAverageVolumesSummary().totals().totalBillableVolumeM3())
+        .isEqualByComparingTo("0");
+    assertThat(result.districtAverageVolumesSummary().totals().totalCutControlVolumeM3())
+        .isEqualByComparingTo("0");
+  }
+
+
+
+  @Test
+  @DisplayName("getBlockDetails returns legacy district average volumes summary from stratum rows")
+  void getBlockDetails_whenLegacyDistrictAverageVolumesExist_returnsMappedSummary() {
+    blockService.setClock(Clock.fixed(Instant.parse("2026-11-17T12:00:00Z"), ZoneOffset.UTC));
+    when(reportingUnitRepository.findByIdAndDeletedFalse(RU_ID)).thenReturn(Optional.empty());
+
+    var legacyRu =
+        new ca.bc.gov.nrs.hrs.dto.reportingunit.ReportingUnitLegacyDetailsDto(
+            CLIENT_NUMBER,
+            "00",
+            new CodeDescriptionDto("AVG", "Average"),
+            new CodeDescriptionDto("DND", "Nadina"));
+    when(legacyApiProvider.getReportingUnitDetails(RU_ID)).thenReturn(legacyRu);
+
+    var legacyRow =
+        new ca.bc.gov.nrs.hrs.dto.block.BlockListItemDto(
+            BLOCK_ID,
+            "FILE",
+            "CP",
+            "CUT",
+            "TM-PRI",
+            null,
+            null,
+            "sub",
+            new ca.bc.gov.nrs.hrs.dto.block.BlockListItemDto.Status("DFT", "Draft"),
+            null,
+            null);
+    when(legacyApiProvider.getReportingUnitBlocksStrict(RU_ID)).thenReturn(List.of(legacyRow));
+    when(legacyApiProvider.getSearchExpanded(RU_ID, BLOCK_ID))
+        .thenReturn(
+            new ReportingUnitSearchExpandedDto(
+                BLOCK_ID, "FILE", "CP", "TM-PRI", false, false, null, List.of(),
+                null, null, null, null, null, 0L, 0L));
+    when(legacyApiProvider.getDistrictAverageVolumes(RU_ID, BLOCK_ID))
+        .thenReturn(
+            java.util.Arrays.asList(
+                new ca.bc.gov.nrs.hrs.dto.search.DistrictAverageVolumeLegacyDto(
+                    "Dispersed",
+                    "Roadside",
+                    "R",
+                    "Rubber-tired Skidder",
+                    "Ocular Estimate",
+                    "Not Stratified",
+                    new BigDecimal("29.4"),
+                    new BigDecimal("12.0")),
+                new ca.bc.gov.nrs.hrs.dto.search.DistrictAverageVolumeLegacyDto(
+                    "Accumulated",
+                    "Roadside",
+                    "H",
+                    null,
+                    "Ocular Estimate",
+                    "Not Stratified",
+                    null,
+                    null),
+                null));
+
+    var result = blockService.getBlockDetails(RU_ID, BLOCK_ID, idirJwt);
+
+    assertThat(result.districtAverageVolumesSummary()).isNotNull();
+    assertThat(result.districtAverageVolumesSummary().rows()).hasSize(2);
+    assertThat(result.districtAverageVolumesSummary().rows().get(0).populationType())
+        .isEqualTo("Dispersed");
+    assertThat(result.districtAverageVolumesSummary().rows().get(0).harvestMethodCode())
+        .isEqualTo("Rubber-tired Skidder");
+    assertThat(result.districtAverageVolumesSummary().rows().get(0).netWasteAreaHa())
+        .isEqualByComparingTo("29.4");
+    assertThat(result.districtAverageVolumesSummary().rows().get(0).totalBillableVolumeM3())
+        .isNull();
+    assertThat(result.districtAverageVolumesSummary().rows().get(0).totalCutControlVolumeM3())
+        .isNull();
+    assertThat(result.districtAverageVolumesSummary().rows().get(1).harvestMethodCode())
+        .isEqualTo("H");
+    assertThat(result.districtAverageVolumesSummary().rows().get(1).netWasteAreaHa()).isNull();
+    assertThat(result.districtAverageVolumesSummary().totals().totalBillableVolumeM3())
+        .isEqualByComparingTo("0");
+    assertThat(result.districtAverageVolumesSummary().totals().totalCutControlVolumeM3())
         .isEqualByComparingTo("0");
   }
 

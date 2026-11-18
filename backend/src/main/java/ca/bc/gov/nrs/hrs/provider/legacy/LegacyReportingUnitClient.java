@@ -3,6 +3,7 @@ package ca.bc.gov.nrs.hrs.provider.legacy;
 import ca.bc.gov.nrs.hrs.dto.block.BlockListItemDto;
 import ca.bc.gov.nrs.hrs.dto.reportingunit.CreateReportingUnitRequestDto;
 import ca.bc.gov.nrs.hrs.dto.reportingunit.ReportingUnitLegacyDetailsDto;
+import ca.bc.gov.nrs.hrs.dto.search.DistrictAverageVolumeLegacyDto;
 import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchExpandedDto;
 import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchParametersDto;
 import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchResultDto;
@@ -313,6 +314,41 @@ public class LegacyReportingUnitClient {
             })
         .body(new ParameterizedTypeReference<>() {});
   }
+
+  /**
+   * Retrieve district average volume/stratum rows for a block from the legacy API.
+   *
+   * @param ruId the reporting unit ID
+   * @param wasteAssessmentAreaId the block/waste assessment area ID
+   * @return district average volume rows; empty list on failure or when none exist
+   */
+  @CircuitBreaker(name = "breaker", fallbackMethod = "fallbackEmptyDistrictAverageVolumes")
+  @NewSpan
+  public List<DistrictAverageVolumeLegacyDto> getDistrictAverageVolumes(
+      Long ruId, Long wasteAssessmentAreaId) {
+    return restClient
+        .get()
+        .uri(
+            uriBuilder ->
+                uriBuilder
+                    .path(
+                        "/api/reporting-units/{reportingUnitId}/blocks/{wasteAssessmentAreaId}"
+                            + "/district-average-volumes")
+                    .build(
+                        Map.of(
+                            REPORTING_UNIT_ID, ruId,
+                            "wasteAssessmentAreaId", wasteAssessmentAreaId)))
+        .retrieve()
+        .body(new ParameterizedTypeReference<>() {});
+  }
+
+  @SuppressWarnings("unused")
+  private List<DistrictAverageVolumeLegacyDto> fallbackEmptyDistrictAverageVolumes(
+      Long ruId, Long wasteAssessmentAreaId, Throwable throwable) {
+    logFallbackError(throwable);
+    return List.of();
+  }
+
 
   /**
    * Creates a reporting unit in the legacy API.

@@ -6,6 +6,9 @@ import ca.bc.gov.nrs.hrs.dto.block.BlockListItemDto;
 import ca.bc.gov.nrs.hrs.dto.block.BlockMarkDto;
 import ca.bc.gov.nrs.hrs.dto.block.BlockResponseDto;
 import ca.bc.gov.nrs.hrs.dto.block.BlockType;
+import ca.bc.gov.nrs.hrs.dto.block.DistrictAverageVolumeRowDto;
+import ca.bc.gov.nrs.hrs.dto.block.DistrictAverageVolumeTotalsDto;
+import ca.bc.gov.nrs.hrs.dto.block.DistrictAverageVolumesSummaryDto;
 import ca.bc.gov.nrs.hrs.dto.block.WasteAssessmentAreaMarkDto;
 import ca.bc.gov.nrs.hrs.dto.block.WasteAssessmentAreaSummaryDto;
 import ca.bc.gov.nrs.hrs.entity.block.BlockAreaSegmentEntity;
@@ -279,6 +282,7 @@ public class BlockService {
         withTimberMarks(
             dto, loadSecondaryTimberMarks(blockId), loadRoadPermitTimberMarks(blockId));
     dto = withWasteAssessmentAreaSummary(dto, buildPostgresWasteAssessmentAreaSummary(blockId));
+    dto = withDistrictAverageVolumesSummary(dto, buildPostgresDistrictAverageVolumesSummary());
     return withResolvedPlcDate(dto);
   }
 
@@ -300,13 +304,17 @@ public class BlockService {
         toLegacyRoadPermitTimberMarks(reportingUnitId, blockId, legacyRow, expanded);
     WasteAssessmentAreaSummaryDto wasteAssessmentAreaSummary =
         buildLegacyWasteAssessmentAreaSummary(expanded);
+    DistrictAverageVolumesSummaryDto districtAverageVolumesSummary =
+        buildLegacyDistrictAverageVolumesSummary(
+            legacyApiProvider.getDistrictAverageVolumes(reportingUnitId, blockId));
 
     return toLegacyResponseDto(
         reportingUnitId,
         legacyRow,
         secondaryTimberMarks,
         roadPermitTimberMarks,
-        wasteAssessmentAreaSummary);
+        wasteAssessmentAreaSummary,
+        districtAverageVolumesSummary);
   }
 
   /**
@@ -441,7 +449,7 @@ public class BlockService {
    * payload carries no block subtype, so the envelope reports the subtype as unknown.
    */
   private BlockResponseDto toLegacyResponseDto(Long reportingUnitId, BlockListItemDto row) {
-    return toLegacyResponseDto(reportingUnitId, row, List.of(), List.of(), null);
+    return toLegacyResponseDto(reportingUnitId, row, List.of(), List.of(), null, null);
   }
 
   private BlockResponseDto toLegacyResponseDto(
@@ -449,7 +457,8 @@ public class BlockService {
       BlockListItemDto row,
       List<BlockMarkDto> secondaryTimberMarks,
       List<BlockMarkDto> roadPermitTimberMarks) {
-    return toLegacyResponseDto(reportingUnitId, row, secondaryTimberMarks, roadPermitTimberMarks, null);
+    return toLegacyResponseDto(
+        reportingUnitId, row, secondaryTimberMarks, roadPermitTimberMarks, null, null);
   }
 
   private BlockResponseDto toLegacyResponseDto(
@@ -458,6 +467,22 @@ public class BlockService {
       List<BlockMarkDto> secondaryTimberMarks,
       List<BlockMarkDto> roadPermitTimberMarks,
       WasteAssessmentAreaSummaryDto wasteAssessmentAreaSummary) {
+    return toLegacyResponseDto(
+        reportingUnitId,
+        row,
+        secondaryTimberMarks,
+        roadPermitTimberMarks,
+        wasteAssessmentAreaSummary,
+        null);
+  }
+
+  private BlockResponseDto toLegacyResponseDto(
+      Long reportingUnitId,
+      BlockListItemDto row,
+      List<BlockMarkDto> secondaryTimberMarks,
+      List<BlockMarkDto> roadPermitTimberMarks,
+      WasteAssessmentAreaSummaryDto wasteAssessmentAreaSummary,
+      DistrictAverageVolumesSummaryDto districtAverageVolumesSummary) {
     boolean draft =
         row.status() != null && DRAFT_STATUS_CODE.equals(row.status().code());
     String state = draft ? "DRAFT" : "ACTIVE";
@@ -475,7 +500,8 @@ public class BlockService {
         null,
         secondaryTimberMarks,
         roadPermitTimberMarks,
-        wasteAssessmentAreaSummary);
+        wasteAssessmentAreaSummary,
+        districtAverageVolumesSummary);
   }
 
   BlockResponseDto withResolvedPlcDate(BlockResponseDto dto) {
@@ -497,7 +523,8 @@ public class BlockService {
         dto.updatedAt(),
         dto.secondaryTimberMarks(),
         dto.roadPermitTimberMarks(),
-        dto.wasteAssessmentAreaSummary());
+        dto.wasteAssessmentAreaSummary(),
+        dto.districtAverageVolumesSummary());
   }
 
   private BlockResponseDto withTimberMarks(
@@ -518,7 +545,8 @@ public class BlockService {
         dto.updatedAt(),
         secondaryTimberMarks,
         roadPermitTimberMarks,
-        dto.wasteAssessmentAreaSummary());
+        dto.wasteAssessmentAreaSummary(),
+        dto.districtAverageVolumesSummary());
   }
 
   private BlockResponseDto withWasteAssessmentAreaSummary(
@@ -537,7 +565,28 @@ public class BlockService {
         dto.updatedAt(),
         dto.secondaryTimberMarks(),
         dto.roadPermitTimberMarks(),
-        wasteAssessmentAreaSummary);
+        wasteAssessmentAreaSummary,
+        dto.districtAverageVolumesSummary());
+  }
+
+  private BlockResponseDto withDistrictAverageVolumesSummary(
+      BlockResponseDto dto, DistrictAverageVolumesSummaryDto districtAverageVolumesSummary) {
+    return new BlockResponseDto(
+        dto.id(),
+        dto.reportingUnitId(),
+        dto.blockType(),
+        dto.state(),
+        dto.draft(),
+        dto.plcDate(),
+        dto.version(),
+        dto.revision(),
+        dto.isLegacy(),
+        dto.createdAt(),
+        dto.updatedAt(),
+        dto.secondaryTimberMarks(),
+        dto.roadPermitTimberMarks(),
+        dto.wasteAssessmentAreaSummary(),
+        districtAverageVolumesSummary);
   }
 
 
@@ -795,6 +844,63 @@ public class BlockService {
     }
     String trimmed = mark.trim();
     return !trimmed.isEmpty() && Character.toUpperCase(trimmed.charAt(0)) == 'R';
+  }
+
+
+  private DistrictAverageVolumesSummaryDto buildPostgresDistrictAverageVolumesSummary() {
+    // OQ3: no structured per-row DA volume data persisted in Postgres yet; return empty summary.
+    return DistrictAverageVolumesSummaryDto.empty();
+  }
+
+  private DistrictAverageVolumesSummaryDto buildLegacyDistrictAverageVolumesSummary(
+      List<ca.bc.gov.nrs.hrs.dto.search.DistrictAverageVolumeLegacyDto> legacyRows) {
+    if (legacyRows == null || legacyRows.isEmpty()) {
+      return DistrictAverageVolumesSummaryDto.empty();
+    }
+    List<DistrictAverageVolumeRowDto> rows =
+        legacyRows.stream()
+            .filter(java.util.Objects::nonNull)
+            .map(this::toLegacyDistrictAverageVolumeRow)
+            .toList();
+    if (rows.isEmpty()) {
+      return DistrictAverageVolumesSummaryDto.empty();
+    }
+    BigDecimal totalBillable =
+        rows.stream()
+            .map(DistrictAverageVolumeRowDto::totalBillableVolumeM3)
+            .reduce(BigDecimal.ZERO, (acc, value) -> acc.add(zeroIfNull(value)));
+    BigDecimal totalCutControl =
+        rows.stream()
+            .map(DistrictAverageVolumeRowDto::totalCutControlVolumeM3)
+            .reduce(BigDecimal.ZERO, (acc, value) -> acc.add(zeroIfNull(value)));
+    return new DistrictAverageVolumesSummaryDto(
+        rows, new DistrictAverageVolumeTotalsDto(totalBillable, totalCutControl));
+  }
+
+  private DistrictAverageVolumeRowDto toLegacyDistrictAverageVolumeRow(
+      ca.bc.gov.nrs.hrs.dto.search.DistrictAverageVolumeLegacyDto row) {
+    String harvestMethod =
+        firstNonBlank(row.harvestMethodDescription(), row.harvestMethodCode());
+    // OQ1=A: billable/cut-control split not stored in legacy strata; keep null (totals sum null as 0).
+    return new DistrictAverageVolumeRowDto(
+        row.populationType(),
+        row.wasteType(),
+        harvestMethod,
+        row.assessmentMethod(),
+        row.wasteLevel(),
+        row.netWasteAreaHa(),
+        null,
+        null);
+  }
+
+  private String firstNonBlank(String primary, String fallback) {
+    if (primary != null && !primary.isBlank()) {
+      return primary;
+    }
+    if (fallback != null && !fallback.isBlank()) {
+      return fallback;
+    }
+    return null;
   }
 
   private LocalDate resolvePlcDate(LocalDate storedPlcDate) {

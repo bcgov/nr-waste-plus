@@ -25,6 +25,7 @@ public interface BlockMapper {
   @Mapping(target = "secondaryTimberMarks", expression = "java(java.util.List.of())")
   @Mapping(target = "roadPermitTimberMarks", expression = "java(java.util.List.of())")
   @Mapping(target = "wasteAssessmentAreaSummary", expression = "java(null)")
+  @Mapping(target = "districtAverageVolumesSummary", expression = "java(null)")
   BlockDetailDto toDetailDto(BlockEntity entity);
 
   /**
@@ -39,6 +40,7 @@ public interface BlockMapper {
   @Mapping(target = "secondaryTimberMarks", expression = "java(java.util.List.of())")
   @Mapping(target = "roadPermitTimberMarks", expression = "java(java.util.List.of())")
   @Mapping(target = "wasteAssessmentAreaSummary", expression = "java(null)")
+  @Mapping(target = "districtAverageVolumesSummary", expression = "java(null)")
   BlockResponseDto toResponseDto(BlockEntity entity);
 
   /** Maps a create payload to a new entity. */

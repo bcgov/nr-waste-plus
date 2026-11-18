@@ -25,6 +25,7 @@ import java.util.List;
  * @param secondaryTimberMarks secondary timber marks associated with the block
  * @param roadPermitTimberMarks road permit timber marks associated with the block
  * @param wasteAssessmentAreaSummary precomputed waste assessment area summary for the block
+ * @param districtAverageVolumesSummary precomputed district average volumes summary for the block
  */
 public record BlockResponseDto(
     Long id,
@@ -40,7 +41,8 @@ public record BlockResponseDto(
     Instant updatedAt,
     List<BlockMarkDto> secondaryTimberMarks,
     List<BlockMarkDto> roadPermitTimberMarks,
-    WasteAssessmentAreaSummaryDto wasteAssessmentAreaSummary) {
+    WasteAssessmentAreaSummaryDto wasteAssessmentAreaSummary,
+    DistrictAverageVolumesSummaryDto districtAverageVolumesSummary) {
 
   /** Canonical constructor ensuring mark lists are never null. */
   public BlockResponseDto {
@@ -50,7 +52,7 @@ public record BlockResponseDto(
         roadPermitTimberMarks == null ? List.of() : List.copyOf(roadPermitTimberMarks);
   }
 
-  /** Backward-compatible constructor without timber mark payload or summary. */
+  /** Backward-compatible constructor without timber mark payload or summaries. */
   public BlockResponseDto(
       Long id,
       Long reportingUnitId,
@@ -77,10 +79,11 @@ public record BlockResponseDto(
         updatedAt,
         List.of(),
         List.of(),
+        null,
         null);
   }
 
-  /** Backward-compatible constructor without waste assessment area summary. */
+  /** Backward-compatible constructor without summaries. */
   public BlockResponseDto(
       Long id,
       Long reportingUnitId,
@@ -109,6 +112,41 @@ public record BlockResponseDto(
         updatedAt,
         secondaryTimberMarks,
         roadPermitTimberMarks,
+        null,
+        null);
+  }
+
+  /** Backward-compatible constructor without district average volumes summary. */
+  public BlockResponseDto(
+      Long id,
+      Long reportingUnitId,
+      String blockType,
+      String state,
+      boolean draft,
+      LocalDate plcDate,
+      Long version,
+      Long revision,
+      boolean isLegacy,
+      Instant createdAt,
+      Instant updatedAt,
+      List<BlockMarkDto> secondaryTimberMarks,
+      List<BlockMarkDto> roadPermitTimberMarks,
+      WasteAssessmentAreaSummaryDto wasteAssessmentAreaSummary) {
+    this(
+        id,
+        reportingUnitId,
+        blockType,
+        state,
+        draft,
+        plcDate,
+        version,
+        revision,
+        isLegacy,
+        createdAt,
+        updatedAt,
+        secondaryTimberMarks,
+        roadPermitTimberMarks,
+        wasteAssessmentAreaSummary,
         null);
   }
 }

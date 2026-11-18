@@ -17,5 +17,12 @@
     },
     "secondary" : [ ],
     "totalNetWasteAreaHa" : 0
+  },
+  "districtAverageVolumesSummary" : {
+    "rows" : [ ],
+    "totals" : {
+      "totalBillableVolumeM3" : 0,
+      "totalCutControlVolumeM3" : 0
+    }
   }
 }

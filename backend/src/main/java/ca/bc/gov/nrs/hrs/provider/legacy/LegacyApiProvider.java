@@ -5,6 +5,7 @@ import ca.bc.gov.nrs.hrs.dto.block.BlockListItemDto;
 import ca.bc.gov.nrs.hrs.dto.reportingunit.CreateReportingUnitRequestDto;
 import ca.bc.gov.nrs.hrs.dto.reportingunit.ReportingUnitLegacyDetailsDto;
 import ca.bc.gov.nrs.hrs.dto.search.MyForestClientSearchResultDto;
+import ca.bc.gov.nrs.hrs.dto.search.DistrictAverageVolumeLegacyDto;
 import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchExpandedDto;
 import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchParametersDto;
 import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchResultDto;
@@ -161,6 +162,19 @@ public class LegacyApiProvider implements ReportingUnitSearchProvider {
       Set<String> values, Pageable pageable) {
     return myForestClientClient.searchMyClients(values, pageable);
   }
+
+  /**
+   * Retrieve district average volume/stratum rows for a block from the legacy API.
+   *
+   * @param ruId the reporting unit ID
+   * @param wasteAssessmentAreaId the block/waste assessment area ID
+   * @return district average volume rows; never null
+   */
+  public List<DistrictAverageVolumeLegacyDto> getDistrictAverageVolumes(
+      Long ruId, Long wasteAssessmentAreaId) {
+    return reportingUnitClient.getDistrictAverageVolumes(ruId, wasteAssessmentAreaId);
+  }
+
 
   /**
    * Retrieve detailed information for a specific reporting unit from the legacy API.
