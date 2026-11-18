@@ -47,7 +47,7 @@ public class JwtRoleAuthorizationManagerFactory {
    * @return an AuthorizationManager for request contexts
    */
   public AuthorizationManager<RequestAuthorizationContext> gotRoleMatching(Role... roles) {
-    final Set<String> requiredRolePrefixes =
+    final Set<String> normalizedRoleNames =
         Stream.of(roles)
             .map(Role::getRoleName)
             .map(name -> name.toUpperCase(Locale.ROOT))
@@ -56,7 +56,13 @@ public class JwtRoleAuthorizationManagerFactory {
     return gotRoleMatching(
         role -> {
           String upperRole = role.toUpperCase(Locale.ROOT);
-          return requiredRolePrefixes.stream().anyMatch(upperRole::startsWith);
+          return normalizedRoleNames.stream()
+              .anyMatch(
+                  r ->
+                      upperRole.equals(r)
+                          || upperRole.equals("WASTE_PLUS_" + r)
+                          || upperRole.startsWith(r + "_")
+                          || upperRole.startsWith("WASTE_PLUS_" + r + "_"));
         });
   }
 
@@ -106,5 +112,32 @@ public class JwtRoleAuthorizationManagerFactory {
   public AuthorizationManager<RequestAuthorizationContext> gotIdp(IdentityProvider provider) {
     return (ignoredAuthentication, ignoredContext) ->
         new AuthorizationDecision(roleChecker.hasIdpProvider(provider));
+  }
+
+  /**
+   * AuthorizationManager that enforces the route-level gate rules across Reporting Unit APIs:
+   * valid principal identity, single IDIR role, no BCeID forbidden roles.
+   *
+   * @return an AuthorizationManager for request contexts
+   */
+  public AuthorizationManager<RequestAuthorizationContext> reportingUnitRouteGate() {
+    return (authenticationSupplier, context) ->
+        new AuthorizationDecision(
+            roleChecker.isValidRouteGatePrincipal(authenticationSupplier.get()));
+  }
+
+  /**
+   * AuthorizationManager for Reporting Unit creation: enforces route gate and requires
+   * create roles (SUBMITTER, AREA, DISTRICT, ADMIN).
+   *
+   * @return an AuthorizationManager for request contexts
+   */
+  public AuthorizationManager<RequestAuthorizationContext> reportingUnitCreateGate() {
+    return (authenticationSupplier, context) -> {
+      var auth = authenticationSupplier.get();
+      boolean valid = roleChecker.isValidRouteGatePrincipal(auth)
+          && roleChecker.hasAnyWriteRole(auth);
+      return new AuthorizationDecision(valid);
+    };
   }
 }

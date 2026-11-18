@@ -53,7 +53,7 @@ import org.springframework.test.web.servlet.MockMvc;
  * other test classes sharing the container) and cleans up in FK order.
  */
 @AutoConfigureMockMvc(print = SYSTEM_OUT)
-@WithMockJwt
+@WithMockJwt(cognitoGroups = {"WASTE_PLUS_ADMIN"})
 @DisplayName("Integrated Test | Postgres Reporting Unit Search")
 class PostgresReportingUnitSearchIntegrationTest extends AbstractTestContainerIntegrationTest {
 

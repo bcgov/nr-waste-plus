@@ -184,6 +184,12 @@ class JwtRoleAuthorizationManagerFactoryTest {
       assertTrue(builtPredicate.test("WASTE_PLUS_ADMIN"), "Should match second role");
       assertFalse(
           builtPredicate.test("WASTE_PLUS_SUBMITTER"), "Should not match role not in the list");
+      assertFalse(
+          builtPredicate.test("WASTE_PLUS_ADMINISTRATOR"),
+          "Should not match prefix false positive");
+      assertFalse(
+          builtPredicate.test("ADMINISTRATOR"),
+          "Should not match raw prefix false positive");
     }
   }
 
@@ -356,6 +362,73 @@ class JwtRoleAuthorizationManagerFactoryTest {
         assertTrue(result.isGranted(), "Should grant access for provider " + provider.name());
         verify(roleChecker).hasIdpProvider(provider);
       }
+    }
+  }
+
+  // ── reportingUnitRouteGate & reportingUnitCreateGate ──────────────────────
+
+  @Nested
+  @DisplayName("reportingUnitRouteGate and reportingUnitCreateGate")
+  class ReportingUnitGateTests {
+
+    @Test
+    @DisplayName("reportingUnitRouteGate grants when isValidRouteGatePrincipal is true")
+    void routeGate_grantsWhenValid() {
+      org.springframework.security.core.Authentication auth =
+          org.mockito.Mockito.mock(org.springframework.security.core.Authentication.class);
+      when(roleChecker.isValidRouteGatePrincipal(auth)).thenReturn(true);
+
+      AuthorizationManager<RequestAuthorizationContext> manager =
+          factory.reportingUnitRouteGate();
+      AuthorizationResult result = manager.authorize(() -> auth, context);
+
+      assertTrue(result.isGranted());
+      verify(roleChecker).isValidRouteGatePrincipal(auth);
+    }
+
+    @Test
+    @DisplayName("reportingUnitRouteGate denies when isValidRouteGatePrincipal is false")
+    void routeGate_deniesWhenInvalid() {
+      org.springframework.security.core.Authentication auth =
+          org.mockito.Mockito.mock(org.springframework.security.core.Authentication.class);
+      when(roleChecker.isValidRouteGatePrincipal(auth)).thenReturn(false);
+
+      AuthorizationManager<RequestAuthorizationContext> manager =
+          factory.reportingUnitRouteGate();
+      AuthorizationResult result = manager.authorize(() -> auth, context);
+
+      assertFalse(result.isGranted());
+      verify(roleChecker).isValidRouteGatePrincipal(auth);
+    }
+
+    @Test
+    @DisplayName("reportingUnitCreateGate grants when principal is valid and has create role")
+    void createGate_grantsWhenValidAndHasCreateRole() {
+      org.springframework.security.core.Authentication auth =
+          org.mockito.Mockito.mock(org.springframework.security.core.Authentication.class);
+      when(roleChecker.isValidRouteGatePrincipal(auth)).thenReturn(true);
+      when(roleChecker.hasAnyWriteRole(auth)).thenReturn(true);
+
+      AuthorizationManager<RequestAuthorizationContext> manager =
+          factory.reportingUnitCreateGate();
+      AuthorizationResult result = manager.authorize(() -> auth, context);
+
+      assertTrue(result.isGranted());
+    }
+
+    @Test
+    @DisplayName("reportingUnitCreateGate denies when principal has no create role (e.g. VIEWER)")
+    void createGate_deniesWhenLacksCreateRole() {
+      org.springframework.security.core.Authentication auth =
+          org.mockito.Mockito.mock(org.springframework.security.core.Authentication.class);
+      when(roleChecker.isValidRouteGatePrincipal(auth)).thenReturn(true);
+      when(roleChecker.hasAnyWriteRole(auth)).thenReturn(false);
+
+      AuthorizationManager<RequestAuthorizationContext> manager =
+          factory.reportingUnitCreateGate();
+      AuthorizationResult result = manager.authorize(() -> auth, context);
+
+      assertFalse(result.isGranted());
     }
   }
 }
