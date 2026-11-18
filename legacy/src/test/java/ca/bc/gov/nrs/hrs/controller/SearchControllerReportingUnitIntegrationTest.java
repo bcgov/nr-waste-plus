@@ -319,7 +319,7 @@ class SearchControllerReportingUnitIntegrationTest
 
   @Test
   @DisplayName("Should search for primary timber mark ER9210")
-  void shouldSearchForPrimaryTimberMarkER9210() throws Exception {
+  void shouldSearchForPrimary() throws Exception {
     mockMvc
         .perform(
             get(SEARCH_URL)
@@ -338,7 +338,7 @@ class SearchControllerReportingUnitIntegrationTest
 
   @Test
   @DisplayName("Should search for primary with lowercase timber mark jy1009")
-  void shouldSearchForPrimaryWithLowerCaseJY1009() throws Exception {
+  void shouldSearchForPrimaryWithLowerCase() throws Exception {
     mockMvc
         .perform(
             get(SEARCH_URL)
