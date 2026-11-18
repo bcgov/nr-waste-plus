@@ -3,8 +3,10 @@ package ca.bc.gov.nrs.hrs.service.reportingunit;
 import ca.bc.gov.nrs.hrs.LegacyConstants;
 import ca.bc.gov.nrs.hrs.dto.base.CodeDescriptionDto;
 import ca.bc.gov.nrs.hrs.dto.reportingunit.CreateReportingUnitRequestDto;
+import ca.bc.gov.nrs.hrs.dto.reportingunit.DistrictAverageVolumeDto;
 import ca.bc.gov.nrs.hrs.dto.reportingunit.ReportingUnitBlockDto;
 import ca.bc.gov.nrs.hrs.dto.reportingunit.ReportingUnitDetailsDto;
+import ca.bc.gov.nrs.hrs.entity.reportingunit.DistrictAverageVolumeProjection;
 import ca.bc.gov.nrs.hrs.entity.reportingunit.ReportingUnitBlockProjection;
 import ca.bc.gov.nrs.hrs.entity.reportingunit.ReportingUnitEntity;
 import ca.bc.gov.nrs.hrs.exception.WasteReportingUnitNotFound;
@@ -85,20 +87,64 @@ public class ReportingUnitService {
    * {@code DFT} / {@code Draft}.</p>
    *
    * @param reportingUnitId the identifier of the reporting unit whose blocks are requested
+   * @param clients client numbers used to scope access; empty or {@code null} means unrestricted
    * @return the list of blocks for the reporting unit, empty when none exist
+   * @throws WasteReportingUnitNotFound if the reporting unit does not exist or is outside the
+   *     caller's client scope
    */
-  public List<ReportingUnitBlockDto> getReportingUnitBlocks(Long reportingUnitId) {
-    verifyReportingUnitExists(reportingUnitId);
+  public List<ReportingUnitBlockDto> getReportingUnitBlocks(
+      Long reportingUnitId, List<String> clients) {
+    List<String> searchClients =
+        CollectionUtils.isEmpty(clients) ? List.of(LegacyConstants.NOVALUE) : clients;
+    if (ruRepository.getReportingUnitDetails(reportingUnitId, searchClients).isEmpty()) {
+      throw new WasteReportingUnitNotFound(reportingUnitId);
+    }
 
     return ruRepository.getReportingUnitBlocks(reportingUnitId).stream()
         .map(ReportingUnitService::toBlockDto)
         .toList();
   }
 
-  private void verifyReportingUnitExists(Long reportingUnitId) {
-    if (!ruRepository.existsById(reportingUnitId)) {
+
+  /**
+   * Retrieves district average volume/stratum rows for a block (waste assessment area).
+   *
+   * <p>Returns an empty list when the block has no strata. If the block/waste assessment area is
+   * not associated with the reporting unit, this method may also return an empty list rather than
+   * raising a not-found error.</p>
+   *
+   * @param reportingUnitId the owning reporting unit identifier
+   * @param wasteAssessmentAreaId the block/waste assessment area identifier
+   * @param clients client numbers used to scope access; empty or {@code null} means unrestricted
+   * @return stratum rows for the block, empty when none exist
+   * @throws WasteReportingUnitNotFound if the reporting unit does not exist or is outside the
+   *     caller's client scope
+   */
+  public List<DistrictAverageVolumeDto> getDistrictAverageVolumes(
+      Long reportingUnitId, Long wasteAssessmentAreaId, List<String> clients) {
+    List<String> searchClients =
+        CollectionUtils.isEmpty(clients) ? List.of(LegacyConstants.NOVALUE) : clients;
+    if (ruRepository.getReportingUnitDetails(reportingUnitId, searchClients).isEmpty()) {
       throw new WasteReportingUnitNotFound(reportingUnitId);
     }
+    return ruRepository
+        .getDistrictAverageVolumes(reportingUnitId, wasteAssessmentAreaId)
+        .stream()
+        .map(ReportingUnitService::toDistrictAverageVolumeDto)
+        .toList();
+  }
+
+  private static DistrictAverageVolumeDto toDistrictAverageVolumeDto(
+      DistrictAverageVolumeProjection projection) {
+    return new DistrictAverageVolumeDto(
+        projection.getPopulationType(),
+        projection.getWasteType(),
+        projection.getHarvestMethodCode(),
+        projection.getHarvestMethodDescription(),
+        projection.getAssessmentMethod(),
+        projection.getWasteLevel(),
+        projection.getNetWasteAreaHa(),
+        projection.getTotalEstimatedVolumeM3());
   }
 
   /**
