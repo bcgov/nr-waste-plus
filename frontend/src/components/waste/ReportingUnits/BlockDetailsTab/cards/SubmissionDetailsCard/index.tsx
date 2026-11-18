@@ -23,6 +23,14 @@ export interface SubmissionDetailsCardProps {
     InteriorSubmissionDetailsValues & CoastSubmissionDetailsValues
   > & {
     readonly districtAverageCriteriaCode?: string;
+    readonly secondaryTimberMarks?: readonly (
+      | string
+      | { mark?: string | null; timberMark?: string | null }
+    )[];
+    readonly roadPermitTimberMarks?: readonly (
+      | string
+      | { mark?: string | null; timberMark?: string | null }
+    )[];
   };
   readonly harvestStatuses: readonly CodeDescriptionDto[];
   readonly becZones: readonly CodeDescriptionDto[];

@@ -96,14 +96,35 @@ export const blockCreateResponseSchema = z.looseObject({
 export type BlockCreateResponseDto = z.infer<typeof blockCreateResponseSchema>;
 
 /**
+ * Block timber mark details returned with block details payload.
+ * Rich payload (OQ-2) mapped from backend `BlockMarkDto`.
+ */
+export const blockMarkDetailSchema = z.looseObject({
+  id: z.nullable(z.int()).optional(),
+  blockId: z.nullable(z.int()).optional(),
+  markType: z.nullable(z.string()).optional(),
+  sequenceNo: z.nullable(z.int()).optional(),
+  mark: z.nullable(z.string()).optional(),
+  validationStatus: z.nullable(z.string()).optional(),
+  forestFileId: z.nullable(z.string()).optional(),
+  timberMark: z.nullable(z.string()).optional(),
+  cuttingPermitId: z.nullable(z.string()).optional(),
+  cutBlockId: z.nullable(z.string()).optional(),
+});
+
+/** TypeScript representation of a block timber mark detail. */
+export type BlockMarkDetailDto = z.infer<typeof blockMarkDetailSchema>;
+
+/**
  * Block-details response
  * (`GET /api/reporting-units/{reportingUnitId}/{blockId}`, Java
- * `BlockDetailDto`).
+ * `BlockResponseDto`).
  *
  * `blockType`, `plcDate`, and `revision` are nullable because the backend
  * cannot resolve them for every block (`plcDate` is a `LocalDate`).
- * `isLegacy` marks blocks served from the legacy system. Loose-object
- * parsing tolerates future backend fields.
+ * `isLegacy` marks blocks served from the legacy system. Timber mark arrays are
+ * richer objects loaded from Postgres/legacy coordination. Loose-object parsing
+ * tolerates future backend fields.
  *
  * Parsed at the boundary in `ReportingUnitService.getBlockDetails`.
  */
@@ -115,6 +136,8 @@ export const blockDetailsSchema = z.looseObject({
   plcDate: z.iso.date().nullable(),
   revision: z.nullable(z.int()),
   isLegacy: z.boolean(),
+  secondaryTimberMarks: z.array(blockMarkDetailSchema).optional().default([]),
+  roadPermitTimberMarks: z.array(blockMarkDetailSchema).optional().default([]),
 });
 
 /** TypeScript representation of a block-details response. */

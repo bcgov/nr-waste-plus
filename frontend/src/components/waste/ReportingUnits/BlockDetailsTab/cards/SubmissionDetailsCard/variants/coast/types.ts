@@ -24,6 +24,14 @@ export interface CoastSubmissionDetailsFormProps {
   readonly mode: 'form' | 'read-only';
   readonly initialValues?: Partial<CoastSubmissionDetailsValues> & {
     readonly districtAverageCriteriaCode?: string;
+    readonly secondaryTimberMarks?: readonly (
+      | string
+      | { mark?: string | null; timberMark?: string | null }
+    )[];
+    readonly roadPermitTimberMarks?: readonly (
+      | string
+      | { mark?: string | null; timberMark?: string | null }
+    )[];
   };
   readonly harvestStatuses: readonly CodeDescriptionDto[];
   readonly maturityOptions: readonly CodeDescriptionDto[];
@@ -54,8 +62,30 @@ export const EMPTY_VALUES: CoastSubmissionDetailsValues = {
   roadPermitTimberMarks: [],
 };
 
+type TimberMarkLike = string | { mark?: string | null; timberMark?: string | null };
+
+const toTimberMarkStrings = (value: unknown): string[] => {
+  if (!Array.isArray(value)) return [];
+  return value
+    .map((item) => {
+      if (typeof item === 'string') return item;
+      if (item && typeof item === 'object') {
+        const mark = (item as { mark?: unknown }).mark;
+        const timberMark = (item as { timberMark?: unknown }).timberMark;
+        const resolved = mark ?? timberMark;
+        return typeof resolved === 'string' ? resolved : '';
+      }
+      return '';
+    })
+    .filter((mark, index, arr) => !(mark === '' && index >= arr.length));
+};
+
 export const normalizeInitialValues = (
-  initialValues?: CoastSubmissionDetailsFormProps['initialValues'],
+  initialValues?: (Partial<CoastSubmissionDetailsValues> & {
+    readonly districtAverageCriteriaCode?: string;
+    readonly secondaryTimberMarks?: readonly TimberMarkLike[];
+    readonly roadPermitTimberMarks?: readonly TimberMarkLike[];
+  }) | undefined,
 ): CoastSubmissionDetailsValues => {
   if (!initialValues) return EMPTY_VALUES;
   const legacy = initialValues.districtAverageCriteriaCode;
@@ -67,7 +97,7 @@ export const normalizeInitialValues = (
     ...EMPTY_VALUES,
     ...(rest as Partial<CoastSubmissionDetailsValues>),
     districtAverageCriteriaCodes: codes,
-    secondaryTimberMarks: (rest.secondaryTimberMarks as string[] | undefined) ?? [],
-    roadPermitTimberMarks: (rest.roadPermitTimberMarks as string[] | undefined) ?? [],
+    secondaryTimberMarks: toTimberMarkStrings(rest.secondaryTimberMarks),
+    roadPermitTimberMarks: toTimberMarkStrings(rest.roadPermitTimberMarks),
   };
 };

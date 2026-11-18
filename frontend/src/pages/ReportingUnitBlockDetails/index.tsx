@@ -268,6 +268,8 @@ const ReportingUnitBlockDetailsPage: FC = () => {
                 mode={blockData.isLegacy ? 'read-only' : 'form'}
                 initialValues={{
                   primaryLoggingCompleteDate: blockData.plcDate ?? '',
+                  secondaryTimberMarks: blockData.secondaryTimberMarks ?? [],
+                  roadPermitTimberMarks: blockData.roadPermitTimberMarks ?? [],
                 }}
                 harvestStatuses={harvestStatuses}
                 becZones={[]}
