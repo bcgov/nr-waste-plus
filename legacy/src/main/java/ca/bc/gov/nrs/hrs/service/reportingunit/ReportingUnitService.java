@@ -115,7 +115,9 @@ public class ReportingUnitService {
     if (ruRepository.getReportingUnitDetails(reportingUnitId, searchClients).isEmpty()) {
       throw new WasteReportingUnitNotFound(reportingUnitId);
     }
-    return ruRepository.getDistrictAverageVolumes(reportingUnitId, wasteAssessmentAreaId).stream()
+    return ruRepository
+        .getDistrictAverageVolumes(reportingUnitId, wasteAssessmentAreaId)
+        .stream()
         .map(ReportingUnitService::toDistrictAverageVolumeDto)
         .toList();
   }

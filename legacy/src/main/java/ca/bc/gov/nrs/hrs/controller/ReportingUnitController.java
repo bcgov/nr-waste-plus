@@ -83,7 +83,6 @@ public class ReportingUnitController {
     return service.getReportingUnitBlocks(reportingUnitId);
   }
 
-
   /**
    * Retrieve district average volume/stratum rows for a block within the reporting unit.
    *

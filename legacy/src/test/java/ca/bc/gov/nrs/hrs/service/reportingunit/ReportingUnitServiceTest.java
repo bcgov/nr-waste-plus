@@ -11,10 +11,12 @@ import static org.mockito.Mockito.when;
 import ca.bc.gov.nrs.hrs.LegacyConstants;
 import ca.bc.gov.nrs.hrs.dto.base.CodeDescriptionDto;
 import ca.bc.gov.nrs.hrs.dto.reportingunit.CreateReportingUnitRequestDto;
+import ca.bc.gov.nrs.hrs.dto.reportingunit.DistrictAverageVolumeDto;
 import ca.bc.gov.nrs.hrs.dto.reportingunit.ReportingUnitBlockDto;
 import ca.bc.gov.nrs.hrs.dto.reportingunit.ReportingUnitDetailsDto;
 import ca.bc.gov.nrs.hrs.entity.codes.OrgUnitEntity;
 import ca.bc.gov.nrs.hrs.entity.codes.SamplingOptionEntity;
+import ca.bc.gov.nrs.hrs.entity.reportingunit.DistrictAverageVolumeProjection;
 import ca.bc.gov.nrs.hrs.entity.reportingunit.ReportingUnitBlockProjection;
 import ca.bc.gov.nrs.hrs.entity.reportingunit.ReportingUnitDetailsProjection;
 import ca.bc.gov.nrs.hrs.entity.reportingunit.ReportingUnitEntity;
@@ -23,6 +25,7 @@ import ca.bc.gov.nrs.hrs.mappers.reportingunit.ReportingUnitDetailsMapper;
 import ca.bc.gov.nrs.hrs.repository.ReportingUnitRepository;
 import ca.bc.gov.nrs.hrs.repository.codes.OrgUnitRepository;
 import ca.bc.gov.nrs.hrs.repository.codes.SamplingOptionRepository;
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
@@ -42,20 +45,26 @@ import org.springframework.web.server.ResponseStatusException;
 @ExtendWith(MockitoExtension.class)
 class ReportingUnitServiceTest {
 
-  @Mock private ReportingUnitRepository ruRepository;
+  @Mock
+  private ReportingUnitRepository ruRepository;
 
-  @Mock private ReportingUnitDetailsMapper ruDetailsMapper;
+  @Mock
+  private ReportingUnitDetailsMapper ruDetailsMapper;
 
-  @Mock private OrgUnitRepository orgUnitRepository;
+  @Mock
+  private OrgUnitRepository orgUnitRepository;
 
-  @Mock private SamplingOptionRepository samplingOptionRepository;
+  @Mock
+  private SamplingOptionRepository samplingOptionRepository;
 
-  @InjectMocks private ReportingUnitService service;
+  @InjectMocks
+  private ReportingUnitService service;
 
   private static final Long RU_ID = 879L;
   private static final List<String> CLIENTS = List.of("00001271", "00001272");
 
-  @Captor private ArgumentCaptor<ReportingUnitEntity> ruEntityCaptor;
+  @Captor
+  private ArgumentCaptor<ReportingUnitEntity> ruEntityCaptor;
 
   private ReportingUnitDetailsDto buildDetailsDto() {
     return new ReportingUnitDetailsDto(
@@ -511,23 +520,23 @@ class ReportingUnitServiceTest {
       Long blockId = 1906L;
       when(ruRepository.getReportingUnitDetails(RU_ID, CLIENTS))
           .thenReturn(Optional.of(mock(ReportingUnitDetailsProjection.class)));
-      ca.bc.gov.nrs.hrs.entity.reportingunit.DistrictAverageVolumeProjection projection =
-          mock(ca.bc.gov.nrs.hrs.entity.reportingunit.DistrictAverageVolumeProjection.class);
+      DistrictAverageVolumeProjection projection =
+          mock(DistrictAverageVolumeProjection.class);
       when(projection.getPopulationType()).thenReturn("Dispersed");
       when(projection.getWasteType()).thenReturn("Sawdust");
       when(projection.getHarvestMethodCode()).thenReturn("O");
       when(projection.getHarvestMethodDescription()).thenReturn("Other");
       when(projection.getAssessmentMethod()).thenReturn("S");
       when(projection.getWasteLevel()).thenReturn("X");
-      when(projection.getNetWasteAreaHa()).thenReturn(new java.math.BigDecimal("27.02"));
+      when(projection.getNetWasteAreaHa()).thenReturn(new BigDecimal("27.02"));
       when(projection.getTotalEstimatedVolumeM3()).thenReturn(null);
       when(ruRepository.getDistrictAverageVolumes(RU_ID, blockId)).thenReturn(List.of(projection));
 
-      List<ca.bc.gov.nrs.hrs.dto.reportingunit.DistrictAverageVolumeDto> result =
+      List<DistrictAverageVolumeDto> result =
           service.getDistrictAverageVolumes(RU_ID, blockId, CLIENTS);
 
       assertThat(result).hasSize(1);
-      ca.bc.gov.nrs.hrs.dto.reportingunit.DistrictAverageVolumeDto row = result.getFirst();
+      DistrictAverageVolumeDto row = result.getFirst();
       assertThat(row.populationType()).isEqualTo("Dispersed");
       assertThat(row.wasteType()).isEqualTo("Sawdust");
       assertThat(row.harvestMethodCode()).isEqualTo("O");

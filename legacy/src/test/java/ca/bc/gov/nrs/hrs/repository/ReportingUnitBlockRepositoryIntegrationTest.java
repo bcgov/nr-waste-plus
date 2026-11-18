@@ -12,7 +12,8 @@ class ReportingUnitBlockRepositoryIntegrationTest extends AbstractTestContainerI
 
   private static final long SEEDED_REPORTING_UNIT_ID = 879L;
 
-  @Autowired private ReportingUnitRepository reportingUnitRepository;
+  @Autowired
+  private ReportingUnitRepository reportingUnitRepository;
 
   @Test
   @DisplayName("shouldReturnNativeBlockProjectionValues_inIdOrder")

@@ -22,4 +22,6 @@ public record DistrictAverageVolumeDto(
     String assessmentMethod,
     String wasteLevel,
     BigDecimal netWasteAreaHa,
-    BigDecimal totalEstimatedVolumeM3) {}
+    BigDecimal totalEstimatedVolumeM3
+) {
+}
