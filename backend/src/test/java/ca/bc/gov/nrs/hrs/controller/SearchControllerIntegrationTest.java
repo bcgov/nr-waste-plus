@@ -197,6 +197,46 @@ class SearchControllerIntegrationTest extends AbstractTestContainerIntegrationTe
         .andExpect(status().is(expectedStatus));
   }
 
+  @Test
+  @DisplayName("Expanded search returns 403 for BCeID user claiming ADMIN role on existing RU")
+  @WithMockJwt(
+      idp = "bceidbusiness",
+      cognitoGroups = {"WASTE_PLUS_ADMIN"})
+  void getSearchExpanded_whenBceidWithAdminRole_returns403_forExistingRu() throws Exception {
+    long ruId = 12345L;
+    long waaId = 1L;
+    legacyApiStub.stubFor(
+        WireMock.get(urlPathEqualTo("/api/reporting-units/" + ruId))
+            .willReturn(okJson("{\"clientNumber\": \"00010002\", \"clientLocnCode\": \"00\"}")));
+
+    mockMvc
+        .perform(
+            get("/api/search/reporting-units/ex/" + ruId + "/" + waaId)
+                .header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
+                .accept(MediaType.APPLICATION_JSON))
+        .andExpect(status().isForbidden());
+  }
+
+  @Test
+  @DisplayName("Expanded search returns 403 for BCeID user claiming ADMIN role on missing RU (no disclosure)")
+  @WithMockJwt(
+      idp = "bceidbusiness",
+      cognitoGroups = {"WASTE_PLUS_ADMIN"})
+  void getSearchExpanded_whenBceidWithAdminRole_returns403_forMissingRu() throws Exception {
+    long missingRuId = 999999L;
+    long waaId = 1L;
+    legacyApiStub.stubFor(
+        WireMock.get(urlPathEqualTo("/api/reporting-units/" + missingRuId))
+            .willReturn(WireMock.notFound()));
+
+    mockMvc
+        .perform(
+            get("/api/search/reporting-units/ex/" + missingRuId + "/" + waaId)
+                .header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
+                .accept(MediaType.APPLICATION_JSON))
+        .andExpect(status().isForbidden());
+  }
+
   @ParameterizedTest
   @MethodSource("searchReportingUnitBceid")
   @DisplayName("Search Reporting Unit with BCeID user")

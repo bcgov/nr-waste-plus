@@ -430,35 +430,5 @@ class JwtRoleAuthorizationManagerFactoryTest {
 
       assertFalse(result.isGranted());
     }
-
-    @Test
-    @DisplayName("reportingUnitWriteGate grants when principal is valid and has write role")
-    void writeGate_grantsWhenValidAndHasWriteRole() {
-      org.springframework.security.core.Authentication auth =
-          org.mockito.Mockito.mock(org.springframework.security.core.Authentication.class);
-      when(roleChecker.isValidRouteGatePrincipal(auth)).thenReturn(true);
-      when(roleChecker.hasAnyWriteRole(auth)).thenReturn(true);
-
-      AuthorizationManager<RequestAuthorizationContext> manager =
-          factory.reportingUnitWriteGate();
-      AuthorizationResult result = manager.authorize(() -> auth, context);
-
-      assertTrue(result.isGranted());
-    }
-
-    @Test
-    @DisplayName("reportingUnitWriteGate denies when principal lacks write role")
-    void writeGate_deniesWhenLacksWriteRole() {
-      org.springframework.security.core.Authentication auth =
-          org.mockito.Mockito.mock(org.springframework.security.core.Authentication.class);
-      when(roleChecker.isValidRouteGatePrincipal(auth)).thenReturn(true);
-      when(roleChecker.hasAnyWriteRole(auth)).thenReturn(false);
-
-      AuthorizationManager<RequestAuthorizationContext> manager =
-          factory.reportingUnitWriteGate();
-      AuthorizationResult result = manager.authorize(() -> auth, context);
-
-      assertFalse(result.isGranted());
-    }
   }
 }

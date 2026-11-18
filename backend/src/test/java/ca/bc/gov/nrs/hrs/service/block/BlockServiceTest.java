@@ -440,7 +440,7 @@ class BlockServiceTest {
 
   @Test
   @DisplayName("getBlockDetails throws ReportingUnitNotFoundException 404 when block found in postgres but caller lacks client scope")
-  void getBlockDetails_whenBlockFoundInPostgresButUnauthorized_throws403() {
+  void getBlockDetails_whenBlockFoundInPostgresButUnauthorized_throws404() {
     Jwt crossClientBceidJwt =
         WithMockJwtSecurityContextFactory.createJwt(
             "other-user",

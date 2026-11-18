@@ -59,6 +59,7 @@ public class ResourceScopeGuard {
   private final ReportingUnitRepository reportingUnitRepository;
   private final LegacyApiProvider legacyApiProvider;
   private final JwtRoleChecker jwtRoleChecker;
+  private final SecurityEventLoggingListener securityEventListener;
   private final Tracer tracer;
 
   /**
@@ -67,6 +68,7 @@ public class ResourceScopeGuard {
    * @param reportingUnitRepository the repository for reporting units
    * @param legacyApiProvider the legacy API provider
    * @param jwtRoleChecker the role checker utility
+   * @param securityEventListener listener for security event auditing
    * @param tracer optional OpenTelemetry tracer for correlation ids
    */
   @Autowired
@@ -74,11 +76,29 @@ public class ResourceScopeGuard {
       ReportingUnitRepository reportingUnitRepository,
       LegacyApiProvider legacyApiProvider,
       JwtRoleChecker jwtRoleChecker,
+      @Autowired(required = false) SecurityEventLoggingListener securityEventListener,
       @Autowired(required = false) Tracer tracer) {
     this.reportingUnitRepository = reportingUnitRepository;
     this.legacyApiProvider = legacyApiProvider;
     this.jwtRoleChecker = jwtRoleChecker;
+    this.securityEventListener = securityEventListener;
     this.tracer = tracer;
+  }
+
+  /**
+   * Constructs a new ResourceScopeGuard without security event listener.
+   *
+   * @param reportingUnitRepository the repository for reporting units
+   * @param legacyApiProvider the legacy API provider
+   * @param jwtRoleChecker the role checker utility
+   * @param tracer optional OpenTelemetry tracer for correlation ids
+   */
+  public ResourceScopeGuard(
+      ReportingUnitRepository reportingUnitRepository,
+      LegacyApiProvider legacyApiProvider,
+      JwtRoleChecker jwtRoleChecker,
+      @Autowired(required = false) Tracer tracer) {
+    this(reportingUnitRepository, legacyApiProvider, jwtRoleChecker, null, tracer);
   }
 
   /**
@@ -92,7 +112,7 @@ public class ResourceScopeGuard {
       ReportingUnitRepository reportingUnitRepository,
       LegacyApiProvider legacyApiProvider,
       @Autowired(required = false) Tracer tracer) {
-    this(reportingUnitRepository, legacyApiProvider, new JwtRoleChecker(), tracer);
+    this(reportingUnitRepository, legacyApiProvider, new JwtRoleChecker(), null, tracer);
   }
 
   /**
@@ -241,6 +261,7 @@ public class ResourceScopeGuard {
             jwt,
             reportingUnitId,
             httpMethod,
+            404,
             "BCeID user assigned clients " + userClientNumbers
                 + " does not match target RU client " + targetClientNumber);
         throw new ReportingUnitNotFoundException(reportingUnitId);
@@ -255,6 +276,7 @@ public class ResourceScopeGuard {
               jwt,
               reportingUnitId,
               httpMethod,
+              404,
               "IDIR DISTRICT user assigned districts " + assignedDistricts
                   + " does not match target RU district " + targetDistrictCode);
           throw new ReportingUnitNotFoundException(reportingUnitId);
@@ -266,6 +288,7 @@ public class ResourceScopeGuard {
               jwt,
               reportingUnitId,
               httpMethod,
+              404,
               "IDIR VIEWER has no assigned district: access denied");
           throw new ReportingUnitNotFoundException(reportingUnitId);
         }
@@ -276,6 +299,7 @@ public class ResourceScopeGuard {
               jwt,
               reportingUnitId,
               httpMethod,
+              404,
               "IDIR VIEWER user assigned districts " + assignedDistricts
                   + " does not match target RU district " + targetDistrictCode);
           throw new ReportingUnitNotFoundException(reportingUnitId);
@@ -315,21 +339,40 @@ public class ResourceScopeGuard {
     }
   }
 
-  private void validatePrincipal(Jwt jwt, Long reportingUnitId, String httpMethod) {
+  /**
+   * Validates that the caller has an acceptable identity provider and valid role combination
+   * under route gate rules. Throws {@link ResponseStatusException} if invalid.
+   *
+   * @param jwt the caller's JWT
+   * @param httpMethod the HTTP method being performed
+   */
+  public void validatePrincipal(Jwt jwt, String httpMethod) {
+    validatePrincipal(jwt, null, httpMethod);
+  }
+
+  /**
+   * Validates that the caller has an acceptable identity provider and valid role combination
+   * under route gate rules for a specific reporting unit.
+   *
+   * @param jwt the caller's JWT
+   * @param reportingUnitId target reporting unit
+   * @param httpMethod the HTTP method being performed
+   */
+  public void validatePrincipal(Jwt jwt, Long reportingUnitId, String httpMethod) {
     IdentityProvider idp = resolveIdentityProvider(jwt);
     if (idp == null) {
       logSecurityDenied(
-          jwt, reportingUnitId, httpMethod, "Missing or unresolved identity provider");
+          jwt, reportingUnitId, httpMethod, 401, "Missing or unresolved identity provider");
       throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unresolved identity provider");
     }
     if (idp != IdentityProvider.IDIR && idp != IdentityProvider.BUSINESS_BCEID) {
-      logSecurityDenied(jwt, reportingUnitId, httpMethod, "Unsupported identity provider: " + idp);
+      logSecurityDenied(jwt, reportingUnitId, httpMethod, 403, "Unsupported identity provider: " + idp);
       throw new ResponseStatusException(
           HttpStatus.FORBIDDEN, "Unsupported identity provider: " + idp.name());
     }
 
     if (!jwtRoleChecker.isValidRouteGatePrincipal(jwt)) {
-      logSecurityDenied(jwt, reportingUnitId, httpMethod, "Invalid principal or role combination");
+      logSecurityDenied(jwt, reportingUnitId, httpMethod, 403, "Invalid principal or role combination");
       throw new ResponseStatusException(
           HttpStatus.FORBIDDEN, "Invalid principal or role combination");
     }
@@ -418,7 +461,7 @@ public class ResourceScopeGuard {
         return new ReportingUnitScope(legacyRu.clientNumber(), districtCode);
       }
     } catch (ReportingUnitNotFoundException | NotFoundGenericException e) {
-      logSecurityDenied(jwt, reportingUnitId, httpMethod, "Target reporting unit does not exist");
+      logSecurityDenied(jwt, reportingUnitId, httpMethod, 404, "Target reporting unit does not exist");
       throw new ReportingUnitNotFoundException(reportingUnitId);
     } catch (Exception ex) {
       log.warn(
@@ -427,12 +470,12 @@ public class ResourceScopeGuard {
           ex.getMessage(),
           ex);
       logSecurityDenied(
-          jwt, reportingUnitId, httpMethod, "Legacy lookup error: " + ex.getMessage());
+          jwt, reportingUnitId, httpMethod, 503, "Legacy lookup error: " + ex.getMessage());
       throw new ResponseStatusException(
           HttpStatus.SERVICE_UNAVAILABLE, "Legacy reporting unit service unavailable", ex);
     }
 
-    logSecurityDenied(jwt, reportingUnitId, httpMethod, "Target reporting unit does not exist");
+    logSecurityDenied(jwt, reportingUnitId, httpMethod, 404, "Target reporting unit does not exist");
     throw new ReportingUnitNotFoundException(reportingUnitId);
   }
 
@@ -462,24 +505,38 @@ public class ResourceScopeGuard {
     return null;
   }
 
-  private void logSecurityDenied(Jwt jwt, Long reportingUnitId, String httpMethod, String reason) {
-    String correlationId = getCorrelationId();
-    String userId = jwt != null ? JwtPrincipalUtil.getUserId(jwt) : "anonymous";
-    String provider = jwt != null ? JwtPrincipalUtil.getProvider(jwt) : "unknown";
+  private void logSecurityDenied(
+      Jwt jwt, Long reportingUnitId, String httpMethod, int status, String reason) {
     HttpServletRequest request = currentRequest();
-    String uri =
-        request != null ? request.getRequestURI() : "/api/reporting-units/" + reportingUnitId;
+    if (securityEventListener != null) {
+      securityEventListener.logEvent(
+          "AUTHORIZATION_DENIED",
+          status,
+          request,
+          jwt != null ? () -> new JwtAuthenticationToken(jwt) : null,
+          reason);
+    } else {
+      String correlationId = getCorrelationId();
+      String userId = jwt != null ? JwtPrincipalUtil.getUserId(jwt) : "anonymous";
+      String provider = jwt != null ? JwtPrincipalUtil.getProvider(jwt) : "unknown";
+      String uri =
+          request != null ? request.getRequestURI() : "/api/reporting-units/" + reportingUnitId;
 
-    log.warn(
-        "SECURITY_EVENT event=AUTHORIZATION_DENIED correlationId={} userId={} provider={} "
-            + "method={} route={} targetReportingUnitId={} reason={}",
-        correlationId,
-        userId,
-        provider,
-        httpMethod != null ? httpMethod : "",
-        uri,
-        reportingUnitId,
-        reason);
+      log.warn(
+          "SECURITY_EVENT event=AUTHORIZATION_DENIED correlationId={} userId={} provider={} "
+              + "method={} route={} targetReportingUnitId={} reason={}",
+          correlationId,
+          userId,
+          provider,
+          httpMethod != null ? httpMethod : "",
+          uri,
+          reportingUnitId,
+          reason);
+    }
+  }
+
+  private void logSecurityDenied(Jwt jwt, Long reportingUnitId, String httpMethod, String reason) {
+    logSecurityDenied(jwt, reportingUnitId, httpMethod, 403, reason);
   }
 
   private String getCorrelationId() {

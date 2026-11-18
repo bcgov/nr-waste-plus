@@ -117,6 +117,9 @@ public class SearchController {
         reportingUnitId,
         JwtPrincipalUtil.getUserId(jwt));
 
+    // Validate caller principal before resolving target scope to prevent existence disclosure
+    resourceScopeGuard.validatePrincipal(jwt, "GET");
+
     // Enforce resource-scope authorization (client number for BCeID, district for IDIR)
     var targetScope = service.getSearchScope(reportingUnitId, wasteAssessmentAreaId);
     resourceScopeGuard.verifyTargetScope(
