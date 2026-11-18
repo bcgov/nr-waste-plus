@@ -103,11 +103,18 @@ public class ReportingUnitService {
    *
    * @param reportingUnitId the owning reporting unit identifier
    * @param wasteAssessmentAreaId the block/waste assessment area identifier
+   * @param clients client numbers used to scope access; empty or {@code null} means unrestricted
    * @return stratum rows for the block, empty when none exist
+   * @throws WasteReportingUnitNotFound if the reporting unit does not exist or is outside the
+   *     caller's client scope
    */
   public List<DistrictAverageVolumeDto> getDistrictAverageVolumes(
-      Long reportingUnitId, Long wasteAssessmentAreaId) {
-    verifyReportingUnitExists(reportingUnitId);
+      Long reportingUnitId, Long wasteAssessmentAreaId, List<String> clients) {
+    List<String> searchClients =
+        CollectionUtils.isEmpty(clients) ? List.of(LegacyConstants.NOVALUE) : clients;
+    if (ruRepository.getReportingUnitDetails(reportingUnitId, searchClients).isEmpty()) {
+      throw new WasteReportingUnitNotFound(reportingUnitId);
+    }
     return ruRepository.getDistrictAverageVolumes(reportingUnitId, wasteAssessmentAreaId).stream()
         .map(ReportingUnitService::toDistrictAverageVolumeDto)
         .toList();

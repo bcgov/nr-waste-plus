@@ -245,4 +245,19 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
         .andExpect(status().isNotFound());
   }
 
+  @Test
+  @DisplayName("shouldReturn404DistrictAverageVolumes_whenBceidUserLacksMatchingClient")
+  @WithMockJwt(
+      idp = "bceidbusiness",
+      cognitoGroups = {"Submitter_00099999"}
+  )
+  void shouldReturn404DistrictAverageVolumes_whenBceidUserLacksMatchingClient()
+      throws Exception {
+    mockMvc
+        .perform(
+            get("/api/reporting-units/{id}/blocks/{blockId}/district-average-volumes", 879, 1906)
+                .accept(MediaType.APPLICATION_JSON))
+        .andExpect(status().isNotFound());
+  }
+
 }

@@ -89,17 +89,20 @@ public class ReportingUnitController {
    *
    * @param reportingUnitId the reporting unit identifier
    * @param wasteAssessmentAreaId the block/waste assessment area identifier
+   * @param jwt the authenticated JWT principal used to derive client scoping
    * @return district average volume rows for the block, empty when none exist
    */
   @GetMapping("/{reportingUnitId}/blocks/{wasteAssessmentAreaId}/district-average-volumes")
   public List<DistrictAverageVolumeDto> getDistrictAverageVolumes(
       @PathVariable Long reportingUnitId,
-      @PathVariable Long wasteAssessmentAreaId) {
+      @PathVariable Long wasteAssessmentAreaId,
+      @AuthenticationPrincipal Jwt jwt) {
     log.info(
         "Fetching district average volumes for reporting unit {} block {}",
         reportingUnitId,
         wasteAssessmentAreaId);
-    return service.getDistrictAverageVolumes(reportingUnitId, wasteAssessmentAreaId);
+    return service.getDistrictAverageVolumes(
+        reportingUnitId, wasteAssessmentAreaId, JwtPrincipalUtil.getClientListFromJwt(jwt));
   }
 
   /**
