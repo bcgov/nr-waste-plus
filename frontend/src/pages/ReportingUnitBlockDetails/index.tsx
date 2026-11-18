@@ -290,6 +290,14 @@ const ReportingUnitBlockDetailsPage: FC = () => {
                       }
                     : undefined
                 }
+                districtAverageVolumes={
+                  blockData.districtAverageVolumesSummary
+                    ? {
+                        rows: blockData.districtAverageVolumesSummary.rows ?? [],
+                        totals: blockData.districtAverageVolumesSummary.totals ?? undefined,
+                      }
+                    : undefined
+                }
                 onNavigateTab={setSelectedTabIndex}
               />
             </TabPanel>

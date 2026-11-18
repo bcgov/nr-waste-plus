@@ -134,6 +134,47 @@ describe('reporting-unit block contracts', () => {
     });
   });
 
+  it('shouldParseBlockDetailsWithDistrictAverageVolumesSummary', () => {
+    const details = {
+      id: 12,
+      reportingUnitId: 468,
+      blockType: 'DISTRICT_AVERAGE',
+      draft: true,
+      plcDate: null,
+      revision: 1,
+      isLegacy: false,
+      districtAverageVolumesSummary: {
+        rows: [
+          {
+            populationType: 'Dispersed',
+            wasteType: 'Roadside',
+            harvestMethodCode: 'Ground Skid',
+            assessmentMethod: 'Ocular Estimate',
+            wasteLevel: 'Stratum',
+            netWasteAreaHa: 2.5,
+            totalBillableVolumeM3: null,
+            totalCutControlVolumeM3: null,
+          },
+        ],
+        totals: { totalBillableVolumeM3: 0, totalCutControlVolumeM3: 0 },
+      },
+    };
+
+    expect(blockDetailsSchema.parse(details)).toMatchObject({
+      districtAverageVolumesSummary: {
+        rows: [
+          expect.objectContaining({
+            populationType: 'Dispersed',
+            harvestMethodCode: 'Ground Skid',
+            netWasteAreaHa: 2.5,
+            totalBillableVolumeM3: null,
+          }),
+        ],
+        totals: { totalBillableVolumeM3: 0, totalCutControlVolumeM3: 0 },
+      },
+    });
+  });
+
   it.each(['id', 'reportingUnitId', 'blockType', 'draft', 'plcDate', 'revision', 'isLegacy'])(
     'shouldRejectBlockDetailsWithoutRequiredField_%s',
     (field) => {

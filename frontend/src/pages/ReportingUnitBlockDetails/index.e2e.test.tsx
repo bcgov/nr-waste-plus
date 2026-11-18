@@ -41,6 +41,24 @@ const blockDetailsPayload = {
     secondary: [{ timberMarkId: 'TM-SEC', netWasteAreaHa: 1.23 }],
     totalNetWasteAreaHa: 1.23,
   },
+  districtAverageVolumesSummary: {
+    rows: [
+      {
+        populationType: 'Dispersed',
+        wasteType: 'Roadside',
+        harvestMethodCode: 'Ground Skid',
+        assessmentMethod: 'Ocular Estimate',
+        wasteLevel: 'Stratum',
+        netWasteAreaHa: 2.5,
+        totalBillableVolumeM3: null,
+        totalCutControlVolumeM3: null,
+      },
+    ],
+    totals: {
+      totalBillableVolumeM3: 0,
+      totalCutControlVolumeM3: 0,
+    },
+  },
 };
 
 test.describe('Reporting Unit Block Details', () => {
@@ -116,6 +134,15 @@ test.describe('Reporting Unit Block Details', () => {
     await expect(totalRow).toContainText('1.23');
     const primaryRow = wasteAssessmentCard.getByRole('row').filter({ hasText: 'TM-PRIMARY' });
     await expect(primaryRow).toContainText('-');
+
+    const volumesCard = page.getByRole('region', {
+      name: 'District average volumes summary',
+    });
+    await expect(volumesCard).toBeVisible();
+    await expect(volumesCard.getByText('Dispersed')).toBeVisible();
+    await expect(volumesCard.getByText('Ground Skid')).toBeVisible();
+    const volumesTotalRow = volumesCard.getByRole('row').filter({ hasText: 'Total' }).last();
+    await expect(volumesTotalRow).toContainText('0');
 
     // No edit controls in the read-only design.
     await expect(page.getByRole('button', { name: /edit/i })).toHaveCount(0);

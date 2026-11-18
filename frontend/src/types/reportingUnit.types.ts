@@ -147,6 +147,43 @@ export const wasteAssessmentAreaSummarySchema = z.looseObject({
 export type WasteAssessmentAreaSummaryDto = z.infer<typeof wasteAssessmentAreaSummarySchema>;
 
 /**
+ * One row in the district average volumes summary payload.
+ * All fields are optional/nullish because source data may be incomplete.
+ */
+export const districtAverageVolumeRowSchema = z.looseObject({
+  populationType: z.string().nullish(),
+  wasteType: z.string().nullish(),
+  harvestMethodCode: z.string().nullish(),
+  assessmentMethod: z.string().nullish(),
+  wasteLevel: z.string().nullish(),
+  netWasteAreaHa: z.number().nullish(),
+  totalBillableVolumeM3: z.number().nullish(),
+  totalCutControlVolumeM3: z.number().nullish(),
+});
+
+export type DistrictAverageVolumeRowDto = z.infer<typeof districtAverageVolumeRowSchema>;
+
+/** Backend-precomputed totals for the district average volumes summary. */
+export const districtAverageVolumeTotalsSchema = z.looseObject({
+  totalBillableVolumeM3: z.number().nullish(),
+  totalCutControlVolumeM3: z.number().nullish(),
+});
+
+export type DistrictAverageVolumeTotalsDto = z.infer<typeof districtAverageVolumeTotalsSchema>;
+
+/**
+ * District average volumes summary returned with block details (read/load).
+ */
+export const districtAverageVolumesSummarySchema = z.looseObject({
+  rows: z.array(districtAverageVolumeRowSchema).optional().default([]),
+  totals: districtAverageVolumeTotalsSchema.nullish(),
+});
+
+export type DistrictAverageVolumesSummaryDto = z.infer<
+  typeof districtAverageVolumesSummarySchema
+>;
+
+/**
  * Block-details response
  * (`GET /api/reporting-units/{reportingUnitId}/{blockId}`, Java
  * `BlockResponseDto`).
@@ -170,6 +207,7 @@ export const blockDetailsSchema = z.looseObject({
   secondaryTimberMarks: z.array(blockMarkDetailSchema).optional().default([]),
   roadPermitTimberMarks: z.array(blockMarkDetailSchema).optional().default([]),
   wasteAssessmentAreaSummary: wasteAssessmentAreaSummarySchema.nullish(),
+  districtAverageVolumesSummary: districtAverageVolumesSummarySchema.nullish(),
 });
 
 /** TypeScript representation of a block-details response. */
