@@ -7,8 +7,13 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import ca.bc.gov.nrs.hrs.dto.block.BlockMarkDto;
+import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchExpandedDto;
+import ca.bc.gov.nrs.hrs.dto.search.SearchExpandedSecondaryDto;
+import ca.bc.gov.nrs.hrs.dto.base.CodeDescriptionDto;
 import ca.bc.gov.nrs.hrs.dto.block.BlockType;
 import ca.bc.gov.nrs.hrs.entity.block.BlockEntity;
+import ca.bc.gov.nrs.hrs.entity.block.BlockMarkEntity;
 import ca.bc.gov.nrs.hrs.entity.block.ReportingUnitEntity;
 import ca.bc.gov.nrs.hrs.entity.block.StatusEventEntity;
 import ca.bc.gov.nrs.hrs.exception.BlockNotFoundException;
@@ -63,6 +68,12 @@ class BlockServiceTest {
 
   @Mock
   private ca.bc.gov.nrs.hrs.mapper.block.BlockMapper blockMapper;
+
+  @Mock
+  private ca.bc.gov.nrs.hrs.repository.block.BlockMarkRepository blockMarkRepository;
+
+  @Mock
+  private ca.bc.gov.nrs.hrs.mapper.block.BlockMarkMapper blockMarkMapper;
 
   @InjectMocks
   private BlockService blockService;
@@ -496,11 +507,17 @@ class BlockServiceTest {
             null,
             null);
     when(blockMapper.toResponseDto(block)).thenReturn(mapped);
+    when(blockMarkRepository.findByBlockIdAndMarkTypeAndDeletedFalseOrderBySequenceNo(BLOCK_ID, "SECONDARY"))
+        .thenReturn(List.of());
+    when(blockMarkRepository.findByBlockIdAndMarkTypeAndDeletedFalseOrderBySequenceNo(BLOCK_ID, "ROAD_PERMIT"))
+        .thenReturn(List.of());
 
     var result = blockService.getBlockDetails(RU_ID, BLOCK_ID, idirJwt);
 
     assertThat(result.plcDate()).isEqualTo(LocalDate.of(2026, 3, 15));
     assertThat(result.isLegacy()).isFalse();
+    assertThat(result.secondaryTimberMarks()).isEmpty();
+    assertThat(result.roadPermitTimberMarks()).isEmpty();
   }
 
   @Test
@@ -530,11 +547,17 @@ class BlockServiceTest {
             null,
             null);
     when(blockMapper.toResponseDto(block)).thenReturn(mapped);
+    when(blockMarkRepository.findByBlockIdAndMarkTypeAndDeletedFalseOrderBySequenceNo(BLOCK_ID, "SECONDARY"))
+        .thenReturn(List.of());
+    when(blockMarkRepository.findByBlockIdAndMarkTypeAndDeletedFalseOrderBySequenceNo(BLOCK_ID, "ROAD_PERMIT"))
+        .thenReturn(List.of());
 
     var result = blockService.getBlockDetails(RU_ID, BLOCK_ID, idirJwt);
 
     assertThat(result.plcDate()).isEqualTo(LocalDate.of(2026, 11, 16));
     assertThat(result.isLegacy()).isFalse();
+    assertThat(result.secondaryTimberMarks()).isEmpty();
+    assertThat(result.roadPermitTimberMarks()).isEmpty();
   }
 
   @Test
@@ -565,11 +588,105 @@ class BlockServiceTest {
             null,
             null);
     when(legacyApiProvider.getReportingUnitBlocksStrict(RU_ID)).thenReturn(List.of(legacyRow));
+    when(legacyApiProvider.getSearchExpanded(RU_ID, BLOCK_ID))
+        .thenReturn(
+            new ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchExpandedDto(
+                BLOCK_ID, null, null, null, false, false, null, List.of(), 0.0, 0.0, null, null, null, 0L, 0L));
 
     var result = blockService.getBlockDetails(RU_ID, BLOCK_ID, idirJwt);
 
     assertThat(result.plcDate()).isEqualTo(LocalDate.of(2026, 11, 16));
     assertThat(result.isLegacy()).isTrue();
+    assertThat(result.secondaryTimberMarks()).isEmpty();
+    assertThat(result.roadPermitTimberMarks()).isEmpty();
+  }
+
+
+
+  @Test
+  @DisplayName("getBlockDetails returns postgres block with loaded secondary and road permit timber marks")
+  void getBlockDetails_whenPostgresBlockHasMarks_returnsLoadedMarks() {
+    blockService.setClock(Clock.fixed(Instant.parse("2026-11-17T12:00:00Z"), ZoneOffset.UTC));
+    when(reportingUnitRepository.findByIdAndDeletedFalse(RU_ID))
+        .thenReturn(Optional.of(reportingUnit));
+
+    BlockEntity block = new BlockEntity();
+    block.setId(BLOCK_ID);
+    block.setReportingUnitId(RU_ID);
+    block.setPlcDate(LocalDate.of(2026, 3, 15));
+    when(blockRepository.findByIdAndReportingUnitIdAndDeletedFalse(BLOCK_ID, RU_ID))
+        .thenReturn(Optional.of(block));
+
+    var mapped =
+        new ca.bc.gov.nrs.hrs.dto.block.BlockResponseDto(
+            BLOCK_ID, RU_ID, "DISTRICT_AVERAGE", "DRAFT", true,
+            LocalDate.of(2026, 3, 15), 0L, 0L, false, null, null);
+    when(blockMapper.toResponseDto(block)).thenReturn(mapped);
+
+    BlockMarkEntity secEntity = new BlockMarkEntity();
+    secEntity.setId(11L); secEntity.setBlockId(BLOCK_ID); secEntity.setMarkType("SECONDARY");
+    secEntity.setSequenceNo(1); secEntity.setMark("SEC1");
+    BlockMarkEntity roadEntity = new BlockMarkEntity();
+    roadEntity.setId(12L); roadEntity.setBlockId(BLOCK_ID); roadEntity.setMarkType("ROAD_PERMIT");
+    roadEntity.setSequenceNo(1); roadEntity.setMark("R123");
+
+    BlockMarkDto secDto = new BlockMarkDto(11L, BLOCK_ID, "SECONDARY", 1, "SEC1", null, null, null, null, null);
+    BlockMarkDto roadDto = new BlockMarkDto(12L, BLOCK_ID, "ROAD_PERMIT", 1, "R123", null, null, null, null, null);
+    when(blockMarkRepository.findByBlockIdAndMarkTypeAndDeletedFalseOrderBySequenceNo(BLOCK_ID, "SECONDARY"))
+        .thenReturn(List.of(secEntity));
+    when(blockMarkRepository.findByBlockIdAndMarkTypeAndDeletedFalseOrderBySequenceNo(BLOCK_ID, "ROAD_PERMIT"))
+        .thenReturn(List.of(roadEntity));
+    when(blockMarkMapper.toDto(secEntity)).thenReturn(secDto);
+    when(blockMarkMapper.toDto(roadEntity)).thenReturn(roadDto);
+
+    var result = blockService.getBlockDetails(RU_ID, BLOCK_ID, idirJwt);
+
+    assertThat(result.secondaryTimberMarks()).containsExactly(secDto);
+    assertThat(result.roadPermitTimberMarks()).containsExactly(roadDto);
+  }
+
+  @Test
+  @DisplayName("getBlockDetails maps legacy expanded secondary and road permit marks (R-prefixed, deduped, sequenced)")
+  void getBlockDetails_whenLegacyExpandedHasMarks_mapsRichTimberMarks() {
+    blockService.setClock(Clock.fixed(Instant.parse("2026-11-17T12:00:00Z"), ZoneOffset.UTC));
+    when(reportingUnitRepository.findByIdAndDeletedFalse(RU_ID)).thenReturn(Optional.empty());
+
+    var legacyRu =
+        new ca.bc.gov.nrs.hrs.dto.reportingunit.ReportingUnitLegacyDetailsDto(
+            CLIENT_NUMBER, "00",
+            new CodeDescriptionDto("AVG", "Average"),
+            new CodeDescriptionDto("DND", "Nadina"));
+    when(legacyApiProvider.getReportingUnitDetails(RU_ID)).thenReturn(legacyRu);
+
+    var legacyRow =
+        new ca.bc.gov.nrs.hrs.dto.block.BlockListItemDto(
+            BLOCK_ID, "FILE", "CP", "CUT", "RPRIMARY",
+            null, null, "sub",
+            new ca.bc.gov.nrs.hrs.dto.block.BlockListItemDto.Status("DFT", "Draft"),
+            null, null);
+    when(legacyApiProvider.getReportingUnitBlocksStrict(RU_ID)).thenReturn(List.of(legacyRow));
+
+    var expanded = new ReportingUnitSearchExpandedDto(
+        BLOCK_ID, "FILE", "CP", "RPRIMARY", false, true, null,
+        java.util.Arrays.asList(
+            new SearchExpandedSecondaryDto("SEC2", new CodeDescriptionDto("APP", "Approved"), 1.0),
+            new SearchExpandedSecondaryDto("RSEC", new CodeDescriptionDto("DFT", "Draft"), 2.0),
+            new SearchExpandedSecondaryDto("", null, null),
+            null),
+        0.0, 0.0, null, null, null, 0L, 0L);
+    when(legacyApiProvider.getSearchExpanded(RU_ID, BLOCK_ID)).thenReturn(expanded);
+
+    var result = blockService.getBlockDetails(RU_ID, BLOCK_ID, idirJwt);
+
+    assertThat(result.secondaryTimberMarks()).hasSize(1);
+    assertThat(result.secondaryTimberMarks().get(0).mark()).isEqualTo("SEC2");
+    assertThat(result.secondaryTimberMarks().get(0).markType()).isEqualTo("SECONDARY");
+    assertThat(result.secondaryTimberMarks().get(0).sequenceNo()).isEqualTo(1);
+    assertThat(result.roadPermitTimberMarks()).extracting(BlockMarkDto::mark)
+        .containsExactly("RPRIMARY", "RSEC");
+    assertThat(result.roadPermitTimberMarks()).allMatch(m -> "ROAD_PERMIT".equals(m.markType()));
+    assertThat(result.roadPermitTimberMarks()).extracting(BlockMarkDto::sequenceNo)
+        .containsExactly(1, 2);
   }
 
 }

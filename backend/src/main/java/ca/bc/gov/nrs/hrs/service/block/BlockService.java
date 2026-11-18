@@ -3,6 +3,7 @@ package ca.bc.gov.nrs.hrs.service.block;
 import ca.bc.gov.nrs.hrs.dto.base.IdentityProvider;
 import ca.bc.gov.nrs.hrs.dto.base.Role;
 import ca.bc.gov.nrs.hrs.dto.block.BlockListItemDto;
+import ca.bc.gov.nrs.hrs.dto.block.BlockMarkDto;
 import ca.bc.gov.nrs.hrs.dto.block.BlockResponseDto;
 import ca.bc.gov.nrs.hrs.dto.block.BlockType;
 import ca.bc.gov.nrs.hrs.entity.block.BlockEntity;
@@ -15,7 +16,9 @@ import ca.bc.gov.nrs.hrs.exception.NotFoundGenericException;
 import ca.bc.gov.nrs.hrs.exception.ReportingUnitNotFoundException;
 import ca.bc.gov.nrs.hrs.exception.ReportingUnitStateConflictException;
 import ca.bc.gov.nrs.hrs.mapper.block.BlockMapper;
+import ca.bc.gov.nrs.hrs.mapper.block.BlockMarkMapper;
 import ca.bc.gov.nrs.hrs.provider.legacy.LegacyApiProvider;
+import ca.bc.gov.nrs.hrs.repository.block.BlockMarkRepository;
 import ca.bc.gov.nrs.hrs.repository.block.BlockRepository;
 import ca.bc.gov.nrs.hrs.repository.block.ReportingUnitRepository;
 import ca.bc.gov.nrs.hrs.repository.block.StatusEventRepository;
@@ -26,6 +29,7 @@ import java.sql.SQLException;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Locale;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.exception.ConstraintViolationException;
@@ -52,6 +56,8 @@ public class BlockService {
   private final StatusEventRepository statusEventRepository;
   private final LegacyApiProvider legacyApiProvider;
   private final BlockMapper blockMapper;
+  private final BlockMarkRepository blockMarkRepository;
+  private final BlockMarkMapper blockMarkMapper;
 
   private Clock clock = Clock.systemDefaultZone();
 
@@ -258,7 +264,9 @@ public class BlockService {
 
     enforceClientScope(jwt, reportingUnitId, clientNumber);
 
-    return withResolvedPlcDate(blockMapper.toResponseDto(block));
+    BlockResponseDto dto = blockMapper.toResponseDto(block);
+    dto = withTimberMarks(dto, loadSecondaryTimberMarks(blockId), loadRoadPermitTimberMarks(blockId));
+    return withResolvedPlcDate(dto);
   }
 
   private BlockResponseDto getLegacyBlockDetails(Long reportingUnitId, Long blockId, Jwt jwt) {
@@ -272,7 +280,14 @@ public class BlockService {
 
     enforceClientScope(jwt, reportingUnitId, legacyReportingUnit.clientNumber());
 
-    return toLegacyResponseDto(reportingUnitId, legacyRow);
+    var expanded = legacyApiProvider.getSearchExpanded(reportingUnitId, blockId);
+    List<BlockMarkDto> secondaryTimberMarks =
+        toLegacySecondaryTimberMarks(reportingUnitId, blockId, legacyRow, expanded);
+    List<BlockMarkDto> roadPermitTimberMarks =
+        toLegacyRoadPermitTimberMarks(reportingUnitId, blockId, legacyRow, expanded);
+
+    return toLegacyResponseDto(
+        reportingUnitId, legacyRow, secondaryTimberMarks, roadPermitTimberMarks);
   }
 
   /**
@@ -407,6 +422,14 @@ public class BlockService {
    * payload carries no block subtype, so the envelope reports the subtype as unknown.
    */
   private BlockResponseDto toLegacyResponseDto(Long reportingUnitId, BlockListItemDto row) {
+    return toLegacyResponseDto(reportingUnitId, row, List.of(), List.of());
+  }
+
+  private BlockResponseDto toLegacyResponseDto(
+      Long reportingUnitId,
+      BlockListItemDto row,
+      List<BlockMarkDto> secondaryTimberMarks,
+      List<BlockMarkDto> roadPermitTimberMarks) {
     boolean draft =
         row.status() != null && DRAFT_STATUS_CODE.equals(row.status().code());
     String state = draft ? "DRAFT" : "ACTIVE";
@@ -421,7 +444,9 @@ public class BlockService {
         null,
         true,
         null,
-        null);
+        null,
+        secondaryTimberMarks,
+        roadPermitTimberMarks);
   }
 
   BlockResponseDto withResolvedPlcDate(BlockResponseDto dto) {
@@ -440,7 +465,163 @@ public class BlockService {
         dto.revision(),
         dto.isLegacy(),
         dto.createdAt(),
-        dto.updatedAt());
+        dto.updatedAt(),
+        dto.secondaryTimberMarks(),
+        dto.roadPermitTimberMarks());
+  }
+
+  private BlockResponseDto withTimberMarks(
+      BlockResponseDto dto,
+      List<BlockMarkDto> secondaryTimberMarks,
+      List<BlockMarkDto> roadPermitTimberMarks) {
+    return new BlockResponseDto(
+        dto.id(),
+        dto.reportingUnitId(),
+        dto.blockType(),
+        dto.state(),
+        dto.draft(),
+        dto.plcDate(),
+        dto.version(),
+        dto.revision(),
+        dto.isLegacy(),
+        dto.createdAt(),
+        dto.updatedAt(),
+        secondaryTimberMarks,
+        roadPermitTimberMarks);
+  }
+
+  private List<BlockMarkDto> loadSecondaryTimberMarks(Long blockId) {
+    return blockMarkRepository
+        .findByBlockIdAndMarkTypeAndDeletedFalseOrderBySequenceNo(blockId, "SECONDARY")
+        .stream()
+        .map(blockMarkMapper::toDto)
+        .toList();
+  }
+
+  private List<BlockMarkDto> loadRoadPermitTimberMarks(Long blockId) {
+    return blockMarkRepository
+        .findByBlockIdAndMarkTypeAndDeletedFalseOrderBySequenceNo(blockId, "ROAD_PERMIT")
+        .stream()
+        .map(blockMarkMapper::toDto)
+        .toList();
+  }
+
+  private List<BlockMarkDto> toLegacySecondaryTimberMarks(
+      Long reportingUnitId,
+      Long blockId,
+      BlockListItemDto legacyRow,
+      ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchExpandedDto expanded) {
+    java.util.ArrayList<BlockMarkDto> marks = new java.util.ArrayList<>();
+    if (expanded != null && expanded.secondaryMarks() != null) {
+      int sequence = 1;
+      for (var secondary : expanded.secondaryMarks()) {
+        if (secondary == null || secondary.mark() == null || secondary.mark().isBlank()) {
+          continue;
+        }
+        if (isRoadPermitMark(secondary.mark())) {
+          continue;
+        }
+        marks.add(
+            new BlockMarkDto(
+                null,
+                blockId,
+                "SECONDARY",
+                sequence++,
+                secondary.mark(),
+                secondary.status() != null ? secondary.status().code() : null,
+                legacyRow.licenseNumber(),
+                secondary.mark(),
+                legacyRow.cuttingPermit(),
+                legacyRow.cutBlockId()));
+      }
+    }
+    return List.copyOf(marks);
+  }
+
+  private List<BlockMarkDto> toLegacyRoadPermitTimberMarks(
+      Long reportingUnitId,
+      Long blockId,
+      BlockListItemDto legacyRow,
+      ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchExpandedDto expanded) {
+    java.util.ArrayList<BlockMarkDto> marks = new java.util.ArrayList<>();
+    java.util.LinkedHashSet<String> seen = new java.util.LinkedHashSet<>();
+    addLegacyRoadPermitMark(seen, marks, blockId, legacyRow, legacyRow.timberMark(), "VALID");
+    if (expanded != null) {
+      addLegacyRoadPermitMark(
+          seen,
+          marks,
+          blockId,
+          legacyRow,
+          expanded.timberMark(),
+          expanded.status() != null ? expanded.status().code() : null);
+      if (expanded.secondaryMarks() != null) {
+        for (var secondary : expanded.secondaryMarks()) {
+          if (secondary == null) {
+            continue;
+          }
+          addLegacyRoadPermitMark(
+              seen,
+              marks,
+              blockId,
+              legacyRow,
+              secondary.mark(),
+              secondary.status() != null ? secondary.status().code() : null);
+        }
+      }
+    }
+    java.util.ArrayList<BlockMarkDto> sequenced = new java.util.ArrayList<>(marks.size());
+    for (int i = 0; i < marks.size(); i++) {
+      BlockMarkDto m = marks.get(i);
+      sequenced.add(
+          new BlockMarkDto(
+              m.id(),
+              m.blockId(),
+              m.markType(),
+              i + 1,
+              m.mark(),
+              m.validationStatus(),
+              m.forestFileId(),
+              m.timberMark(),
+              m.cuttingPermitId(),
+              m.cutBlockId()));
+    }
+    return List.copyOf(sequenced);
+  }
+
+  private void addLegacyRoadPermitMark(
+      java.util.Set<String> seen,
+      java.util.List<BlockMarkDto> marks,
+      Long blockId,
+      BlockListItemDto legacyRow,
+      String markValue,
+      String validationStatus) {
+    if (markValue == null || markValue.isBlank() || !isRoadPermitMark(markValue)) {
+      return;
+    }
+    String normalized = markValue.trim().toUpperCase(Locale.ROOT);
+    if (!seen.add(normalized)) {
+      return;
+    }
+    marks.add(
+        new BlockMarkDto(
+            null,
+            blockId,
+            "ROAD_PERMIT",
+            marks.size() + 1,
+            markValue.trim(),
+            validationStatus,
+            legacyRow.licenseNumber(),
+            markValue.trim(),
+            legacyRow.cuttingPermit(),
+            legacyRow.cutBlockId()));
+  }
+
+  private boolean isRoadPermitMark(String mark) {
+    if (mark == null) {
+      return false;
+    }
+    String trimmed = mark.trim();
+    return !trimmed.isEmpty() && Character.toUpperCase(trimmed.charAt(0)) == 'R';
   }
 
   private LocalDate resolvePlcDate(LocalDate storedPlcDate) {

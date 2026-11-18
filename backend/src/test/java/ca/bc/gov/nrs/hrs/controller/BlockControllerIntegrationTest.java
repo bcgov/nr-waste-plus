@@ -118,6 +118,26 @@ class BlockControllerIntegrationTest extends AbstractTestContainerIntegrationTes
         "district": {"code": "DND", "description": "Nadina Natural Resource District"}
       }""";
 
+  private static final String LEGACY_EXPANDED_EMPTY =
+      """
+      {
+        "id": 777,
+        "licenseNo": null,
+        "cuttingPermit": null,
+        "timberMark": null,
+        "exempted": false,
+        "multiMark": false,
+        "status": null,
+        "secondaryMarks": [],
+        "netArea": 0.0,
+        "markArea": 0.0,
+        "submitter": null,
+        "attachment": null,
+        "comments": null,
+        "totalBlocks": 0,
+        "totalChildren": 0
+      }""";
+
   @RegisterExtension
   static WireMockExtension legacyApiStub =
       WireMockExtension.newInstance()
@@ -278,6 +298,9 @@ class BlockControllerIntegrationTest extends AbstractTestContainerIntegrationTes
     legacyApiStub.stubFor(
         get(urlPathEqualTo("/api/reporting-units/" + legacyReportingUnitId + "/blocks"))
             .willReturn(okJson(LEGACY_BLOCK_LIST)));
+    legacyApiStub.stubFor(
+        get(urlPathEqualTo("/api/search/reporting-units/ex/" + legacyReportingUnitId + "/" + legacyBlockId))
+            .willReturn(okJson(LEGACY_EXPANDED_EMPTY)));
 
     mockMvc
         .perform(MockMvcRequestBuilders.get(detailsUrl(legacyReportingUnitId, legacyBlockId)))
@@ -745,6 +768,10 @@ class BlockControllerIntegrationTest extends AbstractTestContainerIntegrationTes
     legacyApiStub.stubFor(
         get(urlPathEqualTo("/api/reporting-units/" + legacyReportingUnitId + "/blocks"))
             .willReturn(okJson(blockListJson)));
+    legacyApiStub.stubFor(
+        get(com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching(
+                "/api/search/reporting-units/ex/" + legacyReportingUnitId + "/.*"))
+            .willReturn(okJson(LEGACY_EXPANDED_EMPTY)));
   }
 
   private String calculationUrl(Long parentReportingUnitId, Long childBlockId) {

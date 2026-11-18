@@ -1,6 +1,7 @@
 package ca.bc.gov.nrs.hrs.dto.block;
 
 import java.time.LocalDate;
+import java.util.List;
 
 /**
  * Minimal block resource representation for downstream endpoint contracts.
@@ -15,6 +16,8 @@ import java.time.LocalDate;
  *   <li>{@code plcDate}: the PLC date; null when the source does not carry it
  *   <li>{@code revision}: the revision number; null when the source does not carry it
  *   <li>{@code isLegacy}: true when served from the legacy API, false when served from postgres
+ *   <li>{@code secondaryTimberMarks}: secondary timber marks associated with the block
+ *   <li>{@code roadPermitTimberMarks}: road permit timber marks associated with the block
  * </ul>
  */
 public record BlockDetailDto(
@@ -24,4 +27,25 @@ public record BlockDetailDto(
     boolean draft,
     LocalDate plcDate,
     Long revision,
-    boolean isLegacy) {}
+    boolean isLegacy,
+    List<BlockMarkDto> secondaryTimberMarks,
+    List<BlockMarkDto> roadPermitTimberMarks) {
+
+  /** Canonical constructor ensuring mark lists are never null. */
+  public BlockDetailDto {
+    secondaryTimberMarks = secondaryTimberMarks == null ? List.of() : List.copyOf(secondaryTimberMarks);
+    roadPermitTimberMarks = roadPermitTimberMarks == null ? List.of() : List.copyOf(roadPermitTimberMarks);
+  }
+
+  /** Backward-compatible constructor without timber mark payload. */
+  public BlockDetailDto(
+      Long id,
+      Long reportingUnitId,
+      String blockType,
+      boolean draft,
+      LocalDate plcDate,
+      Long revision,
+      boolean isLegacy) {
+    this(id, reportingUnitId, blockType, draft, plcDate, revision, isLegacy, List.of(), List.of());
+  }
+}
