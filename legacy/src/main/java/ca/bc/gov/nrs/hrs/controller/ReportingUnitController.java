@@ -71,20 +71,27 @@ public class ReportingUnitController {
    * have a value.</p>
    *
    * @param reportingUnitId the identifier of the reporting unit whose blocks are requested
+   * @param jwt the authenticated JWT principal used to derive client scoping
    * @return the list of blocks belonging to the reporting unit
    */
   @GetMapping("/{reportingUnitId}/blocks")
   public List<ReportingUnitBlockDto> getReportingUnitBlocks(
-      @PathVariable Long reportingUnitId
+      @PathVariable Long reportingUnitId,
+      @AuthenticationPrincipal Jwt jwt
   ) {
 
     log.info("Fetching blocks for reporting unit {}", reportingUnitId);
 
-    return service.getReportingUnitBlocks(reportingUnitId);
+    return service.getReportingUnitBlocks(
+        reportingUnitId, JwtPrincipalUtil.getClientListFromJwt(jwt));
   }
 
   /**
    * Retrieve district average volume/stratum rows for a block within the reporting unit.
+   *
+   * <p>Returns an empty list when the block has no strata. If the block/waste assessment area is
+   * not associated with the reporting unit, this endpoint may also return an empty list rather
+   * than a not-found error.</p>
    *
    * @param reportingUnitId the reporting unit identifier
    * @param wasteAssessmentAreaId the block/waste assessment area identifier

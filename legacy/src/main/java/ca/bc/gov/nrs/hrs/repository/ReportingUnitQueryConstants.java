@@ -337,7 +337,7 @@ public final class ReportingUnitQueryConstants {
       SELECT
         stc.DESCRIPTION AS population_type,
         wtc.DESCRIPTION AS waste_type,
-        whmc.WASTE_HARVEST_METHOD_CODE AS harvest_method_code,
+        ws.WASTE_HARVEST_METHOD_CODE AS harvest_method_code,
         whmc.DESCRIPTION AS harvest_method_description,
         wamc.DESCRIPTION AS assessment_method,
         wlc.DESCRIPTION AS waste_level,

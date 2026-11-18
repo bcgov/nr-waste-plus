@@ -63,4 +63,16 @@ class ReportingUnitBlockRepositoryIntegrationTest extends AbstractTestContainerI
     assertThat(reportingUnitRepository.getDistrictAverageVolumes(SEEDED_REPORTING_UNIT_ID, 1905L))
         .isEmpty();
   }
+
+  @Test
+  @DisplayName("shouldReturnPopulatedEstimatedVolume_whenStratumHasValue")
+  void shouldReturnPopulatedEstimatedVolume_whenStratumHasValue() {
+    var result = reportingUnitRepository.getDistrictAverageVolumes(10501L, 36676L);
+
+    assertThat(result).hasSize(4);
+    var populated = result.get(3);
+    assertThat(populated.getNetWasteAreaHa()).isEqualByComparingTo("0.13");
+    assertThat(populated.getTotalEstimatedVolumeM3()).isEqualByComparingTo("110");
+    assertThat(populated.getHarvestMethodCode()).isNotBlank();
+  }
 }

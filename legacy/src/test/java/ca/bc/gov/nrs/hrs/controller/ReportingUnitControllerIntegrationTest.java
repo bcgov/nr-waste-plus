@@ -260,4 +260,32 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
         .andExpect(status().isNotFound());
   }
 
+  @Test
+  @DisplayName("shouldReturnDistrictAverageVolumes_whenBlockHasPopulatedEstimatedVolume")
+  void shouldReturnDistrictAverageVolumes_whenBlockHasPopulatedEstimatedVolume() throws Exception {
+    mockMvc
+        .perform(
+            get("/api/reporting-units/{id}/blocks/{blockId}/district-average-volumes", 10501, 36676)
+                .accept(MediaType.APPLICATION_JSON))
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(jsonPath("$.length()").value(4))
+        .andExpect(jsonPath("$[3].netWasteAreaHa").value(0.13))
+        .andExpect(jsonPath("$[3].totalEstimatedVolumeM3").value(110));
+  }
+
+  @Test
+  @DisplayName("shouldReturn404_whenBceidUserLacksMatchingClientForBlockList")
+  @WithMockJwt(
+      idp = "bceidbusiness",
+      cognitoGroups = {"Submitter_00099999"}
+  )
+  void shouldReturn404_whenBceidUserLacksMatchingClientForBlockList() throws Exception {
+    mockMvc
+        .perform(
+            get("/api/reporting-units/{id}/blocks", 879)
+                .accept(MediaType.APPLICATION_JSON))
+        .andExpect(status().isNotFound());
+  }
+
 }

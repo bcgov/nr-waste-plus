@@ -87,10 +87,18 @@ public class ReportingUnitService {
    * {@code DFT} / {@code Draft}.</p>
    *
    * @param reportingUnitId the identifier of the reporting unit whose blocks are requested
+   * @param clients client numbers used to scope access; empty or {@code null} means unrestricted
    * @return the list of blocks for the reporting unit, empty when none exist
+   * @throws WasteReportingUnitNotFound if the reporting unit does not exist or is outside the
+   *     caller's client scope
    */
-  public List<ReportingUnitBlockDto> getReportingUnitBlocks(Long reportingUnitId) {
-    verifyReportingUnitExists(reportingUnitId);
+  public List<ReportingUnitBlockDto> getReportingUnitBlocks(
+      Long reportingUnitId, List<String> clients) {
+    List<String> searchClients =
+        CollectionUtils.isEmpty(clients) ? List.of(LegacyConstants.NOVALUE) : clients;
+    if (ruRepository.getReportingUnitDetails(reportingUnitId, searchClients).isEmpty()) {
+      throw new WasteReportingUnitNotFound(reportingUnitId);
+    }
 
     return ruRepository.getReportingUnitBlocks(reportingUnitId).stream()
         .map(ReportingUnitService::toBlockDto)
@@ -100,6 +108,10 @@ public class ReportingUnitService {
 
   /**
    * Retrieves district average volume/stratum rows for a block (waste assessment area).
+   *
+   * <p>Returns an empty list when the block has no strata. If the block/waste assessment area is
+   * not associated with the reporting unit, this method may also return an empty list rather than
+   * raising a not-found error.</p>
    *
    * @param reportingUnitId the owning reporting unit identifier
    * @param wasteAssessmentAreaId the block/waste assessment area identifier
@@ -133,12 +145,6 @@ public class ReportingUnitService {
         projection.getWasteLevel(),
         projection.getNetWasteAreaHa(),
         projection.getTotalEstimatedVolumeM3());
-  }
-
-  private void verifyReportingUnitExists(Long reportingUnitId) {
-    if (!ruRepository.existsById(reportingUnitId)) {
-      throw new WasteReportingUnitNotFound(reportingUnitId);
-    }
   }
 
   /**
