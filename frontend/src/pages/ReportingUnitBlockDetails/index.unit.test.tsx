@@ -1,8 +1,14 @@
-import { act, screen, waitFor } from '@testing-library/react';
+import { act, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { useBlockDetailsQuery, useReportingUnitDetailsQuery } from '@/config/react-query/hooks';
+import {
+  useBlockDetailsQuery,
+  useDistrictAverageCriteriaCodesQuery,
+  useHarvestStatusCodesQuery,
+  useMaturityTypeCodesQuery,
+  useReportingUnitDetailsQuery,
+} from '@/config/react-query/hooks';
 import { renderWithApp } from '@/config/tests/renderWithApp';
 import { SKELETON_DELAY_MS } from '@/hooks/useDelayedFlag';
 import { sendEvent } from '@/hooks/useNotificationEvents/eventHandler';
@@ -25,6 +31,9 @@ vi.mock('@/config/react-query/hooks', async (importOriginal) => {
     ...actual,
     useReportingUnitDetailsQuery: vi.fn(),
     useBlockDetailsQuery: vi.fn(),
+    useDistrictAverageCriteriaCodesQuery: vi.fn(),
+    useHarvestStatusCodesQuery: vi.fn(),
+    useMaturityTypeCodesQuery: vi.fn(),
   };
 });
 
@@ -82,6 +91,21 @@ function mockBlockQuery(result: BlockQueryResult) {
   } as ReturnType<typeof useBlockDetailsQuery>);
 }
 
+function mockCodeQueries() {
+  vi.mocked(useHarvestStatusCodesQuery).mockReturnValue({
+    data: [
+      { code: 'COM', description: 'Complete' },
+      { code: 'INC', description: 'Incomplete' },
+    ],
+  } as ReturnType<typeof useHarvestStatusCodesQuery>);
+  vi.mocked(useMaturityTypeCodesQuery).mockReturnValue({
+    data: [{ code: 'IM', description: 'Immature' }],
+  } as ReturnType<typeof useMaturityTypeCodesQuery>);
+  vi.mocked(useDistrictAverageCriteriaCodesQuery).mockReturnValue({
+    data: [{ code: '1', description: 'Criterion 1', areas: [] }],
+  } as ReturnType<typeof useDistrictAverageCriteriaCodesQuery>);
+}
+
 /**
  * Renders the page and flushes the in-memory router's initial load so the
  * route component is mounted before assertions run.
@@ -103,6 +127,7 @@ describe('ReportingUnitBlockDetailsPage', () => {
     mockParams = { ruId: '468', blockId: '12' };
     mockQuery({ data: defaultData });
     mockBlockQuery({ data: defaultBlockData });
+    mockCodeQueries();
   });
 
   afterEach(() => {
@@ -292,7 +317,9 @@ describe('ReportingUnitBlockDetailsPage', () => {
       await renderPage();
 
       expect(screen.getByTestId('rublock-banner')).toBeTruthy();
-      expect(screen.getByRole('heading', { level: 2, name: 'Reporting unit summary' })).toBeTruthy();
+      expect(
+        screen.getByRole('heading', { level: 2, name: 'Reporting unit summary' }),
+      ).toBeTruthy();
       expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Block ID 12');
       expect(screen.queryByTestId('legacy-data-tag')).toBeNull();
     });
@@ -307,7 +334,9 @@ describe('ReportingUnitBlockDetailsPage', () => {
         screen.getByText('Required data is missing or an error occurred while loading.'),
       ).toBeTruthy();
       expect(screen.queryByTestId('rublock-banner')).toBeNull();
-      expect(screen.queryByRole('heading', { level: 2, name: 'Reporting unit summary' })).toBeNull();
+      expect(
+        screen.queryByRole('heading', { level: 2, name: 'Reporting unit summary' }),
+      ).toBeNull();
       expect(screen.queryByRole('tab', { name: 'Block details' })).toBeNull();
     });
 
@@ -438,6 +467,37 @@ describe('ReportingUnitBlockDetailsPage', () => {
       );
     });
 
+    it('shouldFetchHarvestStatusCodesWithReportingUnitAndBlockContext', async () => {
+      await renderPage();
+
+      await waitFor(() =>
+        expect(vi.mocked(useHarvestStatusCodesQuery)).toHaveBeenCalledWith(
+          { reportingUnitId: 468, blockId: 12 },
+          { notificationTarget: EVENT_TARGET },
+        ),
+      );
+    });
+
+    it('shouldFetchMaturityTypeCodesWithNotificationTarget', async () => {
+      await renderPage();
+
+      await waitFor(() =>
+        expect(vi.mocked(useMaturityTypeCodesQuery)).toHaveBeenCalledWith({
+          notificationTarget: EVENT_TARGET,
+        }),
+      );
+    });
+
+    it('shouldFetchDistrictAverageCriteriaCodesWithNotificationTarget', async () => {
+      await renderPage();
+
+      await waitFor(() =>
+        expect(vi.mocked(useDistrictAverageCriteriaCodesQuery)).toHaveBeenCalledWith({
+          notificationTarget: EVENT_TARGET,
+        }),
+      );
+    });
+
     it('shouldRefetchBothQueries_whenRetryIsClicked', async () => {
       const user = userEvent.setup();
       mockBlockQuery({ data: undefined, isError: true });
@@ -447,6 +507,141 @@ describe('ReportingUnitBlockDetailsPage', () => {
 
       expect(mockRefetch).toHaveBeenCalledTimes(1);
       expect(mockBlockRefetch).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('district average volumes summary', () => {
+    const blockDataWithSummaries = {
+      ...defaultBlockData,
+      wasteAssessmentAreaSummary: {
+        primary: { timberMarkId: 'TM-PRIMARY', netWasteAreaHa: null },
+        secondary: [{ timberMarkId: 'TM-SEC', netWasteAreaHa: 1.23 }],
+        totalNetWasteAreaHa: 1.23,
+      },
+      districtAverageVolumesSummary: {
+        rows: [
+          {
+            populationType: 'Dispersed',
+            wasteType: 'Roadside',
+            harvestMethodCode: 'Ground Skid',
+            assessmentMethod: 'Ocular Estimate',
+            wasteLevel: 'Stratum',
+            netWasteAreaHa: 2.5,
+            totalBillableVolumeM3: null,
+            totalCutControlVolumeM3: null,
+          },
+          {
+            populationType: 'Landed',
+            wasteType: 'Roadside',
+            harvestMethodCode: null,
+            assessmentMethod: 'Ocular Estimate',
+            wasteLevel: 'Stratum',
+            netWasteAreaHa: 3,
+            totalBillableVolumeM3: null,
+            totalCutControlVolumeM3: null,
+          },
+        ],
+        totals: { totalBillableVolumeM3: 12, totalCutControlVolumeM3: 34 },
+      },
+    };
+
+    beforeEach(() => {
+      mockBlockQuery({ data: blockDataWithSummaries });
+    });
+
+    it('shouldRenderSuppliedHarvestMethod_andTotals_fromBlockData', async () => {
+      await renderPage();
+
+      // The supplied method resolves through the derived options instead of
+      // rendering as an empty "Select one" dropdown.
+      expect(screen.getByText('Ground Skid')).toBeTruthy();
+      expect(screen.getByText('TM-SEC')).toBeTruthy();
+
+      // Totals pass through exactly as supplied.
+      const volumesCard = screen.getByRole('region', {
+        name: 'District average volumes summary',
+      });
+      expect(within(volumesCard).getByText('12')).toBeTruthy();
+      expect(within(volumesCard).getByText('34')).toBeTruthy();
+    });
+
+    it('shouldApplyHarvestMethodLocally_whenDropdownChanges', async () => {
+      const user = userEvent.setup();
+
+      await renderPage();
+      await user.click(
+        screen.getByRole('combobox', { name: 'Harvest method for Landed, Roadside' }),
+      );
+      await user.click(
+        within(
+          screen.getByRole('listbox', { name: 'Harvest method for Landed, Roadside' }),
+        ).getByText('Ground Skid'),
+      );
+
+      // Once a value is chosen Carbon keeps the combobox role and exposes the
+      // selection through the toggle's title/label.
+      const landedToggle = screen.getByRole('combobox', {
+        name: 'Harvest method for Landed, Roadside',
+      });
+      expect(landedToggle.getAttribute('title')).toBe('Ground Skid');
+      const volumesCard = screen.getByRole('region', {
+        name: 'District average volumes summary',
+      });
+      expect(within(volumesCard).getByText('12')).toBeTruthy();
+      expect(within(volumesCard).getByText('34')).toBeTruthy();
+    });
+
+    it('shouldResetLocalHarvestEdits_whenRouteParamsChange', async () => {
+      const user = userEvent.setup();
+
+      const { unmount } = await renderPage();
+      await user.click(
+        screen.getByRole('combobox', { name: 'Harvest method for Landed, Roadside' }),
+      );
+      await user.click(
+        within(
+          screen.getByRole('listbox', { name: 'Harvest method for Landed, Roadside' }),
+        ).getByText('Ground Skid'),
+      );
+      expect(
+        screen
+          .getByRole('combobox', { name: 'Harvest method for Landed, Roadside' })
+          .getAttribute('title'),
+      ).toBe('Ground Skid');
+
+      // A different block's page mount starts from the supplied rows: no local
+      // edit can leak across blocks.
+      unmount();
+      mockParams = { ruId: '999', blockId: '99' };
+      mockBlockQuery({
+        data: {
+          ...blockDataWithSummaries,
+          districtAverageVolumesSummary: {
+            ...blockDataWithSummaries.districtAverageVolumesSummary,
+            rows: [
+              {
+                populationType: 'Landed',
+                wasteType: 'Roadside',
+                harvestMethodCode: null,
+                assessmentMethod: 'Ocular Estimate',
+                wasteLevel: 'Stratum',
+                netWasteAreaHa: 3,
+                totalBillableVolumeM3: null,
+                totalCutControlVolumeM3: null,
+              },
+            ],
+          },
+        },
+      });
+
+      await renderPage();
+      expect(
+        (
+          screen.getByRole('combobox', {
+            name: 'Harvest method for Landed, Roadside',
+          }) as HTMLInputElement
+        ).value,
+      ).toBe('');
     });
   });
 });

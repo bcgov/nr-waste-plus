@@ -23,6 +23,46 @@ describe('queryKeys', () => {
     it('should build statusOptions key', () => {
       expect(queryKeys.codes.statusOptions()).toEqual(['codes', 'status-options', undefined]);
     });
+
+    it('should build harvestStatusOptions key without params', () => {
+      expect(queryKeys.codes.harvestStatusOptions()).toEqual([
+        'codes',
+        'harvest-status-options',
+        null,
+        null,
+        undefined,
+      ]);
+    });
+
+    it('should include context params and notificationTarget in harvestStatusOptions key', () => {
+      expect(
+        queryKeys.codes.harvestStatusOptions({ reportingUnitId: 468, blockId: 12 }, 'panel'),
+      ).toEqual(['codes', 'harvest-status-options', 468, 12, 'panel']);
+    });
+
+    it('should build maturityTypeOptions key', () => {
+      expect(queryKeys.codes.maturityTypeOptions('panel')).toEqual([
+        'codes',
+        'maturity-type-options',
+        'panel',
+      ]);
+    });
+
+    it('should build districtAverageCriteriaCodes key without notificationTarget', () => {
+      expect(queryKeys.codes.districtAverageCriteriaCodes()).toEqual([
+        'codes',
+        'district-average-criteria-codes',
+        undefined,
+      ]);
+    });
+
+    it('should include notificationTarget in districtAverageCriteriaCodes key', () => {
+      expect(queryKeys.codes.districtAverageCriteriaCodes('panel')).toEqual([
+        'codes',
+        'district-average-criteria-codes',
+        'panel',
+      ]);
+    });
   });
 
   describe('preference', () => {

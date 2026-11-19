@@ -4,6 +4,7 @@ import {
   validateAdditionalRequirementsCertify,
   validateDispersedRetentionExplanation,
   validateDispersedRetentionPct,
+  validateDistrictAverageCriteriaCodes,
   validatePrimaryLoggingCompleteDate,
   validatePrimaryLoggingCompleteDateNotFuture,
   validatePrimaryLoggingCompleteDateRequired,
@@ -65,5 +66,13 @@ describe('submission details validators (BR-1, D30, D32)', () => {
     expect(validateAdditionalRequirementsCertify(true, false, false)).toBeUndefined();
     expect(validateAdditionalRequirementsCertify(false, true, false)).toBeUndefined();
     expect(validateAdditionalRequirementsCertify(false, false, true)).toBeUndefined();
+  });
+
+  it('requires at least one district average criterion (D28)', () => {
+    expect(validateDistrictAverageCriteriaCodes([])).toMatch(/at least one/i);
+    expect(validateDistrictAverageCriteriaCodes(undefined)).toMatch(/at least one/i);
+    expect(validateDistrictAverageCriteriaCodes(null)).toMatch(/at least one/i);
+    expect(validateDistrictAverageCriteriaCodes(['7'])).toBeUndefined();
+    expect(validateDistrictAverageCriteriaCodes(['7', '8'])).toBeUndefined();
   });
 });

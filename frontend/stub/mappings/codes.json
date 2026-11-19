@@ -32,6 +32,39 @@
         "status": 200,
         "bodyFileName": "codes/samplings.json"
       }
+    },
+    {
+      "name": "Harvest status codes",
+      "request": {
+        "urlPath": "/api/codes/harvest-statuses",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "bodyFileName": "codes/harvest-statuses.json"
+      }
+    },
+    {
+      "name": "Maturity type codes",
+      "request": {
+        "urlPath": "/api/codes/maturity-types",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "bodyFileName": "codes/maturity-types.json"
+      }
+    },
+    {
+      "name": "District average criteria codes",
+      "request": {
+        "urlPath": "/api/codes/district-average-criteria",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "bodyFileName": "codes/district-average-criteria.json"
+      }
     }
   ]
 }
