@@ -679,7 +679,9 @@ public class BlockService {
         nullSafeList(blockAreaSegmentRepository.findByBlockIdAndDeletedFalse(blockId));
     Map<Long, BigDecimal> totals = new HashMap<>();
     for (BlockAreaSegmentEntity segment : segments) {
-      if (segment == null || segment.getBlockMarkId() == null || segment.getNetWasteAreaHa() == null) {
+      if (segment == null
+          || segment.getBlockMarkId() == null
+          || segment.getNetWasteAreaHa() == null) {
         continue;
       }
       totals.merge(segment.getBlockMarkId(), segment.getNetWasteAreaHa(), BigDecimal::add);
@@ -881,7 +883,8 @@ public class BlockService {
       ca.bc.gov.nrs.hrs.dto.search.DistrictAverageVolumeLegacyDto row) {
     String harvestMethod =
         firstNonBlank(row.harvestMethodDescription(), row.harvestMethodCode());
-    // OQ1=A: billable/cut-control split not stored in legacy strata; keep null (totals sum null as 0).
+    // OQ1=A: billable/cut-control split not stored in legacy strata; keep null (totals sum null
+    // as 0).
     return new DistrictAverageVolumeRowDto(
         row.populationType(),
         row.wasteType(),

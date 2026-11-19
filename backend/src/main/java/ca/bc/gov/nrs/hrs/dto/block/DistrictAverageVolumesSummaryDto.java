@@ -15,11 +15,15 @@ public record DistrictAverageVolumesSummaryDto(
   /** Canonical constructor ensuring rows and totals are never null. */
   public DistrictAverageVolumesSummaryDto {
     rows = rows == null ? List.of() : List.copyOf(rows);
-    totals = totals == null ? new DistrictAverageVolumeTotalsDto(BigDecimal.ZERO, BigDecimal.ZERO) : totals;
+    totals =
+        totals == null
+            ? new DistrictAverageVolumeTotalsDto(BigDecimal.ZERO, BigDecimal.ZERO)
+            : totals;
   }
 
   /** Empty summary with zero totals. */
   public static DistrictAverageVolumesSummaryDto empty() {
-    return new DistrictAverageVolumesSummaryDto(List.of(), new DistrictAverageVolumeTotalsDto(BigDecimal.ZERO, BigDecimal.ZERO));
+    return new DistrictAverageVolumesSummaryDto(
+        List.of(), new DistrictAverageVolumeTotalsDto(BigDecimal.ZERO, BigDecimal.ZERO));
   }
 }

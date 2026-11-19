@@ -146,8 +146,8 @@ public class CodesService {
   /**
    * Retrieves currently effective district average criteria codes from Postgres.
    *
-   * <p>Codes are ordered by numeric criterion (1..11). Descriptions are returned as stored without a
-   * numeric prefix; the frontend appends the criterion number.
+   * <p>Codes are ordered by numeric criterion (1..11). Descriptions are returned as stored without
+   * a numeric prefix; the frontend appends the criterion number.
    *
    * @return list of district average criteria {@link CodeDescriptionDto}
    */
@@ -188,7 +188,8 @@ public class CodesService {
     if (reportingUnitId != null && block.isPresent()
         && !Objects.equals(reportingUnitId, block.get().getReportingUnitId())) {
       log.info(
-          "Conflicting context for harvest status variant resolution: reportingUnitId={} blockId={} (block reportingUnitId={})",
+          "Conflicting context for harvest status variant resolution: reportingUnitId={} "
+              + "blockId={} (block reportingUnitId={})",
           reportingUnitId,
           blockId,
           block.get().getReportingUnitId());
