@@ -21,6 +21,7 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
+import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -249,14 +250,14 @@ class PostgresReportingUnitSearchProviderTest {
     assertThat(provider.getSearchExpanded(17L, 23L))
         .get()
         .extracting(ReportingUnitSearchExpandedDto::secondaryMarks)
-        .asList()
+        .asInstanceOf(InstanceOfAssertFactories.LIST)
         .isEmpty();
 
     when(expandedRow.getSecondary()).thenReturn("  ");
     assertThat(provider.getSearchExpanded(17L, 23L))
         .get()
         .extracting(ReportingUnitSearchExpandedDto::secondaryMarks)
-        .asList()
+        .asInstanceOf(InstanceOfAssertFactories.LIST)
         .isEmpty();
   }
 
