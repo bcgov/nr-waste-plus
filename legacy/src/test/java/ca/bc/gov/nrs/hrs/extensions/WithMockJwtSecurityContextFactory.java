@@ -5,7 +5,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.jetbrains.annotations.NotNull;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.security.core.context.SecurityContext;
@@ -20,7 +19,7 @@ import org.springframework.security.test.context.support.WithSecurityContextFact
 public class WithMockJwtSecurityContextFactory implements WithSecurityContextFactory<WithMockJwt> {
 
   @Override
-  public @NotNull SecurityContext createSecurityContext(WithMockJwt annotation) {
+  public SecurityContext createSecurityContext(WithMockJwt annotation) {
     Jwt jwt = createJwt(
         annotation.value(),
         Arrays.asList(annotation.cognitoGroups()),
