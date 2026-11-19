@@ -11,6 +11,7 @@ import ca.bc.gov.nrs.hrs.repository.codes.DistrictAverageCriteriaCodeRepository;
 import io.micrometer.observation.annotation.Observed;
 import io.micrometer.tracing.annotation.NewSpan;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
@@ -155,7 +156,7 @@ public class CodesService {
   public List<CodeDescriptionDto> getDistrictAverageCriteriaCodes() {
     log.info("Fetching district average criteria codes from postgres");
     return districtAverageCriteriaCodeRepository
-        .findEffectiveOrderedByCode(LocalDateTime.now())
+        .findEffectiveOrderedByCode(LocalDateTime.now(ZoneId.systemDefault()))
         .stream()
         .map(code -> new CodeDescriptionDto(code.getCode(), code.getDescription()))
         .toList();

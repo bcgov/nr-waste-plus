@@ -506,7 +506,7 @@ public class BlockService {
 
   BlockResponseDto withResolvedPlcDate(BlockResponseDto dto) {
     LocalDate resolvedPlcDate = resolvePlcDate(dto.plcDate());
-    if (resolvedPlcDate == dto.plcDate()) {
+    if (resolvedPlcDate.equals(dto.plcDate())) {
       return dto;
     }
     return new BlockResponseDto(
