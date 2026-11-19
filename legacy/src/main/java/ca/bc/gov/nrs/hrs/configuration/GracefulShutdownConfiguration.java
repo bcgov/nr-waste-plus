@@ -2,9 +2,9 @@ package ca.bc.gov.nrs.hrs.configuration;
 
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
+import org.jspecify.annotations.NonNull;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextClosedEvent;
-import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
 
 /**
