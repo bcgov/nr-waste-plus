@@ -10,6 +10,8 @@
   "isLegacy" : false,
   "createdAt" : null,
   "updatedAt" : null,
+  "secondaryTimberMarks" : [ ],
+  "roadPermitTimberMarks" : [ ],
   "wasteAssessmentAreaSummary" : {
     "primary" : {
       "timberMarkId" : "TM-TEST",

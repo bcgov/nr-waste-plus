@@ -799,6 +799,13 @@ class BlockServiceTest {
     when(blockMarkRepository.findByBlockIdAndMarkTypeAndDeletedFalseOrderBySequenceNo(
             BLOCK_ID, "ROAD_PERMIT"))
         .thenReturn(List.of());
+    when(blockMarkMapper.toDto(secondary))
+        .thenReturn(
+            new BlockMarkDto(2L, BLOCK_ID, "SECONDARY", 1, "SEC-MARK", null, null, null, null, null));
+    when(blockMarkMapper.toDto(secondaryNoArea))
+        .thenReturn(
+            new BlockMarkDto(
+                3L, BLOCK_ID, "SECONDARY", 2, "SEC-NO-AREA", null, null, null, null, null));
 
     BlockAreaSegmentEntity segPrimaryA = new BlockAreaSegmentEntity();
     segPrimaryA.setBlockMarkId(1L);
