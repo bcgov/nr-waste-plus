@@ -15,7 +15,7 @@ import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.stream.Stream;
 import org.apache.commons.lang3.StringUtils;
-import org.jetbrains.annotations.NotNull;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -340,7 +340,7 @@ class JwtPrincipalUtilTest {
     return new JwtAuthenticationToken(createJwt(attributes), List.of());
   }
 
-  private static @NotNull Jwt createJwt(Map<String, Object> attributes) {
+  private static Jwt createJwt(Map<String, Object> attributes) {
     return new Jwt(
         "token",
         LocalDateTime.now().minusMinutes(10).toInstant(ZoneOffset.UTC),
