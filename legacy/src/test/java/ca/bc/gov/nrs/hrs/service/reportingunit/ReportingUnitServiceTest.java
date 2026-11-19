@@ -11,10 +11,12 @@ import static org.mockito.Mockito.when;
 import ca.bc.gov.nrs.hrs.LegacyConstants;
 import ca.bc.gov.nrs.hrs.dto.base.CodeDescriptionDto;
 import ca.bc.gov.nrs.hrs.dto.reportingunit.CreateReportingUnitRequestDto;
+import ca.bc.gov.nrs.hrs.dto.reportingunit.DistrictAverageVolumeDto;
 import ca.bc.gov.nrs.hrs.dto.reportingunit.ReportingUnitBlockDto;
 import ca.bc.gov.nrs.hrs.dto.reportingunit.ReportingUnitDetailsDto;
 import ca.bc.gov.nrs.hrs.entity.codes.OrgUnitEntity;
 import ca.bc.gov.nrs.hrs.entity.codes.SamplingOptionEntity;
+import ca.bc.gov.nrs.hrs.entity.reportingunit.DistrictAverageVolumeProjection;
 import ca.bc.gov.nrs.hrs.entity.reportingunit.ReportingUnitBlockProjection;
 import ca.bc.gov.nrs.hrs.entity.reportingunit.ReportingUnitDetailsProjection;
 import ca.bc.gov.nrs.hrs.entity.reportingunit.ReportingUnitEntity;
@@ -23,6 +25,7 @@ import ca.bc.gov.nrs.hrs.mappers.reportingunit.ReportingUnitDetailsMapper;
 import ca.bc.gov.nrs.hrs.repository.ReportingUnitRepository;
 import ca.bc.gov.nrs.hrs.repository.codes.OrgUnitRepository;
 import ca.bc.gov.nrs.hrs.repository.codes.SamplingOptionRepository;
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
@@ -42,20 +45,26 @@ import org.springframework.web.server.ResponseStatusException;
 @ExtendWith(MockitoExtension.class)
 class ReportingUnitServiceTest {
 
-  @Mock private ReportingUnitRepository ruRepository;
+  @Mock
+  private ReportingUnitRepository ruRepository;
 
-  @Mock private ReportingUnitDetailsMapper ruDetailsMapper;
+  @Mock
+  private ReportingUnitDetailsMapper ruDetailsMapper;
 
-  @Mock private OrgUnitRepository orgUnitRepository;
+  @Mock
+  private OrgUnitRepository orgUnitRepository;
 
-  @Mock private SamplingOptionRepository samplingOptionRepository;
+  @Mock
+  private SamplingOptionRepository samplingOptionRepository;
 
-  @InjectMocks private ReportingUnitService service;
+  @InjectMocks
+  private ReportingUnitService service;
 
   private static final Long RU_ID = 879L;
   private static final List<String> CLIENTS = List.of("00001271", "00001272");
 
-  @Captor private ArgumentCaptor<ReportingUnitEntity> ruEntityCaptor;
+  @Captor
+  private ArgumentCaptor<ReportingUnitEntity> ruEntityCaptor;
 
   private ReportingUnitDetailsDto buildDetailsDto() {
     return new ReportingUnitDetailsDto(
@@ -148,13 +157,14 @@ class ReportingUnitServiceTest {
   @Test
   @DisplayName("shouldReturnEmptyBlockList_whenReportingUnitExistsWithoutBlocks")
   void shouldReturnEmptyBlockList_whenReportingUnitExistsWithoutBlocks() {
-    when(ruRepository.existsById(RU_ID)).thenReturn(true);
+    when(ruRepository.getReportingUnitDetails(RU_ID, CLIENTS))
+        .thenReturn(Optional.of(mock(ReportingUnitDetailsProjection.class)));
     when(ruRepository.getReportingUnitBlocks(RU_ID)).thenReturn(List.of());
 
-    List<ReportingUnitBlockDto> result = service.getReportingUnitBlocks(RU_ID);
+    List<ReportingUnitBlockDto> result = service.getReportingUnitBlocks(RU_ID, CLIENTS);
 
     assertThat(result).isEmpty();
-    verify(ruRepository).existsById(RU_ID);
+    verify(ruRepository).getReportingUnitDetails(RU_ID, CLIENTS);
     verify(ruRepository).getReportingUnitBlocks(RU_ID);
   }
 
@@ -162,7 +172,8 @@ class ReportingUnitServiceTest {
   @DisplayName("shouldMapBlockProjectionFields_whenNativeQueryReturnsCompleteBlock")
   void shouldMapBlockProjectionFields_whenNativeQueryReturnsCompleteBlock() {
     ReportingUnitBlockProjection projection = mock(ReportingUnitBlockProjection.class);
-    when(ruRepository.existsById(RU_ID)).thenReturn(true);
+    when(ruRepository.getReportingUnitDetails(RU_ID, CLIENTS))
+        .thenReturn(Optional.of(mock(ReportingUnitDetailsProjection.class)));
     when(ruRepository.getReportingUnitBlocks(RU_ID)).thenReturn(List.of(projection));
     when(projection.getId()).thenReturn(1906L);
     when(projection.getLicenseNumber()).thenReturn("R21110");
@@ -177,7 +188,7 @@ class ReportingUnitServiceTest {
     when(projection.getLastUpdated())
         .thenReturn(java.time.LocalDateTime.parse("2025-08-11T10:19:56"));
 
-    List<ReportingUnitBlockDto> result = service.getReportingUnitBlocks(RU_ID);
+    List<ReportingUnitBlockDto> result = service.getReportingUnitBlocks(RU_ID, CLIENTS);
 
     assertThat(result)
         .containsExactly(
@@ -198,14 +209,15 @@ class ReportingUnitServiceTest {
   @DisplayName("shouldUseDraftDefaults_whenProjectionStatusOrCutBlockIsUnresolved")
   void shouldUseDraftDefaults_whenProjectionStatusOrCutBlockIsUnresolved() {
     ReportingUnitBlockProjection projection = mock(ReportingUnitBlockProjection.class);
-    when(ruRepository.existsById(RU_ID)).thenReturn(true);
+    when(ruRepository.getReportingUnitDetails(RU_ID, CLIENTS))
+        .thenReturn(Optional.of(mock(ReportingUnitDetailsProjection.class)));
     when(ruRepository.getReportingUnitBlocks(RU_ID)).thenReturn(List.of(projection));
     when(projection.getId()).thenReturn(1905L);
     when(projection.getCutBlockId()).thenReturn("  ");
     when(projection.getStatusCode()).thenReturn(" ");
     when(projection.getStatusName()).thenReturn("Draft");
 
-    var result = service.getReportingUnitBlocks(RU_ID).getFirst();
+    var result = service.getReportingUnitBlocks(RU_ID, CLIENTS).getFirst();
 
     assertThat(result.cutBlockId()).isEmpty();
     assertThat(result.status()).isEqualTo(new CodeDescriptionDto("DFT", "Draft"));
@@ -220,13 +232,14 @@ class ReportingUnitServiceTest {
   @DisplayName("shouldUseDraftDefaults_whenProjectionStatusDescriptionIsMissing")
   void shouldUseDraftDefaults_whenProjectionStatusDescriptionIsMissing() {
     ReportingUnitBlockProjection projection = mock(ReportingUnitBlockProjection.class);
-    when(ruRepository.existsById(RU_ID)).thenReturn(true);
+    when(ruRepository.getReportingUnitDetails(RU_ID, CLIENTS))
+        .thenReturn(Optional.of(mock(ReportingUnitDetailsProjection.class)));
     when(ruRepository.getReportingUnitBlocks(RU_ID)).thenReturn(List.of(projection));
     when(projection.getStatusCode()).thenReturn("APP");
     when(projection.getStatusName()).thenReturn(null);
     when(projection.getCutBlockId()).thenReturn("CUT-9");
 
-    var result = service.getReportingUnitBlocks(RU_ID).getFirst();
+    var result = service.getReportingUnitBlocks(RU_ID, CLIENTS).getFirst();
 
     assertThat(result.status()).isEqualTo(new CodeDescriptionDto("DFT", "Draft"));
     assertThat(result.cutBlockId()).isEqualTo("CUT-9");
@@ -236,12 +249,13 @@ class ReportingUnitServiceTest {
   @DisplayName("shouldUseDraftDefaults_whenProjectionStatusCodeIsMissing")
   void shouldUseDraftDefaults_whenProjectionStatusCodeIsMissing() {
     ReportingUnitBlockProjection projection = mock(ReportingUnitBlockProjection.class);
-    when(ruRepository.existsById(RU_ID)).thenReturn(true);
+    when(ruRepository.getReportingUnitDetails(RU_ID, CLIENTS))
+        .thenReturn(Optional.of(mock(ReportingUnitDetailsProjection.class)));
     when(ruRepository.getReportingUnitBlocks(RU_ID)).thenReturn(List.of(projection));
     when(projection.getStatusCode()).thenReturn(null);
     when(projection.getStatusName()).thenReturn("Approved");
 
-    var result = service.getReportingUnitBlocks(RU_ID).getFirst();
+    var result = service.getReportingUnitBlocks(RU_ID, CLIENTS).getFirst();
 
     assertThat(result.status()).isEqualTo(new CodeDescriptionDto("DFT", "Draft"));
   }
@@ -249,11 +263,24 @@ class ReportingUnitServiceTest {
   @Test
   @DisplayName("shouldThrowNotFound_whenReportingUnitDoesNotExistForBlockList")
   void shouldThrowNotFound_whenReportingUnitDoesNotExistForBlockList() {
-    when(ruRepository.existsById(RU_ID)).thenReturn(false);
+    when(ruRepository.getReportingUnitDetails(RU_ID, CLIENTS)).thenReturn(Optional.empty());
 
-    assertThatThrownBy(() -> service.getReportingUnitBlocks(RU_ID))
+    assertThatThrownBy(() -> service.getReportingUnitBlocks(RU_ID, CLIENTS))
         .isInstanceOf(WasteReportingUnitNotFound.class);
 
+    verify(ruRepository, never()).getReportingUnitBlocks(RU_ID);
+  }
+
+  @Test
+  @DisplayName("shouldUseNoValueSentinel_whenClientsNullForBlockList")
+  void shouldUseNoValueSentinel_whenClientsNullForBlockList() {
+    List<String> noValueList = List.of(LegacyConstants.NOVALUE);
+    when(ruRepository.getReportingUnitDetails(RU_ID, noValueList)).thenReturn(Optional.empty());
+
+    assertThatThrownBy(() -> service.getReportingUnitBlocks(RU_ID, null))
+        .isInstanceOf(WasteReportingUnitNotFound.class);
+
+    verify(ruRepository).getReportingUnitDetails(RU_ID, noValueList);
     verify(ruRepository, never()).getReportingUnitBlocks(RU_ID);
   }
 
@@ -498,6 +525,94 @@ class ReportingUnitServiceTest {
           .satisfies(ex -> assertThat(((ResponseStatusException) ex).getStatusCode())
               .isEqualTo(HttpStatus.BAD_REQUEST));
       verify(ruRepository, never()).save(ArgumentMatchers.any());
+    }
+  }
+
+  @Nested
+  @DisplayName("getDistrictAverageVolumes")
+  class GetDistrictAverageVolumes {
+
+    @Test
+    @DisplayName("shouldReturnMappedRows_whenReportingUnitExists")
+    void shouldReturnMappedRows_whenReportingUnitExists() {
+      Long blockId = 1906L;
+      when(ruRepository.getReportingUnitDetails(RU_ID, CLIENTS))
+          .thenReturn(Optional.of(mock(ReportingUnitDetailsProjection.class)));
+      DistrictAverageVolumeProjection projection =
+          mock(DistrictAverageVolumeProjection.class);
+      when(projection.getPopulationType()).thenReturn("Dispersed");
+      when(projection.getWasteType()).thenReturn("Sawdust");
+      when(projection.getHarvestMethodCode()).thenReturn("O");
+      when(projection.getHarvestMethodDescription()).thenReturn("Other");
+      when(projection.getAssessmentMethod()).thenReturn("S");
+      when(projection.getWasteLevel()).thenReturn("X");
+      when(projection.getNetWasteAreaHa()).thenReturn(new BigDecimal("27.02"));
+      when(projection.getTotalEstimatedVolumeM3()).thenReturn(null);
+      when(ruRepository.getDistrictAverageVolumes(RU_ID, blockId)).thenReturn(List.of(projection));
+
+      List<DistrictAverageVolumeDto> result =
+          service.getDistrictAverageVolumes(RU_ID, blockId, CLIENTS);
+
+      assertThat(result).hasSize(1);
+      DistrictAverageVolumeDto row = result.getFirst();
+      assertThat(row.populationType()).isEqualTo("Dispersed");
+      assertThat(row.wasteType()).isEqualTo("Sawdust");
+      assertThat(row.harvestMethodCode()).isEqualTo("O");
+      assertThat(row.harvestMethodDescription()).isEqualTo("Other");
+      assertThat(row.assessmentMethod()).isEqualTo("S");
+      assertThat(row.wasteLevel()).isEqualTo("X");
+      assertThat(row.netWasteAreaHa()).isEqualByComparingTo("27.02");
+      assertThat(row.totalEstimatedVolumeM3()).isNull();
+      verify(ruRepository).getReportingUnitDetails(RU_ID, CLIENTS);
+      verify(ruRepository).getDistrictAverageVolumes(RU_ID, blockId);
+    }
+
+    @Test
+    @DisplayName("shouldMapPopulatedEstimatedVolume_whenProjectionProvidesValue")
+    void shouldMapPopulatedEstimatedVolume_whenProjectionProvidesValue() {
+      Long blockId = 36676L;
+      when(ruRepository.getReportingUnitDetails(RU_ID, CLIENTS))
+          .thenReturn(Optional.of(mock(ReportingUnitDetailsProjection.class)));
+      ca.bc.gov.nrs.hrs.entity.reportingunit.DistrictAverageVolumeProjection projection =
+          mock(ca.bc.gov.nrs.hrs.entity.reportingunit.DistrictAverageVolumeProjection.class);
+      when(projection.getPopulationType()).thenReturn("Accumulated");
+      when(projection.getWasteType()).thenReturn("Crown");
+      when(projection.getHarvestMethodCode()).thenReturn("B");
+      when(projection.getHarvestMethodDescription()).thenReturn("Block");
+      when(projection.getAssessmentMethod()).thenReturn("E");
+      when(projection.getWasteLevel()).thenReturn("X");
+      when(projection.getNetWasteAreaHa()).thenReturn(new java.math.BigDecimal("0.13"));
+      when(projection.getTotalEstimatedVolumeM3()).thenReturn(new java.math.BigDecimal("110"));
+      when(ruRepository.getDistrictAverageVolumes(RU_ID, blockId)).thenReturn(List.of(projection));
+
+      var result = service.getDistrictAverageVolumes(RU_ID, blockId, CLIENTS);
+
+      assertThat(result).hasSize(1);
+      assertThat(result.getFirst().netWasteAreaHa()).isEqualByComparingTo("0.13");
+      assertThat(result.getFirst().totalEstimatedVolumeM3()).isEqualByComparingTo("110");
+    }
+
+    @Test
+    @DisplayName("shouldReturnEmptyList_whenReportingUnitExistsWithoutRows")
+    void shouldReturnEmptyList_whenReportingUnitExistsWithoutRows() {
+      Long blockId = 1905L;
+      when(ruRepository.getReportingUnitDetails(RU_ID, CLIENTS))
+          .thenReturn(Optional.of(mock(ReportingUnitDetailsProjection.class)));
+      when(ruRepository.getDistrictAverageVolumes(RU_ID, blockId)).thenReturn(List.of());
+
+      assertThat(service.getDistrictAverageVolumes(RU_ID, blockId, CLIENTS)).isEmpty();
+      verify(ruRepository).getDistrictAverageVolumes(RU_ID, blockId);
+    }
+
+    @Test
+    @DisplayName("shouldThrowWasteReportingUnitNotFound_whenReportingUnitMissing")
+    void shouldThrowWasteReportingUnitNotFound_whenReportingUnitMissing() {
+      when(ruRepository.getReportingUnitDetails(RU_ID, CLIENTS)).thenReturn(Optional.empty());
+
+      assertThatThrownBy(() -> service.getDistrictAverageVolumes(RU_ID, 1906L, CLIENTS))
+          .isInstanceOf(WasteReportingUnitNotFound.class);
+      verify(ruRepository, never())
+          .getDistrictAverageVolumes(ArgumentMatchers.anyLong(), ArgumentMatchers.anyLong());
     }
   }
 }

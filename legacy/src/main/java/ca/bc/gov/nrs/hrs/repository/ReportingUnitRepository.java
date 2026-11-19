@@ -1,6 +1,7 @@
 package ca.bc.gov.nrs.hrs.repository;
 
 import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchParametersDto;
+import ca.bc.gov.nrs.hrs.entity.reportingunit.DistrictAverageVolumeProjection;
 import ca.bc.gov.nrs.hrs.entity.reportingunit.ReportingUnitBlockProjection;
 import ca.bc.gov.nrs.hrs.entity.reportingunit.ReportingUnitDetailsProjection;
 import ca.bc.gov.nrs.hrs.entity.reportingunit.ReportingUnitEntity;
@@ -124,5 +125,19 @@ public interface ReportingUnitRepository extends JpaRepository<ReportingUnitEnti
       value = ReportingUnitQueryConstants.GET_RU_BLOCKS
   )
   List<ReportingUnitBlockProjection> getReportingUnitBlocks(Long reportingUnit);
+
+  /**
+   * Fetch district average volume/stratum rows for a waste assessment area block.
+   *
+   * @param reportingUnit the owning reporting unit identifier
+   * @param wasteAssessmentAreaId the waste assessment area/block identifier
+   * @return stratum rows for the block, empty when none exist
+   */
+  @Query(
+      nativeQuery = true,
+      value = ReportingUnitQueryConstants.GET_RU_BLOCK_DISTRICT_AVERAGE_VOLUMES
+  )
+  List<DistrictAverageVolumeProjection> getDistrictAverageVolumes(
+      Long reportingUnit, Long wasteAssessmentAreaId);
 
 }
