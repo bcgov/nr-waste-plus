@@ -58,7 +58,11 @@ public class ReportingUnitBlockService {
       Map.of(
           "DRAFT", "DFT",
           "SUBMITTED", "SUB",
-          "APPROVED", "APP");
+          "HOLD", "HLD",
+          "SUBMISSION_APPROVED", "APP",
+          "APPROVED", "APP",
+          "REJECTED", "REJ",
+          "BILLING_APPROVED", "RTB");
 
   /** Descriptions kept aligned with the legacy waste assessment area status code table. */
   private static final Map<String, String> STATUS_DESCRIPTIONS =
@@ -68,7 +72,9 @@ public class ReportingUnitBlockService {
           "APP", "Approved",
           "BIS", "Billing Issued",
           "OREJ", "Office Rejected",
-          "HLD", "Hold");
+          "HLD", "Hold",
+          "REJ", "Rejected",
+          "RTB", "Ready To Bill");
 
   private final ReportingUnitRepository reportingUnitRepository;
   private final BlockRepository blockRepository;
