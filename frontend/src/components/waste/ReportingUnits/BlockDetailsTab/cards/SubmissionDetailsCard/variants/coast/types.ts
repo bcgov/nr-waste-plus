@@ -25,12 +25,10 @@ export interface CoastSubmissionDetailsFormProps {
   readonly initialValues?: Partial<CoastSubmissionDetailsValues> & {
     readonly districtAverageCriteriaCode?: string;
     readonly secondaryTimberMarks?: readonly (
-      | string
-      | { mark?: string | null; timberMark?: string | null }
+      string | { mark?: string | null; timberMark?: string | null }
     )[];
     readonly roadPermitTimberMarks?: readonly (
-      | string
-      | { mark?: string | null; timberMark?: string | null }
+      string | { mark?: string | null; timberMark?: string | null }
     )[];
   };
   readonly harvestStatuses: readonly CodeDescriptionDto[];
@@ -81,18 +79,23 @@ const toTimberMarkStrings = (value: unknown): string[] => {
 };
 
 export const normalizeInitialValues = (
-  initialValues?: (Partial<CoastSubmissionDetailsValues> & {
-    readonly districtAverageCriteriaCode?: string;
-    readonly secondaryTimberMarks?: readonly TimberMarkLike[];
-    readonly roadPermitTimberMarks?: readonly TimberMarkLike[];
-  }) | undefined,
+  initialValues?:
+    | (Partial<CoastSubmissionDetailsValues> & {
+        readonly districtAverageCriteriaCode?: string;
+        readonly secondaryTimberMarks?: readonly TimberMarkLike[];
+        readonly roadPermitTimberMarks?: readonly TimberMarkLike[];
+      })
+    | undefined,
 ): CoastSubmissionDetailsValues => {
   if (!initialValues) return EMPTY_VALUES;
   const legacy = initialValues.districtAverageCriteriaCode;
   const codes =
     initialValues.districtAverageCriteriaCodes ??
     (legacy ? [legacy] : EMPTY_VALUES.districtAverageCriteriaCodes);
-  const { districtAverageCriteriaCode: _legacy, ...rest } = initialValues as Record<string, unknown>;
+  const { districtAverageCriteriaCode: _legacy, ...rest } = initialValues as Record<
+    string,
+    unknown
+  >;
   return {
     ...EMPTY_VALUES,
     ...(rest as Partial<CoastSubmissionDetailsValues>),

@@ -179,9 +179,7 @@ export const districtAverageVolumesSummarySchema = z.looseObject({
   totals: districtAverageVolumeTotalsSchema.nullish(),
 });
 
-export type DistrictAverageVolumesSummaryDto = z.infer<
-  typeof districtAverageVolumesSummarySchema
->;
+export type DistrictAverageVolumesSummaryDto = z.infer<typeof districtAverageVolumesSummarySchema>;
 
 /**
  * Block-details response

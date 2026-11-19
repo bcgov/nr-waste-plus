@@ -3,8 +3,8 @@ import { type FC } from 'react';
 import CoastSubmissionDetailsForm from './variants/coast';
 import InteriorSubmissionDetailsForm from './variants/interior';
 
-import type { CoastSubmissionDetailsValues } from './variants/coast';
 import type { SubmissionVariant } from '../../resolveSubmissionVariant';
+import type { CoastSubmissionDetailsValues } from './variants/coast';
 import type {
   InteriorBecSubzoneVariantOption,
   InteriorSubmissionDetailsValues,
@@ -24,12 +24,10 @@ export interface SubmissionDetailsCardProps {
   > & {
     readonly districtAverageCriteriaCode?: string;
     readonly secondaryTimberMarks?: readonly (
-      | string
-      | { mark?: string | null; timberMark?: string | null }
+      string | { mark?: string | null; timberMark?: string | null }
     )[];
     readonly roadPermitTimberMarks?: readonly (
-      | string
-      | { mark?: string | null; timberMark?: string | null }
+      string | { mark?: string | null; timberMark?: string | null }
     )[];
   };
   readonly harvestStatuses: readonly CodeDescriptionDto[];

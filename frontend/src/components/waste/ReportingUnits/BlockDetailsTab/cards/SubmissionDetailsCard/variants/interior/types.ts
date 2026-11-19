@@ -30,12 +30,10 @@ export interface InteriorSubmissionDetailsFormProps {
   readonly initialValues?: Partial<InteriorSubmissionDetailsValues> & {
     readonly districtAverageCriteriaCode?: string;
     readonly secondaryTimberMarks?: readonly (
-      | string
-      | { mark?: string | null; timberMark?: string | null }
+      string | { mark?: string | null; timberMark?: string | null }
     )[];
     readonly roadPermitTimberMarks?: readonly (
-      | string
-      | { mark?: string | null; timberMark?: string | null }
+      string | { mark?: string | null; timberMark?: string | null }
     )[];
   };
   readonly harvestStatuses: readonly CodeDescriptionDto[];
@@ -92,11 +90,15 @@ export const normalizeInitialValues = (
   },
 ): InteriorSubmissionDetailsValues => {
   if (!initialValues) return EMPTY_VALUES;
-  const legacy = (initialValues as { districtAverageCriteriaCode?: string }).districtAverageCriteriaCode;
+  const legacy = (initialValues as { districtAverageCriteriaCode?: string })
+    .districtAverageCriteriaCode;
   const codes =
     initialValues.districtAverageCriteriaCodes ??
     (legacy ? [legacy] : EMPTY_VALUES.districtAverageCriteriaCodes);
-  const { districtAverageCriteriaCode: _legacy, ...rest } = initialValues as Record<string, unknown>;
+  const { districtAverageCriteriaCode: _legacy, ...rest } = initialValues as Record<
+    string,
+    unknown
+  >;
   return {
     ...EMPTY_VALUES,
     ...(rest as Partial<InteriorSubmissionDetailsValues>),
