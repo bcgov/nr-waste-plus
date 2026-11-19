@@ -72,6 +72,13 @@ test.describe('Reporting Unit Block Details', () => {
       { code: 'IM', description: 'Immature' },
       { code: 'MAT', description: 'Mature' },
     ]);
+    // The page fires all three codes queries with a notification target, so an
+    // unstubbed one fails at the network level and replaces the alert under
+    // test with "Network Connection Failed".
+    await mockApiResponses(page, 'codes/district-average-criteria*', 200, 'application/json', [
+      { code: '1', description: 'Forestry Licence to Cut with a volume limit.', areas: [] },
+      { code: '7', description: 'A cutblock smaller than 2.0 ha.', areas: [] },
+    ]);
   };
 
   test.beforeEach(async ({ page }, testInfo) => {
@@ -97,6 +104,7 @@ test.describe('Reporting Unit Block Details', () => {
       'application/json',
       blockDetailsPayload,
     );
+    await setupCodeMocks(page);
     await page.goto(ROUTE_PATH);
     await page.waitForLoadState('domcontentloaded');
 
@@ -139,7 +147,9 @@ test.describe('Reporting Unit Block Details', () => {
       name: 'District average volumes summary',
     });
     await expect(volumesCard).toBeVisible();
-    await expect(volumesCard.getByText('Dispersed')).toBeVisible();
+    // Scope to the cell: the harvest-method dropdown's hidden label also
+    // contains the population type ("Harvest method for Dispersed, …").
+    await expect(volumesCard.getByRole('cell', { name: 'Dispersed', exact: true })).toBeVisible();
     await expect(volumesCard.getByText('Ground Skid')).toBeVisible();
     const volumesTotalRow = volumesCard.getByRole('row').filter({ hasText: 'Total' }).last();
     await expect(volumesTotalRow).toContainText('0');
@@ -362,7 +372,7 @@ test.describe('Reporting Unit Block Details', () => {
     await expect(
       page.getByRole('heading', { level: 1, name: `Block ID ${BLOCK_ID}` }),
     ).toBeVisible();
-    await expect(page.getByLabelText('Harvest status')).toBeVisible();
+    await expect(page.getByRole('combobox', { name: 'Harvest status' })).toBeVisible();
 
     await expect.poll(() => harvestRequests.length).toBeGreaterThan(0);
     await expect.poll(() => maturityRequests.length).toBeGreaterThan(0);
@@ -419,7 +429,7 @@ test.describe('Reporting Unit Block Details', () => {
     await expect(
       page.getByRole('heading', { level: 1, name: `Block ID ${BLOCK_ID}` }),
     ).toBeVisible();
-    await expect(page.getByLabelText('District average criteria')).toBeVisible();
+    await expect(page.getByRole('combobox', { name: 'District average criteria' })).toBeVisible();
 
     await expect.poll(() => districtAverageCriteriaRequests.length).toBeGreaterThan(0);
     expect(districtAverageCriteriaRequests[0]).toContain('/api/codes/district-average-criteria');
