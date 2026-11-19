@@ -345,6 +345,13 @@ public class LegacyReportingUnitClient {
   @SuppressWarnings("unused")
   private List<DistrictAverageVolumeLegacyDto> fallbackEmptyDistrictAverageVolumes(
       Long ruId, Long wasteAssessmentAreaId, Throwable throwable) {
+    // Parameters mirror the intercepted method's signature (required by Resilience4j) and give
+    // the fallback log useful context.
+    log.debug(
+        "Falling back to empty district average volumes for reportingUnitId={}, "
+            + "wasteAssessmentAreaId={}",
+        ruId,
+        wasteAssessmentAreaId);
     logFallbackError(throwable);
     return List.of();
   }

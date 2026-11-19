@@ -705,7 +705,7 @@ class BlockServiceTest {
             new SearchExpandedSecondaryDto("RSEC", new CodeDescriptionDto("DFT", "Draft"), 2.0),
             new SearchExpandedSecondaryDto("", null, null),
             null),
-        0.0, 0.0, null, null, null, 0L, 0L);
+        99.0, 0.5, null, null, null, 0L, 0L);
     when(legacyApiProvider.getSearchExpanded(RU_ID, BLOCK_ID)).thenReturn(expanded);
     when(legacyApiProvider.getDistrictAverageVolumes(RU_ID, BLOCK_ID)).thenReturn(List.of());
 
@@ -722,13 +722,24 @@ class BlockServiceTest {
     assertThat(result.roadPermitTimberMarks())
         .extracting(BlockMarkDto::sequenceNo)
         .containsExactly(1, 2);
+    // Primary-derived road mark keeps the block's identifiers; secondary-derived ones stay null.
+    assertThat(result.roadPermitTimberMarks().get(0).forestFileId()).isEqualTo("FILE");
+    assertThat(result.roadPermitTimberMarks().get(0).cuttingPermitId()).isEqualTo("CP");
+    assertThat(result.roadPermitTimberMarks().get(0).cutBlockId()).isEqualTo("CUT");
+    assertThat(result.roadPermitTimberMarks().get(1).forestFileId()).isNull();
+    assertThat(result.roadPermitTimberMarks().get(1).cuttingPermitId()).isNull();
+    assertThat(result.roadPermitTimberMarks().get(1).cutBlockId()).isNull();
+    // Secondary marks never inherit the block's licence metadata.
+    assertThat(result.secondaryTimberMarks().get(0).forestFileId()).isNull();
+    assertThat(result.secondaryTimberMarks().get(0).cuttingPermitId()).isNull();
+    assertThat(result.secondaryTimberMarks().get(0).cutBlockId()).isNull();
     assertThat(result.wasteAssessmentAreaSummary()).isNotNull();
     assertThat(result.wasteAssessmentAreaSummary().primary())
-        .isEqualTo(new WasteAssessmentAreaMarkDto("RPRIMARY", BigDecimal.valueOf(0.0)));
+        .isEqualTo(new WasteAssessmentAreaMarkDto("RPRIMARY", BigDecimal.valueOf(0.5)));
     assertThat(result.wasteAssessmentAreaSummary().secondary())
         .containsExactly(new WasteAssessmentAreaMarkDto("SEC2", BigDecimal.valueOf(1.0)));
     assertThat(result.wasteAssessmentAreaSummary().totalNetWasteAreaHa())
-        .isEqualByComparingTo("1.0");
+        .isEqualByComparingTo("1.5");
     assertThat(result.districtAverageVolumesSummary()).isNotNull();
     assertThat(result.districtAverageVolumesSummary().rows()).isEmpty();
     assertThat(result.districtAverageVolumesSummary().totals().totalBillableVolumeM3())
@@ -932,7 +943,7 @@ class BlockServiceTest {
                 new SearchExpandedSecondaryDto("", null, null),
                 null),
             3.0,
-            0.0,
+            1.25,
             null,
             null,
             null,
@@ -946,12 +957,12 @@ class BlockServiceTest {
     WasteAssessmentAreaSummaryDto summary = result.wasteAssessmentAreaSummary();
     assertThat(summary).isNotNull();
     assertThat(summary.primary())
-        .isEqualTo(new WasteAssessmentAreaMarkDto("TM-PRI", BigDecimal.valueOf(3.0)));
+        .isEqualTo(new WasteAssessmentAreaMarkDto("TM-PRI", BigDecimal.valueOf(1.25)));
     assertThat(summary.secondary())
         .containsExactly(
             new WasteAssessmentAreaMarkDto("SEC2", BigDecimal.valueOf(1.5)),
             new WasteAssessmentAreaMarkDto("SEC3", null));
-    assertThat(summary.totalNetWasteAreaHa()).isEqualByComparingTo("4.5");
+    assertThat(summary.totalNetWasteAreaHa()).isEqualByComparingTo("2.75");
     assertThat(result.districtAverageVolumesSummary()).isNotNull();
     assertThat(result.districtAverageVolumesSummary().rows()).isEmpty();
     assertThat(result.districtAverageVolumesSummary().totals().totalBillableVolumeM3())
@@ -1025,6 +1036,51 @@ class BlockServiceTest {
   }
 
 
+
+  @Test
+  @DisplayName("getBlockDetails legacy summary uses block netArea for single-mark blocks")
+  void getBlockDetails_whenLegacySingleMarkBlock_usesNetAreaForPrimary() {
+    blockService.setClock(Clock.fixed(Instant.parse("2026-11-17T12:00:00Z"), ZoneOffset.UTC));
+    when(reportingUnitRepository.findByIdAndDeletedFalse(RU_ID)).thenReturn(Optional.empty());
+
+    var legacyRu =
+        new ca.bc.gov.nrs.hrs.dto.reportingunit.ReportingUnitLegacyDetailsDto(
+            CLIENT_NUMBER,
+            "00",
+            new CodeDescriptionDto("AVG", "Average"),
+            new CodeDescriptionDto("DND", "Nadina"));
+    when(legacyApiProvider.getReportingUnitDetails(RU_ID)).thenReturn(legacyRu);
+
+    var legacyRow =
+        new ca.bc.gov.nrs.hrs.dto.block.BlockListItemDto(
+            BLOCK_ID,
+            "FILE",
+            "CP",
+            "CUT",
+            "TM-PRI",
+            null,
+            null,
+            "sub",
+            new ca.bc.gov.nrs.hrs.dto.block.BlockListItemDto.Status("DFT", "Draft"),
+            null,
+            null);
+    when(legacyApiProvider.getReportingUnitBlocksStrict(RU_ID)).thenReturn(List.of(legacyRow));
+
+    when(legacyApiProvider.getSearchExpanded(RU_ID, BLOCK_ID))
+        .thenReturn(
+            new ReportingUnitSearchExpandedDto(
+                BLOCK_ID, "FILE", "CP", "TM-PRI", false, false, null, List.of(),
+                5.0, 99.0, null, null, null, 0L, 0L));
+    when(legacyApiProvider.getDistrictAverageVolumes(RU_ID, BLOCK_ID)).thenReturn(List.of());
+
+    var result = blockService.getBlockDetails(RU_ID, BLOCK_ID, idirJwt);
+
+    assertThat(result.wasteAssessmentAreaSummary().primary())
+        .isEqualTo(new WasteAssessmentAreaMarkDto("TM-PRI", BigDecimal.valueOf(5.0)));
+    assertThat(result.wasteAssessmentAreaSummary().secondary()).isEmpty();
+    assertThat(result.wasteAssessmentAreaSummary().totalNetWasteAreaHa())
+        .isEqualByComparingTo("5");
+  }
 
   @Test
   @DisplayName("getBlockDetails returns legacy district average volumes summary from stratum rows")

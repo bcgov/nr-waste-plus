@@ -127,7 +127,7 @@ public class LegacyCodesClient {
    *     never null, defaults to empty list if API fails
    * @see LegacyApiConstants#CODE_LIST
    */
-  @CircuitBreaker(name = "breaker", fallbackMethod = "fallbackEmptyList")
+  @CircuitBreaker(name = "harvestStatusCodes", fallbackMethod = "fallbackEmptyList")
   @NewSpan
   public List<CodeDescriptionDto> getHarvestStatusCodes() {
     log.info("Starting {} request to /codes/harvest-statuses", PROVIDER);
@@ -151,7 +151,7 @@ public class LegacyCodesClient {
    *     never null, defaults to empty list if API fails
    * @see LegacyApiConstants#CODE_LIST
    */
-  @CircuitBreaker(name = "breaker", fallbackMethod = "fallbackEmptyList")
+  @CircuitBreaker(name = "maturityTypeCodes", fallbackMethod = "fallbackEmptyList")
   @NewSpan
   public List<CodeDescriptionDto> getMaturityTypeCodes() {
     log.info("Starting {} request to /api/codes/maturity-types", PROVIDER);

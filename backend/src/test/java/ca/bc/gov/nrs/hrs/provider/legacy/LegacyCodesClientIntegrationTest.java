@@ -51,6 +51,8 @@ class LegacyCodesClientIntegrationTest extends AbstractTestContainerIntegrationT
 
     CircuitBreaker breaker = circuitBreakerRegistry.circuitBreaker("breaker");
     breaker.reset();
+    circuitBreakerRegistry.circuitBreaker("harvestStatusCodes").reset();
+    circuitBreakerRegistry.circuitBreaker("maturityTypeCodes").reset();
     RetryConfig retry = retryRegistry.retry("apiRetry").getRetryConfig();
     retryRegistry.remove("apiRetry");
     retryRegistry.retry("apiRetry", retry);

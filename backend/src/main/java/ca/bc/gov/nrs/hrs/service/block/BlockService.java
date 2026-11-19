@@ -298,10 +298,9 @@ public class BlockService {
     enforceClientScope(jwt, reportingUnitId, legacyReportingUnit.clientNumber());
 
     var expanded = legacyApiProvider.getSearchExpanded(reportingUnitId, blockId);
-    List<BlockMarkDto> secondaryTimberMarks =
-        toLegacySecondaryTimberMarks(reportingUnitId, blockId, legacyRow, expanded);
+    List<BlockMarkDto> secondaryTimberMarks = toLegacySecondaryTimberMarks(blockId, expanded);
     List<BlockMarkDto> roadPermitTimberMarks =
-        toLegacyRoadPermitTimberMarks(reportingUnitId, blockId, legacyRow, expanded);
+        toLegacyRoadPermitTimberMarks(blockId, legacyRow, expanded);
     WasteAssessmentAreaSummaryDto wasteAssessmentAreaSummary =
         buildLegacyWasteAssessmentAreaSummary(expanded);
     DistrictAverageVolumesSummaryDto districtAverageVolumesSummary =
@@ -641,9 +640,13 @@ public class BlockService {
       return new WasteAssessmentAreaSummaryDto(null, List.of(), BigDecimal.ZERO);
     }
 
+    // For a multi-mark block netArea is the whole-block total, so the primary row must use the
+    // mark's own attributed area; otherwise adding the secondary rows would double-count.
+    Double primaryArea =
+        Boolean.TRUE.equals(expanded.multiMark()) ? expanded.markArea() : expanded.netArea();
+
     WasteAssessmentAreaMarkDto primary =
-        new WasteAssessmentAreaMarkDto(
-            expanded.timberMark(), toBigDecimal(expanded.netArea()));
+        new WasteAssessmentAreaMarkDto(expanded.timberMark(), toBigDecimal(primaryArea));
 
     List<WasteAssessmentAreaMarkDto> secondary =
         expanded.secondaryMarks() == null
@@ -731,10 +734,7 @@ public class BlockService {
   }
 
   private List<BlockMarkDto> toLegacySecondaryTimberMarks(
-      Long reportingUnitId,
-      Long blockId,
-      BlockListItemDto legacyRow,
-      ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchExpandedDto expanded) {
+      Long blockId, ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchExpandedDto expanded) {
     java.util.ArrayList<BlockMarkDto> marks = new java.util.ArrayList<>();
     if (expanded != null && expanded.secondaryMarks() != null) {
       int sequence = 1;
@@ -745,6 +745,9 @@ public class BlockService {
         if (isRoadPermitMark(secondary.mark())) {
           continue;
         }
+        // Secondary marks are child rows that may belong to a different forest file; the legacy
+        // search payload exposes only mark/status/area, so identifiers stay null rather than
+        // inheriting the block's file/permit/cutblock values.
         marks.add(
             new BlockMarkDto(
                 null,
@@ -753,23 +756,22 @@ public class BlockService {
                 sequence++,
                 secondary.mark(),
                 secondary.status() != null ? secondary.status().code() : null,
-                legacyRow.licenseNumber(),
+                null,
                 secondary.mark(),
-                legacyRow.cuttingPermit(),
-                legacyRow.cutBlockId()));
+                null,
+                null));
       }
     }
     return List.copyOf(marks);
   }
 
   private List<BlockMarkDto> toLegacyRoadPermitTimberMarks(
-      Long reportingUnitId,
       Long blockId,
       BlockListItemDto legacyRow,
       ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchExpandedDto expanded) {
     java.util.ArrayList<BlockMarkDto> marks = new java.util.ArrayList<>();
     java.util.LinkedHashSet<String> seen = new java.util.LinkedHashSet<>();
-    addLegacyRoadPermitMark(seen, marks, blockId, legacyRow, legacyRow.timberMark(), "VALID");
+    addLegacyRoadPermitMark(seen, marks, blockId, legacyRow, legacyRow.timberMark(), "VALID", true);
     if (expanded != null) {
       addLegacyRoadPermitMark(
           seen,
@@ -777,7 +779,8 @@ public class BlockService {
           blockId,
           legacyRow,
           expanded.timberMark(),
-          expanded.status() != null ? expanded.status().code() : null);
+          expanded.status() != null ? expanded.status().code() : null,
+          true);
       if (expanded.secondaryMarks() != null) {
         for (var secondary : expanded.secondaryMarks()) {
           if (secondary == null) {
@@ -789,7 +792,8 @@ public class BlockService {
               blockId,
               legacyRow,
               secondary.mark(),
-              secondary.status() != null ? secondary.status().code() : null);
+              secondary.status() != null ? secondary.status().code() : null,
+              false);
         }
       }
     }
@@ -818,7 +822,8 @@ public class BlockService {
       Long blockId,
       BlockListItemDto legacyRow,
       String markValue,
-      String validationStatus) {
+      String validationStatus,
+      boolean primaryMark) {
     if (markValue == null || markValue.isBlank() || !isRoadPermitMark(markValue)) {
       return;
     }
@@ -826,6 +831,8 @@ public class BlockService {
     if (!seen.add(normalized)) {
       return;
     }
+    // Only the block's primary mark inherits the reporting unit's identifiers; road marks derived
+    // from secondary marks may belong to a different licence, so their identifiers stay null.
     marks.add(
         new BlockMarkDto(
             null,
@@ -834,10 +841,10 @@ public class BlockService {
             marks.size() + 1,
             markValue.trim(),
             validationStatus,
-            legacyRow.licenseNumber(),
+            primaryMark ? legacyRow.licenseNumber() : null,
             markValue.trim(),
-            legacyRow.cuttingPermit(),
-            legacyRow.cutBlockId()));
+            primaryMark ? legacyRow.cuttingPermit() : null,
+            primaryMark ? legacyRow.cutBlockId() : null));
   }
 
   private boolean isRoadPermitMark(String mark) {
