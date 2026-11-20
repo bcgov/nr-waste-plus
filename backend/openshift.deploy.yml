@@ -149,6 +149,16 @@ objects:
                     secretKeyRef:
                       name: ${NAME}-${ZONE}
                       key: cognito-client-id
+                - name: KEYCLOAK_CLIENT_ID
+                  valueFrom:
+                    secretKeyRef:
+                      name: ${NAME}-${ZONE}
+                      key: keycloak-client-id
+                - name: KEYCLOAK_ISSUER_URI
+                  valueFrom:
+                    secretKeyRef:
+                      name: ${NAME}-${ZONE}
+                      key: keycloak-issuer-uri
                 - name: COGNITO_REGION
                   value: ${COGNITO_REGION}
                 - name: COGNITO_DOMAIN
