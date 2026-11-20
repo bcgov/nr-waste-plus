@@ -148,18 +148,29 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     clearRenewalTimer();
   }, [clearRenewalTimer]);
 
-  const handleRenewalFailure = useCallback(async () => {
-    renewalRetriesRef.current += 1;
-    setRenewalError('renewal-failed');
-    // Stable, test-visible failure signal required by the renewal plan.
-    // eslint-disable-next-line no-console
-    console.error('auth.renewal_failed');
-    if (renewalRetriesRef.current >= MAX_RENEWAL_RETRIES) {
-      await clearSessionLocally();
-    } else {
-      scheduleEvaluation(undefined, RENEWAL_RETRY_MS);
-    }
-  }, [clearSessionLocally, scheduleEvaluation]);
+  const handleRenewalFailure = useCallback(
+    async (stored: User | null) => {
+      renewalRetriesRef.current += 1;
+      setRenewalError('renewal-failed');
+      // Stable, test-visible failure signal required by the renewal plan.
+      // eslint-disable-next-line no-console
+      console.error('auth.renewal_failed');
+      if (renewalRetriesRef.current >= MAX_RENEWAL_RETRIES) {
+        await clearSessionLocally();
+      } else {
+        // Keep a still-valid session visible while the retry is pending —
+        // otherwise a transient renewal error logs the user out immediately.
+        if (stored && !stored.expired) {
+          const appUser = toAppUser(stored);
+          setUser((prev) =>
+            isEqual(prev, appUser) ? prev : preserveRolesReference(prev, appUser),
+          );
+        }
+        scheduleEvaluation(undefined, RENEWAL_RETRY_MS);
+      }
+    },
+    [clearSessionLocally, scheduleEvaluation],
+  );
 
   /**
    * Evaluates the stored session. Active users inside the renewal window are
@@ -173,8 +184,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (silent && Date.now() - lastEvaluationRef.current < MIN_EVALUATION_INTERVAL_MS) return;
       lastEvaluationRef.current = Date.now();
 
+      let stored: User | null = null;
       try {
-        const stored = await getStoredUser();
+        stored = await getStoredUser();
         if (!stored) {
           setUser(undefined);
           setRenewalError(undefined);
@@ -190,7 +202,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
         const current = await ensureFreshUser();
         if (!current) {
-          await handleRenewalFailure();
+          await handleRenewalFailure(stored);
           return;
         }
 
@@ -200,7 +212,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setUser((prev) => (isEqual(prev, appUser) ? prev : preserveRolesReference(prev, appUser)));
         scheduleEvaluation(current.expires_at);
       } catch {
-        await handleRenewalFailure();
+        await handleRenewalFailure(stored);
       } finally {
         if (!silent) setIsLoading(false);
       }
