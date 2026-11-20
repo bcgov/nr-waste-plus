@@ -5,6 +5,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.web.access.AccessDeniedHandlerImpl;
@@ -40,11 +41,12 @@ public class CsrfAccessDeniedHandler implements AccessDeniedHandler {
   public void handle(HttpServletRequest request, HttpServletResponse response,
       AccessDeniedException exception) throws IOException, ServletException {
     if (exception instanceof CsrfException csrfException) {
+      Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
       eventLogger.logEvent(
           "AUTHORIZATION_DENIED",
           403,
           request,
-          () -> SecurityContextHolder.getContext().getAuthentication(),
+          authentication,
           csrfException.getClass().getSimpleName());
     }
     delegate.handle(request, response, exception);

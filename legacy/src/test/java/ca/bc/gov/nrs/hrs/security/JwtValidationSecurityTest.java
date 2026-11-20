@@ -15,6 +15,10 @@ import java.util.concurrent.Executors;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.springframework.security.oauth2.core.OAuth2Error;
+import org.springframework.security.oauth2.core.OAuth2TokenValidator;
+import org.springframework.security.oauth2.core.OAuth2TokenValidatorResult;
+import org.springframework.security.oauth2.jwt.JwsHeader;
 import org.springframework.security.oauth2.jwt.JwtClaimsSet;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
@@ -23,10 +27,6 @@ import org.springframework.security.oauth2.jwt.JwtException;
 import org.springframework.security.oauth2.jwt.JwtValidators;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
-import org.springframework.security.oauth2.jwt.JwsHeader;
-import org.springframework.security.oauth2.core.OAuth2Error;
-import org.springframework.security.oauth2.core.OAuth2TokenValidator;
-import org.springframework.security.oauth2.core.OAuth2TokenValidatorResult;
 
 class JwtValidationSecurityTest {
 
@@ -47,7 +47,8 @@ class JwtValidationSecurityTest {
     JWKSource<SecurityContext> source = new ImmutableJWKSet<>(new JWKSet(key));
     encoder = new NimbusJwtEncoder(source);
     jwksServer = HttpServer.create(new InetSocketAddress("localhost", 0), 0);
-    var body = new JWKSet(key.toPublicJWK()).toString().getBytes(java.nio.charset.StandardCharsets.UTF_8);
+    var body = new JWKSet(key.toPublicJWK()).toString()
+        .getBytes(java.nio.charset.StandardCharsets.UTF_8);
     jwksServer.createContext("/jwks", exchange -> {
       exchange.getResponseHeaders().add("Content-Type", "application/json");
       exchange.sendResponseHeaders(200, body.length);
@@ -57,7 +58,8 @@ class JwtValidationSecurityTest {
     });
     jwksServer.setExecutor(Executors.newVirtualThreadPerTaskExecutor());
     jwksServer.start();
-    decoder = NimbusJwtDecoder.withJwkSetUri("http://localhost:" + jwksServer.getAddress().getPort() + "/jwks").build();
+    String jwksUri = "http://localhost:" + jwksServer.getAddress().getPort() + "/jwks";
+    decoder = NimbusJwtDecoder.withJwkSetUri(jwksUri).build();
     ((NimbusJwtDecoder) decoder).setJwtValidator(
         new org.springframework.security.oauth2.core.DelegatingOAuth2TokenValidator<>(
             JwtValidators.createDefaultWithIssuer(ISSUER), new ClientIdValidator("client-good")));
@@ -72,7 +74,8 @@ class JwtValidationSecurityTest {
 
   @Test
   void validAccessTokenReachesDecoder() {
-    assertThat(decoder.decode(token("client-good", ISSUER, Instant.now().plusSeconds(60))).getClaimAsString("client_id"))
+    String compactToken = token("client-good", ISSUER, Instant.now().plusSeconds(60));
+    assertThat(decoder.decode(compactToken).getClaimAsString("client_id"))
         .isEqualTo("client-good");
   }
 
@@ -99,7 +102,8 @@ class JwtValidationSecurityTest {
 
   @Test
   void wrongIssuerMustBeRejected() {
-    String compactToken = token("client-good", "https://issuer-other.test/pool", Instant.now().plusSeconds(60));
+    String compactToken = token(
+        "client-good", "https://issuer-other.test/pool", Instant.now().plusSeconds(60));
     assertThatThrownBy(() -> decoder.decode(compactToken))
         .isInstanceOf(JwtException.class);
   }

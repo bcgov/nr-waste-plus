@@ -101,19 +101,19 @@ public final class ReportingUnitQueryConstants {
         )
         AND (
           NVL(:#{#filter.timberMark}, 'NOVALUE') = 'NOVALUE'
-          OR (
-            UPPER(waa.draft_timber_mark) = :#{#filter.timberMark}
-            OR UPPER(waa.timber_mark) = :#{#filter.timberMark}
-            OR (
-                EXISTS (
-                  SELECT 1 FROM WASTE_ASSESSMENT_AREA waa_child
-                  WHERE waa_child.parent_waa_id = waa.waste_assessment_area_id
-                  AND (
-                    UPPER(waa_child.draft_timber_mark) = :#{#filter.timberMark}
-                    OR UPPER(waa_child.TIMBER_MARK) = :#{#filter.timberMark}
-                  )
-                )
-            )
+          OR waa.waste_assessment_area_id IN (
+            SELECT tm_waa.waste_assessment_area_id
+            FROM WASTE_ASSESSMENT_AREA tm_waa
+            WHERE UPPER(tm_waa.timber_mark) = UPPER(:#{#filter.timberMark})
+               OR UPPER(tm_waa.draft_timber_mark) = UPPER(:#{#filter.timberMark})
+            UNION ALL
+            SELECT tm_c.parent_waa_id
+            FROM WASTE_ASSESSMENT_AREA tm_c
+            WHERE tm_c.parent_waa_id IS NOT NULL
+              AND (
+                UPPER(tm_c.timber_mark) = UPPER(:#{#filter.timberMark})
+                OR UPPER(tm_c.draft_timber_mark) = UPPER(:#{#filter.timberMark})
+              )
           )
         )
         AND (
@@ -143,12 +143,15 @@ public final class ReportingUnitQueryConstants {
       + SEARCH_REPORTING_UNIT_FROM_JOIN
       + SEARCH_REPORTING_UNIT_WHERE;
 
+  /**
+   * Count query for search pagination. Uses a direct COUNT(1) over the same FROM/JOIN and WHERE
+   * clauses as {@link #SEARCH_REPORTING_UNIT_QUERY}; this is equivalent because the search query
+   * select list contains no DISTINCT or row-multiplying aggregates.
+   */
   public static final String SEARCH_REPORTING_UNIT_COUNT =
-      "WITH DistinctResults AS ("
-      + SEARCH_REPORTING_UNIT_SELECT
+      "SELECT COUNT(1) "
       + SEARCH_REPORTING_UNIT_FROM_JOIN
-      + SEARCH_REPORTING_UNIT_WHERE
-      + ") SELECT COUNT(1) OVER () AS total FROM DistinctResults ";
+      + SEARCH_REPORTING_UNIT_WHERE;
 
   private static final String GET_BLOCK_COUNT = """
       SELECT
@@ -331,5 +334,33 @@ public final class ReportingUnitQueryConstants {
           )
         )
       ORDER BY waa.WASTE_ASSESSMENT_AREA_ID
+      """;
+
+  public static final String GET_RU_BLOCK_DISTRICT_AVERAGE_VOLUMES = """
+      SELECT
+        stc.DESCRIPTION AS population_type,
+        wtc.DESCRIPTION AS waste_type,
+        ws.WASTE_HARVEST_METHOD_CODE AS harvest_method_code,
+        whmc.DESCRIPTION AS harvest_method_description,
+        wamc.DESCRIPTION AS assessment_method,
+        wlc.DESCRIPTION AS waste_level,
+        ws.STRATUM_AREA AS net_waste_area_ha,
+        ws.TOTAL_ESTIMATED_VOLUME AS total_estimated_volume_m3
+      FROM WASTE_STRATUM ws
+      INNER JOIN WASTE_ASSESSMENT_AREA waa
+        ON waa.WASTE_ASSESSMENT_AREA_ID = ws.WASTE_ASSESSMENT_AREA_ID
+      LEFT JOIN WASTE_STRATUM_TYPE_CODE stc
+        ON stc.WASTE_STRATUM_TYPE_CODE = ws.WASTE_STRATUM_TYPE_CODE
+      LEFT JOIN WASTE_TYPE_CODE wtc
+        ON wtc.WASTE_TYPE_CODE = ws.WASTE_TYPE_CODE
+      LEFT JOIN WASTE_HARVEST_METHOD_CODE whmc
+        ON whmc.WASTE_HARVEST_METHOD_CODE = ws.WASTE_HARVEST_METHOD_CODE
+      LEFT JOIN WASTE_ASSESSMENT_METHOD_CODE wamc
+        ON wamc.WASTE_ASSESSMENT_METHOD_CODE = ws.WASTE_ASSESSMENT_METHOD_CODE
+      LEFT JOIN WASTE_LEVEL_CODE wlc
+        ON wlc.WASTE_LEVEL_CODE = ws.WASTE_LEVEL_CODE
+      WHERE waa.REPORTING_UNIT_ID = :reportingUnit
+        AND ws.WASTE_ASSESSMENT_AREA_ID = :wasteAssessmentAreaId
+      ORDER BY ws.WASTE_STRATUM_ID
       """;
 }

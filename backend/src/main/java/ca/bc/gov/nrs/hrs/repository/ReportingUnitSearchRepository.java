@@ -84,4 +84,12 @@ public interface ReportingUnitSearchRepository extends JpaRepository<ReportingUn
       nativeQuery = true,
       value = ReportingUnitSearchQueryConstants.LIVE_CLIENT_NUMBER_QUERY)
   Optional<String> findLiveClientNumber(@Param("reportingUnitId") Long reportingUnitId);
+
+  /**
+   * Find a live reporting unit entity by id.
+   *
+   * @param id reporting unit id
+   * @return optional containing the live entity if found
+   */
+  Optional<ReportingUnitEntity> findByIdAndDeletedFalse(Long id);
 }

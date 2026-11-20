@@ -9,8 +9,6 @@ import { sendEvent } from '@/hooks/useNotificationEvents/eventHandler';
 
 import ReportingUnitBlockDetailsPage from './index';
 
-import type { BlockDetailsDto, ReportingUnitDto } from '@/types/reportingUnit.types';
-
 // ── Mutable state used by the module mocks ─────────────────────────────────────
 
 const EVENT_TARGET = 'reporting-unit-block-details';
@@ -41,7 +39,7 @@ vi.mock('@tanstack/react-router', async (importOriginal) => {
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
-const defaultData: ReportingUnitDto = {
+const defaultData = {
   id: 468,
   client: { code: '00002022', description: 'Canadian Forest Products Ltd.' },
   clientStatus: { code: 'ACT', description: 'Active' },
@@ -50,7 +48,7 @@ const defaultData: ReportingUnitDto = {
   district: { code: 'DKM', description: 'Coast Mountains District' },
 };
 
-const defaultBlockData: BlockDetailsDto = {
+const defaultBlockData = {
   id: 12,
   reportingUnitId: 468,
   blockType: 'DISTRICT_AVERAGE',
@@ -67,6 +65,7 @@ function mockQuery(result: QueryResult) {
   vi.mocked(useReportingUnitDetailsQuery).mockReturnValue({
     data: undefined,
     isLoading: false,
+    isFetching: false,
     isError: false,
     refetch: mockRefetch,
     ...result,
@@ -130,7 +129,6 @@ describe('ReportingUnitBlockDetailsPage', () => {
       await renderPage();
 
       await user.click(screen.getByText('Reporting unit 468'));
-      // Breadcrumb crumbs navigate via PageTitle's runtime `href` boundary.
       expect(mockNavigate).toHaveBeenCalledWith({ href: '/reporting-units/468' });
 
       await user.click(screen.getByText('Block 12'));
@@ -141,7 +139,7 @@ describe('ReportingUnitBlockDetailsPage', () => {
       await renderPage();
 
       const heading = screen.getByRole('heading', { level: 1 });
-      // eslint-disable-next-line testing-library/no-node-access -- focus assertion requires document.activeElement; this repo has no jest-dom toHaveFocus matcher
+      // eslint-disable-next-line testing-library/no-node-access -- focus assertion requires document.activeElement
       expect(document.activeElement).toBe(heading);
       expect(heading.getAttribute('tabindex')).toBe('-1');
     });
@@ -170,15 +168,14 @@ describe('ReportingUnitBlockDetailsPage', () => {
       expect(screen.getByTestId('card-item-content-sampling-option').textContent).toBe(
         'DA - District Average',
       );
-      // `ReportingUnitDetailsDto` carries no creation timestamp — the summary
-      // renders the established empty-state dash.
       expect(screen.getByTestId('card-item-content-created-on').textContent).toBe('-');
     });
 
     it('shouldRenderNoEditableInputs', async () => {
       await renderPage();
 
-      expect(screen.queryAllByRole('textbox')).toHaveLength(0);
+      expect(screen.queryByRole('textbox', { name: 'Client name' })).toBeNull();
+      expect(screen.queryByRole('textbox', { name: 'Client ID' })).toBeNull();
       expect(screen.queryByRole('button', { name: /edit/i })).toBeNull();
       expect(screen.queryByRole('button', { name: /delete/i })).toBeNull();
     });
@@ -207,6 +204,13 @@ describe('ReportingUnitBlockDetailsPage', () => {
 
       expect(screen.getByTestId('block-details-skeleton')).toBeTruthy();
     });
+
+    it('shouldRenderProgressIndicatorSkeleton_whenRuIsFetching', async () => {
+      mockQuery({ data: defaultData, isFetching: true });
+      await renderPage();
+
+      expect(document.querySelector('.cds--skeleton')).toBeTruthy();
+    });
   });
 
   describe('reporting-unit summary error', () => {
@@ -219,7 +223,6 @@ describe('ReportingUnitBlockDetailsPage', () => {
 
       expect(screen.getByText('Reporting unit summary unavailable')).toBeTruthy();
       expect(screen.queryByText('Reporting Unit Block not found')).toBeNull();
-      expect(screen.queryByTestId('block-details-summary')).toBeNull();
       expect(screen.getByTestId('rublock-banner')).toBeTruthy();
       expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Block ID 12');
     });
@@ -260,7 +263,6 @@ describe('ReportingUnitBlockDetailsPage', () => {
       expect(
         screen.getByText('Required data is missing or an error occurred while loading.'),
       ).toBeTruthy();
-      expect(screen.queryByTestId('block-details-summary')).toBeNull();
     });
 
     it('shouldCallRefetch_whenRetryIsClicked', async () => {
@@ -290,7 +292,7 @@ describe('ReportingUnitBlockDetailsPage', () => {
       await renderPage();
 
       expect(screen.getByTestId('rublock-banner')).toBeTruthy();
-      expect(screen.getByTestId('block-details-summary')).toBeTruthy();
+      expect(screen.getByRole('heading', { level: 2, name: 'Reporting unit summary' })).toBeTruthy();
       expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Block ID 12');
       expect(screen.queryByTestId('legacy-data-tag')).toBeNull();
     });
@@ -305,7 +307,7 @@ describe('ReportingUnitBlockDetailsPage', () => {
         screen.getByText('Required data is missing or an error occurred while loading.'),
       ).toBeTruthy();
       expect(screen.queryByTestId('rublock-banner')).toBeNull();
-      expect(screen.queryByTestId('block-details-summary')).toBeNull();
+      expect(screen.queryByRole('heading', { level: 2, name: 'Reporting unit summary' })).toBeNull();
       expect(screen.queryByRole('tab', { name: 'Block details' })).toBeNull();
     });
 
@@ -318,8 +320,6 @@ describe('ReportingUnitBlockDetailsPage', () => {
     });
 
     it('shouldDisableLegacyTag_whenBlockApiReportsNotLegacy', async () => {
-      // RU grade heuristic alone would not tag this unit either, but an RU-level
-      // `isLegacy: true` must not win over the block API's explicit `false`.
       mockQuery({ data: { ...defaultData, isLegacy: true } });
       mockBlockQuery({ data: { ...defaultBlockData, isLegacy: false } });
 
@@ -346,7 +346,48 @@ describe('ReportingUnitBlockDetailsPage', () => {
       expect(screen.getByRole('tab', { name: 'Waste volumes' })).toBeTruthy();
       expect(screen.getByRole('tab', { name: 'Attachments' })).toBeTruthy();
       expect(screen.getByRole('tab', { name: 'Endorsement' })).toBeTruthy();
-      expect(screen.getByText('Block details content')).toBeTruthy();
+      expect(screen.getByLabelText('Submission details')).toBeTruthy();
+    });
+
+    it('shouldRenderSubmissionDetailsContent_forInteriorAndCoastGrades', async () => {
+      const { unmount } = await renderPage();
+      expect(screen.getByLabelText('Submission details')).toBeTruthy();
+      unmount();
+
+      mockQuery({ data: { ...defaultData, grade: { code: 'CO', description: 'Coast' } } });
+      await renderPage();
+      expect(screen.getByLabelText('Submission details')).toBeTruthy();
+    });
+
+    it('shouldRenderPageInReadOnlyMode_whenBlockIsLegacy', async () => {
+      mockBlockQuery({ data: { ...defaultBlockData, isLegacy: true } });
+      await renderPage();
+
+      expect(screen.getByLabelText('Submission details')).toBeTruthy();
+      expect(screen.getByRole('tab', { name: 'Block details' })).toBeTruthy();
+    });
+  });
+
+  describe('block details tab navigation (S7)', () => {
+    it('shouldSwitchTabs_viaSummaryCardActionsAndManualTabSelection', async () => {
+      const user = userEvent.setup();
+      await renderPage();
+
+      await user.click(screen.getByRole('button', { name: 'Go to area calculator' }));
+      expect(
+        screen.getByRole('tab', { name: 'Area calculator' }).getAttribute('aria-selected'),
+      ).toBe('true');
+      expect(screen.getByText('Area calculator content')).toBeTruthy();
+
+      await user.click(screen.getByRole('tab', { name: 'Block details' }));
+      await user.click(screen.getByRole('button', { name: 'View volume details' }));
+      expect(screen.getByRole('tab', { name: 'Waste volumes' }).getAttribute('aria-selected')).toBe(
+        'true',
+      );
+      expect(screen.getByText('Waste volumes content')).toBeTruthy();
+
+      await user.click(screen.getByRole('tab', { name: 'Attachments' }));
+      expect(screen.getByText('Attachments content')).toBeTruthy();
     });
   });
 

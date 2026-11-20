@@ -98,6 +98,8 @@
                 <skip.unit.tests>false</skip.unit.tests>
                 <jacoco.skip>false</jacoco.skip>
                 <checkstyle.skip>false</checkstyle.skip>
+                <checkstyle.failsOnError>true</checkstyle.failsOnError>
+                <checkstyle.includeTestSourceDirectory>true</checkstyle.includeTestSourceDirectory>
             </properties>
         </profile>
         <profile>
@@ -170,10 +172,6 @@
             <scope>runtime</scope>
         </dependency>
         <dependency>
-            <groupId>com.zaxxer</groupId>
-            <artifactId>HikariCP</artifactId>
-        </dependency>
-        <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-security-oauth2-client</artifactId>
         </dependency>
@@ -214,6 +212,14 @@
             <artifactId>lombok</artifactId>
             <optional>true</optional>
         </dependency>
+        <!-- Development-only: restarts the app when classes are recompiled. Optional and runtime-scoped,
+             so it is not applied transitively and Spring Boot excludes it from the repackaged jar. -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-devtools</artifactId>
+            <scope>runtime</scope>
+            <optional>true</optional>
+        </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
@@ -221,11 +227,6 @@
         <dependency>
             <groupId>org.mapstruct</groupId>
             <artifactId>mapstruct</artifactId>
-            <version>${mapstruct.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.mapstruct</groupId>
-            <artifactId>mapstruct-processor</artifactId>
             <version>${mapstruct.version}</version>
         </dependency>
         <dependency>
@@ -260,11 +261,6 @@
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-flyway</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-flyway-test</artifactId>
             <scope>test</scope>
         </dependency>
@@ -276,11 +272,6 @@
     </dependencies>
     <dependencyManagement>
         <dependencies>
-            <dependency>
-                <groupId>org.antlr</groupId>
-                <artifactId>antlr4-runtime</artifactId>
-                <version>4.13.2</version>
-            </dependency>
             <dependency>
                 <groupId>com.nimbusds</groupId>
                 <artifactId>nimbus-jose-jwt</artifactId>
@@ -577,7 +568,7 @@
                 <executions>
                     <execution>
                         <id>validate</id>
-                        <phase>checkstyle</phase>
+                        <phase>validate</phase>
                         <goals>
                             <goal>check</goal>
                         </goals>

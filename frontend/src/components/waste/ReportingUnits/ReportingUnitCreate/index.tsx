@@ -45,6 +45,32 @@ const ReportingUnitCreate: FC = () => {
   const auth = useAuth();
 
   const { samplingOptions, districtOptions } = useWasteSearchFilterOptions();
+  const validateGradeForDistrict = (value: {
+    readonly districtCode: string | null;
+    readonly gradeCode: string | null;
+    readonly samplingCode: string | null;
+  }): string | undefined => {
+    if (value.samplingCode !== 'AVG' || value.districtCode === null) {
+      return undefined;
+    }
+
+    const supportedGrades =
+      districtOptions.find((district) => district.code === value.districtCode)?.areas ?? [];
+
+    if (supportedGrades.length === 0) {
+      return 'The selected district has no configured grade for District Average.';
+    }
+
+    if (value.gradeCode === null) {
+      return 'You must select a grade supported by the selected district.';
+    }
+
+    if (!supportedGrades.includes(value.gradeCode)) {
+      return 'The selected grade is not supported by this district.';
+    }
+
+    return undefined;
+  };
   const createMutation = useReportingUnitCreateMutation({
     notificationTarget: 'create-ru',
     onSuccess: (ruId) => {
@@ -62,6 +88,10 @@ const ReportingUnitCreate: FC = () => {
       districtCode: null as string | null,
       samplingCode: 'AVG' as string | null,
       gradeCode: null as string | null,
+    },
+    validators: {
+      onChange: ({ value }) => validateGradeForDistrict(value),
+      onSubmit: ({ value }) => validateGradeForDistrict(value),
     },
     onSubmit: async ({ value }) => {
       await createMutation.mutateAsync(value as ReportingUnitCreateDto);
@@ -279,6 +309,17 @@ const ReportingUnitCreate: FC = () => {
             />
           )}
         </form.Field>
+        <form.Subscribe selector={(state) => [state.errorMap.onChange, state.errorMap.onSubmit]}>
+          {([onChangeError, onSubmitError]) => {
+            const error = onSubmitError ?? onChangeError;
+
+            return error ? (
+              <div className="cds--form-requirement" role="alert">
+                {error}
+              </div>
+            ) : null;
+          }}
+        </form.Subscribe>
         <form.Subscribe selector={(state) => [state.canSubmit, state.isSubmitting]}>
           {([canSubmit, isSubmitting]) => (
             <Button

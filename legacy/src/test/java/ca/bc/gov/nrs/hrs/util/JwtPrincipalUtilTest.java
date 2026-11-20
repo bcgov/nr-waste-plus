@@ -3,6 +3,8 @@ package ca.bc.gov.nrs.hrs.util;
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import ca.bc.gov.nrs.hrs.dto.base.IdentityProvider;
 import ca.bc.gov.nrs.hrs.dto.base.Role;
@@ -15,7 +17,6 @@ import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.stream.Stream;
 import org.apache.commons.lang3.StringUtils;
-import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -388,7 +389,7 @@ class JwtPrincipalUtilTest {
     return new JwtAuthenticationToken(createJwt(attributes), List.of());
   }
 
-  private static @NotNull Jwt createJwt(Map<String, Object> attributes) {
+  private static Jwt createJwt(Map<String, Object> attributes) {
     return new Jwt(
         "token",
         LocalDateTime.now().minusMinutes(10).toInstant(ZoneOffset.UTC),
@@ -409,6 +410,74 @@ class JwtPrincipalUtilTest {
     Set<String> actualGroups = JwtPrincipalUtil.getGroups(jwtAuthenticationToken);
 
     assertEquals(expectedGroups, actualGroups);
+  }
+
+  @Test
+  @DisplayName("getGroups should filter non-string claims from a Jwt")
+  void shouldGetGroupsFromJwt() {
+    Map<String, Object> claims = Map.of("cognito:groups", List.of("Viewer_00001271", 42));
+
+    assertThat(JwtPrincipalUtil.getGroups(createJwt(claims)))
+        .containsExactly("Viewer_00001271");
+  }
+
+  @Test
+  @DisplayName("getGroups should return an empty set for a null Jwt")
+  void shouldReturnEmptyGroupsForNullJwt() {
+    assertThat(JwtPrincipalUtil.getGroups((Jwt) null)).isEmpty();
+  }
+
+  @Test
+  @DisplayName("getGroups should handle a Jwt with missing claims")
+  void shouldReturnEmptyGroupsForJwtWithNullClaims() {
+    Jwt jwt = mock(Jwt.class);
+    when(jwt.getClaims()).thenReturn(null);
+
+    assertThat(JwtPrincipalUtil.getGroups(jwt)).isEmpty();
+  }
+
+  @Test
+  @DisplayName("getGroups should handle a Jwt authentication with missing attributes")
+  void shouldReturnEmptyGroupsForAuthenticationWithNullAttributes() {
+    JwtAuthenticationToken principal = mock(JwtAuthenticationToken.class);
+    when(principal.getTokenAttributes()).thenReturn(null);
+
+    assertThat(JwtPrincipalUtil.getGroups(principal)).isEmpty();
+  }
+
+  @Test
+  @DisplayName("name parsing handles a comma-formatted name without trailing details")
+  void shouldParseCommaFormattedNameWithoutSuffix() {
+    Map<String, Object> claims = Map.of(
+        "custom:idp_name", "idir",
+        "custom:idp_display_name", "Smith, Alice");
+
+    assertThat(JwtPrincipalUtil.getFirstName(createJwt(claims))).isEqualTo("Alice");
+    assertThat(JwtPrincipalUtil.getLastName(createJwt(claims))).isEqualTo("Smith");
+  }
+
+  @Test
+  @DisplayName("name parsing preserves a supplied first name when family name is absent")
+  void shouldPreserveFirstNameWhenFamilyNameIsAbsent() {
+    Map<String, Object> claims = Map.of(
+        "custom:idp_name", "idir",
+        "given_name", "Jane",
+        "family_name", "");
+
+    assertThat(JwtPrincipalUtil.getName(createJwt(claims))).isEqualTo("Jane");
+    assertThat(JwtPrincipalUtil.getLastName(createJwt(claims))).isEmpty();
+  }
+
+  @Test
+  @DisplayName("name parsing preserves a supplied family name when first name is absent")
+  void shouldPreserveFamilyNameWhenFirstNameIsAbsent() {
+    Map<String, Object> claims = Map.of(
+        "custom:idp_name", "idir",
+        "given_name", "",
+        "family_name", "Smith");
+
+    assertThat(JwtPrincipalUtil.getFirstName(createJwt(claims))).isEmpty();
+    assertThat(JwtPrincipalUtil.getLastName(createJwt(claims))).isEqualTo("Smith");
   }
 
   private static Stream<Arguments> provideGroupsTestData() {

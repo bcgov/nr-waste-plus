@@ -93,7 +93,7 @@ Backend checks (`backend/`):
 Legacy checks (`legacy/`):
 
 ```bash
-./mvnw verify -P all-tests checkstyle:checkstyle -Dcheckstyle.skip=false
+./mvnw verify -P all-tests
 ```
 
 Scenario-suite checks (`cypress/`):

@@ -41,13 +41,14 @@ Run commands from `legacy/`:
 # Run the default test suite
 ./mvnw test
 
-# Run the CI verification profile and Checkstyle
-./mvnw verify -P all-tests checkstyle:checkstyle -Dcheckstyle.skip=false
+# Run unit and Oracle integration tests, coverage checks, and Checkstyle
+./mvnw verify -P all-tests
 ```
 
-CI runs the `all-tests` profile and Checkstyle with Java 21. Oracle-backed
-integration tests require Docker because they start an isolated Oracle
-Testcontainer.
+The `all-tests` profile runs Checkstyle across production and test sources,
+unit tests, Oracle integration tests, and the coverage check with Java 21.
+Oracle-backed integration tests require Docker because they start an isolated
+Oracle Testcontainer.
 
 ## Documentation
 

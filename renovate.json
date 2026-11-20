@@ -2,5 +2,14 @@
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
     "github>bcgov/renovate-config#2026.10.29"
+  ],
+  "packageRules": [
+    {
+      "description": "cyclonedx-core-java 13.2.0 and newer are incompatible with cyclonedx-maven-plugin 2.9.3: 13.2.0 dropped commons-io and 13.4.0 dropped packageurl-java, both still required by the plugin, so the makeAggregateBom goal fails to load with a Guice ProvisionException. 13.1.0 is the newest version that works.",
+      "matchPackageNames": [
+        "org.cyclonedx:cyclonedx-core-java"
+      ],
+      "allowedVersions": "<=13.1.0"
+    }
   ]
 }

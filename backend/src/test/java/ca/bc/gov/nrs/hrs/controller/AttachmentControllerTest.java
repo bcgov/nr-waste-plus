@@ -3,6 +3,8 @@ package ca.bc.gov.nrs.hrs.controller;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.nullable;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -14,6 +16,8 @@ import ca.bc.gov.nrs.hrs.dto.block.AttachmentFinalizeResponse;
 import ca.bc.gov.nrs.hrs.dto.block.AttachmentIntentResponse;
 import ca.bc.gov.nrs.hrs.exception.AttachmentConflictException;
 import ca.bc.gov.nrs.hrs.exception.AttachmentNotFoundException;
+import ca.bc.gov.nrs.hrs.exception.ReportingUnitNotFoundException;
+import ca.bc.gov.nrs.hrs.security.ResourceScopeGuard;
 import ca.bc.gov.nrs.hrs.service.block.AttachmentService;
 import java.time.Instant;
 import org.junit.jupiter.api.BeforeEach;
@@ -43,6 +47,9 @@ class AttachmentControllerTest {
 
   @Mock
   private AttachmentService attachmentService;
+
+  @Mock
+  private ResourceScopeGuard resourceScopeGuard;
 
   @InjectMocks
   private AttachmentController attachmentController;
@@ -106,7 +113,7 @@ class AttachmentControllerTest {
                 .content(
                     "{\"documentType\":\"FINAL_MAP\",\"fileName\":\"huge.pdf\","
                         + "\"mimeType\":\"application/pdf\",\"declaredSizeBytes\":999999999}"))
-        .andExpect(status().isPayloadTooLarge());
+        .andExpect(status().isContentTooLarge());
   }
 
   @Test
@@ -224,5 +231,133 @@ class AttachmentControllerTest {
     mockMvc
         .perform(get("/api/reporting-units/1/2/attachments/999/download"))
         .andExpect(status().isNotFound());
+  }
+
+  @Test
+  @DisplayName("POST /attempt returns 403 when role is VIEWER (in scope)")
+  void createAttempt_whenViewerInScope_returns403() throws Exception {
+    doThrow(new ResponseStatusException(HttpStatus.FORBIDDEN, "Viewer role is read-only"))
+        .when(resourceScopeGuard)
+        .verify(nullable(Jwt.class), eq(1L));
+
+    mockMvc
+        .perform(
+            post("/api/reporting-units/1/2/attachments/attempt")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(
+                    "{\"documentType\":\"FINAL_MAP\",\"fileName\":\"map.pdf\","
+                        + "\"mimeType\":\"application/pdf\",\"declaredSizeBytes\":1024}"))
+        .andExpect(status().isForbidden());
+
+    verify(resourceScopeGuard).verify(nullable(Jwt.class), eq(1L));
+  }
+
+  @Test
+  @DisplayName("POST /attempt returns 404 when RU is out of scope (no existence disclosure)")
+  void createAttempt_whenViewerOutOfScope_returns404() throws Exception {
+    doThrow(new ReportingUnitNotFoundException(1L))
+        .when(resourceScopeGuard)
+        .verify(nullable(Jwt.class), eq(1L));
+
+    mockMvc
+        .perform(
+            post("/api/reporting-units/1/2/attachments/attempt")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(
+                    "{\"documentType\":\"FINAL_MAP\",\"fileName\":\"map.pdf\","
+                        + "\"mimeType\":\"application/pdf\",\"declaredSizeBytes\":1024}"))
+        .andExpect(status().isNotFound());
+
+    verify(resourceScopeGuard).verify(nullable(Jwt.class), eq(1L));
+  }
+
+  @Test
+  @DisplayName("POST /attempt succeeds when caller has write permission (SUBMITTER in scope)")
+  void createAttempt_whenSubmitterInScope_succeeds() throws Exception {
+    Instant expiresAt = Instant.parse("2026-01-01T00:05:00Z");
+    when(attachmentService.createAttempt(nullable(Jwt.class), eq(1L), eq(2L), any()))
+        .thenReturn(
+            new AttachmentIntentResponse(
+                501L,
+                "hrs/staging/block/2/attachment/501/final-map.pdf",
+                "https://s3.example.com/hrs/staging/block/2/attachment/501/final-map.pdf?signature=xyz",
+                expiresAt));
+
+    mockMvc
+        .perform(
+            post("/api/reporting-units/1/2/attachments/attempt")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(
+                    "{\"documentType\":\"FINAL_MAP\",\"fileName\":\"map.pdf\","
+                        + "\"mimeType\":\"application/pdf\",\"declaredSizeBytes\":1024}"))
+        .andExpect(status().isCreated());
+
+    verify(resourceScopeGuard).verify(nullable(Jwt.class), eq(1L));
+  }
+
+  @Test
+  @DisplayName("POST /{attachmentId}/finalize returns 403 when role is VIEWER (in scope)")
+  void finalizeAttachment_whenViewerInScope_returns403() throws Exception {
+    doThrow(new ResponseStatusException(HttpStatus.FORBIDDEN, "Viewer role is read-only"))
+        .when(resourceScopeGuard)
+        .verify(nullable(Jwt.class), eq(1L));
+
+    mockMvc
+        .perform(post("/api/reporting-units/1/2/attachments/501/finalize"))
+        .andExpect(status().isForbidden());
+
+    verify(resourceScopeGuard).verify(nullable(Jwt.class), eq(1L));
+  }
+
+  @Test
+  @DisplayName("POST /{attachmentId}/finalize returns 404 when RU is out of scope")
+  void finalizeAttachment_whenViewerOutOfScope_returns404() throws Exception {
+    doThrow(new ReportingUnitNotFoundException(1L))
+        .when(resourceScopeGuard)
+        .verify(nullable(Jwt.class), eq(1L));
+
+    mockMvc
+        .perform(post("/api/reporting-units/1/2/attachments/501/finalize"))
+        .andExpect(status().isNotFound());
+
+    verify(resourceScopeGuard).verify(nullable(Jwt.class), eq(1L));
+  }
+
+  @Test
+  @DisplayName("POST /{attachmentId}/finalize succeeds when caller is SUBMITTER in scope")
+  void finalizeAttachment_whenSubmitterInScope_succeeds() throws Exception {
+    when(attachmentService.finalizeAttachment(nullable(Jwt.class), eq(1L), eq(2L), eq(501L)))
+        .thenReturn(
+            new AttachmentFinalizeResponse(
+                501L,
+                "hrs/permanent/block/2/attachment/501/final-map.pdf",
+                "FINALIZED",
+                "abc123hash"));
+
+    mockMvc
+        .perform(post("/api/reporting-units/1/2/attachments/501/finalize"))
+        .andExpect(status().isOk());
+
+    verify(resourceScopeGuard).verify(nullable(Jwt.class), eq(1L));
+  }
+
+  @Test
+  @DisplayName("GET /{attachmentId}/download delegates to resourceScopeGuard")
+  void getDownloadUrl_verifiesResourceScope() throws Exception {
+    when(attachmentService.getDownloadUrl(nullable(Jwt.class), eq(1L), eq(2L), eq(501L)))
+        .thenReturn(
+            new AttachmentDownloadResponse(
+                501L,
+                "final-map.pdf",
+                "application/pdf",
+                1024L,
+                "https://s3.example.com/download?sig=xyz",
+                Instant.now().plusSeconds(300)));
+
+    mockMvc
+        .perform(get("/api/reporting-units/1/2/attachments/501/download"))
+        .andExpect(status().isOk());
+
+    verify(resourceScopeGuard).verify(nullable(Jwt.class), eq(1L));
   }
 }

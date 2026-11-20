@@ -211,6 +211,7 @@ const mockDistrictOptions: CodeDescriptionDto[] = [
 const mockSamplingOptions: CodeDescriptionDto[] = [
   { code: 'SAM1', description: 'Ground Sampling' },
   { code: 'SAM2', description: 'Crown Sampling' },
+  { code: 'AVG', description: 'District Average' },
 ];
 
 const mockClients: CodeDescriptionDto[] = [
@@ -336,8 +337,14 @@ describe('ReportingUnitCreate', () => {
 
     it('renders the sampling option dropdown', async () => {
       await renderComponent();
-      const samplingInput = screen.getByLabelText('Sampling option');
+      const samplingInput = screen.getByRole('combobox', { name: 'Sampling option' });
+      const districtAverageOption = screen.getByRole('option', { name: 'District Average' });
+
       expect(samplingInput).toBeDefined();
+      expect(districtAverageOption).toBeDefined();
+      expect(
+        districtAverageOption instanceof HTMLOptionElement && districtAverageOption.selected,
+      ).toBe(true);
     });
 
     it('renders form element', async () => {
@@ -495,6 +502,20 @@ describe('grade selection', () => {
       const gradeGroup = screen.queryByTestId('grade-radio-group');
       expect(gradeGroup).toBeNull();
     });
+  });
+
+  it('blocks District Average creation when the selected district has no configured grade', async () => {
+    await renderComponent();
+    const samplingComboBox = screen.getByLabelText('Sampling option');
+    const districtComboBox = screen.getByLabelText('District');
+
+    await userEvent.selectOptions(samplingComboBox, 'AVG');
+    await userEvent.selectOptions(districtComboBox, 'DPG');
+
+    const gradeError = await screen.findByRole('alert');
+    expect(gradeError.textContent).toContain(
+      'The selected district has no configured grade for District Average.',
+    );
   });
 });
 

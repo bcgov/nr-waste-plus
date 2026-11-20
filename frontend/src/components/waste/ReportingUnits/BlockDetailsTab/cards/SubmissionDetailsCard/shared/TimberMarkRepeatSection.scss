@@ -1,0 +1,30 @@
+.timber-mark-repeat-section {
+  &__row {
+    display: flex;
+    align-items: flex-end;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+
+    .cds--form-item {
+      flex: 1;
+    }
+  }
+
+  &__remove {
+    flex: 0 0 auto;
+    margin-bottom: 0.125rem;
+  }
+
+  &__value {
+    margin: 0 0 0.5rem;
+  }
+
+  &__label {
+    font-weight: 600;
+  }
+
+  &__limit {
+    display: block;
+    margin-top: 0.5rem;
+  }
+}

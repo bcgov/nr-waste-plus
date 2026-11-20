@@ -22,3 +22,7 @@ Then('I wait for the text {string} to appear after {string}', (text: string,wait
   cy.wait(`@${waitFor}`,{ timeout: 10 * 1000 });
   cy.contains(text, { timeout: CONTENT_TIMEOUT }).should('be.visible');
 });
+
+Then('the {string} tab should be selected', (tabName: string) => {
+  cy.findByRole('tab', { name: tabName }).should('have.attr', 'aria-selected', 'true');
+});

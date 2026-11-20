@@ -8,10 +8,7 @@ import globals from 'globals';
 import reactHooks from 'eslint-plugin-react-hooks';
 import testingLibrary from 'eslint-plugin-testing-library';
 import vitest from '@vitest/eslint-plugin';
-import { FlatCompat } from '@eslint/eslintrc';
 import { globalIgnores, defineConfig } from 'eslint/config';
-
-const compat = new FlatCompat();
 
 // Local rule: barrel re-exports (`export ... from './x'`) stay sorted
 // case-insensitively by source module — keeps the @/types barrel stable
@@ -61,9 +58,7 @@ const barrelPlugin = {
 
 export default defineConfig([
   globalIgnores(['dist', 'coverage', 'node_modules', 'dev-dist', '.devcontainer', 'scripts', 'src/routeTree.gen.ts']),
-  ...compat.config({
-    extends: ['plugin:react-hooks/recommended'],
-  }),
+  reactHooks.configs.flat.recommended,
   {
     files: ['**/*.{ts,tsx}'],
     extends: [js.configs.recommended, tseslint.configs.recommended, eslintConfigPrettier],

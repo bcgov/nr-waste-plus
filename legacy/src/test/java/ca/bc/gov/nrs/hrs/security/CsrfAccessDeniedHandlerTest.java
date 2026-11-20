@@ -18,7 +18,8 @@ import org.springframework.security.web.csrf.MissingCsrfTokenException;
 @DisplayName("Unit Test | CSRF Access Denied Handler")
 class CsrfAccessDeniedHandlerTest {
 
-  private final Logger logger = (Logger) LoggerFactory.getLogger(SecurityEventLoggingListener.class);
+  private final Logger logger = (Logger) LoggerFactory
+      .getLogger(SecurityEventLoggingListener.class);
   private ListAppender<ILoggingEvent> appender;
   private CsrfAccessDeniedHandler handler;
 

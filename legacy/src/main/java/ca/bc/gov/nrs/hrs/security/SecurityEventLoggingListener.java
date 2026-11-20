@@ -2,7 +2,6 @@ package ca.bc.gov.nrs.hrs.security;
 
 import jakarta.servlet.http.HttpServletRequest;
 import java.time.Instant;
-import java.util.function.Supplier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -56,17 +55,16 @@ public class SecurityEventLoggingListener {
   public void onAuthorizationDenied(AuthorizationDeniedEvent<?> event) {
     HttpServletRequest request = event.getObject() instanceof RequestAuthorizationContext context
         ? context.getRequest() : currentRequest();
-    Supplier<Authentication> supplier = event.getAuthentication();
-    Authentication authentication = supplier.get();
+    Authentication authentication = event.getAuthentication().get();
     if (authentication == null || authentication instanceof AnonymousAuthenticationToken) {
-      logEvent("AUTHENTICATION_FAILED", 401, request, event.getAuthentication(), null);
+      logEvent("AUTHENTICATION_FAILED", 401, request, authentication, null);
       return;
     }
-    logEvent("AUTHORIZATION_DENIED", 403, request, event.getAuthentication(), null);
+    logEvent("AUTHORIZATION_DENIED", 403, request, authentication, null);
   }
 
   void logEvent(String eventName, int status, HttpServletRequest request,
-      Supplier<Authentication> authentication, String failureCategory) {
+      Authentication authentication, String failureCategory) {
     String identity = safeIdentity(authentication);
     String[] parts = identity == null ? new String[] {"", ""} : identity.split("\\|", 2);
     String issuer = parts[0];
@@ -94,12 +92,11 @@ public class SecurityEventLoggingListener {
     return "";
   }
 
-  private static String safeIdentity(Supplier<Authentication> supplier) {
-    if (supplier == null) {
+  private static String safeIdentity(Authentication authentication) {
+    if (authentication == null) {
       return null;
     }
-    Authentication authentication = supplier.get();
-    Object principal = authentication == null ? null : authentication.getPrincipal();
+    Object principal = authentication.getPrincipal();
     if (principal instanceof Jwt jwt) {
       return (jwt.getIssuer() == null ? "" : jwt.getIssuer().toString()) + "|"
           + valueOrEmpty(jwt.getSubject());
