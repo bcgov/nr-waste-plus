@@ -90,10 +90,12 @@ const resolveBackendOrigin = (): Cypress.Chainable<string> => {
       const match = /VITE_BACKEND_URL:\s*['"]([^'"]+)['"]/.exec(body);
 
       if (!match) {
-        throw new Error(
-          "Could not resolve VITE_BACKEND_URL from /data/config.js; the session " +
-            "probe cannot reach the backend.",
-        );
+        // Local runs serve the stock `public/data/config.js` (an empty
+        // `window.config`), which carries no VITE_BACKEND_URL. The packaged
+        // dev default is the localhost backend; deployed previews always
+        // carry the value, so this fallback only ever fires locally.
+        backendOriginCache = "http://localhost:8080";
+        return backendOriginCache;
       }
 
       backendOriginCache = match[1].replace(/\/+$/, "");
@@ -123,6 +125,125 @@ const assertBackendAcceptsSession = (): void => {
     });
   });
 };
+
+/**
+ * Waits until the browser origin stops changing across the broker redirect
+ * chain.
+ *
+ * The realm hands off through several hosted pages before the login form
+ * appears (app → loginproxy realm → the broker's own login page, e.g.
+ * `logontest7.gov.bc.ca` for BCeID or Azure AD for IDIR). The first
+ * cross-origin hop is therefore not necessarily the last, and `cy.origin`
+ * must be pinned to the origin that actually hosts the form.
+ *
+ * Samples the origin repeatedly until two consecutive samples agree (or the
+ * hop budget runs out).
+ */
+const waitForStableOrigin = (): Cypress.Chainable<string> => {
+  const settle = (previous: string, hops: number): Cypress.Chainable<string> =>
+    cy
+      .wait(750, { log: false })
+      .then(() => cy.location("origin", { timeout: 30_000 }))
+      .then((current) => {
+        if (current === previous || hops >= 12) {
+          return cy.wrap(current, { log: false });
+        }
+        return settle(current, hops + 1);
+      });
+
+  return cy
+    .location("origin", { timeout: 30_000 })
+    .then((first) => settle(first, 0));
+};
+
+/**
+ * Answers the Entra MFA prompt with a TOTP code derived from the test
+ * account's authenticator secret (pattern:
+ * https://bcgov.github.io/sso-docs/advanced/automating-mfa-totp). Entra shows
+ * the code entry on the same origin as the password form; if the account's
+ * default method is an authenticator push instead, switches to "Use a
+ * verification code" first. No prompt at all (MFA-exempt account) returns
+ * quietly.
+ *
+ * Requires `idir_totp_secret` — the base32 key from My Sign-Ins → Add
+ * sign-in method → Microsoft Authenticator → "Can't scan QR code?".
+ */
+const completeTotpChallenge = (username: string): Cypress.Chainable<void> =>
+  cy
+    .env(["idir_totp_secret"])
+    .then((env) => cy.wrap(env.idir_totp_secret as string | undefined))
+    .then((secret) =>
+      cy
+        .get("body", { timeout: 20_000 })
+        .then(($body) => {
+          const codeField = $body.find('#idTxtBx_SAOTCC_OTC, input[name="otc"]');
+          const otherWay = $body.find("#signInAnotherWay");
+
+          if (codeField.length === 0 && otherWay.length === 0) {
+            return cy.wrap(null); // no MFA prompt — exempt account
+          }
+
+          if (!secret) {
+            throw new Error(
+              "Entra MFA prompt present but `idir_totp_secret` is not configured in " +
+                "cypress/.env — register a TOTP authenticator on the test IDIR account " +
+                "and store its base32 key.",
+            );
+          }
+
+          if (codeField.length === 0) {
+            cy.get("#signInAnotherWay").click();
+            cy.get('[data-value="PhoneAppOTP"]').click();
+          }
+
+          return cy
+            .task<string>("totp:fresh", secret, { log: false })
+            .then((token) => {
+              cy.get('#idTxtBx_SAOTCC_OTC, input[name="otc"]')
+                .first()
+                .type(token, { log: false });
+              cy.get('#idSubmit_SAOTCC_Continue, input[type="submit"], button[type="submit"]')
+                .first()
+                .click();
+              return cy.wrap(null);
+            });
+        })
+        .then(() => undefined),
+    );
+
+/**
+ * Clears the interstitials Entra can show between MFA and the redirect back
+ * to the app — "Pick an account" (clicks the tile for the signing-in user)
+ * and "Stay signed in?" (declines) — in whatever order they come. Bounded
+ * poll: returns once neither screen is present or the hop budget runs out;
+ * the outer pathname wait fails the run if the redirect never arrives.
+ */
+const finishEntraInterstitials = (username: string, hops: number): Cypress.Chainable<void> =>
+  cy
+    .get("body", { timeout: 10_000 })
+    .then(($body) => {
+      const staySignedIn = $body.find("input#idBtn_Back, input[value='No']");
+      if (staySignedIn.length > 0) {
+        cy.wrap(staySignedIn.first(), { log: false }).click();
+        return finishEntraInterstitials(username, hops + 1);
+      }
+
+      if (/pick an account/i.test($body.text())) {
+        const localPart = username.split("\\").pop()!.split("@")[0];
+        const escaped = localPart.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        cy.contains(new RegExp(`^${escaped}`), { matchCase: false }).first().click();
+        return finishEntraInterstitials(username, hops + 1);
+      }
+
+      return undefined;
+    })
+    .then(() => undefined)
+    .then(() => {
+      if (hops >= 10) {
+        return undefined;
+      }
+      return finishEntraInterstitials(username, hops + 1);
+    });
 
 /**
  * Logs in as the given provider and lands on `afterLoginLocation`.
@@ -165,52 +286,44 @@ const doLogin = (
 
         // The hosted login page is cross-origin, so every command that runs there
         // stays inside `cy.origin` and nothing depends on a hardcoded IdP host.
-        //
-        // The assertion is load-bearing: without it `cy.location` yields whatever
-        // origin exists at that instant and `timeout` never applies, so a redirect
-        // chain that has not landed yet passes the app's own origin into
-        // `cy.origin` and the failure surfaces later as a 30 s wait on
-        // `.site-title`. This race is slower on a CI runner, where Chrome can take
-        // ~19 s to connect, than on a workstation.
         const appOrigin = new URL(Cypress.config("baseUrl") as string).origin;
 
-        cy.location("origin", { timeout: 30_000 })
-          .should("not.eq", appOrigin)
-          .then((loginOrigin) => {
-            cy.origin(
-              loginOrigin,
-              { args: { provider, username, password } },
-              ({ provider: loginProvider, username: loginUsername, password: loginPassword }) => {
-                // The realm's brokers expose different hosted pages: IDIR
-                // federates through Azure AD (`loginfmt`/`passwd`), while the
-                // BCeID business page keeps the classic `#user`/`#password`
-                // form. IDIR additionally demands an MFA challenge that
-                // cannot be automated — an MFA-exempt automation account is
-                // required for unattended IDIR logins (tracked with the CSS
-                // platform owners).
-                if (loginProvider === "idir") {
-                  cy.get('input[name="loginfmt"]', { timeout: 30_000 }).type(
-                    loginUsername,
-                    { log: false },
-                  );
-                  cy.get('input[value="Next"]', { timeout: 30_000 }).click();
-                  cy.get('input[name="passwd"]', { timeout: 30_000 }).type(
-                    loginPassword,
-                    { log: false },
-                  );
-                  cy.get('input[value="Sign in"]', { timeout: 30_000 }).click();
-                } else {
-                  cy.get("#user", { timeout: 30_000 }).type(loginUsername, {
-                    log: false,
-                  });
-                  cy.get("#password", { timeout: 30_000 }).type(loginPassword, {
-                    log: false,
-                  });
-                  cy.get('input[type="submit"]', { timeout: 30_000 }).click();
-                }
-              },
-            );
-          });
+        waitForStableOrigin().then((loginOrigin) => {
+          cy.origin(
+            loginOrigin,
+            { args: { provider, username, password } },
+            ({ provider: loginProvider, username: loginUsername, password: loginPassword }) => {
+              // The realm's brokers expose different hosted pages: IDIR
+              // federates through Azure AD (`loginfmt`/`passwd`, plus the
+              // "Stay signed in?" interstitial), while the BCeID business page
+              // keeps the classic `#user`/`#password` form.
+              if (loginProvider === "idir") {
+                cy.get('input[name="loginfmt"]', { timeout: 30_000 }).type(
+                  loginUsername,
+                  { log: false },
+                );
+                cy.get('input[value="Next"]', { timeout: 30_000 }).click();
+                cy.get('input[name="passwd"]', { timeout: 30_000 }).type(
+                  loginPassword,
+                  { log: false },
+                );
+                cy.get('input[value="Sign in"]', { timeout: 30_000 }).click();
+                // Entra MFA (TOTP from the account's authenticator secret) and
+                // the post-sign-in interstitials — both on this origin.
+                completeTotpChallenge(loginUsername);
+                finishEntraInterstitials(loginUsername, 0);
+              } else {
+                cy.get("#user", { timeout: 30_000 }).type(loginUsername, {
+                  log: false,
+                });
+                cy.get("#password", { timeout: 30_000 }).type(loginPassword, {
+                  log: false,
+                });
+                cy.get('input[type="submit"]', { timeout: 30_000 }).click();
+              }
+            },
+          );
+        });
 
         // `pathname` already matches while the OAuth callback (`/search?code=…`)
         // is still being exchanged, and `cy.session` snapshots as soon as this
@@ -226,10 +339,10 @@ const doLogin = (
       {
         validate: assertBackendAcceptsSession,
         // B1 (#1083): reuse the IdP session across specs in one run, so the
-        // logontest7.gov.bc.ca login dance runs once per run instead of once per
-        // spec. A logout in one spec is now self-healing rather than poisonous:
-        // validate() fails on the revoked token and Cypress re-runs setup once for
-        // the next spec, instead of replaying a dead session into every later one.
+        // login dance runs once per run instead of once per spec. A logout in
+        // one spec is now self-healing rather than poisonous: validate() fails
+        // on the revoked token and Cypress re-runs setup once for the next
+        // spec, instead of replaying a dead session into every later one.
         cacheAcrossSpecs: true,
       },
     );

@@ -1,9 +1,11 @@
 import { defineConfig } from "cypress";
 import webpack from "@cypress/webpack-preprocessor";
 import { addCucumberPreprocessorPlugin } from "@badeball/cypress-cucumber-preprocessor";
-import * as dotenv from "dotenv"; 
+import * as dotenv from "dotenv";
 import fs from "node:fs";
 import path from "node:path";
+
+import { freshTotp, generateTotp } from "./cypress/support/helpers/totp";
 
 dotenv.config();
 
@@ -139,6 +141,8 @@ async function setupNodeEvents(
   });
 
   on("task", {
+    "totp:generate": (secret: string) => generateTotp(secret),
+    "totp:fresh": async (secret: string) => freshTotp(secret),
     "a11y:getSource": () => {
       if (!axeSourceCache) {
         const axePath = require.resolve("axe-core/axe.min.js");
