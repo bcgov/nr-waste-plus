@@ -162,6 +162,22 @@ resilience4j:
         wait-duration-in-open-state: 10s
         permitted-number-of-calls-in-half-open-state: 2
         automatic-transition-from-open-to-half-open-enabled: true
+      # Dedicated instances for the deferred legacy code endpoints: their expected 404s must not
+      # trip the shared breaker used by healthy legacy searches and block reads.
+      harvestStatusCodes:
+        sliding-window-type: COUNT_BASED
+        sliding-window-size: 10
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 10s
+        permitted-number-of-calls-in-half-open-state: 2
+        automatic-transition-from-open-to-half-open-enabled: true
+      maturityTypeCodes:
+        sliding-window-type: COUNT_BASED
+        sliding-window-size: 10
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 10s
+        permitted-number-of-calls-in-half-open-state: 2
+        automatic-transition-from-open-to-half-open-enabled: true
   retry:
     instances:
       saveUserPreferences:
@@ -194,6 +210,19 @@ ca:
           key: ${FORESTCLIENTAPI_KEY:placeholder-api-key}
         legacy-api:
           address: ${LEGACY_URL:http://127.0.0.1:9090}
+        codes:
+          # D33/D36 (plan da-block-details-v2): variant-scoped harvest status allowlists.
+          # Interior = Complete/Incomplete; Coast = Complete/Incomplete/N/A. Codes are the
+          # THE.WASTE_HARVEST_STATUS_CODE values seeded on feat/1251-code-options and still
+          # tracked for confirmation against the production table (open question A1).
+          harvest-status-variants:
+            INTERIOR:
+              - COM
+              - INC
+            COASTAL:
+              - COM
+              - INC
+              - NA
         object-storage:
           endpoint: ${OBJECT_STORAGE_ENDPOINT:}
           presigner-endpoint: ${OBJECT_STORAGE_PRESIGNER_ENDPOINT:}

@@ -19,18 +19,28 @@ public interface BlockMapper {
    * Maps a persisted block to its detail representation.
    *
    * <p>Persisted blocks are always postgres-owned, so the legacy marker is fixed to {@code false}.
+   * Timber marks and waste assessment area summary are populated separately by the service.
    */
   @Mapping(target = "isLegacy", constant = "false")
+  @Mapping(target = "secondaryTimberMarks", expression = "java(java.util.List.of())")
+  @Mapping(target = "roadPermitTimberMarks", expression = "java(java.util.List.of())")
+  @Mapping(target = "wasteAssessmentAreaSummary", expression = "java(null)")
+  @Mapping(target = "districtAverageVolumesSummary", expression = "java(null)")
   BlockDetailDto toDetailDto(BlockEntity entity);
 
   /**
    * Maps a persisted block to its resource response representation.
    *
    * <p>Persisted blocks are always postgres-owned, so the legacy marker is fixed to {@code false}.
+   * Timber marks and waste assessment area summary are populated separately by the service.
    */
   @Mapping(target = "state", expression = "java(entity.isDraft() ? \"DRAFT\" : \"ACTIVE\")")
   @Mapping(target = "version", source = "revision")
   @Mapping(target = "isLegacy", constant = "false")
+  @Mapping(target = "secondaryTimberMarks", expression = "java(java.util.List.of())")
+  @Mapping(target = "roadPermitTimberMarks", expression = "java(java.util.List.of())")
+  @Mapping(target = "wasteAssessmentAreaSummary", expression = "java(null)")
+  @Mapping(target = "districtAverageVolumesSummary", expression = "java(null)")
   BlockResponseDto toResponseDto(BlockEntity entity);
 
   /** Maps a create payload to a new entity. */
