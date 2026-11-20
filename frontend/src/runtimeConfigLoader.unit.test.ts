@@ -129,14 +129,53 @@ describe('runtimeConfigLoader', () => {
   });
 
   it('handles DOM script error events cleanly and removes the script element', async () => {
+    const clearTimeoutSpy = vi.spyOn(globalThis, 'clearTimeout');
     const appendSpy = vi.spyOn(document.head, 'appendChild').mockImplementation((node) => {
       const script = node as HTMLScriptElement;
       script.dispatchEvent(new Event('error'));
       return node;
     });
 
-    await expect(ensureRuntimeConfig({ retryDelaysMs: [0] })).resolves.toBe(false);
+    await expect(ensureRuntimeConfig({ retryDelaysMs: [0], requestTimeoutMs: 5000 })).resolves.toBe(
+      false,
+    );
     expect(appendSpy).toHaveBeenCalledTimes(1);
+    expect(clearTimeoutSpy).toHaveBeenCalledTimes(1);
+    expect(document.head.querySelectorAll('script')).toHaveLength(0);
+  });
+
+  it('times out and cleans up stalled DOM config script requests', async () => {
+    const removeSpies: ReturnType<typeof vi.spyOn>[] = [];
+    const appendSpy = vi.spyOn(document.head, 'appendChild').mockImplementation((node) => {
+      removeSpies.push(vi.spyOn(node as HTMLScriptElement, 'remove'));
+      return node;
+    });
+
+    await expect(ensureRuntimeConfig({ retryDelaysMs: [0], requestTimeoutMs: 10 })).resolves.toBe(
+      false,
+    );
+    expect(appendSpy).toHaveBeenCalledTimes(1);
+    expect(removeSpies[0]).toHaveBeenCalledTimes(1);
+    expect(document.head.querySelectorAll('script')).toHaveLength(0);
+  });
+
+  it('resolves when config.js succeeds and optional params.js stalls until timeout', async () => {
+    const appendSpy = vi.spyOn(document.head, 'appendChild').mockImplementation((node) => {
+      const script = node as HTMLScriptElement;
+      if (script.src.includes('/data/config.js')) {
+        globalThis.window.config = {
+          VITE_APP_NAME: 'Waste Plus',
+          VITE_BACKEND_URL: 'https://api.example.test',
+        };
+        script.dispatchEvent(new Event('load'));
+      }
+      return node;
+    });
+
+    await expect(ensureRuntimeConfig({ retryDelaysMs: [0], requestTimeoutMs: 10 })).resolves.toBe(
+      true,
+    );
+    expect(appendSpy).toHaveBeenCalledTimes(2);
     expect(document.head.querySelectorAll('script')).toHaveLength(0);
   });
 });

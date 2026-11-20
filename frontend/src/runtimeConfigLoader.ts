@@ -1,9 +1,11 @@
 const CONFIG_SCRIPT_PATH = '/data/config.js';
 const PARAMS_SCRIPT_PATH = '/data/params.js';
 const DEFAULT_RETRY_DELAYS_MS: readonly number[] = [250, 750, 1500];
+const DEFAULT_SCRIPT_TIMEOUT_MS = 3000;
 
 export interface RuntimeConfigLoaderOptions {
   retryDelaysMs?: readonly number[];
+  requestTimeoutMs?: number;
   loadScript?: (src: string) => Promise<void>;
 }
 
@@ -22,7 +24,7 @@ const waitMs = (ms: number): Promise<void> => {
   });
 };
 
-const appendAndAwaitScript = (src: string): Promise<void> =>
+const appendAndAwaitScript = (src: string, timeoutMs: number): Promise<void> =>
   new Promise((resolve, reject) => {
     if (typeof document === 'undefined') {
       reject(new Error(`Cannot load runtime config script "${src}" without a DOM document.`));
@@ -39,7 +41,13 @@ const appendAndAwaitScript = (src: string): Promise<void> =>
     script.src = src;
     script.async = false;
 
+    let timeoutId: ReturnType<typeof globalThis.setTimeout> | undefined;
+
     const cleanup = (): void => {
+      if (timeoutId !== undefined) {
+        globalThis.clearTimeout(timeoutId);
+        timeoutId = undefined;
+      }
       script.removeEventListener('load', handleLoad);
       script.removeEventListener('error', handleError);
       script.remove();
@@ -55,6 +63,12 @@ const appendAndAwaitScript = (src: string): Promise<void> =>
       reject(new Error(`Failed to load runtime config script "${src}".`));
     };
 
+    const handleTimeout = (): void => {
+      cleanup();
+      reject(new Error(`Timed out loading runtime config script "${src}".`));
+    };
+
+    timeoutId = globalThis.setTimeout(handleTimeout, timeoutMs);
     script.addEventListener('load', handleLoad, { once: true });
     script.addEventListener('error', handleError, { once: true });
     target.appendChild(script);
@@ -88,7 +102,10 @@ export const ensureRuntimeConfig = async (
   }
 
   const retryDelaysMs = options.retryDelaysMs ?? DEFAULT_RETRY_DELAYS_MS;
-  const loadScript = options.loadScript ?? appendAndAwaitScript;
+  const requestTimeoutMs = options.requestTimeoutMs ?? DEFAULT_SCRIPT_TIMEOUT_MS;
+  const loadScript =
+    options.loadScript ??
+    ((src: string): Promise<void> => appendAndAwaitScript(src, requestTimeoutMs));
 
   for (let index = 0; index < retryDelaysMs.length; index += 1) {
     await waitMs(retryDelaysMs[index] ?? 0);
