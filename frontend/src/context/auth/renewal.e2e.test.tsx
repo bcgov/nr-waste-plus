@@ -3,20 +3,15 @@ import path from 'node:path';
 
 import { expect, test, type Page, type TestInfo } from '@playwright/test';
 
-import { getMockUserStorageKey, mockJwt } from '@/config/tests/auth.helper';
+import { getMockAuthority, getMockUserStorageKey, mockJwt } from '@/config/tests/auth.helper';
 
 const OIDC_FILES = path.resolve(process.cwd(), 'stub', '__files', 'oidc');
 const SESSION_FIXTURE = path.join(OIDC_FILES, 'session-idir.json');
 
-/** Mirrors buildMockAuthority() in auth.helper.ts for discovery metadata. */
-const mockAuthority = (): string => {
-  const backendUrl = process.env.VITE_BACKEND_URL ?? 'http://localhost:8080';
-  return `http://${backendUrl.replace(/^https?:\/\//, '').replace(':8080', ':8181')}/realms/standard`;
-};
-
 type StoredSession = {
   access_token: string;
   id_token: string;
+  refresh_token: string;
   expires_at: number;
 };
 
@@ -40,7 +35,7 @@ const seedSession = async (
     'Content-Type': 'application/json',
     'Access-Control-Allow-Origin': '*',
   };
-  const issuer = mockAuthority();
+  const issuer = getMockAuthority();
 
   // The e2e webServer runs only `vite preview` — WireMock is not started — so
   // discovery and JWKS must be stubbed for signinSilent() to reach the token route.
@@ -88,6 +83,7 @@ const seedSession = async (
       body: JSON.stringify({
         access_token: session.access_token,
         id_token: session.id_token,
+        refresh_token: session.refresh_token,
         token_type: 'Bearer',
         expires_in: 1800,
         scope: 'openid profile email',
@@ -154,6 +150,7 @@ test.describe('Activity-based session renewal @idir-only', () => {
 
     // The first failure schedules the retry 60 s later; advance past it.
     await page.clock.runFor(60_000);
+    await expect.poll(() => tokenCalls()).toBeGreaterThanOrEqual(2);
     await expect.poll(() => storedExpiresAt(page)).toBeNull();
     await expect(page.getByTestId('landing-button__idir')).toBeVisible();
   });

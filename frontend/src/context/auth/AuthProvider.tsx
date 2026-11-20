@@ -160,6 +160,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       } else {
         // Keep a still-valid session visible while the retry is pending —
         // otherwise a transient renewal error logs the user out immediately.
+        // An already-expired user is intentionally not restored: with no valid
+        // token left it would render an authenticated shell that only 401s.
         if (stored && !stored.expired) {
           const appUser = toAppUser(stored);
           setUser((prev) =>

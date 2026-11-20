@@ -61,7 +61,7 @@ const signJwt = (payload: Record<string, unknown>): string => {
  * `src/services/keycloak.ts` exactly: the VITE_BACKEND_URL host with port
  * 8080 swapped for the WireMock port 8181.
  */
-const buildMockAuthority = (): string => {
+export const getMockAuthority = (): string => {
   const backendUrl = process.env.VITE_BACKEND_URL ?? 'http://localhost:8080';
   const host = backendUrl.replace(/^https?:\/\//, '').replace(':8080', ':8181');
   return `http://${host}/realms/standard`;
@@ -76,7 +76,7 @@ const buildMockAuthority = (): string => {
  * Verified against the installed `oidc-client-ts` 3.5.0.
  */
 export const getMockUserStorageKey = (): string =>
-  `oidc.user:${buildMockAuthority()}:${process.env.VITE_KEYCLOAK_CLIENT_ID ?? 'waste-waste-plus-6729'}`;
+  `oidc.user:${getMockAuthority()}:${process.env.VITE_KEYCLOAK_CLIENT_ID ?? 'waste-waste-plus-6729'}`;
 
 /**
  * Whether tests should run against the mock realm rather than a real one.
@@ -183,7 +183,10 @@ export async function mockAuthenticate(page: Page, metadata: Record<string, any>
   } catch (error) {
     // Diagnostics: what does the page actually hold against the key we injected?
     const storageKeys = await page.evaluate(() => Object.keys(localStorage));
-    const injected = await page.evaluate((k) => localStorage.getItem(k) !== null, getMockUserStorageKey());
+    const injected = await page.evaluate(
+      (k) => localStorage.getItem(k) !== null,
+      getMockUserStorageKey(),
+    );
     // eslint-disable-next-line no-console
     console.log(
       `DEBUG storageKeys=${JSON.stringify(storageKeys)} injected=${injected} ` +
