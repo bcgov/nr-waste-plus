@@ -58,10 +58,11 @@ function AuthenticatedLayout() {
         void navigate({ to: '/', replace: true });
         return;
       }
-      // Guard against persisting '/login' itself: after navigate('/login')
-      // fires, the router state updates before this component unmounts; the
-      // skip preserves the real intended URL saved on the first pass.
-      if (pathname !== '/login') {
+      // Guard against persisting internal hop URLs: after navigate('/login')
+      // or a failed /authCallback exchange, router state updates before this
+      // component unmounts; skipping them preserves the real intended URL and
+      // prevents a failed login from replaying a stale redirect on retry.
+      if (pathname !== '/login' && pathname !== '/authCallback') {
         persistRedirectUrl(`${pathname}${searchStr}`);
       }
       void navigate({ href: '/login', replace: true });

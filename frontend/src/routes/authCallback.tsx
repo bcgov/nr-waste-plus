@@ -4,6 +4,7 @@ import { useEffect, useRef } from 'react';
 
 import { clearPersistedRedirect, readPersistedRedirect } from '@/routing/redirectStorage';
 import { completeSignIn } from '@/services/keycloak';
+import { navigateTo } from '@/utils/navigation';
 
 /**
  * Completes the OIDC authorization-code exchange.
@@ -29,10 +30,16 @@ function AuthCallback() {
         await completeSignIn();
         const target = readPersistedRedirect() ?? '/dashboard';
         clearPersistedRedirect();
-        await navigate({ href: target, replace: true });
+        // Full-page navigation: the mounted AuthProvider evaluated before the
+        // exchange stored the user, so a SPA navigate would leave stale state.
+        // A new document remounts the provider, which reads the stored user
+        // while isLoading still suppresses the route guard.
+        navigateTo(target);
       } catch {
         // Failed exchange — land on the public landing page unauthenticated.
+        // Clear after navigation so the guard cannot re-persist the stale target.
         await navigate({ href: '/', replace: true });
+        clearPersistedRedirect();
       }
     })();
   }, [navigate]);
