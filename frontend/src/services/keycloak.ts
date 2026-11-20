@@ -105,6 +105,15 @@ export const getUserManager = (): UserManager => {
 };
 
 /**
+ * Reads the stored OIDC user without triggering renewal. Used by the auth
+ * provider to schedule renewal at the token's actual expiry and to decide
+ * whether an idle user's session should lapse.
+ *
+ * @returns The stored user, or `null` when there is no session.
+ */
+export const getStoredUser = async (): Promise<User | null> => getUserManager().getUser();
+
+/**
  * Determines whether the stored user's access token is expired or inside the
  * renewal margin.
  *

@@ -1,7 +1,5 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { render, waitFor, act } from '@testing-library/react';
-import { describe, it, expect, vi } from 'vitest';
-import type { User } from 'oidc-client-ts';
+import { afterEach, beforeEach, describe, it, expect, vi } from 'vitest';
 
 import { Role, type FamLoginUser, type FamRole } from '@/types/auth.types';
 import { navigateTo } from '@/utils/navigation';
@@ -9,10 +7,20 @@ import { navigateTo } from '@/utils/navigation';
 import { AuthContext, type AuthContextType } from './AuthContext';
 import { AuthProvider, preserveRolesReference } from './AuthProvider';
 
-// The provider consumes the OIDC service exclusively; mock it at the module
-// boundary and craft fake users with real Keycloak claim shapes.
+import type { User } from 'oidc-client-ts';
+
+const activityService = vi.hoisted(() => ({
+  isUserActive: vi.fn<() => boolean>(),
+  startActivityTracking: vi.fn<() => () => void>(),
+  resetActivityTracking: vi.fn<() => void>(),
+}));
+
+vi.mock('@/services/activity', () => activityService);
+
 const keycloakService = vi.hoisted(() => ({
   ensureFreshUser: vi.fn<() => Promise<User | null>>(),
+  getStoredUser: vi.fn<() => Promise<User | null>>(),
+  needsRenewal: vi.fn<(user: User | null | undefined) => boolean>(),
   signIn: vi.fn<() => Promise<void>>(),
   signOut: vi.fn<() => Promise<void>>(),
   removeUserLocally: vi.fn<() => Promise<void>>(),
@@ -41,10 +49,13 @@ const fakeOidcUser = (overrides: Partial<Record<string, unknown>> = {}): User =>
     ...overrides,
   }) as unknown as User;
 
+const mockSession = (user: User | null): void => {
+  keycloakService.getStoredUser.mockResolvedValue(user);
+  keycloakService.ensureFreshUser.mockResolvedValue(user);
+};
+
 /**
- * Renders the provider and returns a live ref to the latest context value —
- * NOT a snapshot. The provider re-renders the Consumer on every state change,
- * so `context.current` always reflects the current auth state.
+ * Renders the provider and returns a live ref to the latest context value.
  */
 const renderWithProvider = () => {
   const context: { current: AuthContextType | undefined } = { current: undefined };
@@ -58,7 +69,6 @@ const renderWithProvider = () => {
       </AuthContext.Consumer>
     </AuthProvider>,
   );
-  // Flush the mount effect so isLoading resolves before assertions.
   return waitFor(() => {
     if (!context.current) throw new Error('context not ready');
     expect(context.current.isLoading).toBe(false);
@@ -66,8 +76,27 @@ const renderWithProvider = () => {
 };
 
 describe('AuthProvider', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    activityService.isUserActive.mockReturnValue(true);
+    activityService.startActivityTracking.mockReturnValue(() => undefined);
+    keycloakService.getStoredUser.mockResolvedValue(null);
+    keycloakService.ensureFreshUser.mockResolvedValue(null);
+    keycloakService.removeUserLocally.mockResolvedValue(undefined);
+    keycloakService.needsRenewal.mockImplementation(
+      (user) =>
+        !!user &&
+        (user.expired || (user.expires_at ?? Number.MAX_SAFE_INTEGER) - Date.now() / 1000 < 60),
+    );
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+  });
+
   it('initializes the session from the OIDC service and maps the user', async () => {
-    keycloakService.ensureFreshUser.mockResolvedValue(fakeOidcUser());
+    mockSession(fakeOidcUser());
     const context = await renderWithProvider();
 
     expect(keycloakService.ensureFreshUser).toHaveBeenCalledTimes(1);
@@ -83,24 +112,67 @@ describe('AuthProvider', () => {
   });
 
   it('stays signed out when no session exists', async () => {
-    keycloakService.ensureFreshUser.mockResolvedValue(null);
     const context = await renderWithProvider();
 
     expect(context.current?.isLoggedIn).toBe(false);
     expect(context.current?.user).toBeUndefined();
+    expect(keycloakService.ensureFreshUser).not.toHaveBeenCalled();
   });
 
-  it('clears the local session when initialization fails', async () => {
-    keycloakService.ensureFreshUser.mockRejectedValue(new Error('unresolvable'));
+  it('renews an active user inside the renewal window without clearing storage', async () => {
+    mockSession(fakeOidcUser({ expires_at: Math.floor(Date.now() / 1000) + 10 }));
     const context = await renderWithProvider();
 
+    expect(keycloakService.ensureFreshUser).toHaveBeenCalledTimes(1);
+    expect(context.current?.isLoggedIn).toBe(true);
+    expect(keycloakService.removeUserLocally).not.toHaveBeenCalled();
+    expect(context.current?.renewalError).toBeUndefined();
+  });
+
+  it('lets an idle user expire locally without calling renew', async () => {
+    activityService.isUserActive.mockReturnValue(false);
+    mockSession(fakeOidcUser({ expired: true, expires_at: Math.floor(Date.now() / 1000) - 10 }));
+    const context = await renderWithProvider();
+
+    expect(keycloakService.ensureFreshUser).not.toHaveBeenCalled();
     expect(keycloakService.removeUserLocally).toHaveBeenCalledTimes(1);
     expect(context.current?.user).toBeUndefined();
-    expect(context.current?.isLoading).toBe(false);
+  });
+
+  it('schedules the next evaluation from the refreshed token expiry', async () => {
+    const timeoutSpy = vi.spyOn(globalThis, 'setTimeout');
+    mockSession(fakeOidcUser({ expires_at: Math.floor(Date.now() / 1000) + 300 }));
+    await renderWithProvider();
+
+    const delays = timeoutSpy.mock.calls.map((call) => Number(call[1]));
+    expect(delays.some((delay) => delay >= 230_000 && delay <= 240_000)).toBe(true);
+  });
+
+  it('reports a renewal failure and clears the stale session after two attempts', async () => {
+    mockSession(fakeOidcUser({ expires_at: Math.floor(Date.now() / 1000) + 10 }));
+    keycloakService.ensureFreshUser.mockRejectedValue(new Error('network down'));
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const timeoutSpy = vi.spyOn(globalThis, 'setTimeout');
+    const context = await renderWithProvider();
+
+    expect(context.current?.renewalError).toBe('renewal-failed');
+    expect(errorSpy).toHaveBeenCalledWith('auth.renewal_failed');
+    expect(keycloakService.removeUserLocally).not.toHaveBeenCalled();
+
+    // Fire the retry timer deterministically instead of waiting 60 real seconds.
+    const retry = timeoutSpy.mock.calls.find((call) => Number(call[1]) === 60_000);
+    expect(retry).toBeDefined();
+    const nowSpy = vi.spyOn(Date, 'now').mockReturnValue(Date.now() + 120_000);
+    await act(async () => {
+      await (retry?.[0] as () => void)();
+    });
+    await waitFor(() => expect(keycloakService.removeUserLocally).toHaveBeenCalledTimes(1));
+    nowSpy.mockRestore();
+    timeoutSpy.mockRestore();
+    errorSpy.mockRestore();
   });
 
   it('starts the sign-in redirect for the chosen provider', async () => {
-    keycloakService.ensureFreshUser.mockResolvedValue(null);
     const context = await renderWithProvider();
 
     await act(async () => {
@@ -115,7 +187,7 @@ describe('AuthProvider', () => {
   });
 
   it('signs out through the realm without local pre-cleanup', async () => {
-    keycloakService.ensureFreshUser.mockResolvedValue(fakeOidcUser());
+    mockSession(fakeOidcUser());
     const context = await renderWithProvider();
 
     await act(async () => {
@@ -128,7 +200,7 @@ describe('AuthProvider', () => {
   });
 
   it('falls back to local cleanup and the landing page when the sign-out redirect fails', async () => {
-    keycloakService.ensureFreshUser.mockResolvedValue(fakeOidcUser());
+    mockSession(fakeOidcUser());
     keycloakService.signOut.mockRejectedValue(new Error('redirect failed'));
     const context = await renderWithProvider();
 
@@ -143,7 +215,7 @@ describe('AuthProvider', () => {
   });
 
   it('collects distinct client values across roles', async () => {
-    keycloakService.ensureFreshUser.mockResolvedValue(
+    mockSession(
       fakeOidcUser({
         access_token: `header.${btoa(
           JSON.stringify({
@@ -172,18 +244,15 @@ describe('preserveRolesReference', () => {
 
   it('returns nextUser when previousUser is undefined', () => {
     const nextUser = { ...mockUser, roles: mockRoles };
-    const result = preserveRolesReference(undefined, nextUser);
-    expect(result).toBe(nextUser);
+    expect(preserveRolesReference(undefined, nextUser)).toBe(nextUser);
   });
 
   it('returns nextUser when nextUser is undefined', () => {
-    const result = preserveRolesReference(mockUser, undefined);
-    expect(result).toBeUndefined();
+    expect(preserveRolesReference(mockUser, undefined)).toBeUndefined();
   });
 
   it('returns nextUser when both are undefined', () => {
-    const result = preserveRolesReference(undefined, undefined);
-    expect(result).toBeUndefined();
+    expect(preserveRolesReference(undefined, undefined)).toBeUndefined();
   });
 
   it('returns nextUser when role content differs', () => {
@@ -210,32 +279,16 @@ describe('preserveRolesReference', () => {
 
   it('returns nextUser unchanged when roles reference is already the same', () => {
     const sharedRoles = mockRoles;
-    const previousUser = {
-      ...mockUser,
-      roles: sharedRoles,
-    };
-    const nextUser = {
-      ...mockUser,
-      roles: sharedRoles,
-    };
+    const previousUser = { ...mockUser, roles: sharedRoles };
+    const nextUser = { ...mockUser, roles: sharedRoles };
 
-    const result = preserveRolesReference(previousUser, nextUser);
-
-    expect(result).toBe(nextUser);
+    expect(preserveRolesReference(previousUser, nextUser)).toBe(nextUser);
   });
 
   it('preserves roles while updating other user fields', () => {
     const sharedRoles: FamRole[] = [{ role: Role.SUBMITTER, clients: ['300'] }];
-    const previousUser = {
-      ...mockUser,
-      roles: sharedRoles,
-      email: 'old@example.com',
-    };
-    const nextUser = {
-      ...mockUser,
-      roles: sharedRoles,
-      email: 'new@example.com',
-    };
+    const previousUser = { ...mockUser, roles: sharedRoles, email: 'old@example.com' };
+    const nextUser = { ...mockUser, roles: sharedRoles, email: 'new@example.com' };
 
     const result = preserveRolesReference(previousUser, nextUser);
 
