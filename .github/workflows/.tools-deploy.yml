@@ -34,7 +34,6 @@ jobs:
             fi
             oc delete cronjob/nr-waste-plus-pr${PR}-droppg \
               cronjob/nr-waste-plus-pr${PR}-migratepg \
-              cronjob/nr-waste-plus-pr${PR}-removepg \
               cronjob/nr-waste-plus-pr${PR}-createpg \
               -n cffaf3-tools --ignore-not-found
 
@@ -179,7 +178,7 @@ jobs:
           login_attempts: "8"
           commands: |
             bash .github/scripts/manage-deployment.sh stop "$APP_NAMESPACE" "$APP_DEPLOYMENT" --wait
-            OC_TOKEN="$OC_TOKEN_TOOLS" bash .github/scripts/run-with-oc-login.sh \
+            OC_TOKEN="$OC_TOKEN_TOOLS" OC_NAMESPACE=cffaf3-tools bash .github/scripts/run-with-oc-login.sh \
               bash .github/scripts/run-postgres-lifecycle.sh cffaf3-tools "$PR_NUMBER" "$PR_BRANCH" "$RUN_ATTEMPT"
             bash .github/scripts/manage-deployment.sh start "$APP_NAMESPACE" "$APP_DEPLOYMENT"
 
@@ -233,7 +232,7 @@ jobs:
           login_attempts: "8"
           commands: |
             bash .github/scripts/manage-deployment.sh stop "$APP_NAMESPACE" "$APP_DEPLOYMENT" --wait
-            OC_TOKEN="$OC_TOKEN_TOOLS" bash .github/scripts/run-with-oc-login.sh \
+            OC_TOKEN="$OC_TOKEN_TOOLS" OC_NAMESPACE=cffaf3-tools bash .github/scripts/run-with-oc-login.sh \
               bash .github/scripts/migrate-oracle-pr.sh cffaf3-tools "$PR_NUMBER" "$PR_BRANCH" "$RUN_ATTEMPT"
             bash .github/scripts/manage-deployment.sh start "$APP_NAMESPACE" "$APP_DEPLOYMENT"
 

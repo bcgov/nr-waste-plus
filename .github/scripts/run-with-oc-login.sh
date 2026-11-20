@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 # run-with-oc-login.sh — Run a command under an isolated oc login context.
-# Usage: OC_SERVER=... OC_TOKEN=... bash run-with-oc-login.sh <command> [args...]
+# Usage: OC_SERVER=... OC_TOKEN=... OC_NAMESPACE=... bash run-with-oc-login.sh <command> [args...]
 # Creates a temporary KUBECONFIG so any outer oc session remains unchanged.
 
 set -euo pipefail
@@ -13,6 +13,7 @@ fi
 
 : "${OC_SERVER:?OC_SERVER is required}"
 : "${OC_TOKEN:?OC_TOKEN is required}"
+: "${OC_NAMESPACE:?OC_NAMESPACE is required}"
 
 KUBECONFIG_FILE=$(mktemp)
 trap 'rm -f "${KUBECONFIG_FILE}"' EXIT
@@ -21,7 +22,8 @@ export KUBECONFIG="${KUBECONFIG_FILE}"
 attempt=1
 max_attempts=8
 while [ "${attempt}" -le "${max_attempts}" ]; do
-  if oc --request-timeout=15s login --server="${OC_SERVER}" --token="${OC_TOKEN}"; then
+  if oc --request-timeout=15s login --server="${OC_SERVER}" --token="${OC_TOKEN}" \
+    && oc --request-timeout=15s project "${OC_NAMESPACE}"; then
     break
   fi
   if [ "${attempt}" -eq "${max_attempts}" ]; then
