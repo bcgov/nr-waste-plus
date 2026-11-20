@@ -6,37 +6,58 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import '@/styles/index.scss';
-import App from '@/App.tsx';
-import amplifyconfig from '@/config/fam/config';
-import { queryClient } from '@/config/react-query/config';
-import AnnouncerProvider from '@/context/announcer/AnnouncerProvider';
-import { AuthProvider } from '@/context/auth/AuthProvider';
-import NotificationProvider from '@/context/notification/NotificationProvider';
-import PageTitleProvider from '@/context/pageTitle/PageTitleProvider';
-import { PreferenceProvider } from '@/context/preference/PreferenceProvider.tsx';
-import ThemeProvider from '@/context/theme/ThemeProvider.tsx';
-import { migrateOldServiceWorker } from '@/registerServiceWorker';
+import { ensureRuntimeConfig } from '@/runtimeConfigLoader';
 
-Amplify.configure(amplifyconfig);
-cognitoUserPoolsTokenProvider.setKeyValueStorage(new CookieStorage());
-migrateOldServiceWorker();
+const bootstrapApplication = async (): Promise<void> => {
+  await ensureRuntimeConfig();
 
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <AnnouncerProvider>
-      <AuthProvider>
-        <QueryClientProvider client={queryClient}>
-          <PreferenceProvider>
-            <ThemeProvider>
-              <NotificationProvider>
-                <PageTitleProvider>
-                  <App />
-                </PageTitleProvider>
-              </NotificationProvider>
-            </ThemeProvider>
-          </PreferenceProvider>
-        </QueryClientProvider>
-      </AuthProvider>
-    </AnnouncerProvider>
-  </StrictMode>,
-);
+  const [
+    { default: App },
+    { default: amplifyconfig },
+    { queryClient },
+    { default: AnnouncerProvider },
+    { AuthProvider },
+    { default: NotificationProvider },
+    { default: PageTitleProvider },
+    { PreferenceProvider },
+    { default: ThemeProvider },
+    { migrateOldServiceWorker },
+  ] = await Promise.all([
+    import('@/App.tsx'),
+    import('@/config/fam/config'),
+    import('@/config/react-query/config'),
+    import('@/context/announcer/AnnouncerProvider'),
+    import('@/context/auth/AuthProvider'),
+    import('@/context/notification/NotificationProvider'),
+    import('@/context/pageTitle/PageTitleProvider'),
+    import('@/context/preference/PreferenceProvider.tsx'),
+    import('@/context/theme/ThemeProvider.tsx'),
+    import('@/registerServiceWorker'),
+  ]);
+
+  Amplify.configure(amplifyconfig);
+  cognitoUserPoolsTokenProvider.setKeyValueStorage(new CookieStorage());
+  migrateOldServiceWorker();
+
+  createRoot(document.getElementById('root')!).render(
+    <StrictMode>
+      <AnnouncerProvider>
+        <AuthProvider>
+          <QueryClientProvider client={queryClient}>
+            <PreferenceProvider>
+              <ThemeProvider>
+                <NotificationProvider>
+                  <PageTitleProvider>
+                    <App />
+                  </PageTitleProvider>
+                </NotificationProvider>
+              </ThemeProvider>
+            </PreferenceProvider>
+          </QueryClientProvider>
+        </AuthProvider>
+      </AnnouncerProvider>
+    </StrictMode>,
+  );
+};
+
+void bootstrapApplication();
