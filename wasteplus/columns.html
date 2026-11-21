@@ -237,8 +237,8 @@
         "comments": "<p>Whether the requirement question was answered affirmatively.<\/p>"
     },
     {
-        "tableName": "block_area_segment",
-        "tableFileName": "block_area_segment",
+        "tableName": "block",
+        "tableFileName": "block",
         "tableType": "Table",
         "keyClass": "",
         "keyTitle": "",
@@ -248,7 +248,7 @@
         "nullable": "",
         "autoUpdated": "",
         "defaultValue": "null",
-        "comments": "<p>Audit actor that last updated this segment.<\/p>"
+        "comments": "<p>Audit actor that last updated this block.<\/p>"
     },
     {
         "tableName": "block_mark",
@@ -279,22 +279,22 @@
         "comments": "<p>Foreign key referencing the target block, if applicable.<\/p>"
     },
     {
-        "tableName": "block",
-        "tableFileName": "block",
-        "tableType": "Table",
-        "keyClass": "primaryKey",
-        "keyTitle": "Primary Key",
-        "name": "<i class='icon ion-key iconkey' style='padding-left: 5px;'><\/i>block_id",
-        "type": "bigserial",
-        "length": 19,
-        "nullable": "",
-        "autoUpdated": "√",
-        "defaultValue": "nextval('wasteplus.block_id_seq'::regclass)",
-        "comments": "<p>Unique identifier for the submission block.<\/p>"
-    },
-    {
         "tableName": "block_area_segment",
         "tableFileName": "block_area_segment",
+        "tableType": "Table",
+        "keyClass": "",
+        "keyTitle": "",
+        "name": "source",
+        "type": "varchar",
+        "length": 32,
+        "nullable": "",
+        "autoUpdated": "",
+        "defaultValue": "null",
+        "comments": "<p>Segment derivation source: e.g. MANUAL or FTA.<\/p>"
+    },
+    {
+        "tableName": "block",
+        "tableFileName": "block",
         "tableType": "Table",
         "keyClass": "",
         "keyTitle": "",
@@ -304,7 +304,7 @@
         "nullable": "",
         "autoUpdated": "",
         "defaultValue": "null",
-        "comments": "<p>Audit actor that created this segment.<\/p>"
+        "comments": "<p>Audit actor that created this block.<\/p>"
     },
     {
         "tableName": "block_comment",
@@ -349,18 +349,18 @@
         "comments": "<p>Actor that created the setting.<\/p>"
     },
     {
-        "tableName": "block",
-        "tableFileName": "block",
+        "tableName": "block_area_segment",
+        "tableFileName": "block_area_segment",
         "tableType": "Table",
         "keyClass": "",
         "keyTitle": "",
-        "name": "created_by",
-        "type": "varchar",
-        "length": 128,
+        "name": "created_at",
+        "type": "timestamptz",
+        "length": 35,
         "nullable": "",
         "autoUpdated": "",
-        "defaultValue": "null",
-        "comments": "<p>Audit actor that created this block.<\/p>"
+        "defaultValue": "now()",
+        "comments": "<p>Timestamp when this segment was created.<\/p>"
     },
     {
         "tableName": "reporting_unit",
@@ -391,18 +391,18 @@
         "comments": "<p>Soft-delete flag; active queries must filter is_deleted = FALSE.<\/p>"
     },
     {
-        "tableName": "block",
-        "tableFileName": "block",
+        "tableName": "block_area_segment",
+        "tableFileName": "block_area_segment",
         "tableType": "Table",
-        "keyClass": "foreignKey",
-        "keyTitle": "Foreign Key",
-        "name": "<i class='icon ion-key iconkey' style='padding-left: 5px;'><\/i>status_code",
-        "type": "text",
-        "length": 2147483647,
+        "keyClass": "",
+        "keyTitle": "",
+        "name": "net_waste_area_ha",
+        "type": "numeric",
+        "length": 12,
         "nullable": "√",
         "autoUpdated": "",
         "defaultValue": "null",
-        "comments": "<p>Nullable block status; references approved WAA codes, not status_event history.<\/p>"
+        "comments": "<p>Calculated net waste area for the segment in hectares.<\/p>"
     },
     {
         "tableName": "status_event",
@@ -895,18 +895,18 @@
         "comments": "<p>JSON payload containing event metadata.<\/p>"
     },
     {
-        "tableName": "block",
-        "tableFileName": "block",
+        "tableName": "block_area_segment",
+        "tableFileName": "block_area_segment",
         "tableType": "Table",
         "keyClass": "",
         "keyTitle": "",
-        "name": "is_deleted",
-        "type": "bool",
-        "length": 1,
-        "nullable": "",
+        "name": "starting_area_ha",
+        "type": "numeric",
+        "length": 12,
+        "nullable": "√",
         "autoUpdated": "",
-        "defaultValue": "false",
-        "comments": "<p>Soft-delete flag; live uniqueness indexes exclude deleted rows.<\/p>"
+        "defaultValue": "null",
+        "comments": "<p>Starting area for the segment in hectares.<\/p>"
     },
     {
         "tableName": "block_sponsor",
@@ -1315,18 +1315,18 @@
         "comments": "<p>Source effective value including time; apply active-date rules.<\/p>"
     },
     {
-        "tableName": "block",
-        "tableFileName": "block",
+        "tableName": "block_area_segment",
+        "tableFileName": "block_area_segment",
         "tableType": "Table",
-        "keyClass": "",
-        "keyTitle": "",
-        "name": "updated_at",
-        "type": "timestamptz",
-        "length": 35,
-        "nullable": "",
+        "keyClass": "foreignKey",
+        "keyTitle": "Foreign Key",
+        "name": "<i class='icon ion-key iconkey' style='padding-left: 5px;'><\/i>block_mark_id",
+        "type": "int8",
+        "length": 19,
+        "nullable": "√",
         "autoUpdated": "",
-        "defaultValue": "now()",
-        "comments": "<p>Timestamp when this block was last updated.<\/p>"
+        "defaultValue": "null",
+        "comments": "<p>Optional foreign key referencing the associated block mark.<\/p>"
     },
     {
         "tableName": "formula_set_row",
@@ -1343,18 +1343,18 @@
         "comments": "<p>Actor that created the formula row.<\/p>"
     },
     {
-        "tableName": "block",
-        "tableFileName": "block",
+        "tableName": "block_area_segment",
+        "tableFileName": "block_area_segment",
         "tableType": "Table",
         "keyClass": "",
         "keyTitle": "",
-        "name": "created_at",
-        "type": "timestamptz",
-        "length": 35,
+        "name": "is_deleted",
+        "type": "bool",
+        "length": 1,
         "nullable": "",
         "autoUpdated": "",
-        "defaultValue": "now()",
-        "comments": "<p>Timestamp when this block was created.<\/p>"
+        "defaultValue": "false",
+        "comments": "<p>Soft-delete flag.<\/p>"
     },
     {
         "tableName": "district_volume",
@@ -1553,18 +1553,18 @@
         "comments": "<p>Nullable source update timestamp; Oracle DATE time is preserved.<\/p>"
     },
     {
-        "tableName": "block_area_segment",
-        "tableFileName": "block_area_segment",
+        "tableName": "block",
+        "tableFileName": "block",
         "tableType": "Table",
         "keyClass": "foreignKey",
         "keyTitle": "Foreign Key",
-        "name": "<i class='icon ion-key iconkey' style='padding-left: 5px;'><\/i>block_mark_id",
-        "type": "int8",
-        "length": 19,
+        "name": "<i class='icon ion-key iconkey' style='padding-left: 5px;'><\/i>status_code",
+        "type": "text",
+        "length": 2147483647,
         "nullable": "√",
         "autoUpdated": "",
         "defaultValue": "null",
-        "comments": "<p>Optional foreign key referencing the associated block mark.<\/p>"
+        "comments": "<p>Nullable block status; references approved WAA codes, not status_event history.<\/p>"
     },
     {
         "tableName": "block_submitter",
@@ -1581,18 +1581,18 @@
         "comments": "<p>Business identifier of the submitter.<\/p>"
     },
     {
-        "tableName": "block_area_segment",
-        "tableFileName": "block_area_segment",
+        "tableName": "block",
+        "tableFileName": "block",
         "tableType": "Table",
         "keyClass": "",
         "keyTitle": "",
-        "name": "area_ha",
-        "type": "numeric",
-        "length": 12,
-        "nullable": "√",
+        "name": "is_draft",
+        "type": "bool",
+        "length": 1,
+        "nullable": "",
         "autoUpdated": "",
-        "defaultValue": "null",
-        "comments": "<p>Segment area in hectares.<\/p>"
+        "defaultValue": "true",
+        "comments": "<p>Whether this block is still an uncommitted draft.<\/p>"
     },
     {
         "tableName": "lifecycle_setting",
@@ -1847,18 +1847,32 @@
         "comments": "<p>Audit actor that created this DA extension.<\/p>"
     },
     {
+        "tableName": "block_area_segment",
+        "tableFileName": "block_area_segment",
+        "tableType": "Table",
+        "keyClass": "",
+        "keyTitle": "",
+        "name": "area_ha",
+        "type": "numeric",
+        "length": 12,
+        "nullable": "√",
+        "autoUpdated": "",
+        "defaultValue": "null",
+        "comments": "<p>Segment area in hectares.<\/p>"
+    },
+    {
         "tableName": "block",
         "tableFileName": "block",
         "tableType": "Table",
-        "keyClass": "foreignKey",
-        "keyTitle": "Foreign Key",
-        "name": "<i class='icon ion-key iconkey' style='padding-left: 5px;'><\/i>reporting_unit_id",
+        "keyClass": "",
+        "keyTitle": "",
+        "name": "revision",
         "type": "int8",
         "length": 19,
         "nullable": "",
         "autoUpdated": "",
-        "defaultValue": "null",
-        "comments": "<p>Foreign key referencing the parent reporting unit.<\/p>"
+        "defaultValue": "1",
+        "comments": "<p>Optimistic locking revision counter.<\/p>"
     },
     {
         "tableName": "block_area_segment",
@@ -1866,27 +1880,13 @@
         "tableType": "Table",
         "keyClass": "",
         "keyTitle": "",
-        "name": "road_width_m",
-        "type": "numeric",
-        "length": 12,
-        "nullable": "√",
+        "name": "created_by",
+        "type": "varchar",
+        "length": 128,
+        "nullable": "",
         "autoUpdated": "",
         "defaultValue": "null",
-        "comments": "<p>Road width in meters.<\/p>"
-    },
-    {
-        "tableName": "block",
-        "tableFileName": "block",
-        "tableType": "Table",
-        "keyClass": "",
-        "keyTitle": "",
-        "name": "plc_date",
-        "type": "date",
-        "length": 13,
-        "nullable": "√",
-        "autoUpdated": "",
-        "defaultValue": "null",
-        "comments": "<p>Primary logging complete date.<\/p>"
+        "comments": "<p>Audit actor that created this segment.<\/p>"
     },
     {
         "tableName": "formula_set_row",
@@ -1903,18 +1903,18 @@
         "comments": "<p>Soft-delete flag.<\/p>"
     },
     {
-        "tableName": "block_area_segment",
-        "tableFileName": "block_area_segment",
+        "tableName": "block",
+        "tableFileName": "block",
         "tableType": "Table",
         "keyClass": "primaryKey",
         "keyTitle": "Primary Key",
-        "name": "<i class='icon ion-key iconkey' style='padding-left: 5px;'><\/i>block_area_segment_id",
+        "name": "<i class='icon ion-key iconkey' style='padding-left: 5px;'><\/i>block_id",
         "type": "bigserial",
         "length": 19,
         "nullable": "",
         "autoUpdated": "√",
-        "defaultValue": "nextval('wasteplus.block_area_segment_id_seq'::regclass)",
-        "comments": "<p>Unique identifier for the area segment.<\/p>"
+        "defaultValue": "nextval('wasteplus.block_id_seq'::regclass)",
+        "comments": "<p>Unique identifier for the submission block.<\/p>"
     },
     {
         "tableName": "user_bookmarks",
@@ -1931,22 +1931,22 @@
         "comments": "<p>Unique identifier for the user<\/p>"
     },
     {
-        "tableName": "block_area_segment",
-        "tableFileName": "block_area_segment",
+        "tableName": "block",
+        "tableFileName": "block",
         "tableType": "Table",
         "keyClass": "",
         "keyTitle": "",
-        "name": "road_length_m",
-        "type": "numeric",
-        "length": 12,
+        "name": "plc_date",
+        "type": "date",
+        "length": 13,
         "nullable": "√",
         "autoUpdated": "",
         "defaultValue": "null",
-        "comments": "<p>Road length in meters.<\/p>"
+        "comments": "<p>Primary logging complete date.<\/p>"
     },
     {
-        "tableName": "block_area_segment",
-        "tableFileName": "block_area_segment",
+        "tableName": "block",
+        "tableFileName": "block",
         "tableType": "Table",
         "keyClass": "",
         "keyTitle": "",
@@ -1956,21 +1956,7 @@
         "nullable": "",
         "autoUpdated": "",
         "defaultValue": "now()",
-        "comments": "<p>Timestamp when this segment was created.<\/p>"
-    },
-    {
-        "tableName": "block",
-        "tableFileName": "block",
-        "tableType": "Table",
-        "keyClass": "",
-        "keyTitle": "",
-        "name": "is_draft",
-        "type": "bool",
-        "length": 1,
-        "nullable": "",
-        "autoUpdated": "",
-        "defaultValue": "true",
-        "comments": "<p>Whether this block is still an uncommitted draft.<\/p>"
+        "comments": "<p>Timestamp when this block was created.<\/p>"
     },
     {
         "tableName": "block_area_segment",
@@ -1978,13 +1964,27 @@
         "tableType": "Table",
         "keyClass": "",
         "keyTitle": "",
-        "name": "net_waste_area_ha",
+        "name": "road_width_m",
         "type": "numeric",
         "length": 12,
         "nullable": "√",
         "autoUpdated": "",
         "defaultValue": "null",
-        "comments": "<p>Calculated net waste area for the segment in hectares.<\/p>"
+        "comments": "<p>Road width in meters.<\/p>"
+    },
+    {
+        "tableName": "block_area_segment",
+        "tableFileName": "block_area_segment",
+        "tableType": "Table",
+        "keyClass": "foreignKey",
+        "keyTitle": "Foreign Key",
+        "name": "<i class='icon ion-key iconkey' style='padding-left: 5px;'><\/i>block_id",
+        "type": "int8",
+        "length": 19,
+        "nullable": "",
+        "autoUpdated": "",
+        "defaultValue": "null",
+        "comments": "<p>Foreign key referencing the parent block.<\/p>"
     },
     {
         "tableName": "block_submitter",
@@ -2435,18 +2435,18 @@
         "comments": "<p>Business identifier of the sponsor.<\/p>"
     },
     {
-        "tableName": "block",
-        "tableFileName": "block",
+        "tableName": "block_area_segment",
+        "tableFileName": "block_area_segment",
         "tableType": "Table",
         "keyClass": "",
         "keyTitle": "",
-        "name": "revision",
-        "type": "int8",
-        "length": 19,
+        "name": "updated_by",
+        "type": "varchar",
+        "length": 128,
         "nullable": "",
         "autoUpdated": "",
-        "defaultValue": "1",
-        "comments": "<p>Optimistic locking revision counter.<\/p>"
+        "defaultValue": "null",
+        "comments": "<p>Audit actor that last updated this segment.<\/p>"
     },
     {
         "tableName": "district_volume",
@@ -2533,18 +2533,18 @@
         "comments": "<p>The user or service account that created the record.<\/p>"
     },
     {
-        "tableName": "block",
-        "tableFileName": "block",
+        "tableName": "block_area_segment",
+        "tableFileName": "block_area_segment",
         "tableType": "Table",
         "keyClass": "",
         "keyTitle": "",
-        "name": "updated_by",
-        "type": "varchar",
-        "length": 128,
+        "name": "updated_at",
+        "type": "timestamptz",
+        "length": 35,
         "nullable": "",
         "autoUpdated": "",
-        "defaultValue": "null",
-        "comments": "<p>Audit actor that last updated this block.<\/p>"
+        "defaultValue": "now()",
+        "comments": "<p>Timestamp when this segment was last updated.<\/p>"
     },
     {
         "tableName": "district_average_block",
@@ -2561,18 +2561,18 @@
         "comments": "<p>Integer array of applicable District Average qualifying criteria.<\/p>"
     },
     {
-        "tableName": "block_area_segment",
-        "tableFileName": "block_area_segment",
+        "tableName": "block",
+        "tableFileName": "block",
         "tableType": "Table",
         "keyClass": "",
         "keyTitle": "",
-        "name": "source",
+        "name": "block_type",
         "type": "varchar",
         "length": 32,
         "nullable": "",
         "autoUpdated": "",
         "defaultValue": "null",
-        "comments": "<p>Segment derivation source: e.g. MANUAL or FTA.<\/p>"
+        "comments": "<p>Block category, e.g. DISTRICT_AVERAGE.<\/p>"
     },
     {
         "tableName": "block_mark",
@@ -2785,8 +2785,8 @@
         "comments": "<p>Harvest Billing System window start date.<\/p>"
     },
     {
-        "tableName": "block_area_segment",
-        "tableFileName": "block_area_segment",
+        "tableName": "block",
+        "tableFileName": "block",
         "tableType": "Table",
         "keyClass": "",
         "keyTitle": "",
@@ -2796,7 +2796,7 @@
         "nullable": "",
         "autoUpdated": "",
         "defaultValue": "now()",
-        "comments": "<p>Timestamp when this segment was last updated.<\/p>"
+        "comments": "<p>Timestamp when this block was last updated.<\/p>"
     },
     {
         "tableName": "block_submitter",
@@ -2883,8 +2883,8 @@
         "comments": "<p>Timestamp at which the calculation was performed.<\/p>"
     },
     {
-        "tableName": "block_area_segment",
-        "tableFileName": "block_area_segment",
+        "tableName": "block",
+        "tableFileName": "block",
         "tableType": "Table",
         "keyClass": "",
         "keyTitle": "",
@@ -2894,7 +2894,7 @@
         "nullable": "",
         "autoUpdated": "",
         "defaultValue": "false",
-        "comments": "<p>Soft-delete flag.<\/p>"
+        "comments": "<p>Soft-delete flag; live uniqueness indexes exclude deleted rows.<\/p>"
     },
     {
         "tableName": "block_requirement",
@@ -3415,18 +3415,18 @@
         "comments": "<p>Geographic area associated with the waste policy used for calculating district volume averages. Currently, two areas are supported: INTERIOR (North Interior and South Interior) and COASTAL (Coast).<\/p>"
     },
     {
-        "tableName": "block_area_segment",
-        "tableFileName": "block_area_segment",
+        "tableName": "block",
+        "tableFileName": "block",
         "tableType": "Table",
         "keyClass": "foreignKey",
         "keyTitle": "Foreign Key",
-        "name": "<i class='icon ion-key iconkey' style='padding-left: 5px;'><\/i>block_id",
+        "name": "<i class='icon ion-key iconkey' style='padding-left: 5px;'><\/i>reporting_unit_id",
         "type": "int8",
         "length": 19,
         "nullable": "",
         "autoUpdated": "",
         "defaultValue": "null",
-        "comments": "<p>Foreign key referencing the parent block.<\/p>"
+        "comments": "<p>Foreign key referencing the parent reporting unit.<\/p>"
     },
     {
         "tableName": "block_requirement",
@@ -3513,18 +3513,18 @@
         "comments": "<p>Unique identifier for the calculation snapshot.<\/p>"
     },
     {
-        "tableName": "block",
-        "tableFileName": "block",
+        "tableName": "block_area_segment",
+        "tableFileName": "block_area_segment",
         "tableType": "Table",
         "keyClass": "",
         "keyTitle": "",
-        "name": "block_type",
-        "type": "varchar",
-        "length": 32,
-        "nullable": "",
+        "name": "road_length_m",
+        "type": "numeric",
+        "length": 12,
+        "nullable": "√",
         "autoUpdated": "",
         "defaultValue": "null",
-        "comments": "<p>Block category, e.g. DISTRICT_AVERAGE.<\/p>"
+        "comments": "<p>Road length in meters.<\/p>"
     },
     {
         "tableName": "waa_status_code",
@@ -3698,15 +3698,15 @@
         "tableName": "block_area_segment",
         "tableFileName": "block_area_segment",
         "tableType": "Table",
-        "keyClass": "",
-        "keyTitle": "",
-        "name": "starting_area_ha",
-        "type": "numeric",
-        "length": 12,
-        "nullable": "√",
-        "autoUpdated": "",
-        "defaultValue": "null",
-        "comments": "<p>Starting area for the segment in hectares.<\/p>"
+        "keyClass": "primaryKey",
+        "keyTitle": "Primary Key",
+        "name": "<i class='icon ion-key iconkey' style='padding-left: 5px;'><\/i>block_area_segment_id",
+        "type": "bigserial",
+        "length": 19,
+        "nullable": "",
+        "autoUpdated": "√",
+        "defaultValue": "nextval('wasteplus.block_area_segment_id_seq'::regclass)",
+        "comments": "<p>Unique identifier for the area segment.<\/p>"
     },
     {
         "tableName": "block_mark",
