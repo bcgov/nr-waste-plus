@@ -20,13 +20,7 @@ public class WithMockJwtSecurityContextFactory implements WithSecurityContextFac
 
   @Override
   public SecurityContext createSecurityContext(WithMockJwt annotation) {
-    Jwt jwt = createJwt(
-        annotation.value(),
-        Arrays.asList(annotation.cognitoGroups()),
-        annotation.idp(),
-        annotation.displayName(),
-        annotation.email()
-    );
+    Jwt jwt = createJwt(annotation);
 
     List<GrantedAuthority> authorities = AuthorityUtils.createAuthorityList(
         annotation.cognitoGroups());
@@ -36,6 +30,61 @@ public class WithMockJwtSecurityContextFactory implements WithSecurityContextFac
     context.setAuthentication(token);
 
     return context;
+  }
+
+  /**
+   * Builds a mock JWT from the full annotation, including the Keycloak-shaped attributes
+   * (epic #1506) when they are set.
+   *
+   * @param annotation the annotation carrying every attribute value
+   * @return a populated {@link Jwt}
+   */
+  private static Jwt createJwt(WithMockJwt annotation) {
+    Map<String, Object> claims = createClaims(
+        annotation.value(),
+        Arrays.asList(annotation.cognitoGroups()),
+        annotation.idp(),
+        annotation.displayName(),
+        annotation.email()
+    );
+    putKeycloakClaims(claims, annotation);
+
+    Instant now = Instant.now();
+
+    return Jwt
+        .withTokenValue("token")
+        .header("alg", "none")
+        .header("typ", "JWT")
+        .subject(annotation.value())
+        .issuedAt(now)
+        .expiresAt(now.plusSeconds(3600))
+        .claims(jwtClaims -> jwtClaims.putAll(claims))
+        .build();
+  }
+
+  /**
+   * Merges the Keycloak-shaped attributes (epic #1506) into the claims map. Attributes left at
+   * their default are omitted so Cognito-only tests keep their original claims.
+   *
+   * @param claims the mutable claims map of the mock token
+   * @param annotation the annotation carrying the Keycloak attribute values
+   */
+  static void putKeycloakClaims(Map<String, Object> claims, WithMockJwt annotation) {
+    if (!annotation.identityProvider().isEmpty()) {
+      claims.put("identity_provider", annotation.identityProvider());
+    }
+    if (!annotation.idirUsername().isEmpty()) {
+      claims.put("idir_username", annotation.idirUsername());
+    }
+    if (!annotation.idirUserGuid().isEmpty()) {
+      claims.put("idir_user_guid", annotation.idirUserGuid());
+    }
+    if (!annotation.azp().isEmpty()) {
+      claims.put("azp", annotation.azp());
+    }
+    if (annotation.clientRoles().length > 0) {
+      claims.put("client_roles", Arrays.asList(annotation.clientRoles()));
+    }
   }
 
   /**

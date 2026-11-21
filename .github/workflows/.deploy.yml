@@ -152,6 +152,10 @@ jobs:
             -p COGNITO_CLIENT_ID=${{ secrets.COGNITO_CLIENT_ID }}
             -p COGNITO_ENVIRONMENT=${{ inputs.target || 'dev' }}
             -p COGNITO_USER_POOL=${{ secrets.COGNITO_USER_POOL }}
+            -p KEYCLOAK_CLIENT_ID=${{ secrets.KEYCLOAK_CLIENT_ID }}
+            -p KEYCLOAK_ISSUER_URI=${{ secrets.KEYCLOAK_ISSUER_URI }}
+            -p VITE_KEYCLOAK_CLIENT_ID=${{ secrets.VITE_KEYCLOAK_CLIENT_ID }}
+            -p VITE_KEYCLOAK_URL=${{ secrets.VITE_KEYCLOAK_URL }}
             -p VITE_NODE_ENV=openshift-${{ inputs.target }}
             -p URL_FRONTEND=${{ inputs.url }}
             -p LANDING_URL=${{ inputs.url }}

@@ -1,14 +1,76 @@
-import { fetchAuthSession, signInWithRedirect, signOut } from 'aws-amplify/auth';
 import isEqual from 'lodash/isEqual';
-import { useEffect, useMemo, useState, useCallback, type ReactNode } from 'react';
+import { type User } from 'oidc-client-ts';
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 
-import { signOutUrl } from '@/config/fam/config';
-import { env } from '@/env';
-import { type FamLoginUser, type IdpProviderType, type JWT } from '@/types/auth.types';
+import { isUserActive, resetActivityTracking, startActivityTracking } from '@/services/activity';
+import {
+  ensureFreshUser,
+  getStoredUser,
+  needsRenewal,
+  removeUserLocally,
+  signIn,
+  signOut,
+} from '@/services/keycloak';
+import { type FamLoginUser, type IdpProviderType } from '@/types/auth.types';
 import { navigateTo } from '@/utils/navigation';
 
 import { AuthContext, type AuthContextType } from './AuthContext';
-import { parseToken, getUserAccessTokenFromCookie, getUserIdTokenFromCookie } from './authUtils';
+import { parseToken } from './authUtils';
+
+/** Renewal is scheduled this many seconds before the access token expires. */
+const RENEWAL_LEAD_SECONDS = 65; // 60 s margin + 5 s buffer
+
+/** Guards against duplicate evaluations from the expiry timer and fallback tick. */
+const MIN_EVALUATION_INTERVAL_MS = 30_000;
+
+/** Retry cadence and budget for an active user whose renewal failed. */
+const RENEWAL_RETRY_MS = 60_000;
+const MAX_RENEWAL_RETRIES = 2;
+
+/** Fallback health check, retained from the original cadence. */
+const FALLBACK_INTERVAL_MS = 3 * 60 * 1000;
+
+/**
+ * Decodes a JWT payload segment without signature verification. The payload
+ * is already trusted at this point — `oidc-client-ts` verified the signature
+ * against the realm JWKS before handing the token over.
+ *
+ * @param token The encoded JWT string.
+ * @returns The decoded claims, or `undefined` when the token is malformed.
+ */
+const decodeJwtPayload = (token: string | undefined): Record<string, unknown> | undefined => {
+  if (!token) return undefined;
+  try {
+    const payloadSegment = token.split('.')[1];
+    if (!payloadSegment) return undefined;
+    return JSON.parse(atob(payloadSegment.replace(/-/g, '+').replace(/_/g, '/'))) as Record<
+      string,
+      unknown
+    >;
+  } catch {
+    return undefined;
+  }
+};
+
+/**
+ * Maps an OIDC user to the application user by merging the ID-token profile
+ * with the decoded access-token payload. The access token wins: the CSS
+ * integration mappers place `idir_username`, `display_name` and `client_roles`
+ * on the access token.
+ *
+ * @param user The OIDC user returned by the user manager.
+ * @returns The application user, or `undefined` when the user carries no tokens.
+ */
+const toAppUser = (user: User | null): FamLoginUser | undefined => {
+  if (!user?.access_token && !user?.profile) return undefined;
+  const claims = {
+    ...(user.profile ?? {}),
+    ...decodeJwtPayload(user.access_token),
+  };
+  const parsed = parseToken(claims);
+  if (!parsed) return undefined;
+  return { ...parsed, authToken: user.access_token };
+};
 
 /**
  * Preserves the existing roles array reference when the next auth user has the
@@ -35,6 +97,9 @@ export const preserveRolesReference = (
 /**
  * Provides authenticated user state and auth actions to the application tree.
  *
+ * Renewal is activity-gated: a visible tab with interaction inside the idle
+ * window keeps its session alive; an idle or hidden tab lets the token lapse.
+ *
  * @param props The provider props.
  * @param props.children The subtree that consumes auth state.
  * @returns The auth context provider.
@@ -42,102 +107,172 @@ export const preserveRolesReference = (
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<FamLoginUser | undefined>(undefined);
   const [isLoading, setIsLoading] = useState(true);
+  const [renewalError, setRenewalError] = useState<string | undefined>(undefined);
 
-  const appEnv = Number.isNaN(Number(env.VITE_ZONE)) ? (env.VITE_ZONE ?? 'TEST') : 'TEST';
-  const isMock = env.VITE_MOCK_AUTH === 'true';
+  const renewalTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const fallbackTimerRef = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
+  const lastEvaluationRef = useRef(0);
+  const renewalRetriesRef = useRef(0);
+  const evaluateRef = useRef<(silent: boolean) => Promise<void>>(async () => undefined);
 
-  const loadUserIdToken = useCallback(async (): Promise<JWT | undefined> => {
-    if (isMock) {
-      // This is for test only
-      const idToken = getUserIdTokenFromCookie();
-      const payload = idToken ? JSON.parse(atob(idToken.split('.')[1])) : null;
-      return payload ? { payload } : undefined;
+  const clearRenewalTimer = useCallback(() => {
+    if (renewalTimerRef.current) {
+      clearTimeout(renewalTimerRef.current);
+      renewalTimerRef.current = undefined;
     }
-
-    const { idToken } = (await fetchAuthSession()).tokens ?? {};
-    return idToken;
-  }, [isMock]);
+  }, []);
 
   /**
-   * Refreshes the cached user state from the current authentication token.
-   * When `silent` is true (periodic refresh), skips isLoading toggling and
-   * only updates user state when the underlying data actually changed.
+   * Schedules the next evaluation from a token expiry, or from a fixed retry
+   * delay. Re-arming after every success is essential — otherwise renewal
+   * regresses to the unaligned fallback tick.
+   */
+  const scheduleEvaluation = useCallback(
+    (expiresAt?: number, retryDelayMs?: number) => {
+      clearRenewalTimer();
+      const nowMs = Date.now();
+      const targetMs = expiresAt ? expiresAt * 1000 : nowMs + 5 * 60 * 1000;
+      const delayMs =
+        retryDelayMs ??
+        Math.max(MIN_EVALUATION_INTERVAL_MS, targetMs - nowMs - RENEWAL_LEAD_SECONDS * 1000);
+      renewalTimerRef.current = setTimeout(() => {
+        void evaluateRef.current(true);
+      }, delayMs);
+    },
+    [clearRenewalTimer],
+  );
+
+  const clearSessionLocally = useCallback(async () => {
+    await removeUserLocally();
+    setUser(undefined);
+    clearRenewalTimer();
+  }, [clearRenewalTimer]);
+
+  const handleRenewalFailure = useCallback(
+    async (stored: User | null) => {
+      renewalRetriesRef.current += 1;
+      setRenewalError('renewal-failed');
+      // Stable, test-visible failure signal required by the renewal plan.
+      // eslint-disable-next-line no-console
+      console.error('auth.renewal_failed');
+      if (renewalRetriesRef.current >= MAX_RENEWAL_RETRIES) {
+        await clearSessionLocally();
+      } else {
+        // Keep a still-valid session visible while the retry is pending —
+        // otherwise a transient renewal error logs the user out immediately.
+        // An already-expired user is intentionally not restored: with no valid
+        // token left it would render an authenticated shell that only 401s.
+        if (stored && !stored.expired) {
+          const appUser = toAppUser(stored);
+          setUser((prev) =>
+            isEqual(prev, appUser) ? prev : preserveRolesReference(prev, appUser),
+          );
+        }
+        scheduleEvaluation(undefined, RENEWAL_RETRY_MS);
+      }
+    },
+    [clearSessionLocally, scheduleEvaluation],
+  );
+
+  /**
+   * Evaluates the stored session. Active users inside the renewal window are
+   * renewed; idle users with an expired token are cleared locally so the route
+   * guard lands them on the public login buttons.
+   *
+   * @param silent Skip the loading flag and de-duplicate fallback ticks.
    */
   const refreshUserState = useCallback(
     async (silent = false) => {
-      if (!silent) {
-        setIsLoading(true);
-      }
+      if (silent && Date.now() - lastEvaluationRef.current < MIN_EVALUATION_INTERVAL_MS) return;
+      lastEvaluationRef.current = Date.now();
+
+      let stored: User | null = null;
       try {
-        const idToken = await loadUserIdToken();
-        const newUser = idToken ? parseToken(idToken) : undefined;
-        setUser((prev) => {
-          if (isEqual(prev, newUser)) return prev;
-          return preserveRolesReference(prev, newUser);
-        });
-      } catch {
-        setUser(undefined);
-        if (!silent) await signOut();
-      } finally {
-        if (!silent) {
-          setIsLoading(false);
+        stored = await getStoredUser();
+        if (!stored) {
+          setUser(undefined);
+          setRenewalError(undefined);
+          clearRenewalTimer();
+          return;
         }
+
+        if (needsRenewal(stored) && !isUserActive()) {
+          await clearSessionLocally();
+          setRenewalError(undefined);
+          return;
+        }
+
+        const current = await ensureFreshUser();
+        if (!current) {
+          await handleRenewalFailure(stored);
+          return;
+        }
+
+        renewalRetriesRef.current = 0;
+        setRenewalError(undefined);
+        const appUser = toAppUser(current);
+        setUser((prev) => (isEqual(prev, appUser) ? prev : preserveRolesReference(prev, appUser)));
+        scheduleEvaluation(current.expires_at);
+      } catch {
+        await handleRenewalFailure(stored);
+      } finally {
+        if (!silent) setIsLoading(false);
       }
     },
-    [loadUserIdToken],
+    [clearRenewalTimer, clearSessionLocally, handleRenewalFailure, scheduleEvaluation],
   );
-
   useEffect(() => {
-    const initializeAuth = async () => {
-      try {
-        await refreshUserState();
-      } catch {
-        setUser(undefined);
-      }
-    };
+    evaluateRef.current = refreshUserState;
+    const stopTracking = startActivityTracking();
 
+    // Keep the initialize function out of the effect body so the state update
+    // happens after the mount commit, not synchronously during the effect.
+    const initializeAuth = async (): Promise<void> => {
+      await refreshUserState();
+    };
     void initializeAuth();
 
-    const interval = setInterval(
-      () => {
-        void refreshUserState(true);
-      },
-      3 * 60 * 1000,
-    );
+    fallbackTimerRef.current = setInterval(() => {
+      void refreshUserState(true);
+    }, FALLBACK_INTERVAL_MS);
 
-    return () => clearInterval(interval);
-  }, [refreshUserState]);
+    return () => {
+      stopTracking();
+      if (fallbackTimerRef.current) clearInterval(fallbackTimerRef.current);
+      clearRenewalTimer();
+    };
+  }, [refreshUserState, clearRenewalTimer]);
 
-  const login = useCallback(
-    async (provider: IdpProviderType) => {
-      const envProvider =
-        provider === 'IDIR'
-          ? `${appEnv.toLocaleUpperCase()}-IDIR`
-          : `${appEnv.toLocaleUpperCase()}-BCEIDBUSINESS`;
-
-      signInWithRedirect({
-        provider: { custom: envProvider.toUpperCase() },
-      });
-    },
-    [appEnv],
-  );
-
-  const logout = async () => {
-    await signOut();
-    setUser(undefined);
-    navigateTo(signOutUrl);
-  };
-
-  // Memoized function to get the current user's access token from cookies.
-  const userToken = useCallback(() => {
-    return getUserAccessTokenFromCookie();
+  const login = useCallback(async (provider: IdpProviderType) => {
+    await signIn(provider);
   }, []);
+
+  /**
+   * Signs the user out through the realm's end-session endpoint. The stored
+   * user is intentionally left in place for the redirect (the realm needs its
+   * `id_token_hint`); local cleanup only happens as the failure fallback.
+   */
+  const logout = useCallback(async () => {
+    resetActivityTracking();
+    try {
+      await signOut();
+    } catch {
+      await clearSessionLocally();
+      navigateTo('/');
+    }
+  }, [clearSessionLocally]);
+
+  // Memoized accessor for the current access token, kept in sync with state.
+  const userToken = useCallback(() => {
+    return user?.authToken;
+  }, [user]);
 
   const contextValue: AuthContextType = useMemo(
     () => ({
       user,
       isLoggedIn: !!user,
       isLoading,
+      renewalError,
       login,
       logout,
       userToken,
@@ -146,7 +281,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           ?.flatMap((role) => role.clients ?? [])
           .filter((role, indexOfMap, self) => indexOfMap === self.indexOf(role)) ?? [],
     }),
-    [user, isLoading, login, userToken],
+    [user, isLoading, renewalError, login, logout, userToken],
   );
 
   return <AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>;

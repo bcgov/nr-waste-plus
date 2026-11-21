@@ -9,6 +9,8 @@ export type AuthContextType = {
   user: FamLoginUser | undefined;
   isLoggedIn: boolean;
   isLoading: boolean;
+  /** Set to `'renewal-failed'` when a renewal attempt fails; cleared on success. */
+  renewalError?: string | undefined;
   login: (provider: IdpProviderType) => void;
   logout: () => void;
   userToken: () => string | undefined;

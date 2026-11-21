@@ -16,9 +16,9 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          jwk-set-uri: https://cognito-idp.${COGNITO_REGION:region}.amazonaws.com/${COGNITO_USER_POOL:usrpool}/.well-known/jwks.json
-          issuer-uri: https://cognito-idp.${COGNITO_REGION:region}.amazonaws.com/${COGNITO_USER_POOL:usrpool}
-          client-id: ${COGNITO_CLIENT_ID:test-client-id}
+          issuer-uri: ${KEYCLOAK_ISSUER_URI:https://test.loginproxy.gov.bc.ca/auth/realms/standard}
+          jwk-set-uri: ${KEYCLOAK_ISSUER_URI:https://test.loginproxy.gov.bc.ca/auth/realms/standard}/protocol/openid-connect/certs
+          client-id: ${KEYCLOAK_CLIENT_ID:test-client-id}
   datasource:
     url: jdbc:oracle:thin:@tcps://${ca.bc.gov.nrs.oracle.host}:${ca.bc.gov.nrs.oracle.port}/${ca.bc.gov.nrs.oracle.service}?javax.net.ssl.trustStore=${ca.bc.gov.nrs.oracle.keystore}&javax.net.ssl.trustStorePassword=${ca.bc.gov.nrs.oracle.secret}&javax.net.ssl.keyStore=${ca.bc.gov.nrs.oracle.keystore}&javax.net.ssl.keyStorePassword=${ca.bc.gov.nrs.oracle.secret}
     username: ${ca.bc.gov.nrs.oracle.username}

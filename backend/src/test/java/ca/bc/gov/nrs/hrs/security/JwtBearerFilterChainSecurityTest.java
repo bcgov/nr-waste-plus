@@ -1,14 +1,12 @@
 package ca.bc.gov.nrs.hrs.security;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.mock;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import ca.bc.gov.nrs.hrs.configuration.SecurityConfiguration;
-import ca.bc.gov.nrs.hrs.provider.cognito.CognitoUserInfoClient;
 import com.nimbusds.jose.jwk.JWKSet;
 import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jose.jwk.source.ImmutableJWKSet;
@@ -481,11 +479,6 @@ class JwtBearerFilterChainSecurityTest {
   static class TestSecurityBeans {
 
     @Bean
-    CognitoUserInfoClient cognitoUserInfoClient() {
-      return mock(CognitoUserInfoClient.class);
-    }
-
-    @Bean
     HeadersSecurityCustomizer headersSecurityCustomizer() {
       return new HeadersSecurityCustomizer();
     }
@@ -516,8 +509,8 @@ class JwtBearerFilterChainSecurityTest {
     }
 
     @Bean
-    Oauth2SecurityCustomizer oauth2SecurityCustomizer(CognitoUserInfoClient client) {
-      return new Oauth2SecurityCustomizer(client, ISSUER, "client-good", jwksUri());
+    Oauth2SecurityCustomizer oauth2SecurityCustomizer() {
+      return new Oauth2SecurityCustomizer(ISSUER, "client-good", jwksUri());
     }
   }
 }

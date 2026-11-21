@@ -1,12 +1,10 @@
 import { cleanup } from '@testing-library/react';
 import { afterEach, afterAll, beforeAll, vi } from 'vitest';
 
-// Mock AWS Amplify Auth globally for all tests
-vi.mock('aws-amplify/auth', () => ({
-  fetchAuthSession: vi.fn(),
-  signInWithRedirect: vi.fn(),
-  signOut: vi.fn(),
-}));
+// NOTE: no global mock for '@/services/keycloak' — the real service is
+// jsdom-safe (getUser() reads sessionStorage locally and never hits the
+// network), and suites that need specific behaviour mock the service at
+// their own module boundary (e.g. AuthProvider.unit.test.tsx).
 
 // Mock the APIs service globally to prevent HTTP requests
 vi.mock('@/services/APIs', () => ({

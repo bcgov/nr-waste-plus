@@ -76,8 +76,8 @@ jobs:
 
       - name: Verify Cypress credentials configured
         env:
-          IDIR_USERNAME: ${{ secrets.IDIR_UAT_USERNAME }}
-          IDIR_PASSWORD: ${{ secrets.IDIR_UAT_PASSWORD }}
+          IDIR_USERNAME: ${{ secrets.IDIR_CSS_USERNAME }}
+          IDIR_PASSWORD: ${{ secrets.IDIR_CSS_PASSWORD }}
           BCEID_USERNAME: ${{ secrets.BCEID_UAT_USERNAME }}
           BCEID_PASSWORD: ${{ secrets.BCEID_UAT_PASSWORD }}
         run: |
@@ -101,8 +101,8 @@ jobs:
         env:
           CYPRESS_baseUrl: https://${{ inputs.url }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          CYPRESS_idir_password: ${{ secrets.IDIR_UAT_PASSWORD }}
-          CYPRESS_idir_username: ${{ secrets.IDIR_UAT_USERNAME }}
+          CYPRESS_idir_password: ${{ secrets.IDIR_CSS_PASSWORD }}
+          CYPRESS_idir_username: ${{ secrets.IDIR_CSS_USERNAME }}
           CYPRESS_bceid_password: ${{ secrets.BCEID_UAT_PASSWORD }}
           CYPRESS_bceid_username: ${{ secrets.BCEID_UAT_USERNAME }}
 

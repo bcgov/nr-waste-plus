@@ -150,25 +150,6 @@ import tools.jackson.databind.json.JsonMapper.Builder;
 public class GlobalConfiguration {
 
   /**
-   * Builds a {@link RestClient} configured to call the Cognito userInfo endpoint.
-   *
-   * <p>The base URL is set to the configured Cognito userInfo URI from {@link HrsConfiguration}. B3
-   * trace headers are forwarded to Cognito via the supplied {@link B3HeaderForwarder}. No default
-   * Authorization header is set here — each call supplies its own Bearer token.
-   *
-   * @param configuration application configuration providing the Cognito userInfo URI
-   * @param b3Header request initializer that forwards B3 trace headers
-   * @return a configured {@link RestClient} for the Cognito userInfo endpoint
-   */
-  @Bean
-  public RestClient cognitoApi(HrsConfiguration configuration, B3HeaderForwarder b3Header) {
-    return RestClient.builder()
-        .baseUrl(configuration.getCognito().getUserinfoUri())
-        .requestInitializer(b3Header)
-        .build();
-  }
-
-  /**
    * Builds a {@link RestClient} configured to call the Forest Client API.
    *
    * <p>The returned client is configured with the base URL and API key taken from the supplied

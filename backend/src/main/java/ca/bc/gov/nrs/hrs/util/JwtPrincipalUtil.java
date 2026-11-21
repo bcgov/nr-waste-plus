@@ -29,6 +29,15 @@ import org.springframework.security.oauth2.server.resource.authentication.JwtAut
  * from the access token and can only be retrieved via the Cognito {@code /oauth2/userInfo}
  * endpoint. Methods that read such claims are marked {@link Deprecated}; when called against an
  * access token, they may return an empty string.
+ *
+ * <p><strong>Keycloak migration note (epic #1506):</strong> with the move to the BC Gov SSO Keycloak
+ * standard realm, identity claims are read <em>Keycloak-first</em> with a Cognito-claims fallback:
+ * {@code identity_provider} replaces {@code custom:idp_name}, {@code idir_username} / {@code
+ * idir_user_guid} replace {@code custom:idp_username} / {@code custom:idp_user_id}. Every IDIR
+ * alias ({@code idir}, {@code azureidir}, any case) normalizes to the audit string {@code IDIR}.
+ * The GUID is case-folded to uppercase wherever it is used as the identity slot ({@code
+ * getUserId}); usernames keep the exact case the identity provider issued. The Cognito fallback
+ * branches are removed in the S3 sweep of the migration.
  */
 @NoArgsConstructor(access = lombok.AccessLevel.PRIVATE)
 public class JwtPrincipalUtil {
@@ -37,12 +46,35 @@ public class JwtPrincipalUtil {
   private static final String LAST_NAME = "lastName";
   public static final String FULL_NAME = "fullName";
 
+  /** Claim naming the identity provider in Keycloak tokens (replaces {@code custom:idp_name}). */
+  private static final String CLAIM_IDENTITY_PROVIDER = "identity_provider";
+
+  /** Claim carrying the IDIR username as issued by the identity provider (Keycloak). */
+  private static final String CLAIM_IDIR_USERNAME = "idir_username";
+
+  /** Claim carrying the IDIR user GUID (Keycloak); uppercased when used as the identity slot. */
+  private static final String CLAIM_IDIR_USER_GUID = "idir_user_guid";
+
+  /** Claim naming the identity provider in Cognito tokens. */
+  private static final String CLAIM_CUSTOM_IDP_NAME = "custom:idp_name";
+
+  /** Claim carrying the IDP username in Cognito tokens. */
+  private static final String CLAIM_CUSTOM_IDP_USERNAME = "custom:idp_username";
+
+  /** Claim carrying the IDP user id in Cognito tokens. */
+  private static final String CLAIM_CUSTOM_IDP_USER_ID = "custom:idp_user_id";
+
+  /** Cognito BCSC broker prefix that normalizes to the {@code BCSC} audit string. */
+  private static final String BCSC_BROKER_PREFIX = "ca.bc.gov.flnr.fam.";
+
   /**
    * Retrieves the provider of the JWT token from the given JwtAuthenticationToken principal.
    *
-   * <p>The provider is read from the claim/key {@code custom:idp_name}. If the provider value
-   * starts with {@code ca.bc.gov.flnr.fam.} it is normalized to {@code BCSC}; otherwise the value
-   * is upper-cased. If missing, an empty string is returned.
+   * <p>The provider is read Keycloak-first from {@code identity_provider} with a fallback to the
+   * Cognito claim {@code custom:idp_name}. If the provider value starts with {@code
+   * ca.bc.gov.flnr.fam.} it is normalized to {@code BCSC}; every IDIR alias ({@code idir}, {@code
+   * azureidir}, any case) is normalized to {@code IDIR}; otherwise the value is upper-cased. If
+   * missing, an empty string is returned.
    *
    * @param principal JwtAuthenticationToken object from which the provider is to be extracted.
    * @return The provider of the JWT token in uppercase, or an empty string if the provider is
@@ -55,7 +87,9 @@ public class JwtPrincipalUtil {
   /**
    * Retrieves the identity provider from the given Jwt token.
    *
-   * <p>The provider is extracted from the {@code custom:idp_name} claim.
+   * <p>The provider is read Keycloak-first from {@code identity_provider} with a fallback to the
+   * Cognito claim {@code custom:idp_name}, normalized as in {@link #getProvider(
+   * JwtAuthenticationToken)}.
    *
    * @param principal the Jwt token containing the claims
    * @return the identity provider as a string, or an empty string if the claim is missing or not a
@@ -68,8 +102,10 @@ public class JwtPrincipalUtil {
   /**
    * Retrieves the user ID from the given JwtAuthenticationToken principal.
    *
-   * <p>The user id is taken from {@code custom:idp_username} or {@code custom:idp_user_id} and is
-   * prefixed with the provider (e.g. {@code BCSC\\someuser}) when present.
+   * <p>The identity slot is taken Keycloak-first from {@code idir_username} (case as issued) or
+   * {@code idir_user_guid} (case-folded to uppercase), falling back to the Cognito claims {@code
+   * custom:idp_username} and {@code custom:idp_user_id}. It is prefixed with the provider (e.g.
+   * {@code IDIR\\jryan}) when present.
    *
    * @param principal JwtAuthenticationToken object from which the user ID is to be extracted.
    * @return The user ID prefixed with the provider in uppercase and a backslash, or an empty string
@@ -82,8 +118,10 @@ public class JwtPrincipalUtil {
   /**
    * Retrieves the user ID from the given Jwt principal.
    *
-   * <p>The user id is taken from {@code custom:idp_username} or {@code custom:idp_user_id} and is
-   * prefixed with the provider (e.g. {@code BCSC\\someuser}) when present.
+   * <p>The identity slot is taken Keycloak-first from {@code idir_username} (case as issued) or
+   * {@code idir_user_guid} (case-folded to uppercase), falling back to the Cognito claims {@code
+   * custom:idp_username} and {@code custom:idp_user_id}. It is prefixed with the provider (e.g.
+   * {@code IDIR\\jryan}) when present.
    *
    * @param principal Jwt object from which the user ID is to be extracted.
    * @return The user ID prefixed with the provider in uppercase and a backslash, or an empty string
@@ -509,8 +547,8 @@ public class JwtPrincipalUtil {
   }
 
   /**
-   * Retrieves the value of a specified claim from the claims map. If the claim is not present,
-   * returns an empty string.
+   * Retrieves the value of a specified claim from the claims map. If the claim is not present or
+   * holds a null value, returns an empty string.
    *
    * @param claims The map containing the JWT claims.
    * @param claimName The name of the claim to retrieve.
@@ -518,24 +556,34 @@ public class JwtPrincipalUtil {
    *     present.
    */
   private static String getClaimValue(Map<String, Object> claims, String claimName) {
-    return claims.getOrDefault(claimName, StringUtils.EMPTY).toString();
+    return Objects.toString(claims.get(claimName), StringUtils.EMPTY);
   }
 
   /**
-   * Retrieves the provider value from the JWT claims. The provider is identified by the key
-   * "custom:idp_name" within the claims. If the provider's name starts with "ca.bc.gov.flnr.fam.",
-   * it is replaced with "BCSC". Otherwise, the provider's name is returned in uppercase. If the
-   * provider is not specified, an empty string is returned.
+   * Retrieves the provider value from the JWT claims. The provider is identified Keycloak-first by
+   * the key "identity_provider" with a fallback to the Cognito key "custom:idp_name". If the
+   * provider's name starts with "ca.bc.gov.flnr.fam.", it is replaced with "BCSC"; every IDIR alias
+   * ("idir", "azureidir", any case) is normalized to "IDIR". Otherwise, the provider's name is
+   * returned in uppercase. If the provider is not specified, an empty string is returned.
    *
    * @param claims The map containing the JWT claims.
-   * @return The provider's name in uppercase or "BCSC" if it starts with "ca.bc.gov.flnr.fam.", or
-   *     an empty string if the provider is not specified.
+   * @return The provider's name in uppercase (or "IDIR"/"BCSC" when normalized), or an empty string
+   *     if the provider is not specified.
    */
   private static String getProviderValue(Map<String, Object> claims) {
-    String provider = getClaimValue(claims, "custom:idp_name");
+    String provider =
+        Stream.of(
+                getClaimValue(claims, CLAIM_IDENTITY_PROVIDER),
+                getClaimValue(claims, CLAIM_CUSTOM_IDP_NAME))
+            .filter(StringUtils::isNotBlank)
+            .findFirst()
+            .orElse(StringUtils.EMPTY);
 
     if (StringUtils.isNotBlank(provider)) {
-      return provider.startsWith("ca.bc.gov.flnr.fam.")
+      if (IdentityProvider.fromClaim(provider).orElse(null) == IdentityProvider.IDIR) {
+        return IdentityProvider.IDIR.getClaimName().toUpperCase(Locale.ROOT);
+      }
+      return provider.startsWith(BCSC_BROKER_PREFIX)
           ? "BCSC"
           : provider.toUpperCase(Locale.ROOT);
     }
@@ -555,23 +603,23 @@ public class JwtPrincipalUtil {
   }
 
   /**
-   * Constructs the user ID by combining the provider's name with the user's username or user ID.
-   * The method first attempts to retrieve the user's username from the JWT claims using the key
-   * "custom:idp_username". If the username is not present or is blank, it then attempts to retrieve
-   * the user's ID using the key "custom:idp_user_id". If either value is found, it is combined with
-   * the provider's name, separated by a backslash. If neither value is found, an empty string is
-   * returned. This method ensures that the user ID is uniquely identified by prefixing it with the
-   * provider's name.
+   * Constructs the user ID by combining the provider's name with the user's username or GUID. The
+   * identity slot is resolved Keycloak-first: {@code idir_username} (case exactly as issued), then
+   * {@code idir_user_guid} (case-folded to uppercase so the GUID is one stable identity whichever
+   * case the token carries), then the Cognito claims {@code custom:idp_username} and {@code
+   * custom:idp_user_id} (both as issued). The first non-blank value is combined with the provider's
+   * name, separated by a backslash. If none is found, an empty string is returned.
    *
    * @param claims The map containing the JWT claims.
-   * @return The constructed user ID in the format "Provider\Username" or "Provider\UserID", or an
-   *     empty string if neither the username nor the user ID is present in the claims.
+   * @return The constructed user ID in the format "Provider\Username" or "Provider\GUID", or an
+   *     empty string if no identity claim is present in the claims.
    */
   private static String getUserIdValue(Map<String, Object> claims) {
     return Stream.of(
-            getClaimValue(claims, "custom:idp_username"),
-            getClaimValue(claims, "custom:idp_user_id"))
-        .map(Object::toString)
+            getClaimValue(claims, CLAIM_IDIR_USERNAME),
+            getClaimValue(claims, CLAIM_IDIR_USER_GUID).toUpperCase(Locale.ROOT),
+            getClaimValue(claims, CLAIM_CUSTOM_IDP_USERNAME),
+            getClaimValue(claims, CLAIM_CUSTOM_IDP_USER_ID))
         .filter(StringUtils::isNotBlank)
         .map(userId -> getProviderValue(claims) + "\\" + userId)
         .findFirst()
@@ -581,11 +629,11 @@ public class JwtPrincipalUtil {
   /**
    * Retrieves the IDP username from the given JwtAuthenticationToken principal.
    *
-   * <p>The IDP username is extracted from {@code custom:idp_username}. If absent, {@code
-   * custom:idp_user_id} is used as a fallback.
+   * <p>The username is read Keycloak-first from {@code idir_username} (case exactly as issued),
+   * falling back to the Cognito claims {@code custom:idp_username} and {@code custom:idp_user_id}.
    *
    * @param principal JwtAuthenticationToken object from which the IDP username is extracted
-   * @return the IDP username or an empty string when both claims are absent
+   * @return the IDP username or an empty string when all claims are absent
    */
   public static String getIdpUsername(JwtAuthenticationToken principal) {
     return getIdpUsernameValue(principal.getTokenAttributes());
@@ -594,11 +642,11 @@ public class JwtPrincipalUtil {
   /**
    * Retrieves the IDP username from the given Jwt principal.
    *
-   * <p>The IDP username is extracted from {@code custom:idp_username}. If absent, {@code
-   * custom:idp_user_id} is used as a fallback.
+   * <p>The username is read Keycloak-first from {@code idir_username} (case exactly as issued),
+   * falling back to the Cognito claims {@code custom:idp_username} and {@code custom:idp_user_id}.
    *
    * @param principal Jwt object from which the IDP username is extracted
-   * @return the IDP username or an empty string when both claims are absent
+   * @return the IDP username or an empty string when all claims are absent
    */
   public static String getIdpUsername(Jwt principal) {
     return getIdpUsernameValue(principal.getClaims());
@@ -606,9 +654,9 @@ public class JwtPrincipalUtil {
 
   private static String getIdpUsernameValue(Map<String, Object> claims) {
     return Stream.of(
-            getClaimValue(claims, "custom:idp_username"),
-            getClaimValue(claims, "custom:idp_user_id"))
-        .map(Object::toString)
+            getClaimValue(claims, CLAIM_IDIR_USERNAME),
+            getClaimValue(claims, CLAIM_CUSTOM_IDP_USERNAME),
+            getClaimValue(claims, CLAIM_CUSTOM_IDP_USER_ID))
         .filter(StringUtils::isNotBlank)
         .findFirst()
         .orElse(StringUtils.EMPTY);

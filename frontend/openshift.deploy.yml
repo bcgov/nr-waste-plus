@@ -122,6 +122,16 @@ objects:
                     secretKeyRef:
                       name: ${NAME}-${ZONE}
                       key: fam-domain
+                - name: KEYCLOAK_CLIENT_ID
+                  valueFrom:
+                    secretKeyRef:
+                      name: ${NAME}-${ZONE}
+                      key: keycloak-client-id
+                - name: KEYCLOAK_ISSUER_URI
+                  valueFrom:
+                    secretKeyRef:
+                      name: ${NAME}-${ZONE}
+                      key: keycloak-issuer-uri
                 - name: RANDOM_EXPRESSION
                   value: ${RANDOM_EXPRESSION}
               imagePullPolicy: Always
