@@ -116,7 +116,7 @@ test.describe('Auth callback propagation @idir-only', () => {
   });
 
   test('failed exchange stays public and clears the persisted redirect', async ({ page }) => {
-    await stubRealm(page, true);
+    const tokenCalls = await stubRealm(page, true);
     await page.goto('/');
     await page.evaluate(() => sessionStorage.setItem('redirectAfterLogin', '/search?legacy=true'));
 
@@ -125,6 +125,7 @@ test.describe('Auth callback propagation @idir-only', () => {
     await expect.poll(() => page.url()).toMatch(/\/$/);
     await expect(page.locator('.cds--header__name')).toHaveCount(0);
     await expect(page.getByTestId('landing-button__idir')).toBeVisible();
+    await expect.poll(() => tokenCalls()).toBe(1);
     expect(await page.evaluate(() => sessionStorage.getItem('redirectAfterLogin'))).toBeNull();
   });
 });

@@ -28,7 +28,11 @@ function AuthCallback() {
     void (async () => {
       try {
         await completeSignIn();
-        const target = readPersistedRedirect() ?? '/dashboard';
+        const persisted = readPersistedRedirect() ?? '/dashboard';
+        // Storage is writable by page scripts — never let a tampered value
+        // turn the callback into an off-origin redirect.
+        const target =
+          persisted.startsWith('/') && !persisted.startsWith('//') ? persisted : '/dashboard';
         clearPersistedRedirect();
         // Full-page navigation: the mounted AuthProvider evaluated before the
         // exchange stored the user, so a SPA navigate would leave stale state.
@@ -37,9 +41,13 @@ function AuthCallback() {
         navigateTo(target);
       } catch {
         // Failed exchange — land on the public landing page unauthenticated.
-        // Clear after navigation so the guard cannot re-persist the stale target.
-        await navigate({ href: '/', replace: true });
-        clearPersistedRedirect();
+        // Clear in finally: even if the navigate rejects, a stale target must
+        // not replay on the next login.
+        try {
+          await navigate({ href: '/', replace: true });
+        } finally {
+          clearPersistedRedirect();
+        }
       }
     })();
   }, [navigate]);
