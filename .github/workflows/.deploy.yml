@@ -185,10 +185,8 @@ jobs:
     timeout-minutes: 20
     strategy:
       matrix:
-        name: [database, frontend, backend, legacy]
+        name: [frontend, backend, legacy]
         include:
-          - name: database
-            overwrite: false
           - name: frontend
             overwrite: true
             parameters: -p URL=${{ inputs.url }}
