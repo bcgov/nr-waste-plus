@@ -599,8 +599,6 @@ class LifecycleEventServiceTest {
     @Test
     @DisplayName("viewBlockLifecycle returns current state, available events, history, and revision")
     void viewBlockLifecycle_success() {
-      MockHttpServletRequest request = new MockHttpServletRequest();
-
       when(reportingUnitRepository.findByIdAndDeletedFalse(RU_ID))
           .thenReturn(Optional.of(reportingUnit));
       when(blockRepository.findByIdAndReportingUnitIdAndDeletedFalse(BLOCK_ID, RU_ID))
@@ -638,8 +636,6 @@ class LifecycleEventServiceTest {
     @Test
     @DisplayName("viewReportingUnitLifecycle returns state, available events, history, and revision")
     void viewReportingUnitLifecycle_success() {
-      MockHttpServletRequest request = new MockHttpServletRequest();
-
       when(reportingUnitRepository.findByIdAndDeletedFalse(RU_ID))
           .thenReturn(Optional.of(reportingUnit));
       when(statusEventRepository.findFirstByReportingUnitIdOrderByCreatedAtDescIdDesc(RU_ID))
