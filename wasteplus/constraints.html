@@ -553,6 +553,11 @@
                                 </thead>
                                 <tbody>
                                     <tr>
+                                        <td><a href='tables/district_average_criteria_code.html'>district_average_criteria_code</a></td>
+                                        <td>district_average_criteria_code_lengths_ck</td>
+                                        <td>((char_length(code) &lt;&#61; 2) AND (char_length(description) &lt;&#61; 1000))</td>
+                                    </tr>
+                                    <tr>
                                         <td><a href='tables/reporting_unit.html'>reporting_unit</a></td>
                                         <td>ck_reporting_unit_avg_requires_grade</td>
                                         <td>((sampling_code &lt;&gt; &#39;AVG&#39;::text) OR (grade_code IS NOT NULL))</td>
@@ -565,7 +570,7 @@
                                     <tr>
                                         <td><a href='tables/block_mark.html'>block_mark</a></td>
                                         <td>block_mark_sequence_ck</td>
-                                        <td>(((mark_type)::text &lt;&gt; &#39;SECONDARY&#39;::text) OR ((sequence_no &gt;&#61; 1) AND (sequence_no &lt;&#61; 5)))</td>
+                                        <td>(((mark_type)::text &lt;&gt; ALL (ARRAY[&#39;SECONDARY&#39;::text, &#39;ROAD_PERMIT&#39;::text])) OR ((sequence_no &gt;&#61; 1) AND (sequence_no &lt;&#61; 5)))</td>
                                     </tr>
                                     <tr>
                                         <td><a href='tables/sampling_option_code.html'>sampling_option_code</a></td>

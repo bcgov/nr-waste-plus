@@ -19,6 +19,7 @@ block_area_segment
 block_calculation_snapshot
 block_comment
 block_requirement
+district_average_criteria_code
 flyway_schema_history
 idempotency_record
 lifecycle_setting

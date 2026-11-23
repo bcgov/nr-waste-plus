@@ -180,7 +180,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td><p>Mark type: PRIMARY or SECONDARY.</p></td>
+                                    <td><p>Mark type: PRIMARY, SECONDARY, or ROAD_PERMIT.</p></td>
                                 </tr>
                                 <tr>
                                     <td class='indexedColumn' title='Indexed'><i class='fa fa-sitemap fa-rotate-120' style='padding-right: 5px;'></i><span id="sequence_no">sequence_no</span></td>
@@ -464,7 +464,7 @@
                                 <tbody>
                                 <tr>
                                     <td>block_mark_sequence_ck</td>
-                                    <td>(((mark_type)::text &lt;&gt; &#39;SECONDARY&#39;::text) OR ((sequence_no &gt;&#61; 1) AND (sequence_no &lt;&#61; 5)))</td>
+                                    <td>(((mark_type)::text &lt;&gt; ALL (ARRAY[&#39;SECONDARY&#39;::text, &#39;ROAD_PERMIT&#39;::text])) OR ((sequence_no &gt;&#61; 1) AND (sequence_no &lt;&#61; 5)))</td>
                                 </tr>
                                 </tbody>
                             </table>

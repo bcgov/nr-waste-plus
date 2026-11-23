@@ -3,6 +3,7 @@ user_bookmarks
 lifecycle_setting
 idempotency_record
 flyway_schema_history
+district_average_criteria_code
 block_requirement
 block_comment
 block_calculation_snapshot

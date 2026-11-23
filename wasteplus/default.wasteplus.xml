@@ -245,7 +245,7 @@
          <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="block_id" nullable="false" remarks="Foreign key referencing the parent block." size="19" type="int8" typeCode="-5">
             <parent column="block_id" foreignKey="fk_block_mark_block" implied="false" onDeleteCascade="false" schema="wasteplus" table="block"/>
          </column>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="mark_type" nullable="false" remarks="Mark type: PRIMARY or SECONDARY." size="32" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="mark_type" nullable="false" remarks="Mark type: PRIMARY, SECONDARY, or ROAD_PERMIT." size="32" type="varchar" typeCode="12"/>
          <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="sequence_no" nullable="false" remarks="Sequential order number for secondary marks." size="10" type="int4" typeCode="4"/>
          <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="mark" nullable="false" remarks="Timber mark or identifier string." size="64" type="varchar" typeCode="12"/>
          <column autoUpdated="false" defaultValue="null" digits="0" id="5" name="validation_status" nullable="true" remarks="External mark validation state." size="32" type="varchar" typeCode="12"/>
@@ -270,7 +270,7 @@
             <column ascending="true" name="mark_type"/>
             <column ascending="true" name="sequence_no"/>
          </index>
-         <checkConstraint constraint="(((mark_type)::text &lt;&gt; 'SECONDARY'::text) OR ((sequence_no &gt;= 1) AND (sequence_no &lt;= 5)))" name="block_mark_sequence_ck"/>
+         <checkConstraint constraint="(((mark_type)::text &lt;&gt; ALL (ARRAY['SECONDARY'::text, 'ROAD_PERMIT'::text])) OR ((sequence_no &gt;= 1) AND (sequence_no &lt;= 5)))" name="block_mark_sequence_ck"/>
       </table>
       <table name="block_requirement" remarks="Requirement responses and optional evidence links for a submission block." schema="wasteplus" type="TABLE">
          <column autoUpdated="true" defaultValue="nextval('wasteplus.block_requirement_id_seq'::regclass)" digits="0" id="0" name="block_requirement_id" nullable="false" remarks="Unique identifier for the requirement response." size="19" type="bigserial" typeCode="-5"/>
@@ -378,6 +378,18 @@
          <index name="district_average_block_pk" unique="true">
             <column ascending="true" name="district_average_block_id"/>
          </index>
+      </table>
+      <table name="district_average_criteria_code" remarks="District Average criteria options (Waste manual section 4.5) for HRS. Codes 1-11 are stable criterion identifiers; descriptions use manual, then spreadsheet, then Confluence precedence where wording differs." schema="wasteplus" type="TABLE">
+         <column autoUpdated="false" defaultValue="null" digits="0" id="0" name="code" nullable="false" remarks="Stable criterion code '1'-'11'; deterministic ordering by criterion number." size="2147483647" type="text" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="description" nullable="false" remarks="Full criterion description text (without numeric label prefix; frontend appends the criterion number as done for other dropdown options)." size="2147483647" type="text" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="6" id="2" name="effective_date" nullable="false" remarks="Effective timestamp; apply active-date rules when reading current codes." size="29" type="timestamp" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="null" digits="6" id="3" name="expiry_date" nullable="false" remarks="Expiry timestamp; apply active-date rules when reading current codes." size="29" type="timestamp" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="null" digits="6" id="4" name="update_timestamp" nullable="false" remarks="Last update timestamp for the seeded criterion record." size="29" type="timestamp" typeCode="93"/>
+         <primaryKey column="code" sequenceNumberInPK="1"/>
+         <index name="district_average_criteria_code_pk" unique="true">
+            <column ascending="true" name="code"/>
+         </index>
+         <checkConstraint constraint="((char_length(code) &lt;= 2) AND (char_length(description) &lt;= 1000))" name="district_average_criteria_code_lengths_ck"/>
       </table>
       <table name="district_grade_support" remarks="Historical district/grade pairs from stored DISTRICT_VOLUME configurations. Soft-deleted configurations are included; the service checks current support." schema="wasteplus" type="TABLE">
          <column autoUpdated="false" defaultValue="null" digits="0" id="0" name="geographic_code" nullable="false" remarks="District code that has appeared in a District Volume configuration." size="3" type="varchar" typeCode="12">
