@@ -8,6 +8,7 @@ import { fieldError } from './formUtils';
 import { validateDistrictAverageCriteriaCodes } from './validation';
 
 import type { CodeDescriptionDto } from '@/types/search.types';
+import type { AnyFieldApi } from '@tanstack/react-form';
 
 type Props = {
   form: any;
@@ -24,7 +25,7 @@ const DistrictAverageCriteriaField = ({ form, id, options }: Props) => (
           validateDistrictAverageCriteriaCodes(value),
       }}
     >
-      {(field: any) => {
+      {(field: AnyFieldApi) => {
         const invalidText = fieldError(field.state.meta.errors);
         return (
           <ActiveMultiSelect
