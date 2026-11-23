@@ -438,7 +438,6 @@ public class LifecycleEventService {
   /**
    * Retrieves the current lifecycle details, available events, and history for a block.
    *
-   * @param servletRequest HTTP request
    * @param jwt caller JWT principal
    * @param reportingUnitId target reporting unit identifier
    * @param blockId target block identifier
@@ -447,7 +446,6 @@ public class LifecycleEventService {
   @NewSpan
   @Transactional(readOnly = true)
   public LifecycleViewResult viewBlockLifecycle(
-      HttpServletRequest servletRequest,
       Jwt jwt,
       Long reportingUnitId,
       Long blockId) {
@@ -485,7 +483,6 @@ public class LifecycleEventService {
   /**
    * Retrieves the current lifecycle details, available events, and history for a reporting unit.
    *
-   * @param servletRequest HTTP request
    * @param jwt caller JWT principal
    * @param reportingUnitId target reporting unit identifier
    * @return view result pairing the details payload with the reporting unit revision
@@ -493,7 +490,6 @@ public class LifecycleEventService {
   @NewSpan
   @Transactional(readOnly = true)
   public LifecycleViewResult viewReportingUnitLifecycle(
-      HttpServletRequest servletRequest,
       Jwt jwt,
       Long reportingUnitId) {
 

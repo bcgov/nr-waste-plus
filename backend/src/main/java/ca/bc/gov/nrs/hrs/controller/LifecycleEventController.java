@@ -139,7 +139,6 @@ public class LifecycleEventController {
   /**
    * Retrieves the current lifecycle details, available events, and history for a block.
    *
-   * @param servletRequest HTTP request
    * @param jwt caller JWT principal
    * @param reportingUnitId target reporting unit identifier
    * @param blockId target block identifier
@@ -150,7 +149,6 @@ public class LifecycleEventController {
     "/{reportingUnitId}/blocks/{blockId}/lifecycle"
   })
   public ResponseEntity<LifecycleDetailsDto> getBlockLifecycle(
-      HttpServletRequest servletRequest,
       @AuthenticationPrincipal Jwt jwt,
       @PathVariable Long reportingUnitId,
       @PathVariable Long blockId) {
@@ -158,8 +156,7 @@ public class LifecycleEventController {
     resourceScopeGuard.verify(jwt, reportingUnitId, "GET");
 
     LifecycleViewResult result =
-        lifecycleEventService.viewBlockLifecycle(
-            servletRequest, jwt, reportingUnitId, blockId);
+        lifecycleEventService.viewBlockLifecycle(jwt, reportingUnitId, blockId);
 
     var responseBuilder = ResponseEntity.ok();
     if (result.revision() != null) {
@@ -173,22 +170,19 @@ public class LifecycleEventController {
   /**
    * Retrieves the current lifecycle details, available events, and history for a reporting unit.
    *
-   * @param servletRequest HTTP request
    * @param jwt caller JWT principal
    * @param reportingUnitId target reporting unit identifier
    * @return 200 OK with the lifecycle details and strong ETag header
    */
   @GetMapping("/{reportingUnitId}/lifecycle")
   public ResponseEntity<LifecycleDetailsDto> getReportingUnitLifecycle(
-      HttpServletRequest servletRequest,
       @AuthenticationPrincipal Jwt jwt,
       @PathVariable Long reportingUnitId) {
 
     resourceScopeGuard.verify(jwt, reportingUnitId, "GET");
 
     LifecycleViewResult result =
-        lifecycleEventService.viewReportingUnitLifecycle(
-            servletRequest, jwt, reportingUnitId);
+        lifecycleEventService.viewReportingUnitLifecycle(jwt, reportingUnitId);
 
     var responseBuilder = ResponseEntity.ok();
     if (result.revision() != null) {

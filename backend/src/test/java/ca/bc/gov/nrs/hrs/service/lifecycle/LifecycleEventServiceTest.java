@@ -624,7 +624,7 @@ class LifecycleEventServiceTest {
           .thenReturn(List.of(event1));
 
       LifecycleViewResult result =
-          lifecycleEventService.viewBlockLifecycle(request, submitterJwt, RU_ID, BLOCK_ID);
+          lifecycleEventService.viewBlockLifecycle(submitterJwt, RU_ID, BLOCK_ID);
 
       assertThat(result).isNotNull();
       assertThat(result.revision()).isEqualTo(5L);
@@ -650,7 +650,7 @@ class LifecycleEventServiceTest {
           .thenReturn(List.of());
 
       LifecycleViewResult result =
-          lifecycleEventService.viewReportingUnitLifecycle(request, submitterJwt, RU_ID);
+          lifecycleEventService.viewReportingUnitLifecycle(submitterJwt, RU_ID);
 
       assertThat(result).isNotNull();
       assertThat(result.revision()).isEqualTo(10L);

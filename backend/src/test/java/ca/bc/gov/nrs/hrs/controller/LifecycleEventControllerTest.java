@@ -332,7 +332,7 @@ class LifecycleEventControllerTest {
         new LifecycleDetailsDto("SUBMITTED", List.of(approveEvent, rejectEvent), List.of(historyItem));
     LifecycleViewResult viewResult = new LifecycleViewResult(detailsDto, 15L);
 
-    when(lifecycleEventService.viewBlockLifecycle(any(), isNull(), eq(RU_ID), eq(BLOCK_ID)))
+    when(lifecycleEventService.viewBlockLifecycle(isNull(), eq(RU_ID), eq(BLOCK_ID)))
         .thenReturn(viewResult);
 
     mockMvc
@@ -364,7 +364,7 @@ class LifecycleEventControllerTest {
         new LifecycleDetailsDto("SUBMITTED", List.of(), List.of());
     LifecycleViewResult viewResult = new LifecycleViewResult(detailsDto, 15L);
 
-    when(lifecycleEventService.viewBlockLifecycle(any(), isNull(), eq(RU_ID), eq(BLOCK_ID)))
+    when(lifecycleEventService.viewBlockLifecycle(isNull(), eq(RU_ID), eq(BLOCK_ID)))
         .thenReturn(viewResult);
 
     mockMvc
@@ -385,7 +385,7 @@ class LifecycleEventControllerTest {
         new LifecycleDetailsDto("SUBMISSION", List.of(submitEvent), List.of());
     LifecycleViewResult viewResult = new LifecycleViewResult(detailsDto, 10L);
 
-    when(lifecycleEventService.viewReportingUnitLifecycle(any(), isNull(), eq(RU_ID)))
+    when(lifecycleEventService.viewReportingUnitLifecycle(isNull(), eq(RU_ID)))
         .thenReturn(viewResult);
 
     mockMvc
