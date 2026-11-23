@@ -63,6 +63,7 @@ public class BlockService {
   private static final String DRAFT_STATUS_CODE = "DFT";
   private static final String ONE_DA_PER_RU_CONSTRAINT = "uq_block_one_da_per_ru";
   private static final String MARK_TYPE_SECONDARY = "SECONDARY";
+  private static final String MARK_TYPE_ROAD_PERMIT = "ROAD_PERMIT";
 
   private final ReportingUnitRepository reportingUnitRepository;
   private final BlockRepository blockRepository;
@@ -700,7 +701,7 @@ public class BlockService {
 
   private List<BlockMarkDto> loadRoadPermitTimberMarks(Long blockId) {
     return blockMarkRepository
-        .findByBlockIdAndMarkTypeAndDeletedFalseOrderBySequenceNo(blockId, "ROAD_PERMIT")
+        .findByBlockIdAndMarkTypeAndDeletedFalseOrderBySequenceNo(blockId, MARK_TYPE_ROAD_PERMIT)
         .stream()
         .map(blockMarkMapper::toDto)
         .toList();
@@ -819,7 +820,7 @@ public class BlockService {
         new BlockMarkDto(
             null,
             blockId,
-            "ROAD_PERMIT",
+            MARK_TYPE_ROAD_PERMIT,
             marks.size() + 1,
             markValue.trim(),
             validationStatus,

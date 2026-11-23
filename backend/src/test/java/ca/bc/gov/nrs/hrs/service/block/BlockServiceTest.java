@@ -35,6 +35,7 @@ import java.sql.SQLException;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.Month;
 import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Optional;
@@ -497,7 +498,7 @@ class BlockServiceTest {
     BlockEntity block = new BlockEntity();
     block.setId(BLOCK_ID);
     block.setReportingUnitId(RU_ID);
-    block.setPlcDate(LocalDate.of(2026, 3, 15));
+    block.setPlcDate(LocalDate.of(2026, Month.MARCH, 15));
     when(blockRepository.findByIdAndReportingUnitIdAndDeletedFalse(BLOCK_ID, RU_ID))
         .thenReturn(Optional.of(block));
 
@@ -508,7 +509,7 @@ class BlockServiceTest {
             "DISTRICT_AVERAGE",
             "DRAFT",
             true,
-            LocalDate.of(2026, 3, 15),
+            LocalDate.of(2026, Month.MARCH, 15),
             0L,
             0L,
             false,
@@ -522,7 +523,7 @@ class BlockServiceTest {
 
     var result = blockService.getBlockDetails(RU_ID, BLOCK_ID, idirJwt);
 
-    assertThat(result.plcDate()).isEqualTo(LocalDate.of(2026, 3, 15));
+    assertThat(result.plcDate()).isEqualTo(LocalDate.of(2026, Month.MARCH, 15));
     assertThat(result.isLegacy()).isFalse();
     assertThat(result.secondaryTimberMarks()).isEmpty();
     assertThat(result.roadPermitTimberMarks()).isEmpty();
@@ -568,7 +569,7 @@ class BlockServiceTest {
 
     var result = blockService.getBlockDetails(RU_ID, BLOCK_ID, idirJwt);
 
-    assertThat(result.plcDate()).isEqualTo(LocalDate.of(2026, 11, 16));
+    assertThat(result.plcDate()).isEqualTo(LocalDate.of(2026, Month.NOVEMBER, 16));
     assertThat(result.isLegacy()).isFalse();
     assertThat(result.secondaryTimberMarks()).isEmpty();
     assertThat(result.roadPermitTimberMarks()).isEmpty();
@@ -615,7 +616,7 @@ class BlockServiceTest {
 
     var result = blockService.getBlockDetails(RU_ID, BLOCK_ID, idirJwt);
 
-    assertThat(result.plcDate()).isEqualTo(LocalDate.of(2026, 11, 16));
+    assertThat(result.plcDate()).isEqualTo(LocalDate.of(2026, Month.NOVEMBER, 16));
     assertThat(result.isLegacy()).isTrue();
     assertThat(result.secondaryTimberMarks()).isEmpty();
     assertThat(result.roadPermitTimberMarks()).isEmpty();
@@ -639,14 +640,14 @@ class BlockServiceTest {
     BlockEntity block = new BlockEntity();
     block.setId(BLOCK_ID);
     block.setReportingUnitId(RU_ID);
-    block.setPlcDate(LocalDate.of(2026, 3, 15));
+    block.setPlcDate(LocalDate.of(2026, Month.MARCH, 15));
     when(blockRepository.findByIdAndReportingUnitIdAndDeletedFalse(BLOCK_ID, RU_ID))
         .thenReturn(Optional.of(block));
 
     var mapped =
         new ca.bc.gov.nrs.hrs.dto.block.BlockResponseDto(
             BLOCK_ID, RU_ID, "DISTRICT_AVERAGE", "DRAFT", true,
-            LocalDate.of(2026, 3, 15), 0L, 0L, false, null, null);
+            LocalDate.of(2026, Month.MARCH, 15), 0L, 0L, false, null, null);
     when(blockMapper.toResponseDto(block)).thenReturn(mapped);
 
     BlockMarkEntity secEntity = new BlockMarkEntity();
@@ -759,7 +760,7 @@ class BlockServiceTest {
     BlockEntity block = new BlockEntity();
     block.setId(BLOCK_ID);
     block.setReportingUnitId(RU_ID);
-    block.setPlcDate(LocalDate.of(2026, 3, 15));
+    block.setPlcDate(LocalDate.of(2026, Month.MARCH, 15));
     when(blockRepository.findByIdAndReportingUnitIdAndDeletedFalse(BLOCK_ID, RU_ID))
         .thenReturn(Optional.of(block));
 
@@ -770,7 +771,7 @@ class BlockServiceTest {
             "DISTRICT_AVERAGE",
             "DRAFT",
             true,
-            LocalDate.of(2026, 3, 15),
+            LocalDate.of(2026, Month.MARCH, 15),
             0L,
             0L,
             false,
