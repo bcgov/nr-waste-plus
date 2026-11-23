@@ -51,6 +51,8 @@ class LegacyCodesClientIntegrationTest extends AbstractTestContainerIntegrationT
 
     CircuitBreaker breaker = circuitBreakerRegistry.circuitBreaker("breaker");
     breaker.reset();
+    circuitBreakerRegistry.circuitBreaker("harvestStatusCodes").reset();
+    circuitBreakerRegistry.circuitBreaker("maturityTypeCodes").reset();
     RetryConfig retry = retryRegistry.retry("apiRetry").getRetryConfig();
     retryRegistry.remove("apiRetry");
     retryRegistry.retry("apiRetry", retry);
@@ -79,5 +81,94 @@ class LegacyCodesClientIntegrationTest extends AbstractTestContainerIntegrationT
     assertNotNull(legacyCodesClient.getDistrictCodes());
     assertFalse(legacyCodesClient.getDistrictCodes().isEmpty());
     assertEquals(23, legacyCodesClient.getDistrictCodes().size());
+  }
+
+  @Test
+  @DisplayName("Should fetch harvest status codes successfully")
+  void shouldFetchHarvestStatusCodes() {
+    clientApiStub.stubFor(
+        get(urlPathEqualTo("/api/codes/harvest-statuses"))
+            .willReturn(
+                okJson(
+                    """
+                    [{"code":"C","description":"Complete"},
+                     {"code":"I","description":"Incomplete"},
+                     {"code":"NA","description":"N/A - Not applicable"}]
+                    """)));
+
+    var result = legacyCodesClient.getHarvestStatusCodes();
+
+    assertNotNull(result);
+    assertEquals(3, result.size());
+    assertEquals("C", result.get(0).code());
+  }
+
+  @Test
+  @DisplayName("Fallback to empty list when harvest status service is unavailable")
+  void shouldFallbackHarvestStatusCodesWhenUnavailable() {
+    clientApiStub.stubFor(
+        get(urlPathEqualTo("/api/codes/harvest-statuses")).willReturn(serviceUnavailable()));
+
+    var result = legacyCodesClient.getHarvestStatusCodes();
+
+    assertNotNull(result);
+    assertEquals(0, result.size());
+  }
+
+  @Test
+  @DisplayName("Should fetch maturity type codes successfully")
+  void shouldFetchMaturityTypeCodes() {
+    clientApiStub.stubFor(
+        get(urlPathEqualTo("/api/codes/maturity-types"))
+            .willReturn(
+                okJson(
+                    """
+                    [{"code":"MAT","description":"Mature"},
+                     {"code":"IMM","description":"Immature"}]
+                    """)));
+
+    var result = legacyCodesClient.getMaturityTypeCodes();
+
+    assertNotNull(result);
+    assertEquals(2, result.size());
+    assertEquals("MAT", result.get(0).code());
+  }
+
+  @Test
+  @DisplayName("Fallback to empty list when maturity type service is unavailable")
+  void shouldFallbackMaturityTypeCodesWhenUnavailable() {
+    clientApiStub.stubFor(
+        get(urlPathEqualTo("/api/codes/maturity-types")).willReturn(serviceUnavailable()));
+
+    var result = legacyCodesClient.getMaturityTypeCodes();
+
+    assertNotNull(result);
+    assertEquals(0, result.size());
+  }
+
+  @Test
+  @DisplayName("Fallback to empty list when maturity type service returns 404")
+  void shouldFallbackMaturityTypeCodesWhenNotFound() {
+    clientApiStub.stubFor(
+        get(urlPathEqualTo("/api/codes/maturity-types"))
+            .willReturn(com.github.tomakehurst.wiremock.client.WireMock.notFound()));
+
+    var result = legacyCodesClient.getMaturityTypeCodes();
+
+    assertNotNull(result);
+    assertEquals(0, result.size());
+  }
+
+  @Test
+  @DisplayName("Fallback to empty list when harvest status service returns 404")
+  void shouldFallbackHarvestStatusCodesWhenNotFound() {
+    clientApiStub.stubFor(
+        get(urlPathEqualTo("/api/codes/harvest-statuses"))
+            .willReturn(com.github.tomakehurst.wiremock.client.WireMock.notFound()));
+
+    var result = legacyCodesClient.getHarvestStatusCodes();
+
+    assertNotNull(result);
+    assertEquals(0, result.size());
   }
 }

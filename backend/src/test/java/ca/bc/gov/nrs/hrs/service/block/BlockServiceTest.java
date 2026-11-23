@@ -7,8 +7,17 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import ca.bc.gov.nrs.hrs.dto.block.BlockMarkDto;
+import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchExpandedDto;
+import ca.bc.gov.nrs.hrs.dto.search.SearchExpandedSecondaryDto;
+import ca.bc.gov.nrs.hrs.dto.base.CodeDescriptionDto;
 import ca.bc.gov.nrs.hrs.dto.block.BlockType;
+import ca.bc.gov.nrs.hrs.dto.block.WasteAssessmentAreaMarkDto;
+import ca.bc.gov.nrs.hrs.dto.block.WasteAssessmentAreaSummaryDto;
+import ca.bc.gov.nrs.hrs.entity.block.BlockAreaSegmentEntity;
+import java.math.BigDecimal;
 import ca.bc.gov.nrs.hrs.entity.block.BlockEntity;
+import ca.bc.gov.nrs.hrs.entity.block.BlockMarkEntity;
 import ca.bc.gov.nrs.hrs.entity.block.ReportingUnitEntity;
 import ca.bc.gov.nrs.hrs.entity.block.StatusEventEntity;
 import ca.bc.gov.nrs.hrs.exception.BlockNotFoundException;
@@ -18,10 +27,16 @@ import ca.bc.gov.nrs.hrs.exception.NotFoundGenericException;
 import ca.bc.gov.nrs.hrs.exception.ReportingUnitNotFoundException;
 import ca.bc.gov.nrs.hrs.exception.ReportingUnitStateConflictException;
 import ca.bc.gov.nrs.hrs.extensions.WithMockJwtSecurityContextFactory;
+import ca.bc.gov.nrs.hrs.repository.block.BlockAreaSegmentRepository;
 import ca.bc.gov.nrs.hrs.repository.block.BlockRepository;
 import ca.bc.gov.nrs.hrs.repository.block.ReportingUnitRepository;
 import ca.bc.gov.nrs.hrs.repository.block.StatusEventRepository;
 import java.sql.SQLException;
+import java.time.Clock;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.Month;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Optional;
 import org.hibernate.exception.ConstraintViolationException;
@@ -59,6 +74,15 @@ class BlockServiceTest {
 
   @Mock
   private ca.bc.gov.nrs.hrs.mapper.block.BlockMapper blockMapper;
+
+  @Mock
+  private ca.bc.gov.nrs.hrs.repository.block.BlockMarkRepository blockMarkRepository;
+
+  @Mock
+  private ca.bc.gov.nrs.hrs.mapper.block.BlockMarkMapper blockMarkMapper;
+
+  @Mock
+  private BlockAreaSegmentRepository blockAreaSegmentRepository;
 
   @InjectMocks
   private BlockService blockService;
@@ -462,5 +486,680 @@ class BlockServiceTest {
         .isInstanceOf(ReportingUnitNotFoundException.class)
         .matches(ex -> ((ResponseStatusException) ex).getStatusCode().value() == 404);
   }
-}
 
+
+  @Test
+  @DisplayName("getBlockDetails returns postgres block with stored plcDate unchanged")
+  void getBlockDetails_whenPostgresBlockHasPlcDate_returnsStoredPlcDate() {
+    blockService.setClock(Clock.fixed(Instant.parse("2026-11-17T12:00:00Z"), ZoneOffset.UTC));
+    when(reportingUnitRepository.findByIdAndDeletedFalse(RU_ID))
+        .thenReturn(Optional.of(reportingUnit));
+
+    BlockEntity block = new BlockEntity();
+    block.setId(BLOCK_ID);
+    block.setReportingUnitId(RU_ID);
+    block.setPlcDate(LocalDate.of(2026, Month.MARCH, 15));
+    when(blockRepository.findByIdAndReportingUnitIdAndDeletedFalse(BLOCK_ID, RU_ID))
+        .thenReturn(Optional.of(block));
+
+    var mapped =
+        new ca.bc.gov.nrs.hrs.dto.block.BlockResponseDto(
+            BLOCK_ID,
+            RU_ID,
+            "DISTRICT_AVERAGE",
+            "DRAFT",
+            true,
+            LocalDate.of(2026, Month.MARCH, 15),
+            0L,
+            0L,
+            false,
+            null,
+            null);
+    when(blockMapper.toResponseDto(block)).thenReturn(mapped);
+    when(blockMarkRepository.findByBlockIdAndMarkTypeAndDeletedFalseOrderBySequenceNo(BLOCK_ID, "SECONDARY"))
+        .thenReturn(List.of());
+    when(blockMarkRepository.findByBlockIdAndMarkTypeAndDeletedFalseOrderBySequenceNo(BLOCK_ID, "ROAD_PERMIT"))
+        .thenReturn(List.of());
+
+    var result = blockService.getBlockDetails(RU_ID, BLOCK_ID, idirJwt);
+
+    assertThat(result.plcDate()).isEqualTo(LocalDate.of(2026, Month.MARCH, 15));
+    assertThat(result.isLegacy()).isFalse();
+    assertThat(result.secondaryTimberMarks()).isEmpty();
+    assertThat(result.roadPermitTimberMarks()).isEmpty();
+    assertThat(result.districtAverageVolumesSummary()).isNotNull();
+    assertThat(result.districtAverageVolumesSummary().rows()).isEmpty();
+    assertThat(result.districtAverageVolumesSummary().totals().totalBillableVolumeM3())
+        .isEqualByComparingTo("0");
+    assertThat(result.districtAverageVolumesSummary().totals().totalCutControlVolumeM3())
+        .isEqualByComparingTo("0");
+  }
+
+  @Test
+  @DisplayName("getBlockDetails returns postgres block with default plcDate when stored value is missing")
+  void getBlockDetails_whenPostgresBlockMissingPlcDate_returnsDefaultPlcDate() {
+    blockService.setClock(Clock.fixed(Instant.parse("2026-11-17T12:00:00Z"), ZoneOffset.UTC));
+    when(reportingUnitRepository.findByIdAndDeletedFalse(RU_ID))
+        .thenReturn(Optional.of(reportingUnit));
+
+    BlockEntity block = new BlockEntity();
+    block.setId(BLOCK_ID);
+    block.setReportingUnitId(RU_ID);
+    when(blockRepository.findByIdAndReportingUnitIdAndDeletedFalse(BLOCK_ID, RU_ID))
+        .thenReturn(Optional.of(block));
+
+    var mapped =
+        new ca.bc.gov.nrs.hrs.dto.block.BlockResponseDto(
+            BLOCK_ID,
+            RU_ID,
+            "DISTRICT_AVERAGE",
+            "DRAFT",
+            true,
+            null,
+            0L,
+            0L,
+            false,
+            null,
+            null);
+    when(blockMapper.toResponseDto(block)).thenReturn(mapped);
+    when(blockMarkRepository.findByBlockIdAndMarkTypeAndDeletedFalseOrderBySequenceNo(BLOCK_ID, "SECONDARY"))
+        .thenReturn(List.of());
+    when(blockMarkRepository.findByBlockIdAndMarkTypeAndDeletedFalseOrderBySequenceNo(BLOCK_ID, "ROAD_PERMIT"))
+        .thenReturn(List.of());
+
+    var result = blockService.getBlockDetails(RU_ID, BLOCK_ID, idirJwt);
+
+    assertThat(result.plcDate()).isEqualTo(LocalDate.of(2026, Month.NOVEMBER, 16));
+    assertThat(result.isLegacy()).isFalse();
+    assertThat(result.secondaryTimberMarks()).isEmpty();
+    assertThat(result.roadPermitTimberMarks()).isEmpty();
+    assertThat(result.districtAverageVolumesSummary()).isNotNull();
+    assertThat(result.districtAverageVolumesSummary().rows()).isEmpty();
+    assertThat(result.districtAverageVolumesSummary().totals().totalBillableVolumeM3())
+        .isEqualByComparingTo("0");
+    assertThat(result.districtAverageVolumesSummary().totals().totalCutControlVolumeM3())
+        .isEqualByComparingTo("0");
+  }
+
+  @Test
+  @DisplayName("getBlockDetails returns legacy block with default plcDate when no stored value exists")
+  void getBlockDetails_whenLegacyBlockMissingPlcDate_returnsDefaultPlcDate() {
+    blockService.setClock(Clock.fixed(Instant.parse("2026-11-17T12:00:00Z"), ZoneOffset.UTC));
+    when(reportingUnitRepository.findByIdAndDeletedFalse(RU_ID)).thenReturn(Optional.empty());
+
+    var legacyRu =
+        new ca.bc.gov.nrs.hrs.dto.reportingunit.ReportingUnitLegacyDetailsDto(
+            CLIENT_NUMBER,
+            "00",
+            new ca.bc.gov.nrs.hrs.dto.base.CodeDescriptionDto("AVG", "Average"),
+            new ca.bc.gov.nrs.hrs.dto.base.CodeDescriptionDto("DND", "Nadina"));
+    when(legacyApiProvider.getReportingUnitDetails(RU_ID)).thenReturn(legacyRu);
+
+    var legacyRow =
+        new ca.bc.gov.nrs.hrs.dto.block.BlockListItemDto(
+            BLOCK_ID,
+            "FILE",
+            "CP",
+            "CUT",
+            "TM",
+            null,
+            null,
+            "sub",
+            new ca.bc.gov.nrs.hrs.dto.block.BlockListItemDto.Status("DFT", "Draft"),
+            null,
+            null);
+    when(legacyApiProvider.getReportingUnitBlocksStrict(RU_ID)).thenReturn(List.of(legacyRow));
+    when(legacyApiProvider.getSearchExpanded(RU_ID, BLOCK_ID))
+        .thenReturn(
+            new ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchExpandedDto(
+                BLOCK_ID, null, null, null, false, false, null, List.of(), 0.0, 0.0, null, null, null, 0L, 0L));
+
+    var result = blockService.getBlockDetails(RU_ID, BLOCK_ID, idirJwt);
+
+    assertThat(result.plcDate()).isEqualTo(LocalDate.of(2026, Month.NOVEMBER, 16));
+    assertThat(result.isLegacy()).isTrue();
+    assertThat(result.secondaryTimberMarks()).isEmpty();
+    assertThat(result.roadPermitTimberMarks()).isEmpty();
+    assertThat(result.districtAverageVolumesSummary()).isNotNull();
+    assertThat(result.districtAverageVolumesSummary().rows()).isEmpty();
+    assertThat(result.districtAverageVolumesSummary().totals().totalBillableVolumeM3())
+        .isEqualByComparingTo("0");
+    assertThat(result.districtAverageVolumesSummary().totals().totalCutControlVolumeM3())
+        .isEqualByComparingTo("0");
+  }
+
+
+
+  @Test
+  @DisplayName("getBlockDetails returns postgres block with loaded secondary and road permit timber marks")
+  void getBlockDetails_whenPostgresBlockHasMarks_returnsLoadedMarks() {
+    blockService.setClock(Clock.fixed(Instant.parse("2026-11-17T12:00:00Z"), ZoneOffset.UTC));
+    when(reportingUnitRepository.findByIdAndDeletedFalse(RU_ID))
+        .thenReturn(Optional.of(reportingUnit));
+
+    BlockEntity block = new BlockEntity();
+    block.setId(BLOCK_ID);
+    block.setReportingUnitId(RU_ID);
+    block.setPlcDate(LocalDate.of(2026, Month.MARCH, 15));
+    when(blockRepository.findByIdAndReportingUnitIdAndDeletedFalse(BLOCK_ID, RU_ID))
+        .thenReturn(Optional.of(block));
+
+    var mapped =
+        new ca.bc.gov.nrs.hrs.dto.block.BlockResponseDto(
+            BLOCK_ID, RU_ID, "DISTRICT_AVERAGE", "DRAFT", true,
+            LocalDate.of(2026, Month.MARCH, 15), 0L, 0L, false, null, null);
+    when(blockMapper.toResponseDto(block)).thenReturn(mapped);
+
+    BlockMarkEntity secEntity = new BlockMarkEntity();
+    secEntity.setId(11L); secEntity.setBlockId(BLOCK_ID); secEntity.setMarkType("SECONDARY");
+    secEntity.setSequenceNo(1); secEntity.setMark("SEC1");
+    BlockMarkEntity roadEntity = new BlockMarkEntity();
+    roadEntity.setId(12L); roadEntity.setBlockId(BLOCK_ID); roadEntity.setMarkType("ROAD_PERMIT");
+    roadEntity.setSequenceNo(1); roadEntity.setMark("R123");
+
+    BlockMarkDto secDto = new BlockMarkDto(11L, BLOCK_ID, "SECONDARY", 1, "SEC1", null, null, null, null, null);
+    BlockMarkDto roadDto = new BlockMarkDto(12L, BLOCK_ID, "ROAD_PERMIT", 1, "R123", null, null, null, null, null);
+    when(blockMarkRepository.findByBlockIdAndMarkTypeAndDeletedFalseOrderBySequenceNo(BLOCK_ID, "SECONDARY"))
+        .thenReturn(List.of(secEntity));
+    when(blockMarkRepository.findByBlockIdAndMarkTypeAndDeletedFalseOrderBySequenceNo(BLOCK_ID, "ROAD_PERMIT"))
+        .thenReturn(List.of(roadEntity));
+    when(blockMarkMapper.toDto(secEntity)).thenReturn(secDto);
+    when(blockMarkMapper.toDto(roadEntity)).thenReturn(roadDto);
+
+    var result = blockService.getBlockDetails(RU_ID, BLOCK_ID, idirJwt);
+
+    assertThat(result.secondaryTimberMarks()).containsExactly(secDto);
+    assertThat(result.roadPermitTimberMarks()).containsExactly(roadDto);
+    assertThat(result.districtAverageVolumesSummary()).isNotNull();
+    assertThat(result.districtAverageVolumesSummary().rows()).isEmpty();
+    assertThat(result.districtAverageVolumesSummary().totals().totalBillableVolumeM3())
+        .isEqualByComparingTo("0");
+    assertThat(result.districtAverageVolumesSummary().totals().totalCutControlVolumeM3())
+        .isEqualByComparingTo("0");
+  }
+
+  @Test
+  @DisplayName("getBlockDetails maps legacy expanded secondary and road permit marks (R-prefixed, deduped, sequenced)")
+  void getBlockDetails_whenLegacyExpandedHasMarks_mapsRichTimberMarks() {
+    blockService.setClock(Clock.fixed(Instant.parse("2026-11-17T12:00:00Z"), ZoneOffset.UTC));
+    when(reportingUnitRepository.findByIdAndDeletedFalse(RU_ID)).thenReturn(Optional.empty());
+
+    var legacyRu =
+        new ca.bc.gov.nrs.hrs.dto.reportingunit.ReportingUnitLegacyDetailsDto(
+            CLIENT_NUMBER, "00",
+            new CodeDescriptionDto("AVG", "Average"),
+            new CodeDescriptionDto("DND", "Nadina"));
+    when(legacyApiProvider.getReportingUnitDetails(RU_ID)).thenReturn(legacyRu);
+
+    var legacyRow =
+        new ca.bc.gov.nrs.hrs.dto.block.BlockListItemDto(
+            BLOCK_ID, "FILE", "CP", "CUT", "RPRIMARY",
+            null, null, "sub",
+            new ca.bc.gov.nrs.hrs.dto.block.BlockListItemDto.Status("DFT", "Draft"),
+            null, null);
+    when(legacyApiProvider.getReportingUnitBlocksStrict(RU_ID)).thenReturn(List.of(legacyRow));
+
+    var expanded = new ReportingUnitSearchExpandedDto(
+        BLOCK_ID, "FILE", "CP", "RPRIMARY", false, true, null,
+        java.util.Arrays.asList(
+            new SearchExpandedSecondaryDto("SEC2", new CodeDescriptionDto("APP", "Approved"), 1.0),
+            new SearchExpandedSecondaryDto("RSEC", new CodeDescriptionDto("DFT", "Draft"), 2.0),
+            new SearchExpandedSecondaryDto("", null, null),
+            null),
+        99.0, 0.5, null, null, null, 0L, 0L);
+    when(legacyApiProvider.getSearchExpanded(RU_ID, BLOCK_ID)).thenReturn(expanded);
+    when(legacyApiProvider.getDistrictAverageVolumes(RU_ID, BLOCK_ID)).thenReturn(List.of());
+
+    var result = blockService.getBlockDetails(RU_ID, BLOCK_ID, idirJwt);
+
+    assertThat(result.secondaryTimberMarks()).hasSize(1);
+    assertThat(result.secondaryTimberMarks().get(0).mark()).isEqualTo("SEC2");
+    assertThat(result.secondaryTimberMarks().get(0).markType()).isEqualTo("SECONDARY");
+    assertThat(result.secondaryTimberMarks().get(0).sequenceNo()).isEqualTo(1);
+    assertThat(result.roadPermitTimberMarks())
+        .extracting(BlockMarkDto::mark)
+        .containsExactly("RPRIMARY", "RSEC");
+    assertThat(result.roadPermitTimberMarks()).allMatch(m -> "ROAD_PERMIT".equals(m.markType()));
+    assertThat(result.roadPermitTimberMarks())
+        .extracting(BlockMarkDto::sequenceNo)
+        .containsExactly(1, 2);
+    // Primary-derived road mark keeps the block's identifiers; secondary-derived ones stay null.
+    assertThat(result.roadPermitTimberMarks().get(0).forestFileId()).isEqualTo("FILE");
+    assertThat(result.roadPermitTimberMarks().get(0).cuttingPermitId()).isEqualTo("CP");
+    assertThat(result.roadPermitTimberMarks().get(0).cutBlockId()).isEqualTo("CUT");
+    assertThat(result.roadPermitTimberMarks().get(1).forestFileId()).isNull();
+    assertThat(result.roadPermitTimberMarks().get(1).cuttingPermitId()).isNull();
+    assertThat(result.roadPermitTimberMarks().get(1).cutBlockId()).isNull();
+    // Secondary marks never inherit the block's licence metadata.
+    assertThat(result.secondaryTimberMarks().get(0).forestFileId()).isNull();
+    assertThat(result.secondaryTimberMarks().get(0).cuttingPermitId()).isNull();
+    assertThat(result.secondaryTimberMarks().get(0).cutBlockId()).isNull();
+    assertThat(result.wasteAssessmentAreaSummary()).isNotNull();
+    assertThat(result.wasteAssessmentAreaSummary().primary())
+        .isEqualTo(new WasteAssessmentAreaMarkDto("RPRIMARY", BigDecimal.valueOf(0.5)));
+    assertThat(result.wasteAssessmentAreaSummary().secondary())
+        .containsExactly(new WasteAssessmentAreaMarkDto("SEC2", BigDecimal.valueOf(1.0)));
+    assertThat(result.wasteAssessmentAreaSummary().totalNetWasteAreaHa())
+        .isEqualByComparingTo("1.5");
+    assertThat(result.districtAverageVolumesSummary()).isNotNull();
+    assertThat(result.districtAverageVolumesSummary().rows()).isEmpty();
+    assertThat(result.districtAverageVolumesSummary().totals().totalBillableVolumeM3())
+        .isEqualByComparingTo("0");
+    assertThat(result.districtAverageVolumesSummary().totals().totalCutControlVolumeM3())
+        .isEqualByComparingTo("0");
+  }
+
+
+  @Test
+  @DisplayName("getBlockDetails returns postgres waste assessment area summary with per-mark attributed net areas")
+  void getBlockDetails_whenPostgresBlockHasMarksAndSegments_returnsWasteAssessmentAreaSummary() {
+    blockService.setClock(Clock.fixed(Instant.parse("2026-11-17T12:00:00Z"), ZoneOffset.UTC));
+    when(reportingUnitRepository.findByIdAndDeletedFalse(RU_ID))
+        .thenReturn(Optional.of(reportingUnit));
+
+    BlockEntity block = new BlockEntity();
+    block.setId(BLOCK_ID);
+    block.setReportingUnitId(RU_ID);
+    block.setPlcDate(LocalDate.of(2026, Month.MARCH, 15));
+    when(blockRepository.findByIdAndReportingUnitIdAndDeletedFalse(BLOCK_ID, RU_ID))
+        .thenReturn(Optional.of(block));
+
+    var mapped =
+        new ca.bc.gov.nrs.hrs.dto.block.BlockResponseDto(
+            BLOCK_ID,
+            RU_ID,
+            "DISTRICT_AVERAGE",
+            "DRAFT",
+            true,
+            LocalDate.of(2026, Month.MARCH, 15),
+            0L,
+            0L,
+            false,
+            null,
+            null);
+    when(blockMapper.toResponseDto(block)).thenReturn(mapped);
+
+    BlockMarkEntity primary = new BlockMarkEntity();
+    primary.setId(1L);
+    primary.setBlockId(BLOCK_ID);
+    primary.setMarkType("PRIMARY");
+    primary.setSequenceNo(0);
+    primary.setMark("M1");
+    primary.setTimberMark(" TM-PRIMARY ");
+
+    BlockMarkEntity secondary = new BlockMarkEntity();
+    secondary.setId(2L);
+    secondary.setBlockId(BLOCK_ID);
+    secondary.setMarkType("SECONDARY");
+    secondary.setSequenceNo(1);
+    secondary.setMark("SEC-MARK");
+    secondary.setTimberMark(null);
+
+    BlockMarkEntity secondaryNoArea = new BlockMarkEntity();
+    secondaryNoArea.setId(3L);
+    secondaryNoArea.setBlockId(BLOCK_ID);
+    secondaryNoArea.setMarkType("SECONDARY");
+    secondaryNoArea.setSequenceNo(2);
+    secondaryNoArea.setMark("SEC-NO-AREA");
+
+    when(blockMarkRepository.findByBlockIdAndMarkTypeAndDeletedFalseOrderBySequenceNo(
+            BLOCK_ID, "PRIMARY"))
+        .thenReturn(List.of(primary));
+    when(blockMarkRepository.findByBlockIdAndMarkTypeAndDeletedFalseOrderBySequenceNo(
+            BLOCK_ID, "SECONDARY"))
+        .thenReturn(List.of(secondary, secondaryNoArea));
+    when(blockMarkRepository.findByBlockIdAndMarkTypeAndDeletedFalseOrderBySequenceNo(
+            BLOCK_ID, "ROAD_PERMIT"))
+        .thenReturn(List.of());
+    when(blockMarkMapper.toDto(secondary))
+        .thenReturn(
+            new BlockMarkDto(2L, BLOCK_ID, "SECONDARY", 1, "SEC-MARK", null, null, null, null, null));
+    when(blockMarkMapper.toDto(secondaryNoArea))
+        .thenReturn(
+            new BlockMarkDto(
+                3L, BLOCK_ID, "SECONDARY", 2, "SEC-NO-AREA", null, null, null, null, null));
+
+    BlockAreaSegmentEntity segPrimaryA = new BlockAreaSegmentEntity();
+    segPrimaryA.setBlockMarkId(1L);
+    segPrimaryA.setNetWasteAreaHa(new BigDecimal("1.25"));
+    BlockAreaSegmentEntity segPrimaryB = new BlockAreaSegmentEntity();
+    segPrimaryB.setBlockMarkId(1L);
+    segPrimaryB.setNetWasteAreaHa(new BigDecimal("0.75"));
+    BlockAreaSegmentEntity segSecondaryNull = new BlockAreaSegmentEntity();
+    segSecondaryNull.setBlockMarkId(2L);
+    segSecondaryNull.setNetWasteAreaHa(null);
+    BlockAreaSegmentEntity segUnlinked = new BlockAreaSegmentEntity();
+    segUnlinked.setBlockMarkId(null);
+    segUnlinked.setNetWasteAreaHa(new BigDecimal("99.99"));
+    when(blockAreaSegmentRepository.findByBlockIdAndDeletedFalse(BLOCK_ID))
+        .thenReturn(List.of(segPrimaryA, segPrimaryB, segSecondaryNull, segUnlinked));
+
+    var result = blockService.getBlockDetails(RU_ID, BLOCK_ID, idirJwt);
+
+    WasteAssessmentAreaSummaryDto summary = result.wasteAssessmentAreaSummary();
+    assertThat(summary).isNotNull();
+    assertThat(summary.primary())
+        .isEqualTo(new WasteAssessmentAreaMarkDto("TM-PRIMARY", new BigDecimal("2.00")));
+    assertThat(summary.secondary())
+        .containsExactly(
+            new WasteAssessmentAreaMarkDto("SEC-MARK", null),
+            new WasteAssessmentAreaMarkDto("SEC-NO-AREA", null));
+    assertThat(summary.totalNetWasteAreaHa()).isEqualByComparingTo("2.00");
+    assertThat(result.districtAverageVolumesSummary()).isNotNull();
+    assertThat(result.districtAverageVolumesSummary().rows()).isEmpty();
+    assertThat(result.districtAverageVolumesSummary().totals().totalBillableVolumeM3())
+        .isEqualByComparingTo("0");
+    assertThat(result.districtAverageVolumesSummary().totals().totalCutControlVolumeM3())
+        .isEqualByComparingTo("0");
+  }
+
+  @Test
+  @DisplayName("getBlockDetails returns postgres summary with null primary and zero total when no marks exist")
+  void getBlockDetails_whenPostgresBlockHasNoMarks_returnsEmptyWasteAssessmentAreaSummary() {
+    blockService.setClock(Clock.fixed(Instant.parse("2026-11-17T12:00:00Z"), ZoneOffset.UTC));
+    when(reportingUnitRepository.findByIdAndDeletedFalse(RU_ID))
+        .thenReturn(Optional.of(reportingUnit));
+
+    BlockEntity block = new BlockEntity();
+    block.setId(BLOCK_ID);
+    block.setReportingUnitId(RU_ID);
+    when(blockRepository.findByIdAndReportingUnitIdAndDeletedFalse(BLOCK_ID, RU_ID))
+        .thenReturn(Optional.of(block));
+
+    var mapped =
+        new ca.bc.gov.nrs.hrs.dto.block.BlockResponseDto(
+            BLOCK_ID, RU_ID, "DISTRICT_AVERAGE", "DRAFT", true, null, 0L, 0L, false, null, null);
+    when(blockMapper.toResponseDto(block)).thenReturn(mapped);
+    when(blockMarkRepository.findByBlockIdAndMarkTypeAndDeletedFalseOrderBySequenceNo(
+            BLOCK_ID, "SECONDARY"))
+        .thenReturn(List.of());
+    when(blockMarkRepository.findByBlockIdAndMarkTypeAndDeletedFalseOrderBySequenceNo(
+            BLOCK_ID, "ROAD_PERMIT"))
+        .thenReturn(List.of());
+    when(blockMarkRepository.findByBlockIdAndMarkTypeAndDeletedFalseOrderBySequenceNo(
+            BLOCK_ID, "PRIMARY"))
+        .thenReturn(List.of());
+    when(blockAreaSegmentRepository.findByBlockIdAndDeletedFalse(BLOCK_ID)).thenReturn(List.of());
+
+    var result = blockService.getBlockDetails(RU_ID, BLOCK_ID, idirJwt);
+
+    assertThat(result.wasteAssessmentAreaSummary()).isNotNull();
+    assertThat(result.wasteAssessmentAreaSummary().primary()).isNull();
+    assertThat(result.wasteAssessmentAreaSummary().secondary()).isEmpty();
+    assertThat(result.wasteAssessmentAreaSummary().totalNetWasteAreaHa())
+        .isEqualByComparingTo("0");
+    assertThat(result.districtAverageVolumesSummary()).isNotNull();
+    assertThat(result.districtAverageVolumesSummary().rows()).isEmpty();
+    assertThat(result.districtAverageVolumesSummary().totals().totalBillableVolumeM3())
+        .isEqualByComparingTo("0");
+    assertThat(result.districtAverageVolumesSummary().totals().totalCutControlVolumeM3())
+        .isEqualByComparingTo("0");
+  }
+
+  @Test
+  @DisplayName("getBlockDetails returns legacy waste assessment area summary derived from expanded search")
+  void getBlockDetails_whenLegacyExpandedHasAreas_returnsWasteAssessmentAreaSummary() {
+    blockService.setClock(Clock.fixed(Instant.parse("2026-11-17T12:00:00Z"), ZoneOffset.UTC));
+    when(reportingUnitRepository.findByIdAndDeletedFalse(RU_ID)).thenReturn(Optional.empty());
+
+    var legacyRu =
+        new ca.bc.gov.nrs.hrs.dto.reportingunit.ReportingUnitLegacyDetailsDto(
+            CLIENT_NUMBER,
+            "00",
+            new CodeDescriptionDto("AVG", "Average"),
+            new CodeDescriptionDto("DND", "Nadina"));
+    when(legacyApiProvider.getReportingUnitDetails(RU_ID)).thenReturn(legacyRu);
+
+    var legacyRow =
+        new ca.bc.gov.nrs.hrs.dto.block.BlockListItemDto(
+            BLOCK_ID,
+            "FILE",
+            "CP",
+            "CUT",
+            "TM-PRI",
+            null,
+            null,
+            "sub",
+            new ca.bc.gov.nrs.hrs.dto.block.BlockListItemDto.Status("DFT", "Draft"),
+            null,
+            null);
+    when(legacyApiProvider.getReportingUnitBlocksStrict(RU_ID)).thenReturn(List.of(legacyRow));
+
+    var expanded =
+        new ReportingUnitSearchExpandedDto(
+            BLOCK_ID,
+            "FILE",
+            "CP",
+            "TM-PRI",
+            false,
+            true,
+            null,
+            java.util.Arrays.asList(
+                new SearchExpandedSecondaryDto(
+                    "SEC2", new CodeDescriptionDto("APP", "Approved"), 1.5),
+                new SearchExpandedSecondaryDto(
+                    "RSEC", new CodeDescriptionDto("DFT", "Draft"), 2.0),
+                new SearchExpandedSecondaryDto(
+                    "SEC3", new CodeDescriptionDto("DFT", "Draft"), null),
+                new SearchExpandedSecondaryDto("", null, null),
+                null),
+            3.0,
+            1.25,
+            null,
+            null,
+            null,
+            0L,
+            0L);
+    when(legacyApiProvider.getSearchExpanded(RU_ID, BLOCK_ID)).thenReturn(expanded);
+    when(legacyApiProvider.getDistrictAverageVolumes(RU_ID, BLOCK_ID)).thenReturn(List.of());
+
+    var result = blockService.getBlockDetails(RU_ID, BLOCK_ID, idirJwt);
+
+    WasteAssessmentAreaSummaryDto summary = result.wasteAssessmentAreaSummary();
+    assertThat(summary).isNotNull();
+    assertThat(summary.primary())
+        .isEqualTo(new WasteAssessmentAreaMarkDto("TM-PRI", BigDecimal.valueOf(1.25)));
+    assertThat(summary.secondary())
+        .containsExactly(
+            new WasteAssessmentAreaMarkDto("SEC2", BigDecimal.valueOf(1.5)),
+            new WasteAssessmentAreaMarkDto("SEC3", null));
+    assertThat(summary.totalNetWasteAreaHa()).isEqualByComparingTo("2.75");
+    assertThat(result.districtAverageVolumesSummary()).isNotNull();
+    assertThat(result.districtAverageVolumesSummary().rows()).isEmpty();
+    assertThat(result.districtAverageVolumesSummary().totals().totalBillableVolumeM3())
+        .isEqualByComparingTo("0");
+    assertThat(result.districtAverageVolumesSummary().totals().totalCutControlVolumeM3())
+        .isEqualByComparingTo("0");
+  }
+
+  @Test
+  @DisplayName("getBlockDetails returns legacy summary with zero total when expanded areas are null")
+  void getBlockDetails_whenLegacyExpandedHasNullAreas_returnsSummaryWithZeroTotal() {
+    blockService.setClock(Clock.fixed(Instant.parse("2026-11-17T12:00:00Z"), ZoneOffset.UTC));
+    when(reportingUnitRepository.findByIdAndDeletedFalse(RU_ID)).thenReturn(Optional.empty());
+
+    var legacyRu =
+        new ca.bc.gov.nrs.hrs.dto.reportingunit.ReportingUnitLegacyDetailsDto(
+            CLIENT_NUMBER,
+            "00",
+            new CodeDescriptionDto("AVG", "Average"),
+            new CodeDescriptionDto("DND", "Nadina"));
+    when(legacyApiProvider.getReportingUnitDetails(RU_ID)).thenReturn(legacyRu);
+
+    var legacyRow =
+        new ca.bc.gov.nrs.hrs.dto.block.BlockListItemDto(
+            BLOCK_ID,
+            "FILE",
+            "CP",
+            "CUT",
+            "TM-PRI",
+            null,
+            null,
+            "sub",
+            new ca.bc.gov.nrs.hrs.dto.block.BlockListItemDto.Status("DFT", "Draft"),
+            null,
+            null);
+    when(legacyApiProvider.getReportingUnitBlocksStrict(RU_ID)).thenReturn(List.of(legacyRow));
+    when(legacyApiProvider.getSearchExpanded(RU_ID, BLOCK_ID))
+        .thenReturn(
+            new ReportingUnitSearchExpandedDto(
+                BLOCK_ID,
+                "FILE",
+                "CP",
+                "TM-PRI",
+                false,
+                false,
+                null,
+                List.of(new SearchExpandedSecondaryDto("SEC2", null, null)),
+                null,
+                null,
+                null,
+                null,
+                null,
+                0L,
+                0L));
+    when(legacyApiProvider.getDistrictAverageVolumes(RU_ID, BLOCK_ID)).thenReturn(List.of());
+
+    var result = blockService.getBlockDetails(RU_ID, BLOCK_ID, idirJwt);
+
+    assertThat(result.wasteAssessmentAreaSummary().primary())
+        .isEqualTo(new WasteAssessmentAreaMarkDto("TM-PRI", null));
+    assertThat(result.wasteAssessmentAreaSummary().secondary())
+        .containsExactly(new WasteAssessmentAreaMarkDto("SEC2", null));
+    assertThat(result.wasteAssessmentAreaSummary().totalNetWasteAreaHa())
+        .isEqualByComparingTo("0");
+    assertThat(result.districtAverageVolumesSummary()).isNotNull();
+    assertThat(result.districtAverageVolumesSummary().rows()).isEmpty();
+    assertThat(result.districtAverageVolumesSummary().totals().totalBillableVolumeM3())
+        .isEqualByComparingTo("0");
+    assertThat(result.districtAverageVolumesSummary().totals().totalCutControlVolumeM3())
+        .isEqualByComparingTo("0");
+  }
+
+
+
+  @Test
+  @DisplayName("getBlockDetails legacy summary uses block netArea for single-mark blocks")
+  void getBlockDetails_whenLegacySingleMarkBlock_usesNetAreaForPrimary() {
+    blockService.setClock(Clock.fixed(Instant.parse("2026-11-17T12:00:00Z"), ZoneOffset.UTC));
+    when(reportingUnitRepository.findByIdAndDeletedFalse(RU_ID)).thenReturn(Optional.empty());
+
+    var legacyRu =
+        new ca.bc.gov.nrs.hrs.dto.reportingunit.ReportingUnitLegacyDetailsDto(
+            CLIENT_NUMBER,
+            "00",
+            new CodeDescriptionDto("AVG", "Average"),
+            new CodeDescriptionDto("DND", "Nadina"));
+    when(legacyApiProvider.getReportingUnitDetails(RU_ID)).thenReturn(legacyRu);
+
+    var legacyRow =
+        new ca.bc.gov.nrs.hrs.dto.block.BlockListItemDto(
+            BLOCK_ID,
+            "FILE",
+            "CP",
+            "CUT",
+            "TM-PRI",
+            null,
+            null,
+            "sub",
+            new ca.bc.gov.nrs.hrs.dto.block.BlockListItemDto.Status("DFT", "Draft"),
+            null,
+            null);
+    when(legacyApiProvider.getReportingUnitBlocksStrict(RU_ID)).thenReturn(List.of(legacyRow));
+
+    when(legacyApiProvider.getSearchExpanded(RU_ID, BLOCK_ID))
+        .thenReturn(
+            new ReportingUnitSearchExpandedDto(
+                BLOCK_ID, "FILE", "CP", "TM-PRI", false, false, null, List.of(),
+                5.0, 99.0, null, null, null, 0L, 0L));
+    when(legacyApiProvider.getDistrictAverageVolumes(RU_ID, BLOCK_ID)).thenReturn(List.of());
+
+    var result = blockService.getBlockDetails(RU_ID, BLOCK_ID, idirJwt);
+
+    assertThat(result.wasteAssessmentAreaSummary().primary())
+        .isEqualTo(new WasteAssessmentAreaMarkDto("TM-PRI", BigDecimal.valueOf(5.0)));
+    assertThat(result.wasteAssessmentAreaSummary().secondary()).isEmpty();
+    assertThat(result.wasteAssessmentAreaSummary().totalNetWasteAreaHa())
+        .isEqualByComparingTo("5");
+  }
+
+  @Test
+  @DisplayName("getBlockDetails returns legacy district average volumes summary from stratum rows")
+  void getBlockDetails_whenLegacyDistrictAverageVolumesExist_returnsMappedSummary() {
+    blockService.setClock(Clock.fixed(Instant.parse("2026-11-17T12:00:00Z"), ZoneOffset.UTC));
+    when(reportingUnitRepository.findByIdAndDeletedFalse(RU_ID)).thenReturn(Optional.empty());
+
+    var legacyRu =
+        new ca.bc.gov.nrs.hrs.dto.reportingunit.ReportingUnitLegacyDetailsDto(
+            CLIENT_NUMBER,
+            "00",
+            new CodeDescriptionDto("AVG", "Average"),
+            new CodeDescriptionDto("DND", "Nadina"));
+    when(legacyApiProvider.getReportingUnitDetails(RU_ID)).thenReturn(legacyRu);
+
+    var legacyRow =
+        new ca.bc.gov.nrs.hrs.dto.block.BlockListItemDto(
+            BLOCK_ID,
+            "FILE",
+            "CP",
+            "CUT",
+            "TM-PRI",
+            null,
+            null,
+            "sub",
+            new ca.bc.gov.nrs.hrs.dto.block.BlockListItemDto.Status("DFT", "Draft"),
+            null,
+            null);
+    when(legacyApiProvider.getReportingUnitBlocksStrict(RU_ID)).thenReturn(List.of(legacyRow));
+    when(legacyApiProvider.getSearchExpanded(RU_ID, BLOCK_ID))
+        .thenReturn(
+            new ReportingUnitSearchExpandedDto(
+                BLOCK_ID, "FILE", "CP", "TM-PRI", false, false, null, List.of(),
+                null, null, null, null, null, 0L, 0L));
+    when(legacyApiProvider.getDistrictAverageVolumes(RU_ID, BLOCK_ID))
+        .thenReturn(
+            java.util.Arrays.asList(
+                new ca.bc.gov.nrs.hrs.dto.search.DistrictAverageVolumeLegacyDto(
+                    "Dispersed",
+                    "Roadside",
+                    "R",
+                    "Rubber-tired Skidder",
+                    "Ocular Estimate",
+                    "Not Stratified",
+                    new BigDecimal("29.4"),
+                    new BigDecimal("12.0")),
+                new ca.bc.gov.nrs.hrs.dto.search.DistrictAverageVolumeLegacyDto(
+                    "Accumulated",
+                    "Roadside",
+                    "H",
+                    null,
+                    "Ocular Estimate",
+                    "Not Stratified",
+                    null,
+                    null),
+                null));
+
+    var result = blockService.getBlockDetails(RU_ID, BLOCK_ID, idirJwt);
+
+    assertThat(result.districtAverageVolumesSummary()).isNotNull();
+    assertThat(result.districtAverageVolumesSummary().rows()).hasSize(2);
+    assertThat(result.districtAverageVolumesSummary().rows().get(0).populationType())
+        .isEqualTo("Dispersed");
+    assertThat(result.districtAverageVolumesSummary().rows().get(0).harvestMethodCode())
+        .isEqualTo("Rubber-tired Skidder");
+    assertThat(result.districtAverageVolumesSummary().rows().get(0).netWasteAreaHa())
+        .isEqualByComparingTo("29.4");
+    assertThat(result.districtAverageVolumesSummary().rows().get(0).totalBillableVolumeM3())
+        .isNull();
+    assertThat(result.districtAverageVolumesSummary().rows().get(0).totalCutControlVolumeM3())
+        .isNull();
+    assertThat(result.districtAverageVolumesSummary().rows().get(1).harvestMethodCode())
+        .isEqualTo("H");
+    assertThat(result.districtAverageVolumesSummary().rows().get(1).netWasteAreaHa()).isNull();
+    assertThat(result.districtAverageVolumesSummary().totals().totalBillableVolumeM3())
+        .isEqualByComparingTo("0");
+    assertThat(result.districtAverageVolumesSummary().totals().totalCutControlVolumeM3())
+        .isEqualByComparingTo("0");
+  }
+
+}
