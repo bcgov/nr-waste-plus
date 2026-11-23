@@ -87,7 +87,7 @@ jobs:
     runs-on: ubuntu-26.04
     strategy:
       matrix:
-        component: [backend, frontend, legacy, database]
+        component: [backend, frontend, legacy]
     steps:
       - uses: shrink/actions-docker-registry-tag@e6aaef25c595b6e0edd18bf4c7dbfea3abd43299 # v5
         with:
