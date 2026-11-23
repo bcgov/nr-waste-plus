@@ -1,7 +1,9 @@
 package ca.bc.gov.nrs.hrs.controller;
 
+import ca.bc.gov.nrs.hrs.dto.block.LifecycleDetailsDto;
 import ca.bc.gov.nrs.hrs.dto.block.LifecycleEventRequestDto;
 import ca.bc.gov.nrs.hrs.dto.block.LifecycleEventResponseDto;
+import ca.bc.gov.nrs.hrs.dto.block.LifecycleViewResult;
 import ca.bc.gov.nrs.hrs.security.ResourceScopeGuard;
 import ca.bc.gov.nrs.hrs.service.lifecycle.LifecycleEventService;
 import ca.bc.gov.nrs.hrs.util.ConditionalRequestSupport;
@@ -16,6 +18,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -131,5 +134,68 @@ public class LifecycleEventController {
     }
 
     return responseBuilder.body(response);
+  }
+
+  /**
+   * Retrieves the current lifecycle details, available events, and history for a block.
+   *
+   * @param servletRequest HTTP request
+   * @param jwt caller JWT principal
+   * @param reportingUnitId target reporting unit identifier
+   * @param blockId target block identifier
+   * @return 200 OK with the lifecycle details and strong ETag header
+   */
+  @GetMapping({
+    "/{reportingUnitId}/{blockId}/lifecycle",
+    "/{reportingUnitId}/blocks/{blockId}/lifecycle"
+  })
+  public ResponseEntity<LifecycleDetailsDto> getBlockLifecycle(
+      HttpServletRequest servletRequest,
+      @AuthenticationPrincipal Jwt jwt,
+      @PathVariable Long reportingUnitId,
+      @PathVariable Long blockId) {
+
+    resourceScopeGuard.verify(jwt, reportingUnitId, "GET");
+
+    LifecycleViewResult result =
+        lifecycleEventService.viewBlockLifecycle(
+            servletRequest, jwt, reportingUnitId, blockId);
+
+    var responseBuilder = ResponseEntity.ok();
+    if (result.revision() != null) {
+      responseBuilder.header(
+          HttpHeaders.ETAG, ConditionalRequestSupport.eTagOf(result.revision()));
+    }
+
+    return responseBuilder.body(result.details());
+  }
+
+  /**
+   * Retrieves the current lifecycle details, available events, and history for a reporting unit.
+   *
+   * @param servletRequest HTTP request
+   * @param jwt caller JWT principal
+   * @param reportingUnitId target reporting unit identifier
+   * @return 200 OK with the lifecycle details and strong ETag header
+   */
+  @GetMapping("/{reportingUnitId}/lifecycle")
+  public ResponseEntity<LifecycleDetailsDto> getReportingUnitLifecycle(
+      HttpServletRequest servletRequest,
+      @AuthenticationPrincipal Jwt jwt,
+      @PathVariable Long reportingUnitId) {
+
+    resourceScopeGuard.verify(jwt, reportingUnitId, "GET");
+
+    LifecycleViewResult result =
+        lifecycleEventService.viewReportingUnitLifecycle(
+            servletRequest, jwt, reportingUnitId);
+
+    var responseBuilder = ResponseEntity.ok();
+    if (result.revision() != null) {
+      responseBuilder.header(
+          HttpHeaders.ETAG, ConditionalRequestSupport.eTagOf(result.revision()));
+    }
+
+    return responseBuilder.body(result.details());
   }
 }

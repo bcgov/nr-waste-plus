@@ -13,5 +13,5 @@ public record LifecycleEventRequestDto(
     @NotBlank(message = "Event is required")
     String event,
 
-    @Size(max = 4000, message = "Comment must not exceed 4000 characters")
+    @Size(max = 2000, message = "Comment must not exceed 2000 characters")
     String comment) {}

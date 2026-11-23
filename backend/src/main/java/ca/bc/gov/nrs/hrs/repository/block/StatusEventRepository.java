@@ -1,6 +1,7 @@
 package ca.bc.gov.nrs.hrs.repository.block;
 
 import ca.bc.gov.nrs.hrs.entity.block.StatusEventEntity;
+import java.util.List;
 import java.util.Optional;
 import org.springframework.stereotype.Repository;
 
@@ -26,4 +27,10 @@ public interface StatusEventRepository
   /** Returns the most recent status event recorded for a reporting unit, if any. */
   Optional<StatusEventEntity> findFirstByReportingUnitIdOrderByCreatedAtDescIdDesc(
       Long reportingUnitId);
+
+  /** Returns all status events recorded for a block in chronological order. */
+  List<StatusEventEntity> findByBlockIdOrderByCreatedAtAscIdAsc(Long blockId);
+
+  /** Returns all status events recorded for a reporting unit in chronological order. */
+  List<StatusEventEntity> findByReportingUnitIdOrderByCreatedAtAscIdAsc(Long reportingUnitId);
 }

@@ -4,8 +4,12 @@ import ca.bc.gov.nrs.hrs.dto.base.IdentityProvider;
 import ca.bc.gov.nrs.hrs.dto.base.Role;
 import ca.bc.gov.nrs.hrs.dto.block.AttachmentScanStatus;
 import ca.bc.gov.nrs.hrs.dto.block.AttachmentStatus;
+import ca.bc.gov.nrs.hrs.dto.block.AvailableLifecycleEventDto;
+import ca.bc.gov.nrs.hrs.dto.block.LifecycleDetailsDto;
 import ca.bc.gov.nrs.hrs.dto.block.LifecycleEventRequestDto;
 import ca.bc.gov.nrs.hrs.dto.block.LifecycleEventResponseDto;
+import ca.bc.gov.nrs.hrs.dto.block.LifecycleHistoryItemDto;
+import ca.bc.gov.nrs.hrs.dto.block.LifecycleViewResult;
 import ca.bc.gov.nrs.hrs.entity.block.BlockCommentEntity;
 import ca.bc.gov.nrs.hrs.entity.block.BlockEntity;
 import ca.bc.gov.nrs.hrs.entity.block.BlockRequirementEntity;
@@ -30,6 +34,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
@@ -101,11 +107,24 @@ public class LifecycleEventService {
 
     ConditionalRequestSupport.requireMatch(servletRequest, block.getRevision());
 
-    if (TransitionPolicyService.EVENT_SUBMIT.equalsIgnoreCase(request.event())) {
-      validateBlockSubmissionReadiness(block);
+    String currentState = resolveBlockState(blockId, block.isDraft());
+
+    if (transitionPolicyService.isCommentRequired(currentState, request.event())) {
+      if (request.comment() == null || request.comment().isBlank()) {
+        ResponseStatusException ex =
+            new ResponseStatusException(
+                HttpStatus.UNPROCESSABLE_ENTITY, "A comment is required for this event");
+        ex.getBody().setProperty("code", "COMMENT_REQUIRED");
+        ex.getBody().setProperty("blockState", currentState);
+        ex.getBody().setProperty("retryable", false);
+        throw ex;
+      }
     }
 
-    String currentState = resolveBlockState(blockId, block.isDraft());
+    if (TransitionPolicyService.EVENT_SUBMIT.equalsIgnoreCase(request.event())) {
+      validateBlockSubmissionReadiness(block, currentState);
+    }
+
     Role role = resolveActorRole(jwt, reportingUnit.getClientNumber());
     IdentityProvider provider = JwtPrincipalUtil.getIdentityProvider(jwt);
     TransitionContext context = buildBlockTransitionContext(blockId, block.getPlcDate());
@@ -120,9 +139,15 @@ public class LifecycleEventService {
           reportingUnitId,
           result.reason());
       if (result.denialReason() == TransitionEvaluationResult.DenialReason.FORBIDDEN_ROLE) {
-        throw new ResponseStatusException(HttpStatus.FORBIDDEN, result.reason());
+        ResponseStatusException ex =
+            new ResponseStatusException(HttpStatus.FORBIDDEN, result.reason());
+        ex.getBody().setProperty("code", "ROLE_NOT_ALLOWED");
+        ex.getBody().setProperty("blockState", currentState);
+        ex.getBody().setProperty("retryable", false);
+        throw ex;
       }
-      throw new IllegalTransitionException(result.reason());
+      throw new IllegalTransitionException(
+          result.reason(), "ILLEGAL_TRANSITION", currentState, false);
     }
 
     final String targetState = result.targetState();
@@ -136,10 +161,12 @@ public class LifecycleEventService {
     statusEvent.setStatus(targetState);
     statusEvent.setEventType(request.event().trim().toUpperCase(Locale.ROOT));
 
+    var detailsNode = objectMapper.createObjectNode();
+    detailsNode.put("fromState", currentState);
     if (request.comment() != null && !request.comment().isBlank()) {
-      statusEvent.setDetails(
-          objectMapper.createObjectNode().put("comment", request.comment().trim()));
+      detailsNode.put("comment", request.comment().trim());
     }
+    statusEvent.setDetails(detailsNode);
     statusEvent = statusEventRepository.save(statusEvent);
 
     if (request.comment() != null && !request.comment().isBlank()) {
@@ -195,6 +222,19 @@ public class LifecycleEventService {
     ConditionalRequestSupport.requireMatch(servletRequest, reportingUnit.getRevision());
 
     String currentState = resolveReportingUnitState(reportingUnitId);
+
+    if (transitionPolicyService.isCommentRequired(currentState, request.event())) {
+      if (request.comment() == null || request.comment().isBlank()) {
+        ResponseStatusException ex =
+            new ResponseStatusException(
+                HttpStatus.UNPROCESSABLE_ENTITY, "A comment is required for this event");
+        ex.getBody().setProperty("code", "COMMENT_REQUIRED");
+        ex.getBody().setProperty("blockState", currentState);
+        ex.getBody().setProperty("retryable", false);
+        throw ex;
+      }
+    }
+
     Role role = resolveActorRole(jwt, reportingUnit.getClientNumber());
     IdentityProvider provider = JwtPrincipalUtil.getIdentityProvider(jwt);
 
@@ -208,9 +248,15 @@ public class LifecycleEventService {
           reportingUnitId,
           result.reason());
       if (result.denialReason() == TransitionEvaluationResult.DenialReason.FORBIDDEN_ROLE) {
-        throw new ResponseStatusException(HttpStatus.FORBIDDEN, result.reason());
+        ResponseStatusException ex =
+            new ResponseStatusException(HttpStatus.FORBIDDEN, result.reason());
+        ex.getBody().setProperty("code", "ROLE_NOT_ALLOWED");
+        ex.getBody().setProperty("blockState", currentState);
+        ex.getBody().setProperty("retryable", false);
+        throw ex;
       }
-      throw new IllegalTransitionException(result.reason());
+      throw new IllegalTransitionException(
+          result.reason(), "ILLEGAL_TRANSITION", currentState, false);
     }
 
     final String targetState = result.targetState();
@@ -223,10 +269,12 @@ public class LifecycleEventService {
     statusEvent.setStatus(targetState);
     statusEvent.setEventType(request.event().trim().toUpperCase(Locale.ROOT));
 
+    var detailsNode = objectMapper.createObjectNode();
+    detailsNode.put("fromState", currentState);
     if (request.comment() != null && !request.comment().isBlank()) {
-      statusEvent.setDetails(
-          objectMapper.createObjectNode().put("comment", request.comment().trim()));
+      detailsNode.put("comment", request.comment().trim());
     }
+    statusEvent.setDetails(detailsNode);
     statusEvent = statusEventRepository.save(statusEvent);
     entityManager.flush();
 
@@ -357,10 +405,16 @@ public class LifecycleEventService {
         plcDate, submissionDate, rationaleRequired, burntPiles);
   }
 
-  private void validateBlockSubmissionReadiness(BlockEntity block) {
+  private void validateBlockSubmissionReadiness(BlockEntity block, String currentState) {
     if (block.getPlcDate() == null) {
-      throw new IllegalTransitionException(
-          "Cannot submit block: planned completion date (plcDate) is required.");
+      ResponseStatusException ex =
+          new ResponseStatusException(
+              HttpStatus.UNPROCESSABLE_ENTITY,
+              "Cannot submit block: planned completion date (plcDate) is required.");
+      ex.getBody().setProperty("code", "PRECONDITION_FAILED");
+      ex.getBody().setProperty("blockState", currentState);
+      ex.getBody().setProperty("retryable", false);
+      throw ex;
     }
     long totalAttachments =
         blockAttachmentRepository.countByBlockIdAndDeletedFalse(block.getId());
@@ -370,9 +424,131 @@ public class LifecycleEventService {
             AttachmentStatus.FINALIZED.name(),
             AttachmentScanStatus.CLEAN.name());
     if (totalAttachments != validAttachments) {
-      throw new IllegalTransitionException(
-          "Cannot submit block: all attachments must be finalized and clean of malware.");
+      ResponseStatusException ex =
+          new ResponseStatusException(
+              HttpStatus.UNPROCESSABLE_ENTITY,
+              "Cannot submit block: all attachments must be finalized and clean of malware.");
+      ex.getBody().setProperty("code", "PRECONDITION_FAILED");
+      ex.getBody().setProperty("blockState", currentState);
+      ex.getBody().setProperty("retryable", false);
+      throw ex;
     }
+  }
+
+  /**
+   * Retrieves the current lifecycle details, available events, and history for a block.
+   *
+   * @param servletRequest HTTP request
+   * @param jwt caller JWT principal
+   * @param reportingUnitId target reporting unit identifier
+   * @param blockId target block identifier
+   * @return view result pairing the details payload with the block revision
+   */
+  @NewSpan
+  @Transactional(readOnly = true)
+  public LifecycleViewResult viewBlockLifecycle(
+      HttpServletRequest servletRequest,
+      Jwt jwt,
+      Long reportingUnitId,
+      Long blockId) {
+
+    ReportingUnitEntity reportingUnit =
+        reportingUnitRepository
+            .findByIdAndDeletedFalse(reportingUnitId)
+            .orElseThrow(() -> new ReportingUnitNotFoundException(reportingUnitId));
+
+    validateTenantAccess(jwt, reportingUnit);
+
+    BlockEntity block =
+        blockRepository
+            .findByIdAndReportingUnitIdAndDeletedFalse(blockId, reportingUnitId)
+            .orElseThrow(() -> new BlockNotFoundException(blockId, reportingUnitId));
+
+    String currentState = resolveBlockState(blockId, block.isDraft());
+    Role role = resolveActorRole(jwt, reportingUnit.getClientNumber());
+    IdentityProvider provider = JwtPrincipalUtil.getIdentityProvider(jwt);
+    TransitionContext context = buildBlockTransitionContext(blockId, block.getPlcDate());
+
+    List<AvailableLifecycleEventDto> availableEvents =
+        transitionPolicyService.availableEvents(currentState, role, provider, context);
+
+    List<StatusEventEntity> events =
+        statusEventRepository.findByBlockIdOrderByCreatedAtAscIdAsc(blockId);
+
+    List<LifecycleHistoryItemDto> history =
+        mapToHistoryItems(events, TransitionPolicyService.STATE_DRAFT);
+
+    LifecycleDetailsDto details = new LifecycleDetailsDto(currentState, availableEvents, history);
+    return new LifecycleViewResult(details, block.getRevision());
+  }
+
+  /**
+   * Retrieves the current lifecycle details, available events, and history for a reporting unit.
+   *
+   * @param servletRequest HTTP request
+   * @param jwt caller JWT principal
+   * @param reportingUnitId target reporting unit identifier
+   * @return view result pairing the details payload with the reporting unit revision
+   */
+  @NewSpan
+  @Transactional(readOnly = true)
+  public LifecycleViewResult viewReportingUnitLifecycle(
+      HttpServletRequest servletRequest,
+      Jwt jwt,
+      Long reportingUnitId) {
+
+    ReportingUnitEntity reportingUnit =
+        reportingUnitRepository
+            .findByIdAndDeletedFalse(reportingUnitId)
+            .orElseThrow(() -> new ReportingUnitNotFoundException(reportingUnitId));
+
+    validateTenantAccess(jwt, reportingUnit);
+
+    String currentState = resolveReportingUnitState(reportingUnitId);
+    Role role = resolveActorRole(jwt, reportingUnit.getClientNumber());
+    IdentityProvider provider = JwtPrincipalUtil.getIdentityProvider(jwt);
+
+    List<AvailableLifecycleEventDto> availableEvents =
+        transitionPolicyService.availableEvents(
+            currentState, role, provider, TransitionContext.empty());
+
+    List<StatusEventEntity> events =
+        statusEventRepository.findByReportingUnitIdOrderByCreatedAtAscIdAsc(reportingUnitId);
+
+    List<LifecycleHistoryItemDto> history =
+        mapToHistoryItems(events, TransitionPolicyService.STATE_SUBMISSION);
+
+    LifecycleDetailsDto details = new LifecycleDetailsDto(currentState, availableEvents, history);
+    return new LifecycleViewResult(details, reportingUnit.getRevision());
+  }
+
+  private List<LifecycleHistoryItemDto> mapToHistoryItems(
+      List<StatusEventEntity> events, String defaultInitialState) {
+    List<LifecycleHistoryItemDto> history = new ArrayList<>();
+    String previousState = defaultInitialState;
+    for (StatusEventEntity se : events) {
+      String fromState = previousState;
+      if (se.getDetails() != null && se.getDetails().has("fromState")) {
+        fromState = se.getDetails().get("fromState").asText();
+      }
+      String comment = null;
+      if (se.getDetails() != null && se.getDetails().has("comment")) {
+        comment = se.getDetails().get("comment").asText();
+      }
+      String toState = se.getStatus();
+      String actor = se.getCreatedBy();
+      history.add(
+          new LifecycleHistoryItemDto(
+              se.getId(),
+              se.getEventType(),
+              fromState,
+              toState,
+              actor,
+              se.getCreatedAt(),
+              comment));
+      previousState = toState;
+    }
+    return Collections.unmodifiableList(history);
   }
 
   private LocalDate resolveSubmissionDate(Long blockId) {

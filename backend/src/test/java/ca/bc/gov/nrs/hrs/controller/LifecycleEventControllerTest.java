@@ -5,13 +5,18 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import ca.bc.gov.nrs.hrs.dto.block.AvailableLifecycleEventDto;
+import ca.bc.gov.nrs.hrs.dto.block.LifecycleDetailsDto;
 import ca.bc.gov.nrs.hrs.dto.block.LifecycleEventRequestDto;
 import ca.bc.gov.nrs.hrs.dto.block.LifecycleEventResponseDto;
+import ca.bc.gov.nrs.hrs.dto.block.LifecycleHistoryItemDto;
+import ca.bc.gov.nrs.hrs.dto.block.LifecycleViewResult;
 import ca.bc.gov.nrs.hrs.exception.BlockNotFoundException;
 import ca.bc.gov.nrs.hrs.exception.ConditionalRequestException;
 import ca.bc.gov.nrs.hrs.exception.GlobalExceptionHandler;
@@ -21,6 +26,7 @@ import ca.bc.gov.nrs.hrs.exception.ValidationProblemDetailsExceptionHandler;
 import ca.bc.gov.nrs.hrs.security.ResourceScopeGuard;
 import ca.bc.gov.nrs.hrs.service.lifecycle.LifecycleEventService;
 import java.time.Instant;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -308,5 +314,88 @@ class LifecycleEventControllerTest {
                     { "event": "SUBMIT", "comment": null }
                     """))
         .andExpect(status().isNotFound());
+  }
+
+  @Test
+  @DisplayName("GET /{ruId}/{blockId}/lifecycle returns 200 with details and ETag")
+  void getBlockLifecycle_returnsOkWithETag() throws Exception {
+    AvailableLifecycleEventDto approveEvent =
+        new AvailableLifecycleEventDto("APPROVE", "Approve submission", false, true);
+    AvailableLifecycleEventDto rejectEvent =
+        new AvailableLifecycleEventDto("REJECT", "Reject submission", true, true);
+    LifecycleHistoryItemDto historyItem =
+        new LifecycleHistoryItemDto(
+            901L, "SUBMIT", "DRAFT", "SUBMITTED", "idir\\jdoe",
+            Instant.parse("2026-08-24T12:00:00Z"), null);
+
+    LifecycleDetailsDto detailsDto =
+        new LifecycleDetailsDto("SUBMITTED", List.of(approveEvent, rejectEvent), List.of(historyItem));
+    LifecycleViewResult viewResult = new LifecycleViewResult(detailsDto, 15L);
+
+    when(lifecycleEventService.viewBlockLifecycle(any(), isNull(), eq(RU_ID), eq(BLOCK_ID)))
+        .thenReturn(viewResult);
+
+    mockMvc
+        .perform(get("/api/reporting-units/{ruId}/{blockId}/lifecycle", RU_ID, BLOCK_ID))
+        .andExpect(status().isOk())
+        .andExpect(header().string(HttpHeaders.ETAG, "\"15\""))
+        .andExpect(jsonPath("$.state").value("SUBMITTED"))
+        .andExpect(jsonPath("$.availableEvents").isArray())
+        .andExpect(jsonPath("$.availableEvents[0].event").value("APPROVE"))
+        .andExpect(jsonPath("$.availableEvents[0].label").value("Approve submission"))
+        .andExpect(jsonPath("$.availableEvents[0].commentRequired").value(false))
+        .andExpect(jsonPath("$.availableEvents[0].confirmationRequired").value(true))
+        .andExpect(jsonPath("$.availableEvents[1].event").value("REJECT"))
+        .andExpect(jsonPath("$.availableEvents[1].commentRequired").value(true))
+        .andExpect(jsonPath("$.history").isArray())
+        .andExpect(jsonPath("$.history[0].statusEventId").value(901))
+        .andExpect(jsonPath("$.history[0].event").value("SUBMIT"))
+        .andExpect(jsonPath("$.history[0].fromState").value("DRAFT"))
+        .andExpect(jsonPath("$.history[0].toState").value("SUBMITTED"))
+        .andExpect(jsonPath("$.history[0].actor").value("idir\\jdoe"));
+
+    verify(resourceScopeGuard).verify(isNull(Jwt.class), eq(RU_ID), eq("GET"));
+  }
+
+  @Test
+  @DisplayName("GET /{ruId}/blocks/{blockId}/lifecycle returns 200 with alias path")
+  void getBlockLifecycle_blocksAliasPath_returnsOk() throws Exception {
+    LifecycleDetailsDto detailsDto =
+        new LifecycleDetailsDto("SUBMITTED", List.of(), List.of());
+    LifecycleViewResult viewResult = new LifecycleViewResult(detailsDto, 15L);
+
+    when(lifecycleEventService.viewBlockLifecycle(any(), isNull(), eq(RU_ID), eq(BLOCK_ID)))
+        .thenReturn(viewResult);
+
+    mockMvc
+        .perform(get("/api/reporting-units/{ruId}/blocks/{blockId}/lifecycle", RU_ID, BLOCK_ID))
+        .andExpect(status().isOk())
+        .andExpect(header().string(HttpHeaders.ETAG, "\"15\""))
+        .andExpect(jsonPath("$.state").value("SUBMITTED"));
+
+    verify(resourceScopeGuard).verify(isNull(Jwt.class), eq(RU_ID), eq("GET"));
+  }
+
+  @Test
+  @DisplayName("GET /{ruId}/lifecycle returns 200 with reporting unit details and ETag")
+  void getReportingUnitLifecycle_returnsOkWithETag() throws Exception {
+    AvailableLifecycleEventDto submitEvent =
+        new AvailableLifecycleEventDto("SUBMIT", "Submit", false, false);
+    LifecycleDetailsDto detailsDto =
+        new LifecycleDetailsDto("SUBMISSION", List.of(submitEvent), List.of());
+    LifecycleViewResult viewResult = new LifecycleViewResult(detailsDto, 10L);
+
+    when(lifecycleEventService.viewReportingUnitLifecycle(any(), isNull(), eq(RU_ID)))
+        .thenReturn(viewResult);
+
+    mockMvc
+        .perform(get("/api/reporting-units/{ruId}/lifecycle", RU_ID))
+        .andExpect(status().isOk())
+        .andExpect(header().string(HttpHeaders.ETAG, "\"10\""))
+        .andExpect(jsonPath("$.state").value("SUBMISSION"))
+        .andExpect(jsonPath("$.availableEvents[0].event").value("SUBMIT"))
+        .andExpect(jsonPath("$.history").isEmpty());
+
+    verify(resourceScopeGuard).verify(isNull(Jwt.class), eq(RU_ID), eq("GET"));
   }
 }

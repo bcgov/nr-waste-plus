@@ -10,8 +10,11 @@ import static org.mockito.Mockito.when;
 
 import ca.bc.gov.nrs.hrs.dto.base.IdentityProvider;
 import ca.bc.gov.nrs.hrs.dto.base.Role;
+import ca.bc.gov.nrs.hrs.dto.block.AvailableLifecycleEventDto;
+import ca.bc.gov.nrs.hrs.dto.block.LifecycleDetailsDto;
 import ca.bc.gov.nrs.hrs.dto.block.LifecycleEventRequestDto;
 import ca.bc.gov.nrs.hrs.dto.block.LifecycleEventResponseDto;
+import ca.bc.gov.nrs.hrs.dto.block.LifecycleViewResult;
 import ca.bc.gov.nrs.hrs.entity.block.BlockCommentEntity;
 import ca.bc.gov.nrs.hrs.entity.block.BlockEntity;
 import ca.bc.gov.nrs.hrs.entity.block.BlockRequirementEntity;
@@ -312,7 +315,7 @@ class LifecycleEventServiceTest {
     }
 
     @Test
-    @DisplayName("Submit without plcDate throws IllegalTransitionException")
+    @DisplayName("Submit without plcDate throws 422 ResponseStatusException")
     void recordBlockLifecycleEvent_submitWithoutPlcDate_throws() {
       MockHttpServletRequest request = new MockHttpServletRequest();
       request.addHeader("If-Match", "\"5\"");
@@ -329,12 +332,17 @@ class LifecycleEventServiceTest {
               () ->
                   lifecycleEventService.recordBlockLifecycleEvent(
                       request, submitterJwt, RU_ID, BLOCK_ID, requestDto))
-          .isInstanceOf(IllegalTransitionException.class)
-          .hasMessageContaining("planned completion date (plcDate) is required");
+          .isInstanceOf(ResponseStatusException.class)
+          .satisfies(
+              ex -> {
+                ResponseStatusException rse = (ResponseStatusException) ex;
+                assertThat(rse.getStatusCode()).isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY);
+                assertThat(rse.getReason()).contains("planned completion date (plcDate) is required");
+              });
     }
 
     @Test
-    @DisplayName("Submit with unfinalized or unclean attachments throws IllegalTransitionException")
+    @DisplayName("Submit with unfinalized or unclean attachments throws 422 ResponseStatusException")
     void recordBlockLifecycleEvent_submitWithInvalidAttachment_throws() {
       MockHttpServletRequest request = new MockHttpServletRequest();
       request.addHeader("If-Match", "\"5\"");
@@ -354,8 +362,40 @@ class LifecycleEventServiceTest {
               () ->
                   lifecycleEventService.recordBlockLifecycleEvent(
                       request, submitterJwt, RU_ID, BLOCK_ID, requestDto))
-          .isInstanceOf(IllegalTransitionException.class)
-          .hasMessageContaining("all attachments must be finalized and clean");
+          .isInstanceOf(ResponseStatusException.class)
+          .satisfies(
+              ex -> {
+                ResponseStatusException rse = (ResponseStatusException) ex;
+                assertThat(rse.getStatusCode()).isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY);
+                assertThat(rse.getReason()).contains("all attachments must be finalized and clean");
+              });
+    }
+
+    @Test
+    @DisplayName("Missing comment when commentRequired returns 422")
+    void recordBlockLifecycleEvent_missingComment_throws422() {
+      MockHttpServletRequest request = new MockHttpServletRequest();
+      request.addHeader("If-Match", "\"5\"");
+
+      LifecycleEventRequestDto requestDto = new LifecycleEventRequestDto("CANCEL", "   ");
+
+      when(reportingUnitRepository.findByIdAndDeletedFalse(RU_ID))
+          .thenReturn(Optional.of(reportingUnit));
+      when(blockRepository.findByIdAndReportingUnitIdAndDeletedFalse(BLOCK_ID, RU_ID))
+          .thenReturn(Optional.of(block));
+      when(transitionPolicyService.isCommentRequired(any(), eq("CANCEL"))).thenReturn(true);
+
+      assertThatThrownBy(
+              () ->
+                  lifecycleEventService.recordBlockLifecycleEvent(
+                      request, submitterJwt, RU_ID, BLOCK_ID, requestDto))
+          .isInstanceOf(ResponseStatusException.class)
+          .satisfies(
+              ex -> {
+                ResponseStatusException rse = (ResponseStatusException) ex;
+                assertThat(rse.getStatusCode()).isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY);
+                assertThat(rse.getReason()).contains("A comment is required for this event");
+              });
     }
 
     @Test
@@ -549,6 +589,74 @@ class LifecycleEventServiceTest {
       assertThat(captured.getReportingUnitId()).isEqualTo(RU_ID);
       assertThat(captured.getBlockId()).isNull(); // XOR subject check
       assertThat(captured.getStatus()).isEqualTo("SUBMITTED");
+    }
+  }
+
+  @Nested
+  @DisplayName("Lifecycle Query Views")
+  class LifecycleQueryViews {
+
+    @Test
+    @DisplayName("viewBlockLifecycle returns current state, available events, history, and revision")
+    void viewBlockLifecycle_success() {
+      MockHttpServletRequest request = new MockHttpServletRequest();
+
+      when(reportingUnitRepository.findByIdAndDeletedFalse(RU_ID))
+          .thenReturn(Optional.of(reportingUnit));
+      when(blockRepository.findByIdAndReportingUnitIdAndDeletedFalse(BLOCK_ID, RU_ID))
+          .thenReturn(Optional.of(block));
+      when(statusEventRepository.findFirstByBlockIdOrderByCreatedAtDescIdDesc(BLOCK_ID))
+          .thenReturn(Optional.empty());
+
+      AvailableLifecycleEventDto submitEvent =
+          new AvailableLifecycleEventDto("SUBMIT", "Submit", false, false);
+      when(transitionPolicyService.availableEvents(eq("DRAFT"), any(), any(), any()))
+          .thenReturn(List.of(submitEvent));
+
+      StatusEventEntity event1 = new StatusEventEntity();
+      event1.setId(101L);
+      event1.setEventType("CREATE");
+      event1.setStatus("DRAFT");
+      event1.setCreatedBy("idir\\jdoe");
+      event1.setCreatedAt(Instant.parse("2026-08-20T10:00:00Z"));
+
+      when(statusEventRepository.findByBlockIdOrderByCreatedAtAscIdAsc(BLOCK_ID))
+          .thenReturn(List.of(event1));
+
+      LifecycleViewResult result =
+          lifecycleEventService.viewBlockLifecycle(request, submitterJwt, RU_ID, BLOCK_ID);
+
+      assertThat(result).isNotNull();
+      assertThat(result.revision()).isEqualTo(5L);
+      assertThat(result.details().state()).isEqualTo("DRAFT");
+      assertThat(result.details().availableEvents()).containsExactly(submitEvent);
+      assertThat(result.details().history()).hasSize(1);
+      assertThat(result.details().history().get(0).statusEventId()).isEqualTo(101L);
+      assertThat(result.details().history().get(0).actor()).isEqualTo("idir\\jdoe");
+    }
+
+    @Test
+    @DisplayName("viewReportingUnitLifecycle returns state, available events, history, and revision")
+    void viewReportingUnitLifecycle_success() {
+      MockHttpServletRequest request = new MockHttpServletRequest();
+
+      when(reportingUnitRepository.findByIdAndDeletedFalse(RU_ID))
+          .thenReturn(Optional.of(reportingUnit));
+      when(statusEventRepository.findFirstByReportingUnitIdOrderByCreatedAtDescIdDesc(RU_ID))
+          .thenReturn(Optional.empty());
+      when(transitionPolicyService.availableEvents(eq("SUBMISSION"), any(), any(), any()))
+          .thenReturn(List.of());
+      when(statusEventRepository.findByReportingUnitIdOrderByCreatedAtAscIdAsc(RU_ID))
+          .thenReturn(List.of());
+
+      LifecycleViewResult result =
+          lifecycleEventService.viewReportingUnitLifecycle(request, submitterJwt, RU_ID);
+
+      assertThat(result).isNotNull();
+      assertThat(result.revision()).isEqualTo(10L);
+      assertThat(result.details().state()).isEqualTo("SUBMISSION");
+      assertThat(result.details().availableEvents()).isEmpty();
+      assertThat(result.details().history()).isEmpty();
     }
   }
 }

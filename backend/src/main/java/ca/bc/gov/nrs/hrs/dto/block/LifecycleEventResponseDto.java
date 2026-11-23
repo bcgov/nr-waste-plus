@@ -12,6 +12,7 @@ import java.time.Instant;
  * @param event the event name that triggered the transition
  * @param version updated aggregate revision backing the ETag header
  * @param occurredAt timestamp when the lifecycle status event was recorded
+ * @param hbsStatus external billing status, present only for billing approval events
  */
 public record LifecycleEventResponseDto(
     Long reportingUnitId,
@@ -20,4 +21,20 @@ public record LifecycleEventResponseDto(
     String state,
     String event,
     Long version,
-    Instant occurredAt) {}
+    Instant occurredAt,
+    String hbsStatus) {
+
+  /**
+   * Constructs a lifecycle event response without external HBS status.
+   */
+  public LifecycleEventResponseDto(
+      Long reportingUnitId,
+      Long blockId,
+      String previousState,
+      String state,
+      String event,
+      Long version,
+      Instant occurredAt) {
+    this(reportingUnitId, blockId, previousState, state, event, version, occurredAt, null);
+  }
+}

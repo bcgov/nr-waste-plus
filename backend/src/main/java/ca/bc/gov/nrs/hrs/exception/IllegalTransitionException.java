@@ -17,6 +17,24 @@ public class IllegalTransitionException extends ResponseStatusException {
    * @param message failure explanation
    */
   public IllegalTransitionException(String message) {
+    this(message, "ILLEGAL_TRANSITION", null, false);
+  }
+
+  /**
+   * Constructs an IllegalTransitionException with error code and state details.
+   *
+   * @param message failure explanation
+   * @param code stable error code
+   * @param blockState current block lifecycle state
+   * @param retryable whether the operation is retryable
+   */
+  public IllegalTransitionException(
+      String message, String code, String blockState, boolean retryable) {
     super(HttpStatus.CONFLICT, message);
+    getBody().setProperty("code", code);
+    if (blockState != null) {
+      getBody().setProperty("blockState", blockState);
+    }
+    getBody().setProperty("retryable", retryable);
   }
 }

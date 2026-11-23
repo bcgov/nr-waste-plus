@@ -4,7 +4,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import ca.bc.gov.nrs.hrs.dto.base.IdentityProvider;
 import ca.bc.gov.nrs.hrs.dto.base.Role;
+import ca.bc.gov.nrs.hrs.dto.block.AvailableLifecycleEventDto;
 import java.time.LocalDate;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -472,6 +474,108 @@ class TransitionPolicyServiceTest {
 
       assertThat(result.allowed()).isFalse();
       assertThat(result.reason()).contains("must not be blank");
+    }
+  }
+
+  @Nested
+  @DisplayName("Available Events Computation")
+  class AvailableEventsComputation {
+
+    @Test
+    @DisplayName("Submitter in DRAFT gets SUBMIT and CANCEL")
+    void availableEvents_forSubmitterInDraft() {
+      List<AvailableLifecycleEventDto> events =
+          transitionPolicyService.availableEvents(
+              TransitionPolicyService.STATE_DRAFT,
+              Role.SUBMITTER,
+              IdentityProvider.BUSINESS_BCEID,
+              TransitionContext.empty());
+
+      assertThat(events)
+          .extracting(AvailableLifecycleEventDto::event)
+          .containsExactlyInAnyOrder("SUBMIT", "CANCEL");
+
+      AvailableLifecycleEventDto cancelEvent =
+          events.stream().filter(e -> "CANCEL".equals(e.event())).findFirst().orElseThrow();
+      assertThat(cancelEvent.commentRequired()).isTrue();
+      assertThat(cancelEvent.confirmationRequired()).isTrue();
+    }
+
+    @Test
+    @DisplayName("Ministry staff in SUBMITTED gets APPROVE, REJECT, and HOLD")
+    void availableEvents_forAreaInSubmitted() {
+      List<AvailableLifecycleEventDto> events =
+          transitionPolicyService.availableEvents(
+              TransitionPolicyService.STATE_SUBMITTED,
+              Role.AREA,
+              IdentityProvider.IDIR,
+              TransitionContext.empty());
+
+      assertThat(events)
+          .extracting(AvailableLifecycleEventDto::event)
+          .containsExactlyInAnyOrder("APPROVE", "REJECT", "HOLD");
+
+      AvailableLifecycleEventDto rejectEvent =
+          events.stream().filter(e -> "REJECT".equals(e.event())).findFirst().orElseThrow();
+      assertThat(rejectEvent.commentRequired()).isTrue();
+      assertThat(rejectEvent.confirmationRequired()).isTrue();
+    }
+
+    @Test
+    @DisplayName("Viewer gets empty list in every state")
+    void availableEvents_forViewer_returnsEmpty() {
+      List<AvailableLifecycleEventDto> events =
+          transitionPolicyService.availableEvents(
+              TransitionPolicyService.STATE_SUBMITTED,
+              Role.VIEWER,
+              IdentityProvider.IDIR,
+              TransitionContext.empty());
+
+      assertThat(events).isEmpty();
+    }
+
+    @Test
+    @DisplayName("BCeID caller claiming internal role gets empty list")
+    void availableEvents_forBceidClaimingAdmin_returnsEmpty() {
+      List<AvailableLifecycleEventDto> events =
+          transitionPolicyService.availableEvents(
+              TransitionPolicyService.STATE_SUBMITTED,
+              Role.ADMIN,
+              IdentityProvider.BUSINESS_BCEID,
+              TransitionContext.empty());
+
+      assertThat(events).isEmpty();
+    }
+  }
+
+  @Nested
+  @DisplayName("Comment Requirement Rules")
+  class CommentRequirementRules {
+
+    @Test
+    @DisplayName("isCommentRequired returns true for REJECT and CANCEL")
+    void isCommentRequired_trueCases() {
+      assertThat(
+              transitionPolicyService.isCommentRequired(
+                  TransitionPolicyService.STATE_SUBMITTED, "REJECT"))
+          .isTrue();
+      assertThat(
+              transitionPolicyService.isCommentRequired(
+                  TransitionPolicyService.STATE_DRAFT, "CANCEL"))
+          .isTrue();
+    }
+
+    @Test
+    @DisplayName("isCommentRequired returns false for SUBMIT and APPROVE")
+    void isCommentRequired_falseCases() {
+      assertThat(
+              transitionPolicyService.isCommentRequired(
+                  TransitionPolicyService.STATE_DRAFT, "SUBMIT"))
+          .isFalse();
+      assertThat(
+              transitionPolicyService.isCommentRequired(
+                  TransitionPolicyService.STATE_SUBMITTED, "APPROVE"))
+          .isFalse();
     }
   }
 }
