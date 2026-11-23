@@ -13,6 +13,7 @@ jobs:
     permissions:
       pull-requests: write
     runs-on: ubuntu-26.04
+    timeout-minutes: 30
     environment: tools
     steps:
       - name: Checkout

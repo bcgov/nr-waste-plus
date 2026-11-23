@@ -293,6 +293,13 @@ const doLogin = (
             loginOrigin,
             { args: { provider, username, password } },
             ({ provider: loginProvider, username: loginUsername, password: loginPassword }) => {
+              // Fail loudly when the IdP rejects the test account instead of
+              // letting cy.session wait forever for a redirect that never comes.
+              cy.get("body", { timeout: 30_000 }).should(
+                "not.contain.text",
+                "You are not authorized to access this page",
+              );
+
               // The realm's brokers expose different hosted pages: IDIR
               // federates through Azure AD (`loginfmt`/`passwd`, plus the
               // "Stay signed in?" interstitial), while the BCeID business page
