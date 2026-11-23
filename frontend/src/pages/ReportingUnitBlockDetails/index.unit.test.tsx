@@ -2,6 +2,7 @@ import { act, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { PILE_BURN_QUESTION } from '@/components/waste/ReportingUnits/BlockDetailsTab/cards/AdditionalRequirementsCard';
 import {
   useBlockDetailsQuery,
   useDistrictAverageCriteriaCodesQuery,
@@ -417,6 +418,29 @@ describe('ReportingUnitBlockDetailsPage', () => {
 
       await user.click(screen.getByRole('tab', { name: 'Attachments' }));
       expect(screen.getByText('Attachments content')).toBeTruthy();
+    });
+  });
+
+  describe('card-local state across blocks', () => {
+    it('shouldResetAdditionalRequirementsAnswers_whenRouteMovesToAnotherBlockWithoutRemount', async () => {
+      const user = userEvent.setup();
+      await renderPage();
+
+      await user.click(screen.getByRole('switch', { name: PILE_BURN_QUESTION }));
+      expect(
+        screen.getByRole('switch', { name: PILE_BURN_QUESTION }).getAttribute('aria-checked'),
+      ).toBe('true');
+
+      // Block 13 is cached, so the route change renders without a loading state and the
+      // page instance stays mounted. Tab changes re-render the page with the new params.
+      mockParams = { ruId: '468', blockId: '13' };
+      await user.click(screen.getByRole('tab', { name: 'Attachments' }));
+      await user.click(screen.getByRole('tab', { name: 'Block details' }));
+
+      expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Block ID 13');
+      expect(
+        screen.getByRole('switch', { name: PILE_BURN_QUESTION }).getAttribute('aria-checked'),
+      ).toBe('false');
     });
   });
 

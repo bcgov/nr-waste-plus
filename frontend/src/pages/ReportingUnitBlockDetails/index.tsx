@@ -305,6 +305,7 @@ const ReportingUnitBlockDetailsPage: FC = () => {
           <TabPanels>
             <TabPanel>
               <BlockDetailsTab
+                key={blockKey}
                 grade={data?.grade}
                 mode={blockData.isLegacy ? 'read-only' : 'form'}
                 initialValues={{
