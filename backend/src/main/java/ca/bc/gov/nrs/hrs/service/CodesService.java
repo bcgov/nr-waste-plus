@@ -212,7 +212,21 @@ public class CodesService {
             .or(() -> reportingUnitRepository.findByIdAndDeletedFalse(effectiveReportingUnitId))
             .orElse(null);
 
-    String gradeCode = reportingUnit != null ? reportingUnit.getGradeCode() : null;
+    return variantFromGrade(
+        reportingUnit != null ? reportingUnit.getGradeCode() : null, effectiveReportingUnitId);
+  }
+
+  /**
+   * Maps a reporting unit's grade code to its harvest-status variant.
+   *
+   * <p>Blank grades and unsupported grades resolve to {@code null}, which callers treat as
+   * "no variant" and return unfiltered codes.
+   *
+   * @param gradeCode the reporting unit's grade code, possibly null
+   * @param effectiveReportingUnitId reporting unit used for logging context
+   * @return {@code COASTAL_VARIANT} or {@code INTERIOR_VARIANT}, or {@code null} when unresolvable
+   */
+  private String variantFromGrade(String gradeCode, Long effectiveReportingUnitId) {
     if (StringUtils.isBlank(gradeCode)) {
       log.info(
           "No grade available for reporting unit {} when resolving harvest status variant",

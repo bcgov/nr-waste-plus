@@ -62,6 +62,7 @@ public class BlockService {
   public static final String DEFAULT_INITIAL_STATE = "SUBMISSION";
   private static final String DRAFT_STATUS_CODE = "DFT";
   private static final String ONE_DA_PER_RU_CONSTRAINT = "uq_block_one_da_per_ru";
+  private static final String MARK_TYPE_SECONDARY = "SECONDARY";
 
   private final ReportingUnitRepository reportingUnitRepository;
   private final BlockRepository blockRepository;
@@ -447,34 +448,6 @@ public class BlockService {
    * legacy marker is {@code true}. {@code blockType} stays null on purpose: the legacy (Oracle)
    * payload carries no block subtype, so the envelope reports the subtype as unknown.
    */
-  private BlockResponseDto toLegacyResponseDto(Long reportingUnitId, BlockListItemDto row) {
-    return toLegacyResponseDto(reportingUnitId, row, List.of(), List.of(), null, null);
-  }
-
-  private BlockResponseDto toLegacyResponseDto(
-      Long reportingUnitId,
-      BlockListItemDto row,
-      List<BlockMarkDto> secondaryTimberMarks,
-      List<BlockMarkDto> roadPermitTimberMarks) {
-    return toLegacyResponseDto(
-        reportingUnitId, row, secondaryTimberMarks, roadPermitTimberMarks, null, null);
-  }
-
-  private BlockResponseDto toLegacyResponseDto(
-      Long reportingUnitId,
-      BlockListItemDto row,
-      List<BlockMarkDto> secondaryTimberMarks,
-      List<BlockMarkDto> roadPermitTimberMarks,
-      WasteAssessmentAreaSummaryDto wasteAssessmentAreaSummary) {
-    return toLegacyResponseDto(
-        reportingUnitId,
-        row,
-        secondaryTimberMarks,
-        roadPermitTimberMarks,
-        wasteAssessmentAreaSummary,
-        null);
-  }
-
   private BlockResponseDto toLegacyResponseDto(
       Long reportingUnitId,
       BlockListItemDto row,
@@ -604,7 +577,7 @@ public class BlockService {
     List<BlockMarkEntity> secondaryMarks =
         nullSafeList(
             blockMarkRepository.findByBlockIdAndMarkTypeAndDeletedFalseOrderBySequenceNo(
-                blockId, "SECONDARY"));
+                blockId, MARK_TYPE_SECONDARY));
 
     Map<Long, BigDecimal> netAreaByMarkId = sumNetWasteAreaByMarkId(blockId);
 
@@ -652,7 +625,7 @@ public class BlockService {
         expanded.secondaryMarks() == null
             ? List.of()
             : expanded.secondaryMarks().stream()
-                .filter(secondaryMark -> secondaryMark != null)
+                .filter(java.util.Objects::nonNull)
                 .filter(
                     secondaryMark ->
                         secondaryMark.mark() != null && !secondaryMark.mark().isBlank())
@@ -719,7 +692,7 @@ public class BlockService {
 
   private List<BlockMarkDto> loadSecondaryTimberMarks(Long blockId) {
     return blockMarkRepository
-        .findByBlockIdAndMarkTypeAndDeletedFalseOrderBySequenceNo(blockId, "SECONDARY")
+        .findByBlockIdAndMarkTypeAndDeletedFalseOrderBySequenceNo(blockId, MARK_TYPE_SECONDARY)
         .stream()
         .map(blockMarkMapper::toDto)
         .toList();
@@ -739,10 +712,10 @@ public class BlockService {
     if (expanded != null && expanded.secondaryMarks() != null) {
       int sequence = 1;
       for (var secondary : expanded.secondaryMarks()) {
-        if (secondary == null || secondary.mark() == null || secondary.mark().isBlank()) {
-          continue;
-        }
-        if (isRoadPermitMark(secondary.mark())) {
+        if (secondary == null
+            || secondary.mark() == null
+            || secondary.mark().isBlank()
+            || isRoadPermitMark(secondary.mark())) {
           continue;
         }
         // Secondary marks are child rows that may belong to a different forest file; the legacy
@@ -752,7 +725,7 @@ public class BlockService {
             new BlockMarkDto(
                 null,
                 blockId,
-                "SECONDARY",
+                MARK_TYPE_SECONDARY,
                 sequence++,
                 secondary.mark(),
                 secondary.status() != null ? secondary.status().code() : null,
@@ -782,19 +755,7 @@ public class BlockService {
           expanded.status() != null ? expanded.status().code() : null,
           true);
       if (expanded.secondaryMarks() != null) {
-        for (var secondary : expanded.secondaryMarks()) {
-          if (secondary == null) {
-            continue;
-          }
-          addLegacyRoadPermitMark(
-              seen,
-              marks,
-              blockId,
-              legacyRow,
-              secondary.mark(),
-              secondary.status() != null ? secondary.status().code() : null,
-              false);
-        }
+        appendSecondaryRoadPermitMarks(seen, marks, blockId, legacyRow, expanded);
       }
     }
     java.util.ArrayList<BlockMarkDto> sequenced = new java.util.ArrayList<>(marks.size());
@@ -814,6 +775,27 @@ public class BlockService {
               m.cutBlockId()));
     }
     return List.copyOf(sequenced);
+  }
+
+  private void appendSecondaryRoadPermitMarks(
+      java.util.Set<String> seen,
+      java.util.List<BlockMarkDto> marks,
+      Long blockId,
+      BlockListItemDto legacyRow,
+      ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchExpandedDto expanded) {
+    for (var secondary : expanded.secondaryMarks()) {
+      if (secondary == null) {
+        continue;
+      }
+      addLegacyRoadPermitMark(
+          seen,
+          marks,
+          blockId,
+          legacyRow,
+          secondary.mark(),
+          secondary.status() != null ? secondary.status().code() : null,
+          false);
+    }
   }
 
   private void addLegacyRoadPermitMark(
