@@ -3,9 +3,17 @@ package ca.bc.gov.nrs.hrs.service.block;
 import ca.bc.gov.nrs.hrs.dto.base.IdentityProvider;
 import ca.bc.gov.nrs.hrs.dto.base.Role;
 import ca.bc.gov.nrs.hrs.dto.block.BlockListItemDto;
+import ca.bc.gov.nrs.hrs.dto.block.BlockMarkDto;
 import ca.bc.gov.nrs.hrs.dto.block.BlockResponseDto;
 import ca.bc.gov.nrs.hrs.dto.block.BlockType;
+import ca.bc.gov.nrs.hrs.dto.block.DistrictAverageVolumeRowDto;
+import ca.bc.gov.nrs.hrs.dto.block.DistrictAverageVolumeTotalsDto;
+import ca.bc.gov.nrs.hrs.dto.block.DistrictAverageVolumesSummaryDto;
+import ca.bc.gov.nrs.hrs.dto.block.WasteAssessmentAreaMarkDto;
+import ca.bc.gov.nrs.hrs.dto.block.WasteAssessmentAreaSummaryDto;
+import ca.bc.gov.nrs.hrs.entity.block.BlockAreaSegmentEntity;
 import ca.bc.gov.nrs.hrs.entity.block.BlockEntity;
+import ca.bc.gov.nrs.hrs.entity.block.BlockMarkEntity;
 import ca.bc.gov.nrs.hrs.entity.block.ReportingUnitEntity;
 import ca.bc.gov.nrs.hrs.entity.block.StatusEventEntity;
 import ca.bc.gov.nrs.hrs.exception.BlockNotFoundException;
@@ -15,15 +23,25 @@ import ca.bc.gov.nrs.hrs.exception.NotFoundGenericException;
 import ca.bc.gov.nrs.hrs.exception.ReportingUnitNotFoundException;
 import ca.bc.gov.nrs.hrs.exception.ReportingUnitStateConflictException;
 import ca.bc.gov.nrs.hrs.mapper.block.BlockMapper;
+import ca.bc.gov.nrs.hrs.mapper.block.BlockMarkMapper;
 import ca.bc.gov.nrs.hrs.provider.legacy.LegacyApiProvider;
+import ca.bc.gov.nrs.hrs.repository.block.BlockAreaSegmentRepository;
+import ca.bc.gov.nrs.hrs.repository.block.BlockMarkRepository;
 import ca.bc.gov.nrs.hrs.repository.block.BlockRepository;
 import ca.bc.gov.nrs.hrs.repository.block.ReportingUnitRepository;
 import ca.bc.gov.nrs.hrs.repository.block.StatusEventRepository;
 import ca.bc.gov.nrs.hrs.util.JwtPrincipalUtil;
 import io.micrometer.observation.annotation.Observed;
 import io.micrometer.tracing.annotation.NewSpan;
+import java.math.BigDecimal;
 import java.sql.SQLException;
+import java.time.Clock;
+import java.time.LocalDate;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.exception.ConstraintViolationException;
@@ -44,12 +62,23 @@ public class BlockService {
   public static final String DEFAULT_INITIAL_STATE = "SUBMISSION";
   private static final String DRAFT_STATUS_CODE = "DFT";
   private static final String ONE_DA_PER_RU_CONSTRAINT = "uq_block_one_da_per_ru";
+  private static final String MARK_TYPE_SECONDARY = "SECONDARY";
+  private static final String MARK_TYPE_ROAD_PERMIT = "ROAD_PERMIT";
 
   private final ReportingUnitRepository reportingUnitRepository;
   private final BlockRepository blockRepository;
   private final StatusEventRepository statusEventRepository;
   private final LegacyApiProvider legacyApiProvider;
   private final BlockMapper blockMapper;
+  private final BlockMarkRepository blockMarkRepository;
+  private final BlockMarkMapper blockMarkMapper;
+  private final BlockAreaSegmentRepository blockAreaSegmentRepository;
+
+  private Clock clock = Clock.systemDefaultZone();
+
+  void setClock(Clock clock) {
+    this.clock = clock;
+  }
 
   /**
    * Creates a new submission block under the specified reporting unit, validating the expected
@@ -250,7 +279,13 @@ public class BlockService {
 
     enforceClientScope(jwt, reportingUnitId, clientNumber);
 
-    return blockMapper.toResponseDto(block);
+    BlockResponseDto dto = blockMapper.toResponseDto(block);
+    dto =
+        withTimberMarks(
+            dto, loadSecondaryTimberMarks(blockId), loadRoadPermitTimberMarks(blockId));
+    dto = withWasteAssessmentAreaSummary(dto, buildPostgresWasteAssessmentAreaSummary(blockId));
+    dto = withDistrictAverageVolumesSummary(dto, buildPostgresDistrictAverageVolumesSummary());
+    return withResolvedPlcDate(dto);
   }
 
   private BlockResponseDto getLegacyBlockDetails(Long reportingUnitId, Long blockId, Jwt jwt) {
@@ -264,7 +299,23 @@ public class BlockService {
 
     enforceClientScope(jwt, reportingUnitId, legacyReportingUnit.clientNumber());
 
-    return toLegacyResponseDto(reportingUnitId, legacyRow);
+    var expanded = legacyApiProvider.getSearchExpanded(reportingUnitId, blockId);
+    List<BlockMarkDto> secondaryTimberMarks = toLegacySecondaryTimberMarks(blockId, expanded);
+    List<BlockMarkDto> roadPermitTimberMarks =
+        toLegacyRoadPermitTimberMarks(blockId, legacyRow, expanded);
+    WasteAssessmentAreaSummaryDto wasteAssessmentAreaSummary =
+        buildLegacyWasteAssessmentAreaSummary(expanded);
+    DistrictAverageVolumesSummaryDto districtAverageVolumesSummary =
+        buildLegacyDistrictAverageVolumesSummary(
+            legacyApiProvider.getDistrictAverageVolumes(reportingUnitId, blockId));
+
+    return toLegacyResponseDto(
+        reportingUnitId,
+        legacyRow,
+        secondaryTimberMarks,
+        roadPermitTimberMarks,
+        wasteAssessmentAreaSummary,
+        districtAverageVolumesSummary);
   }
 
   /**
@@ -398,7 +449,13 @@ public class BlockService {
    * legacy marker is {@code true}. {@code blockType} stays null on purpose: the legacy (Oracle)
    * payload carries no block subtype, so the envelope reports the subtype as unknown.
    */
-  private BlockResponseDto toLegacyResponseDto(Long reportingUnitId, BlockListItemDto row) {
+  private BlockResponseDto toLegacyResponseDto(
+      Long reportingUnitId,
+      BlockListItemDto row,
+      List<BlockMarkDto> secondaryTimberMarks,
+      List<BlockMarkDto> roadPermitTimberMarks,
+      WasteAssessmentAreaSummaryDto wasteAssessmentAreaSummary,
+      DistrictAverageVolumesSummaryDto districtAverageVolumesSummary) {
     boolean draft =
         row.status() != null && DRAFT_STATUS_CODE.equals(row.status().code());
     String state = draft ? "DRAFT" : "ACTIVE";
@@ -408,11 +465,438 @@ public class BlockService {
         null,
         state,
         draft,
-        null,
+        resolvePlcDate(null),
         null,
         null,
         true,
         null,
+        null,
+        secondaryTimberMarks,
+        roadPermitTimberMarks,
+        wasteAssessmentAreaSummary,
+        districtAverageVolumesSummary);
+  }
+
+  BlockResponseDto withResolvedPlcDate(BlockResponseDto dto) {
+    LocalDate resolvedPlcDate = resolvePlcDate(dto.plcDate());
+    if (resolvedPlcDate.equals(dto.plcDate())) {
+      return dto;
+    }
+    return new BlockResponseDto(
+        dto.id(),
+        dto.reportingUnitId(),
+        dto.blockType(),
+        dto.state(),
+        dto.draft(),
+        resolvedPlcDate,
+        dto.version(),
+        dto.revision(),
+        dto.isLegacy(),
+        dto.createdAt(),
+        dto.updatedAt(),
+        dto.secondaryTimberMarks(),
+        dto.roadPermitTimberMarks(),
+        dto.wasteAssessmentAreaSummary(),
+        dto.districtAverageVolumesSummary());
+  }
+
+  private BlockResponseDto withTimberMarks(
+      BlockResponseDto dto,
+      List<BlockMarkDto> secondaryTimberMarks,
+      List<BlockMarkDto> roadPermitTimberMarks) {
+    return new BlockResponseDto(
+        dto.id(),
+        dto.reportingUnitId(),
+        dto.blockType(),
+        dto.state(),
+        dto.draft(),
+        dto.plcDate(),
+        dto.version(),
+        dto.revision(),
+        dto.isLegacy(),
+        dto.createdAt(),
+        dto.updatedAt(),
+        secondaryTimberMarks,
+        roadPermitTimberMarks,
+        dto.wasteAssessmentAreaSummary(),
+        dto.districtAverageVolumesSummary());
+  }
+
+  private BlockResponseDto withWasteAssessmentAreaSummary(
+      BlockResponseDto dto, WasteAssessmentAreaSummaryDto wasteAssessmentAreaSummary) {
+    return new BlockResponseDto(
+        dto.id(),
+        dto.reportingUnitId(),
+        dto.blockType(),
+        dto.state(),
+        dto.draft(),
+        dto.plcDate(),
+        dto.version(),
+        dto.revision(),
+        dto.isLegacy(),
+        dto.createdAt(),
+        dto.updatedAt(),
+        dto.secondaryTimberMarks(),
+        dto.roadPermitTimberMarks(),
+        wasteAssessmentAreaSummary,
+        dto.districtAverageVolumesSummary());
+  }
+
+  private BlockResponseDto withDistrictAverageVolumesSummary(
+      BlockResponseDto dto, DistrictAverageVolumesSummaryDto districtAverageVolumesSummary) {
+    return new BlockResponseDto(
+        dto.id(),
+        dto.reportingUnitId(),
+        dto.blockType(),
+        dto.state(),
+        dto.draft(),
+        dto.plcDate(),
+        dto.version(),
+        dto.revision(),
+        dto.isLegacy(),
+        dto.createdAt(),
+        dto.updatedAt(),
+        dto.secondaryTimberMarks(),
+        dto.roadPermitTimberMarks(),
+        dto.wasteAssessmentAreaSummary(),
+        districtAverageVolumesSummary);
+  }
+
+
+  private WasteAssessmentAreaSummaryDto buildPostgresWasteAssessmentAreaSummary(Long blockId) {
+    List<BlockMarkEntity> primaryMarks =
+        nullSafeList(
+                blockMarkRepository.findByBlockIdAndMarkTypeAndDeletedFalseOrderBySequenceNo(
+                    blockId, "PRIMARY"))
+            .stream()
+            .sorted(
+                Comparator.comparing(
+                        BlockMarkEntity::getSequenceNo, Comparator.nullsLast(Integer::compareTo))
+                    .thenComparing(
+                        BlockMarkEntity::getId, Comparator.nullsLast(Long::compareTo)))
+            .toList();
+    List<BlockMarkEntity> secondaryMarks =
+        nullSafeList(
+            blockMarkRepository.findByBlockIdAndMarkTypeAndDeletedFalseOrderBySequenceNo(
+                blockId, MARK_TYPE_SECONDARY));
+
+    Map<Long, BigDecimal> netAreaByMarkId = sumNetWasteAreaByMarkId(blockId);
+
+    WasteAssessmentAreaMarkDto primary = null;
+    if (!primaryMarks.isEmpty()) {
+      BlockMarkEntity primaryMark = primaryMarks.get(0);
+      primary =
+          new WasteAssessmentAreaMarkDto(
+              resolveMarkDisplayValue(primaryMark), netAreaByMarkId.get(primaryMark.getId()));
+    }
+
+    List<WasteAssessmentAreaMarkDto> secondary =
+        secondaryMarks.stream()
+            .map(
+                mark ->
+                    new WasteAssessmentAreaMarkDto(
+                        resolveMarkDisplayValue(mark), netAreaByMarkId.get(mark.getId())))
+            .toList();
+
+    BigDecimal total =
+        zeroIfNull(primary == null ? null : primary.netWasteAreaHa())
+            .add(
+                secondary.stream()
+                    .map(WasteAssessmentAreaMarkDto::netWasteAreaHa)
+                    .reduce(BigDecimal.ZERO, (acc, value) -> acc.add(zeroIfNull(value))));
+
+    return new WasteAssessmentAreaSummaryDto(primary, secondary, total);
+  }
+
+  private WasteAssessmentAreaSummaryDto buildLegacyWasteAssessmentAreaSummary(
+      ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchExpandedDto expanded) {
+    if (expanded == null) {
+      return new WasteAssessmentAreaSummaryDto(null, List.of(), BigDecimal.ZERO);
+    }
+
+    // For a multi-mark block netArea is the whole-block total, so the primary row must use the
+    // mark's own attributed area; otherwise adding the secondary rows would double-count.
+    Double primaryArea =
+        Boolean.TRUE.equals(expanded.multiMark()) ? expanded.markArea() : expanded.netArea();
+
+    WasteAssessmentAreaMarkDto primary =
+        new WasteAssessmentAreaMarkDto(expanded.timberMark(), toBigDecimal(primaryArea));
+
+    List<WasteAssessmentAreaMarkDto> secondary =
+        expanded.secondaryMarks() == null
+            ? List.of()
+            : expanded.secondaryMarks().stream()
+                .filter(java.util.Objects::nonNull)
+                .filter(
+                    secondaryMark ->
+                        secondaryMark.mark() != null && !secondaryMark.mark().isBlank())
+                .filter(secondaryMark -> !isRoadPermitMark(secondaryMark.mark()))
+                .map(
+                    secondaryMark ->
+                        new WasteAssessmentAreaMarkDto(
+                            secondaryMark.mark(), toBigDecimal(secondaryMark.area())))
+                .toList();
+
+    BigDecimal total =
+        zeroIfNull(primary.netWasteAreaHa())
+            .add(
+                secondary.stream()
+                    .map(WasteAssessmentAreaMarkDto::netWasteAreaHa)
+                    .reduce(BigDecimal.ZERO, (acc, value) -> acc.add(zeroIfNull(value))));
+
+    if (primary.timberMarkId() == null && primary.netWasteAreaHa() == null) {
+      primary = null;
+    }
+
+    return new WasteAssessmentAreaSummaryDto(primary, secondary, total);
+  }
+
+  private Map<Long, BigDecimal> sumNetWasteAreaByMarkId(Long blockId) {
+    List<BlockAreaSegmentEntity> segments =
+        nullSafeList(blockAreaSegmentRepository.findByBlockIdAndDeletedFalse(blockId));
+    Map<Long, BigDecimal> totals = new HashMap<>();
+    for (BlockAreaSegmentEntity segment : segments) {
+      if (segment == null
+          || segment.getBlockMarkId() == null
+          || segment.getNetWasteAreaHa() == null) {
+        continue;
+      }
+      totals.merge(segment.getBlockMarkId(), segment.getNetWasteAreaHa(), BigDecimal::add);
+    }
+    return totals;
+  }
+
+  private <T> List<T> nullSafeList(List<T> values) {
+    return values == null ? List.of() : values;
+  }
+
+  private String resolveMarkDisplayValue(BlockMarkEntity mark) {
+    if (mark == null) {
+      return null;
+    }
+    if (mark.getTimberMark() != null) {
+      String trimmed = mark.getTimberMark().trim();
+      if (!trimmed.isEmpty()) {
+        return trimmed;
+      }
+    }
+    return mark.getMark();
+  }
+
+  private BigDecimal toBigDecimal(Double value) {
+    return value == null ? null : BigDecimal.valueOf(value);
+  }
+
+  private BigDecimal zeroIfNull(BigDecimal value) {
+    return value == null ? BigDecimal.ZERO : value;
+  }
+
+  private List<BlockMarkDto> loadSecondaryTimberMarks(Long blockId) {
+    return blockMarkRepository
+        .findByBlockIdAndMarkTypeAndDeletedFalseOrderBySequenceNo(blockId, MARK_TYPE_SECONDARY)
+        .stream()
+        .map(blockMarkMapper::toDto)
+        .toList();
+  }
+
+  private List<BlockMarkDto> loadRoadPermitTimberMarks(Long blockId) {
+    return blockMarkRepository
+        .findByBlockIdAndMarkTypeAndDeletedFalseOrderBySequenceNo(blockId, MARK_TYPE_ROAD_PERMIT)
+        .stream()
+        .map(blockMarkMapper::toDto)
+        .toList();
+  }
+
+  private List<BlockMarkDto> toLegacySecondaryTimberMarks(
+      Long blockId, ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchExpandedDto expanded) {
+    java.util.ArrayList<BlockMarkDto> marks = new java.util.ArrayList<>();
+    if (expanded != null && expanded.secondaryMarks() != null) {
+      int sequence = 1;
+      for (var secondary : expanded.secondaryMarks()) {
+        if (secondary == null
+            || secondary.mark() == null
+            || secondary.mark().isBlank()
+            || isRoadPermitMark(secondary.mark())) {
+          continue;
+        }
+        // Secondary marks are child rows that may belong to a different forest file; the legacy
+        // search payload exposes only mark/status/area, so identifiers stay null rather than
+        // inheriting the block's file/permit/cutblock values.
+        marks.add(
+            new BlockMarkDto(
+                null,
+                blockId,
+                MARK_TYPE_SECONDARY,
+                sequence++,
+                secondary.mark(),
+                secondary.status() != null ? secondary.status().code() : null,
+                null,
+                secondary.mark(),
+                null,
+                null));
+      }
+    }
+    return List.copyOf(marks);
+  }
+
+  private List<BlockMarkDto> toLegacyRoadPermitTimberMarks(
+      Long blockId,
+      BlockListItemDto legacyRow,
+      ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchExpandedDto expanded) {
+    java.util.ArrayList<BlockMarkDto> marks = new java.util.ArrayList<>();
+    java.util.LinkedHashSet<String> seen = new java.util.LinkedHashSet<>();
+    addLegacyRoadPermitMark(seen, marks, blockId, legacyRow, legacyRow.timberMark(), "VALID", true);
+    if (expanded != null) {
+      addLegacyRoadPermitMark(
+          seen,
+          marks,
+          blockId,
+          legacyRow,
+          expanded.timberMark(),
+          expanded.status() != null ? expanded.status().code() : null,
+          true);
+      if (expanded.secondaryMarks() != null) {
+        appendSecondaryRoadPermitMarks(seen, marks, blockId, legacyRow, expanded);
+      }
+    }
+    java.util.ArrayList<BlockMarkDto> sequenced = new java.util.ArrayList<>(marks.size());
+    for (int i = 0; i < marks.size(); i++) {
+      BlockMarkDto m = marks.get(i);
+      sequenced.add(
+          new BlockMarkDto(
+              m.id(),
+              m.blockId(),
+              m.markType(),
+              i + 1,
+              m.mark(),
+              m.validationStatus(),
+              m.forestFileId(),
+              m.timberMark(),
+              m.cuttingPermitId(),
+              m.cutBlockId()));
+    }
+    return List.copyOf(sequenced);
+  }
+
+  private void appendSecondaryRoadPermitMarks(
+      java.util.Set<String> seen,
+      java.util.List<BlockMarkDto> marks,
+      Long blockId,
+      BlockListItemDto legacyRow,
+      ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchExpandedDto expanded) {
+    for (var secondary : expanded.secondaryMarks()) {
+      if (secondary == null) {
+        continue;
+      }
+      addLegacyRoadPermitMark(
+          seen,
+          marks,
+          blockId,
+          legacyRow,
+          secondary.mark(),
+          secondary.status() != null ? secondary.status().code() : null,
+          false);
+    }
+  }
+
+  private void addLegacyRoadPermitMark(
+      java.util.Set<String> seen,
+      java.util.List<BlockMarkDto> marks,
+      Long blockId,
+      BlockListItemDto legacyRow,
+      String markValue,
+      String validationStatus,
+      boolean primaryMark) {
+    if (markValue == null || markValue.isBlank() || !isRoadPermitMark(markValue)) {
+      return;
+    }
+    String normalized = markValue.trim().toUpperCase(Locale.ROOT);
+    if (!seen.add(normalized)) {
+      return;
+    }
+    // Only the block's primary mark inherits the reporting unit's identifiers; road marks derived
+    // from secondary marks may belong to a different licence, so their identifiers stay null.
+    marks.add(
+        new BlockMarkDto(
+            null,
+            blockId,
+            MARK_TYPE_ROAD_PERMIT,
+            marks.size() + 1,
+            markValue.trim(),
+            validationStatus,
+            primaryMark ? legacyRow.licenseNumber() : null,
+            markValue.trim(),
+            primaryMark ? legacyRow.cuttingPermit() : null,
+            primaryMark ? legacyRow.cutBlockId() : null));
+  }
+
+  private boolean isRoadPermitMark(String mark) {
+    if (mark == null) {
+      return false;
+    }
+    String trimmed = mark.trim();
+    return !trimmed.isEmpty() && Character.toUpperCase(trimmed.charAt(0)) == 'R';
+  }
+
+
+  private DistrictAverageVolumesSummaryDto buildPostgresDistrictAverageVolumesSummary() {
+    // OQ3: no structured per-row DA volume data persisted in Postgres yet; return empty summary.
+    return DistrictAverageVolumesSummaryDto.empty();
+  }
+
+  private DistrictAverageVolumesSummaryDto buildLegacyDistrictAverageVolumesSummary(
+      List<ca.bc.gov.nrs.hrs.dto.search.DistrictAverageVolumeLegacyDto> legacyRows) {
+    if (legacyRows == null || legacyRows.isEmpty()) {
+      return DistrictAverageVolumesSummaryDto.empty();
+    }
+    List<DistrictAverageVolumeRowDto> rows =
+        legacyRows.stream()
+            .filter(java.util.Objects::nonNull)
+            .map(this::toLegacyDistrictAverageVolumeRow)
+            .toList();
+    if (rows.isEmpty()) {
+      return DistrictAverageVolumesSummaryDto.empty();
+    }
+    BigDecimal totalBillable =
+        rows.stream()
+            .map(DistrictAverageVolumeRowDto::totalBillableVolumeM3)
+            .reduce(BigDecimal.ZERO, (acc, value) -> acc.add(zeroIfNull(value)));
+    BigDecimal totalCutControl =
+        rows.stream()
+            .map(DistrictAverageVolumeRowDto::totalCutControlVolumeM3)
+            .reduce(BigDecimal.ZERO, (acc, value) -> acc.add(zeroIfNull(value)));
+    return new DistrictAverageVolumesSummaryDto(
+        rows, new DistrictAverageVolumeTotalsDto(totalBillable, totalCutControl));
+  }
+
+  private DistrictAverageVolumeRowDto toLegacyDistrictAverageVolumeRow(
+      ca.bc.gov.nrs.hrs.dto.search.DistrictAverageVolumeLegacyDto row) {
+    String harvestMethod =
+        firstNonBlank(row.harvestMethodDescription(), row.harvestMethodCode());
+    // OQ1=A: billable/cut-control split not stored in legacy strata; keep null (totals sum null
+    // as 0).
+    return new DistrictAverageVolumeRowDto(
+        row.populationType(),
+        row.wasteType(),
+        harvestMethod,
+        row.assessmentMethod(),
+        row.wasteLevel(),
+        row.netWasteAreaHa(),
+        null,
         null);
+  }
+
+  private String firstNonBlank(String primary, String fallback) {
+    if (primary != null && !primary.isBlank()) {
+      return primary;
+    }
+    if (fallback != null && !fallback.isBlank()) {
+      return fallback;
+    }
+    return null;
+  }
+
+  private LocalDate resolvePlcDate(LocalDate storedPlcDate) {
+    return storedPlcDate != null ? storedPlcDate : LocalDate.now(clock).minusDays(1);
   }
 }

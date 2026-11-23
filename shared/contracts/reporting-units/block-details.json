@@ -9,5 +9,22 @@
   "revision" : 1,
   "isLegacy" : false,
   "createdAt" : null,
-  "updatedAt" : null
+  "updatedAt" : null,
+  "secondaryTimberMarks" : [ ],
+  "roadPermitTimberMarks" : [ ],
+  "wasteAssessmentAreaSummary" : {
+    "primary" : {
+      "timberMarkId" : "TM-TEST",
+      "netWasteAreaHa" : null
+    },
+    "secondary" : [ ],
+    "totalNetWasteAreaHa" : 0
+  },
+  "districtAverageVolumesSummary" : {
+    "rows" : [ ],
+    "totals" : {
+      "totalBillableVolumeM3" : 0,
+      "totalCutControlVolumeM3" : 0
+    }
+  }
 }
