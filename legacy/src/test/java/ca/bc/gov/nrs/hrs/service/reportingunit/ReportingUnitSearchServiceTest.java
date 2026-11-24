@@ -318,6 +318,31 @@ class ReportingUnitSearchServiceTest {
       assertThat(filters.getReportingUnitIds()).containsExactly(-1L);
       verify(ruRepository).searchReportingUnits(any(), any());
     }
+
+    @Test
+    @DisplayName(
+        "should return empty page when existing RU IDs do not overlap timber mark matches"
+    )
+    void shouldReturnEmptyPage_whenTimberMarkAndExistingRuIdsDoNotOverlap() {
+      // Arrange
+      ReportingUnitSearchParametersDto filters =
+          new ReportingUnitSearchParametersDto();
+      filters.setTimberMark(" ER9210 ");
+      filters.setReportingUnitIds(List.of(99999L));
+      PageRequest pageable = PageRequest.of(0, 10, Sort.unsorted());
+
+      when(ruRepository.findReportingUnitIdsByTimberMark("ER9210"))
+          .thenReturn(List.of(BigDecimal.valueOf(36301L)));
+
+      // Act
+      Page<ReportingUnitSearchResultDto> result =
+          service.search(filters, pageable, CLIENT_NUMBERS, "user1");
+
+      // Assert
+      assertThat(result).isEmpty();
+      assertThat(filters.getTimberMark()).isEqualTo("ER9210");
+      verify(ruRepository, never()).searchReportingUnits(any(), any());
+    }
   }
 
   // -----------------------------------------------------------------------

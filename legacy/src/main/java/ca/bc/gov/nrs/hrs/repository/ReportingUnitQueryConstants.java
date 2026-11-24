@@ -151,21 +151,25 @@ public final class ReportingUnitQueryConstants {
       + SEARCH_REPORTING_UNIT_WHERE;
 
   /**
-   * Fast lookup query to resolve matching reporting unit IDs for a given timber mark,
+   * Lookup query to resolve matching reporting unit IDs for a given timber mark,
    * including both the direct reporting unit and any parent block reporting units.
+   * Uses a CTE to scan WASTE_ASSESSMENT_AREA once and joins parent rows by primary key.
    */
   public static final String FIND_RU_IDS_BY_TIMBER_MARK = """
-      SELECT tm.REPORTING_UNIT_ID
-      FROM WASTE_ASSESSMENT_AREA tm
-      WHERE UPPER(tm.TIMBER_MARK) = UPPER(:timberMark)
-         OR UPPER(tm.DRAFT_TIMBER_MARK) = UPPER(:timberMark)
+      WITH matched AS (
+        SELECT tm.REPORTING_UNIT_ID, tm.PARENT_WAA_ID
+        FROM WASTE_ASSESSMENT_AREA tm
+        WHERE UPPER(tm.TIMBER_MARK) = UPPER(:timberMark)
+           OR UPPER(tm.DRAFT_TIMBER_MARK) = UPPER(:timberMark)
+      )
+      SELECT REPORTING_UNIT_ID
+      FROM matched
       UNION
       SELECT parent.REPORTING_UNIT_ID
-      FROM WASTE_ASSESSMENT_AREA tm_child
+      FROM matched m
       JOIN WASTE_ASSESSMENT_AREA parent
-        ON parent.WASTE_ASSESSMENT_AREA_ID = tm_child.PARENT_WAA_ID
-      WHERE UPPER(tm_child.TIMBER_MARK) = UPPER(:timberMark)
-         OR UPPER(tm_child.DRAFT_TIMBER_MARK) = UPPER(:timberMark)
+        ON parent.WASTE_ASSESSMENT_AREA_ID = m.PARENT_WAA_ID
+      WHERE m.PARENT_WAA_ID IS NOT NULL
       """;
 
   private static final String GET_BLOCK_COUNT = """

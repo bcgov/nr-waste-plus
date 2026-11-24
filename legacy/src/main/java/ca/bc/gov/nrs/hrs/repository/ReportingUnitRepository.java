@@ -53,7 +53,7 @@ public interface ReportingUnitRepository extends JpaRepository<ReportingUnitEnti
   );
 
   /**
-   * Fast lookup of distinct reporting unit IDs that have blocks matching the given timber mark.
+   * Lookup of distinct reporting unit IDs that have blocks matching the given timber mark.
    *
    * <p>Returns {@link Number} because native Oracle queries select {@code NUMBER} columns as
    * {@link java.math.BigDecimal} at runtime.
