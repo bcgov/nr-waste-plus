@@ -1,4 +1,8 @@
 import { Before, Step } from "@badeball/cypress-cucumber-preprocessor";
+import {
+  pauseTestBudget,
+  restartTestBudget,
+} from "../../helpers/test-timeout";
 
 type Provider = "idir" | "bceid";
 
@@ -268,6 +272,10 @@ const doLogin = (
       throw new Error(`Username or password for ${provider} not found.`);
     }
 
+    // The test-body budget starts in the support beforeEach. Login is bounded
+    // by its own command timeouts, so suspend the budget until the session is
+    // established, then restart it for the test body.
+    pauseTestBudget();
     cy.session(
       `${provider}-${username}`,
       () => {
@@ -352,7 +360,7 @@ const doLogin = (
         // spec, instead of replaying a dead session into every later one.
         cacheAcrossSpecs: true,
       },
-    );
+    ).then(() => restartTestBudget());
     cy.visit(afterLoginLocation);
   });
 };
