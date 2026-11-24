@@ -85,6 +85,25 @@ public class ReportingUnitSearchService {
         resolvedSort
     );
 
+    if (filters.getTimberMark() != null && !filters.getTimberMark().isBlank()
+        && !LegacyConstants.NOVALUE.equalsIgnoreCase(filters.getTimberMark())) {
+      String trimmedTimberMark = filters.getTimberMark().trim();
+      List<Long> matchingRuIds = ruRepository.findReportingUnitIdsByTimberMark(trimmedTimberMark);
+      if (matchingRuIds.isEmpty()) {
+        return Page.empty(pageRequest);
+      }
+      List<Long> existingRuIds = filters.getReportingUnitIds();
+      if (existingRuIds != null && !existingRuIds.contains(-1L)) {
+        List<Long> intersected = matchingRuIds.stream().filter(existingRuIds::contains).toList();
+        if (intersected.isEmpty()) {
+          return Page.empty(pageRequest);
+        }
+        filters.setReportingUnitIds(intersected);
+      } else {
+        filters.setReportingUnitIds(matchingRuIds);
+      }
+    }
+
     return ruRepository
         .searchReportingUnits(filters, pageRequest)
         .map(ruSearchMapper::fromProjection);

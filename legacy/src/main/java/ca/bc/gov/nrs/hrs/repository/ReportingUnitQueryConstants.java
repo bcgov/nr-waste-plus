@@ -101,12 +101,9 @@ public final class ReportingUnitQueryConstants {
         )
         AND (
           NVL(:#{#filter.timberMark}, 'NOVALUE') = 'NOVALUE'
+          OR UPPER(waa.timber_mark) = UPPER(:#{#filter.timberMark})
+          OR UPPER(waa.draft_timber_mark) = UPPER(:#{#filter.timberMark})
           OR waa.waste_assessment_area_id IN (
-            SELECT tm_waa.waste_assessment_area_id
-            FROM WASTE_ASSESSMENT_AREA tm_waa
-            WHERE UPPER(tm_waa.timber_mark) = UPPER(:#{#filter.timberMark})
-               OR UPPER(tm_waa.draft_timber_mark) = UPPER(:#{#filter.timberMark})
-            UNION ALL
             SELECT tm_c.parent_waa_id
             FROM WASTE_ASSESSMENT_AREA tm_c
             WHERE tm_c.parent_waa_id IS NOT NULL
@@ -152,6 +149,17 @@ public final class ReportingUnitQueryConstants {
       "SELECT COUNT(1) "
       + SEARCH_REPORTING_UNIT_FROM_JOIN
       + SEARCH_REPORTING_UNIT_WHERE;
+
+  /**
+   * Fast lookup query to resolve matching reporting unit IDs for a given timber mark.
+   * Scans only the WASTE_ASSESSMENT_AREA table without joins.
+   */
+  public static final String FIND_RU_IDS_BY_TIMBER_MARK = """
+      SELECT DISTINCT tm.REPORTING_UNIT_ID
+      FROM WASTE_ASSESSMENT_AREA tm
+      WHERE UPPER(tm.TIMBER_MARK) = UPPER(:timberMark)
+         OR UPPER(tm.DRAFT_TIMBER_MARK) = UPPER(:timberMark)
+      """;
 
   private static final String GET_BLOCK_COUNT = """
       SELECT
