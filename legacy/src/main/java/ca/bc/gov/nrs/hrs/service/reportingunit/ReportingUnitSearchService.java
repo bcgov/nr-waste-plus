@@ -85,9 +85,67 @@ public class ReportingUnitSearchService {
         resolvedSort
     );
 
+    if (!applyTimberMarkPreFilter(filters)) {
+      return Page.empty(pageRequest);
+    }
+
     return ruRepository
         .searchReportingUnits(filters, pageRequest)
         .map(ruSearchMapper::fromProjection);
+  }
+
+  /**
+   * Narrows {@code filters.reportingUnitIds} to reporting units matching {@code filters.timberMark}
+   * so the main query can drive off the reporting-unit primary key.
+   *
+   * @return {@code true} if the main search should proceed, or {@code false} if no results can
+   *     match
+   */
+  private boolean applyTimberMarkPreFilter(ReportingUnitSearchParametersDto filters) {
+    String rawTimberMark = filters.getTimberMark();
+    if (rawTimberMark == null
+        || rawTimberMark.isBlank()
+        || LegacyConstants.NOVALUE.equalsIgnoreCase(rawTimberMark)) {
+      return true;
+    }
+
+    String trimmedTimberMark = rawTimberMark.trim();
+    filters.setTimberMark(trimmedTimberMark);
+
+    List<Long> matchingRuIds = ruRepository.findReportingUnitIdsByTimberMark(trimmedTimberMark)
+        .stream()
+        .filter(Objects::nonNull)
+        .map(Number::longValue)
+        .toList();
+    if (matchingRuIds.isEmpty()) {
+      return false;
+    }
+
+    // Oracle rejects IN lists exceeding 1000 expressions (ORA-01795).
+    if (matchingRuIds.size() > 1000) {
+      log.warn(
+          "Timber mark {} matched {} reporting units (>1000); skipping RU ID pre-filter",
+          trimmedTimberMark,
+          matchingRuIds.size()
+      );
+      return true;
+    }
+
+    // getReportingUnitIds() returns [-1L] as a sentinel when no RU ID filter is set.
+    List<Long> existingRuIds = filters.getReportingUnitIds();
+    if (existingRuIds.contains(-1L)) {
+      filters.setReportingUnitIds(matchingRuIds);
+      return true;
+    }
+
+    List<Long> intersected = matchingRuIds.stream()
+        .filter(existingRuIds::contains)
+        .toList();
+    if (intersected.isEmpty()) {
+      return false;
+    }
+    filters.setReportingUnitIds(intersected);
+    return true;
   }
 
   private void enrichFilters(
