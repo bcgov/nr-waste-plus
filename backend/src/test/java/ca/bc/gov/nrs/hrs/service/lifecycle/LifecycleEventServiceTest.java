@@ -30,11 +30,13 @@ import ca.bc.gov.nrs.hrs.repository.block.BlockRepository;
 import ca.bc.gov.nrs.hrs.repository.block.BlockRequirementRepository;
 import ca.bc.gov.nrs.hrs.repository.block.ReportingUnitRepository;
 import ca.bc.gov.nrs.hrs.repository.block.StatusEventRepository;
+import ca.bc.gov.nrs.hrs.security.ResourceScopeGuard;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.EntityManager;
 import jakarta.servlet.http.HttpServletRequest;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.Month;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -83,6 +85,9 @@ class LifecycleEventServiceTest {
 
   @Mock
   private TransitionPolicyService transitionPolicyService;
+
+  @Mock
+  private ResourceScopeGuard resourceScopeGuard;
 
   @Mock
   private EntityManager entityManager;
@@ -271,50 +276,6 @@ class LifecycleEventServiceTest {
     }
 
     @Test
-    @DisplayName("Cancel transition preserves draft and statusCode on block")
-    void recordBlockLifecycleEvent_cancel_preservesDraftAndStatusCode() {
-      MockHttpServletRequest request = new MockHttpServletRequest();
-      request.addHeader("If-Match", "\"5\"");
-
-      block.setDraft(true);
-      block.setStatusCode("DFT");
-
-      LifecycleEventRequestDto requestDto = new LifecycleEventRequestDto("CANCEL", null);
-
-      when(reportingUnitRepository.findByIdAndDeletedFalse(RU_ID))
-          .thenReturn(Optional.of(reportingUnit));
-      when(blockRepository.findByIdAndReportingUnitIdAndDeletedFalse(BLOCK_ID, RU_ID))
-          .thenReturn(Optional.of(block));
-      when(statusEventRepository.findFirstByBlockIdOrderByCreatedAtDescIdDesc(BLOCK_ID))
-          .thenReturn(Optional.empty());
-      when(blockRequirementRepository.findByBlockIdAndDeletedFalse(BLOCK_ID))
-          .thenReturn(Collections.emptyList());
-
-      when(transitionPolicyService.evaluate(
-              eq("DRAFT"), eq("CANCEL"), eq(Role.SUBMITTER),
-              eq(IdentityProvider.BUSINESS_BCEID), any()))
-          .thenReturn(TransitionEvaluationResult.allowed("CANCELLED"));
-
-      when(blockRepository.saveAndFlush(any(BlockEntity.class)))
-          .thenAnswer(invocation -> invocation.getArgument(0));
-
-      StatusEventEntity savedEvent = new StatusEventEntity();
-      savedEvent.setId(998L);
-      savedEvent.setBlockId(BLOCK_ID);
-      savedEvent.setStatus("CANCELLED");
-      savedEvent.setEventType("CANCEL");
-      when(statusEventRepository.save(any(StatusEventEntity.class))).thenReturn(savedEvent);
-
-      LifecycleEventResponseDto response =
-          lifecycleEventService.recordBlockLifecycleEvent(
-              request, submitterJwt, RU_ID, BLOCK_ID, requestDto);
-
-      assertThat(response.state()).isEqualTo("CANCELLED");
-      assertThat(block.isDraft()).isTrue();
-      assertThat(block.getStatusCode()).isEqualTo("DFT");
-    }
-
-    @Test
     @DisplayName("Submit without plcDate throws 422 ResponseStatusException")
     void recordBlockLifecycleEvent_submitWithoutPlcDate_throws() {
       MockHttpServletRequest request = new MockHttpServletRequest();
@@ -327,6 +288,8 @@ class LifecycleEventServiceTest {
           .thenReturn(Optional.of(reportingUnit));
       when(blockRepository.findByIdAndReportingUnitIdAndDeletedFalse(BLOCK_ID, RU_ID))
           .thenReturn(Optional.of(block));
+      when(transitionPolicyService.evaluate(any(), any(), any(), any(), any()))
+          .thenReturn(TransitionEvaluationResult.allowed("SUBMITTED"));
 
       assertThatThrownBy(
               () ->
@@ -353,6 +316,8 @@ class LifecycleEventServiceTest {
           .thenReturn(Optional.of(reportingUnit));
       when(blockRepository.findByIdAndReportingUnitIdAndDeletedFalse(BLOCK_ID, RU_ID))
           .thenReturn(Optional.of(block));
+      when(transitionPolicyService.evaluate(any(), any(), any(), any(), any()))
+          .thenReturn(TransitionEvaluationResult.allowed("SUBMITTED"));
       when(blockAttachmentRepository.countByBlockIdAndDeletedFalse(BLOCK_ID)).thenReturn(2L);
       when(blockAttachmentRepository.countByBlockIdAndStatusAndScanStatusAndDeletedFalse(
               BLOCK_ID, "FINALIZED", "CLEAN"))
@@ -383,6 +348,8 @@ class LifecycleEventServiceTest {
           .thenReturn(Optional.of(reportingUnit));
       when(blockRepository.findByIdAndReportingUnitIdAndDeletedFalse(BLOCK_ID, RU_ID))
           .thenReturn(Optional.of(block));
+      when(transitionPolicyService.evaluate(any(), any(), any(), any(), any()))
+          .thenReturn(TransitionEvaluationResult.allowed("CANCELLED"));
       when(transitionPolicyService.isCommentRequired(any(), eq("CANCEL"))).thenReturn(true);
 
       assertThatThrownBy(
@@ -450,6 +417,7 @@ class LifecycleEventServiceTest {
 
       LifecycleEventRequestDto requestDto = new LifecycleEventRequestDto("APPROVE", null);
 
+      when(resourceScopeGuard.extractAssignedDistricts(districtJwt)).thenReturn(Set.of("DKA"));
       when(reportingUnitRepository.findByIdAndDeletedFalse(RU_ID))
           .thenReturn(Optional.of(reportingUnit));
       when(blockRepository.findByIdAndReportingUnitIdAndDeletedFalse(BLOCK_ID, RU_ID))
@@ -496,6 +464,7 @@ class LifecycleEventServiceTest {
 
       LifecycleEventRequestDto requestDto = new LifecycleEventRequestDto("APPROVE", null);
 
+      when(resourceScopeGuard.extractAssignedDistricts(districtJwt)).thenReturn(Set.of("DKA"));
       when(reportingUnitRepository.findByIdAndDeletedFalse(RU_ID))
           .thenReturn(Optional.of(reportingUnit));
 
@@ -529,6 +498,129 @@ class LifecycleEventServiceTest {
           .isInstanceOf(ReportingUnitNotFoundException.class);
 
       verify(blockRepository, never()).findByIdAndReportingUnitIdAndDeletedFalse(any(), any());
+    }
+
+    @Test
+    @DisplayName("Cancelling block sets draft false and statusCode CAN")
+    void recordBlockLifecycleEvent_cancel_setsDraftFalseAndStatusCodeCan() {
+      MockHttpServletRequest request = new MockHttpServletRequest();
+      request.addHeader("If-Match", "\"5\"");
+
+      LifecycleEventRequestDto requestDto =
+          new LifecycleEventRequestDto("CANCEL", "User cancelled draft");
+
+      when(reportingUnitRepository.findByIdAndDeletedFalse(RU_ID))
+          .thenReturn(Optional.of(reportingUnit));
+      when(blockRepository.findByIdAndReportingUnitIdAndDeletedFalse(BLOCK_ID, RU_ID))
+          .thenReturn(Optional.of(block));
+      when(statusEventRepository.findFirstByBlockIdOrderByCreatedAtDescIdDesc(BLOCK_ID))
+          .thenReturn(Optional.empty());
+      when(blockRequirementRepository.findByBlockIdAndDeletedFalse(BLOCK_ID))
+          .thenReturn(Collections.emptyList());
+
+      when(transitionPolicyService.evaluate(any(), eq("CANCEL"), any(), any(), any()))
+          .thenReturn(TransitionEvaluationResult.allowed("CANCELLED"));
+      when(blockRepository.saveAndFlush(any(BlockEntity.class)))
+          .thenAnswer(invocation -> invocation.getArgument(0));
+
+      StatusEventEntity savedEvent = new StatusEventEntity();
+      savedEvent.setId(888L);
+      savedEvent.setBlockId(BLOCK_ID);
+      savedEvent.setStatus("CANCELLED");
+      savedEvent.setEventType("CANCEL");
+      when(statusEventRepository.save(any(StatusEventEntity.class))).thenReturn(savedEvent);
+
+      LifecycleEventResponseDto response =
+          lifecycleEventService.recordBlockLifecycleEvent(
+              request, submitterJwt, RU_ID, BLOCK_ID, requestDto);
+
+      assertThat(response.state()).isEqualTo("CANCELLED");
+      assertThat(block.isDraft()).isFalse();
+      assertThat(block.getStatusCode()).isEqualTo("CAN");
+    }
+
+    @Test
+    @DisplayName("Role check evaluated before comment and readiness checks (fails with 403)")
+    void recordBlockLifecycleEvent_authEvaluatedBeforePreconditions_throws403() {
+      MockHttpServletRequest request = new MockHttpServletRequest();
+      request.addHeader("If-Match", "\"5\"");
+
+      LifecycleEventRequestDto requestDto = new LifecycleEventRequestDto("REJECT", null);
+
+      when(reportingUnitRepository.findByIdAndDeletedFalse(RU_ID))
+          .thenReturn(Optional.of(reportingUnit));
+      when(blockRepository.findByIdAndReportingUnitIdAndDeletedFalse(BLOCK_ID, RU_ID))
+          .thenReturn(Optional.of(block));
+      when(statusEventRepository.findFirstByBlockIdOrderByCreatedAtDescIdDesc(BLOCK_ID))
+          .thenReturn(Optional.empty());
+      when(blockRequirementRepository.findByBlockIdAndDeletedFalse(BLOCK_ID))
+          .thenReturn(Collections.emptyList());
+
+      when(transitionPolicyService.evaluate(any(), eq("REJECT"), any(), any(), any()))
+          .thenReturn(TransitionEvaluationResult.forbidden("Role is not permitted"));
+
+      assertThatThrownBy(
+              () ->
+                  lifecycleEventService.recordBlockLifecycleEvent(
+                      request, submitterJwt, RU_ID, BLOCK_ID, requestDto))
+          .isInstanceOf(ResponseStatusException.class)
+          .satisfies(
+              ex -> {
+                ResponseStatusException rse = (ResponseStatusException) ex;
+                assertThat(rse.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+                assertThat(rse.getBody().getProperties().get("code"))
+                    .isEqualTo("ROLE_NOT_ALLOWED");
+              });
+    }
+
+    @Test
+    @DisplayName("resolveSubmissionDate anchors on SUBMIT event even when resulting status was HOLD")
+    void recordBlockLifecycleEvent_submissionDate_anchorsOnSubmitEvent() {
+      MockHttpServletRequest request = new MockHttpServletRequest();
+      request.addHeader("If-Match", "\"5\"");
+
+      StatusEventEntity submitEvent = new StatusEventEntity();
+      submitEvent.setId(77L);
+      submitEvent.setBlockId(BLOCK_ID);
+      submitEvent.setEventType("SUBMIT");
+      submitEvent.setStatus("HOLD");
+      submitEvent.setCreatedAt(Instant.parse("2025-05-10T10:00:00Z"));
+
+      when(statusEventRepository.findFirstByBlockIdAndEventTypeOrderByCreatedAtDesc(
+              BLOCK_ID, "SUBMIT"))
+          .thenReturn(Optional.of(submitEvent));
+
+      when(reportingUnitRepository.findByIdAndDeletedFalse(RU_ID))
+          .thenReturn(Optional.of(reportingUnit));
+      when(blockRepository.findByIdAndReportingUnitIdAndDeletedFalse(BLOCK_ID, RU_ID))
+          .thenReturn(Optional.of(block));
+      when(statusEventRepository.findFirstByBlockIdOrderByCreatedAtDescIdDesc(BLOCK_ID))
+          .thenReturn(Optional.of(submitEvent));
+      when(blockRequirementRepository.findByBlockIdAndDeletedFalse(BLOCK_ID))
+          .thenReturn(Collections.emptyList());
+
+      ArgumentCaptor<TransitionContext> contextCaptor =
+          ArgumentCaptor.forClass(TransitionContext.class);
+      when(transitionPolicyService.evaluate(
+              eq("HOLD"), eq("UNHOLD"), any(), any(), contextCaptor.capture()))
+          .thenReturn(TransitionEvaluationResult.allowed("SUBMITTED"));
+      when(blockRepository.saveAndFlush(any(BlockEntity.class)))
+          .thenAnswer(invocation -> invocation.getArgument(0));
+
+      StatusEventEntity unholdEvent = new StatusEventEntity();
+      unholdEvent.setId(78L);
+      unholdEvent.setBlockId(BLOCK_ID);
+      unholdEvent.setStatus("SUBMITTED");
+      unholdEvent.setEventType("UNHOLD");
+      when(statusEventRepository.save(any(StatusEventEntity.class))).thenReturn(unholdEvent);
+
+      LifecycleEventRequestDto requestDto = new LifecycleEventRequestDto("UNHOLD", null);
+      lifecycleEventService.recordBlockLifecycleEvent(
+          request, submitterJwt, RU_ID, BLOCK_ID, requestDto);
+
+      TransitionContext capturedContext = contextCaptor.getValue();
+      assertThat(capturedContext.submissionDate())
+          .isEqualTo(LocalDate.of(2025, Month.MAY, 10));
     }
   }
 

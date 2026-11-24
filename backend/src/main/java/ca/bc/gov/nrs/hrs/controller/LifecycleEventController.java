@@ -63,7 +63,7 @@ public class LifecycleEventController {
       @PathVariable Long blockId,
       @Valid @RequestBody LifecycleEventRequestDto request) {
 
-    if (idempotencyKey == null || idempotencyKey.isBlank()) {
+    if (idempotencyKey.isBlank()) {
       throw new ResponseStatusException(
           HttpStatus.BAD_REQUEST, "Idempotency-Key header is required and cannot be blank");
     }
@@ -109,7 +109,7 @@ public class LifecycleEventController {
       @PathVariable Long reportingUnitId,
       @Valid @RequestBody LifecycleEventRequestDto request) {
 
-    if (idempotencyKey == null || idempotencyKey.isBlank()) {
+    if (idempotencyKey.isBlank()) {
       throw new ResponseStatusException(
           HttpStatus.BAD_REQUEST, "Idempotency-Key header is required and cannot be blank");
     }

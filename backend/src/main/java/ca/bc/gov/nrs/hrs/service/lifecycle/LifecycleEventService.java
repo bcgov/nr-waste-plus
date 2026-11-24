@@ -24,6 +24,7 @@ import ca.bc.gov.nrs.hrs.repository.block.BlockRepository;
 import ca.bc.gov.nrs.hrs.repository.block.BlockRequirementRepository;
 import ca.bc.gov.nrs.hrs.repository.block.ReportingUnitRepository;
 import ca.bc.gov.nrs.hrs.repository.block.StatusEventRepository;
+import ca.bc.gov.nrs.hrs.security.ResourceScopeGuard;
 import ca.bc.gov.nrs.hrs.util.ConditionalRequestSupport;
 import ca.bc.gov.nrs.hrs.util.JwtPrincipalUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -69,6 +70,7 @@ public class LifecycleEventService {
   private final BlockAttachmentRepository blockAttachmentRepository;
   private final BlockCommentRepository blockCommentRepository;
   private final TransitionPolicyService transitionPolicyService;
+  private final ResourceScopeGuard resourceScopeGuard;
   private final EntityManager entityManager;
   private final ObjectMapper objectMapper;
 
@@ -109,22 +111,6 @@ public class LifecycleEventService {
 
     String currentState = resolveBlockState(blockId, block.isDraft());
 
-    if (transitionPolicyService.isCommentRequired(currentState, request.event())) {
-      if (request.comment() == null || request.comment().isBlank()) {
-        ResponseStatusException ex =
-            new ResponseStatusException(
-                HttpStatus.UNPROCESSABLE_ENTITY, "A comment is required for this event");
-        ex.getBody().setProperty("code", "COMMENT_REQUIRED");
-        ex.getBody().setProperty("blockState", currentState);
-        ex.getBody().setProperty("retryable", false);
-        throw ex;
-      }
-    }
-
-    if (TransitionPolicyService.EVENT_SUBMIT.equalsIgnoreCase(request.event())) {
-      validateBlockSubmissionReadiness(block, currentState);
-    }
-
     Role role = resolveActorRole(jwt, reportingUnit.getClientNumber());
     IdentityProvider provider = JwtPrincipalUtil.getIdentityProvider(jwt);
     TransitionContext context = buildBlockTransitionContext(blockId, block.getPlcDate());
@@ -142,12 +128,30 @@ public class LifecycleEventService {
         ResponseStatusException ex =
             new ResponseStatusException(HttpStatus.FORBIDDEN, result.reason());
         ex.getBody().setProperty("code", "ROLE_NOT_ALLOWED");
+        ex.getBody().setProperty("state", currentState);
         ex.getBody().setProperty("blockState", currentState);
         ex.getBody().setProperty("retryable", false);
         throw ex;
       }
       throw new IllegalTransitionException(
           result.reason(), "ILLEGAL_TRANSITION", currentState, false);
+    }
+
+    if (transitionPolicyService.isCommentRequired(currentState, request.event())) {
+      if (request.comment() == null || request.comment().isBlank()) {
+        ResponseStatusException ex =
+            new ResponseStatusException(
+                HttpStatus.UNPROCESSABLE_ENTITY, "A comment is required for this event");
+        ex.getBody().setProperty("code", "COMMENT_REQUIRED");
+        ex.getBody().setProperty("state", currentState);
+        ex.getBody().setProperty("blockState", currentState);
+        ex.getBody().setProperty("retryable", false);
+        throw ex;
+      }
+    }
+
+    if (TransitionPolicyService.EVENT_SUBMIT.equalsIgnoreCase(request.event())) {
+      validateBlockSubmissionReadiness(block, currentState);
     }
 
     final String targetState = result.targetState();
@@ -223,18 +227,6 @@ public class LifecycleEventService {
 
     String currentState = resolveReportingUnitState(reportingUnitId);
 
-    if (transitionPolicyService.isCommentRequired(currentState, request.event())) {
-      if (request.comment() == null || request.comment().isBlank()) {
-        ResponseStatusException ex =
-            new ResponseStatusException(
-                HttpStatus.UNPROCESSABLE_ENTITY, "A comment is required for this event");
-        ex.getBody().setProperty("code", "COMMENT_REQUIRED");
-        ex.getBody().setProperty("blockState", currentState);
-        ex.getBody().setProperty("retryable", false);
-        throw ex;
-      }
-    }
-
     Role role = resolveActorRole(jwt, reportingUnit.getClientNumber());
     IdentityProvider provider = JwtPrincipalUtil.getIdentityProvider(jwt);
 
@@ -251,12 +243,26 @@ public class LifecycleEventService {
         ResponseStatusException ex =
             new ResponseStatusException(HttpStatus.FORBIDDEN, result.reason());
         ex.getBody().setProperty("code", "ROLE_NOT_ALLOWED");
+        ex.getBody().setProperty("state", currentState);
         ex.getBody().setProperty("blockState", currentState);
         ex.getBody().setProperty("retryable", false);
         throw ex;
       }
       throw new IllegalTransitionException(
           result.reason(), "ILLEGAL_TRANSITION", currentState, false);
+    }
+
+    if (transitionPolicyService.isCommentRequired(currentState, request.event())) {
+      if (request.comment() == null || request.comment().isBlank()) {
+        ResponseStatusException ex =
+            new ResponseStatusException(
+                HttpStatus.UNPROCESSABLE_ENTITY, "A comment is required for this event");
+        ex.getBody().setProperty("code", "COMMENT_REQUIRED");
+        ex.getBody().setProperty("state", currentState);
+        ex.getBody().setProperty("blockState", currentState);
+        ex.getBody().setProperty("retryable", false);
+        throw ex;
+      }
     }
 
     final String targetState = result.targetState();
@@ -313,7 +319,7 @@ public class LifecycleEventService {
       }
     } else if (IdentityProvider.IDIR == idp) {
       if (JwtPrincipalUtil.hasConcreteRole(jwt, Role.DISTRICT)) {
-        Set<String> assignedDistricts = extractAssignedDistricts(jwt);
+        Set<String> assignedDistricts = resourceScopeGuard.extractAssignedDistricts(jwt);
         String targetDistrict = reportingUnit.getGeographicCode();
         if (targetDistrict == null
             || assignedDistricts.stream().noneMatch(d -> d.equalsIgnoreCase(targetDistrict))) {
@@ -326,24 +332,6 @@ public class LifecycleEventService {
         }
       }
     }
-  }
-
-  private Set<String> extractAssignedDistricts(Jwt jwt) {
-    Set<String> districts = new HashSet<>();
-    if (jwt == null) {
-      return districts;
-    }
-    Map<Role, List<String>> roles = JwtPrincipalUtil.getRoles(jwt);
-    if (roles.containsKey(Role.DISTRICT)) {
-      districts.addAll(roles.get(Role.DISTRICT));
-    }
-    for (String key : List.of("custom:idp_district", "custom:district")) {
-      Object val = jwt.getClaims().get(key);
-      if (val instanceof String s && !s.isBlank()) {
-        districts.add(s.trim());
-      }
-    }
-    return districts;
   }
 
   private Role resolveActorRole(Jwt jwt, String clientNumber) {
@@ -412,6 +400,7 @@ public class LifecycleEventService {
               HttpStatus.UNPROCESSABLE_ENTITY,
               "Cannot submit block: planned completion date (plcDate) is required.");
       ex.getBody().setProperty("code", "PRECONDITION_FAILED");
+      ex.getBody().setProperty("state", currentState);
       ex.getBody().setProperty("blockState", currentState);
       ex.getBody().setProperty("retryable", false);
       throw ex;
@@ -429,6 +418,7 @@ public class LifecycleEventService {
               HttpStatus.UNPROCESSABLE_ENTITY,
               "Cannot submit block: all attachments must be finalized and clean of malware.");
       ex.getBody().setProperty("code", "PRECONDITION_FAILED");
+      ex.getBody().setProperty("state", currentState);
       ex.getBody().setProperty("blockState", currentState);
       ex.getBody().setProperty("retryable", false);
       throw ex;
@@ -549,8 +539,8 @@ public class LifecycleEventService {
 
   private LocalDate resolveSubmissionDate(Long blockId) {
     return statusEventRepository
-        .findFirstByBlockIdAndStatusOrderByCreatedAtAsc(
-            blockId, TransitionPolicyService.STATE_SUBMITTED)
+        .findFirstByBlockIdAndEventTypeOrderByCreatedAtDesc(
+            blockId, TransitionPolicyService.EVENT_SUBMIT)
         .map(StatusEventEntity::getCreatedAt)
         .map(instant -> LocalDate.ofInstant(instant, ZoneOffset.UTC))
         .orElse(LocalDate.now(ZoneOffset.UTC));
@@ -577,7 +567,8 @@ public class LifecycleEventService {
       block.setDraft(false);
       block.setStatusCode("RTB");
     } else if (TransitionPolicyService.STATE_CANCELLED.equalsIgnoreCase(targetState)) {
-      // When cancelled, preserve existing draft flag and statusCode; status_event records state
+      block.setDraft(false);
+      block.setStatusCode("CAN");
     }
   }
 }

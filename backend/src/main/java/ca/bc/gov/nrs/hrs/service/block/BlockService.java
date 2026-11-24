@@ -280,12 +280,20 @@ public class BlockService {
     enforceClientScope(jwt, reportingUnitId, clientNumber);
 
     BlockResponseDto dto = blockMapper.toResponseDto(block);
+    dto = dto.withState(resolveBlockState(blockId, block.isDraft()));
     dto =
         withTimberMarks(
             dto, loadSecondaryTimberMarks(blockId), loadRoadPermitTimberMarks(blockId));
     dto = withWasteAssessmentAreaSummary(dto, buildPostgresWasteAssessmentAreaSummary(blockId));
     dto = withDistrictAverageVolumesSummary(dto, buildPostgresDistrictAverageVolumesSummary());
     return withResolvedPlcDate(dto);
+  }
+
+  private String resolveBlockState(Long blockId, boolean draft) {
+    return statusEventRepository
+        .findFirstByBlockIdOrderByCreatedAtDescIdDesc(blockId)
+        .map(StatusEventEntity::getStatus)
+        .orElse(draft ? "DRAFT" : "ACTIVE");
   }
 
   private BlockResponseDto getLegacyBlockDetails(Long reportingUnitId, Long blockId, Jwt jwt) {

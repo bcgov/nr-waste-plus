@@ -24,6 +24,10 @@ public interface StatusEventRepository
   Optional<StatusEventEntity> findFirstByBlockIdAndStatusOrderByCreatedAtAsc(
       Long blockId, String status);
 
+  /** Returns the most recent status event recorded for a block with a given event type. */
+  Optional<StatusEventEntity> findFirstByBlockIdAndEventTypeOrderByCreatedAtDesc(
+      Long blockId, String eventType);
+
   /** Returns the most recent status event recorded for a reporting unit, if any. */
   Optional<StatusEventEntity> findFirstByReportingUnitIdOrderByCreatedAtDescIdDesc(
       Long reportingUnitId);

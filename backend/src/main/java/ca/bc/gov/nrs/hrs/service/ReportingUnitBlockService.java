@@ -55,26 +55,28 @@ public class ReportingUnitBlockService {
 
   /** Long-form status names occasionally produced before codes were normalised. */
   private static final Map<String, String> STATUS_CODE_ALIASES =
-      Map.of(
-          "DRAFT", "DFT",
-          "SUBMITTED", "SUB",
-          "HOLD", "HLD",
-          "SUBMISSION_APPROVED", "APP",
-          "APPROVED", "APP",
-          "REJECTED", "REJ",
-          "BILLING_APPROVED", "RTB");
+      Map.ofEntries(
+          Map.entry("DRAFT", "DFT"),
+          Map.entry("SUBMITTED", "SUB"),
+          Map.entry("HOLD", "HLD"),
+          Map.entry("SUBMISSION_APPROVED", "APP"),
+          Map.entry("APPROVED", "APP"),
+          Map.entry("REJECTED", "REJ"),
+          Map.entry("BILLING_APPROVED", "RTB"),
+          Map.entry("CANCELLED", "CAN"));
 
   /** Descriptions kept aligned with the legacy waste assessment area status code table. */
   private static final Map<String, String> STATUS_DESCRIPTIONS =
-      Map.of(
-          "DFT", FALLBACK_STATUS_NAME,
-          "SUB", "Submitted",
-          "APP", "Approved",
-          "BIS", "Billing Issued",
-          "OREJ", "Office Rejected",
-          "HLD", "Hold",
-          "REJ", "Rejected",
-          "RTB", "Ready To Bill");
+      Map.ofEntries(
+          Map.entry("DFT", FALLBACK_STATUS_NAME),
+          Map.entry("SUB", "Submitted"),
+          Map.entry("APP", "Approved"),
+          Map.entry("BIS", "Billing Issued"),
+          Map.entry("OREJ", "Office Rejected"),
+          Map.entry("HLD", "Hold"),
+          Map.entry("REJ", "Rejected"),
+          Map.entry("RTB", "Ready To Bill"),
+          Map.entry("CAN", "Cancelled"));
 
   private final ReportingUnitRepository reportingUnitRepository;
   private final BlockRepository blockRepository;

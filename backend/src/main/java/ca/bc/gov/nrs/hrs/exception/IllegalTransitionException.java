@@ -34,6 +34,7 @@ public class IllegalTransitionException extends ResponseStatusException {
     getBody().setProperty("code", code);
     if (blockState != null) {
       getBody().setProperty("blockState", blockState);
+      getBody().setProperty("state", blockState);
     }
     getBody().setProperty("retryable", retryable);
   }
