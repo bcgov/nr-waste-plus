@@ -152,9 +152,10 @@ const waitForStableOrigin = (appOrigin: string): Cypress.Chainable<string> => {
           return cy.wrap(current, { log: false });
         }
         if (hops >= 20) {
-          throw new Error(
-            `IdP redirect never left the app origin (${appOrigin}); last seen ${current}`,
-          );
+          // A silent SSO round trip can finish before the first sample. Return
+          // the app origin so the caller can check whether the app is already
+          // authenticated instead of misrouting cy.origin() to the app itself.
+          return cy.wrap(appOrigin, { log: false });
         }
         return settle(current, hops + 1);
       });
@@ -268,6 +269,10 @@ const doLogin = (
   const usernameKey = `${provider}_username`;
   const passwordKey = `${provider}_password`;
 
+  // Suspend the test-body budget before any login command is queued. Cypress
+  // runs support beforeEach and Gherkin Before hooks as command chains, so
+  // pausing inside cy.env().then() is too late when the IdP hop is slow.
+  pauseTestBudget();
   cy.env([usernameKey, passwordKey]).then((env) => {
     const username = env[usernameKey];
     const password = env[passwordKey];
@@ -276,10 +281,8 @@ const doLogin = (
       throw new Error(`Username or password for ${provider} not found.`);
     }
 
-    // The test-body budget starts in the support beforeEach. Login is bounded
-    // by its own command timeouts, so suspend the budget until the session is
-    // established, then restart it for the test body.
-    pauseTestBudget();
+    // Login is bounded by its own command timeouts; the budget restarts after
+    // the session is established so it covers only the test body.
     cy.session(
       `${provider}-${username}`,
       () => {
@@ -301,6 +304,18 @@ const doLogin = (
         const appOrigin = new URL(Cypress.config("baseUrl") as string).origin;
 
         waitForStableOrigin(appOrigin).then((loginOrigin) => {
+          if (loginOrigin === appOrigin) {
+            // No observable IdP hop: either SSO silently signed us in, or the
+            // login button did nothing. The authenticated app shell decides.
+            cy.get("body", { timeout: 10_000 }).should(($body) => {
+              expect(
+                $body.find(".cds--header__name").length,
+                "authenticated app shell after silent SSO",
+              ).to.be.greaterThan(0);
+            });
+            return;
+          }
+
           cy.origin(
             loginOrigin,
             { args: { provider, username, password } },

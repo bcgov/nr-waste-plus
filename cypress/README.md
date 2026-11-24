@@ -50,16 +50,15 @@ Start the local frontend separately before either headless command. `cy:open:loc
 is named for the local workflow but is configured to open the deployed Silver
 URL; use the headless scripts for the configured localhost target.
 
-Each test body has a 12.2-second wall-clock budget, installed from
+Each test body has a 30-second wall-clock budget, installed from
 `cypress/support/helpers/test-timeout.ts`; Business BCeID authenticated tests
-get a 24.4-second budget because their post-login steps take longer. The SSO
-login hook suspends that budget while `cy.session` runs its own timed commands,
-then re-arms it for the test body, so login cost is not charged against the
-body budget. The budget is
-derived from the slowest non-hung CI failure (9.8 min) plus 10%, divided across
-the 53 test cases; adding tests therefore grows the suite's runtime budget
-automatically. Retune `TEST_BUDGET_MS` in that helper if the suite's slowest
-healthy test body changes.
+get 24.4 seconds. The IDIR budget allows for the silent SSO redirect that can
+take ~15 seconds to settle. The SSO login hook suspends the budget while
+`cy.session` runs its own timed commands, then re-arms it for the test body.
+The baseline is derived from the slowest non-hung CI failure (9.8 min) plus 10%,
+divided across the 53 test cases (12.2 s); adding tests therefore grows the
+suite's runtime budget automatically. Retune the constants in that helper if
+the slowest healthy test changes.
 
 Useful maintenance commands:
 

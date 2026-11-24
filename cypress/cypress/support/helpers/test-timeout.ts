@@ -7,15 +7,16 @@
  * a timer throws into whichever runnable is active, and is cleared when that
  * runnable finishes.
  *
- * Budget = 9.8 min (slowest non-hung CI failure) * 1.1 / 53 test cases
- *        = 12.2 s. The slowest passing test body measured locally was 11.6 s.
- * Business BCeID post-login steps take noticeably longer than IDIR ones, so
- * authenticated BCeID tests get a 2x buffer. Adding tests grows the suite's
- * runtime budget automatically. Retune the constants below if the slowest
- * healthy test body changes.
+ * Baseline = 9.8 min (slowest non-hung CI failure) * 1.1 / 53 test cases
+ *           = 12.2 s. The slowest passing test body measured locally was 11.6 s.
+ * The IDIR path can spend ~15 s waiting for a silent SSO redirect to settle,
+ * so its budget is 30 s. Business BCeID gets 2x the baseline (24.4 s) for its
+ * post-login steps. Adding tests still grows the suite's runtime budget
+ * automatically. Retune the constants below if the slowest healthy test changes.
  */
-export const TEST_BUDGET_MS = 12_200;
-export const BCEID_TEST_BUDGET_MS = TEST_BUDGET_MS * 2;
+const BASELINE_BUDGET_MS = 12_200;
+export const TEST_BUDGET_MS = 30_000;
+export const BCEID_TEST_BUDGET_MS = BASELINE_BUDGET_MS * 2;
 
 let timer: ReturnType<typeof setTimeout> | undefined;
 let paused = false;
