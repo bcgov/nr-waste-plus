@@ -31,7 +31,6 @@ import ca.bc.gov.nrs.hrs.repository.block.BlockRequirementRepository;
 import ca.bc.gov.nrs.hrs.repository.block.ReportingUnitRepository;
 import ca.bc.gov.nrs.hrs.repository.block.StatusEventRepository;
 import ca.bc.gov.nrs.hrs.security.ResourceScopeGuard;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.EntityManager;
 import jakarta.servlet.http.HttpServletRequest;
 import java.time.Instant;
@@ -50,7 +49,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.mock.web.MockHttpServletRequest;
@@ -91,9 +89,6 @@ class LifecycleEventServiceTest {
 
   @Mock
   private EntityManager entityManager;
-
-  @Spy
-  private ObjectMapper objectMapper = new ObjectMapper();
 
   @InjectMocks
   private LifecycleEventService lifecycleEventService;

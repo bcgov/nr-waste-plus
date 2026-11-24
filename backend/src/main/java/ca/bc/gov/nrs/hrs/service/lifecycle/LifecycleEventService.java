@@ -62,6 +62,7 @@ public class LifecycleEventService {
   private static final String CONTEXT_LIFECYCLE = "LIFECYCLE";
   private static final String REQ_RATIONALE = "RATIONALE_REQUIRED";
   private static final String REQ_BURNT_PILES = "BURNT_PILES";
+  private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
   private final ReportingUnitRepository reportingUnitRepository;
   private final BlockRepository blockRepository;
@@ -72,7 +73,6 @@ public class LifecycleEventService {
   private final TransitionPolicyService transitionPolicyService;
   private final ResourceScopeGuard resourceScopeGuard;
   private final EntityManager entityManager;
-  private final ObjectMapper objectMapper;
 
   /**
    * Applies a lifecycle event to a submission block.
@@ -165,7 +165,7 @@ public class LifecycleEventService {
     statusEvent.setStatus(targetState);
     statusEvent.setEventType(request.event().trim().toUpperCase(Locale.ROOT));
 
-    var detailsNode = objectMapper.createObjectNode();
+    var detailsNode = OBJECT_MAPPER.createObjectNode();
     detailsNode.put("fromState", currentState);
     if (request.comment() != null && !request.comment().isBlank()) {
       detailsNode.put("comment", request.comment().trim());
@@ -275,7 +275,7 @@ public class LifecycleEventService {
     statusEvent.setStatus(targetState);
     statusEvent.setEventType(request.event().trim().toUpperCase(Locale.ROOT));
 
-    var detailsNode = objectMapper.createObjectNode();
+    var detailsNode = OBJECT_MAPPER.createObjectNode();
     detailsNode.put("fromState", currentState);
     if (request.comment() != null && !request.comment().isBlank()) {
       detailsNode.put("comment", request.comment().trim());
