@@ -50,6 +50,14 @@ Start the local frontend separately before either headless command. `cy:open:loc
 is named for the local workflow but is configured to open the deployed Silver
 URL; use the headless scripts for the configured localhost target.
 
+Each test has a 12.2-second wall-clock budget, installed from
+`cypress/support/helpers/test-timeout.ts`. It bounds the whole test, including
+its hooks, so a hung login or assertion cannot stall a run for minutes. The
+budget is derived from the slowest non-hung CI failure (9.8 min) plus 10%,
+divided across the 53 test cases; adding tests therefore grows the suite's
+runtime budget automatically. Retune `TEST_BUDGET_MS` in that helper if the
+suite's slowest healthy test changes.
+
 Useful maintenance commands:
 
 ```bash

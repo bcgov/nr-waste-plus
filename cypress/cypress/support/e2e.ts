@@ -1,6 +1,9 @@
 import "./commands";
 import "@testing-library/cypress/add-commands";
 import "cypress-real-events";
+import { installTestTimeouts } from "./helpers/test-timeout";
+
+installTestTimeouts();
 
 Cypress.Keyboard.defaults({
   keystrokeDelay: 10,
