@@ -223,7 +223,7 @@ class ReportingUnitSearchServiceTest {
 
     @Test
     @DisplayName("should filter by timber mark when matching reporting units exist")
-    void shouldFilterByTimberMark_whenMatchingRUsExist() {
+    void shouldFilterByTimberMark_whenMatchingReportingUnitsExist() {
       // Arrange
       ReportingUnitSearchParametersDto filters =
           new ReportingUnitSearchParametersDto();
@@ -245,8 +245,10 @@ class ReportingUnitSearchServiceTest {
     }
 
     @Test
-    @DisplayName("should return empty page immediately when no matching reporting units for timber mark")
-    void shouldReturnEmptyPage_whenNoMatchingRUsForTimberMark() {
+    @DisplayName(
+        "should return empty page immediately when no matching reporting units for timber mark"
+    )
+    void shouldReturnEmptyPage_whenNoMatchingReportingUnitsForTimberMark() {
       // Arrange
       ReportingUnitSearchParametersDto filters =
           new ReportingUnitSearchParametersDto();
@@ -266,7 +268,9 @@ class ReportingUnitSearchServiceTest {
     }
 
     @Test
-    @DisplayName("should intersect reporting unit IDs when existing reporting unit filter is present")
+    @DisplayName(
+        "should intersect reporting unit IDs when existing reporting unit filter is present"
+    )
     void shouldIntersectReportingUnitIds_whenExistingRuIdsPresent() {
       // Arrange
       ReportingUnitSearchParametersDto filters =
