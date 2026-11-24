@@ -160,26 +160,8 @@ public class TransitionPolicyService {
             STATE_REJECTED, EVENT_CANCEL, "Cancel", submitterAndAdmin, true, true, false,
             ctx -> STATE_CANCELLED));
 
-    // APPROVED / SUBMISSION_APPROVED transitions
-    Function<TransitionContext, String> autoApproveBillingResolver =
-        context -> isAutoApproveBillingEligible(context) ? STATE_BILLING_APPROVED : null;
-
-    matrix.add(
-        new MatrixEntry(
-            STATE_SUBMISSION_APPROVED, EVENT_AUTO_APPROVE_BILLING, "Auto-approve billing",
-            Set.of(Role.ADMIN), false, false, true, autoApproveBillingResolver));
-    matrix.add(
-        new MatrixEntry(
-            STATE_SUBMISSION_APPROVED, EVENT_APPROVE_BILLING, "Approve for billing",
-            ministryStaffAndAdmin, false, true, false, ctx -> STATE_BILLING_APPROVED));
-    matrix.add(
-        new MatrixEntry(
-            STATE_APPROVED, EVENT_AUTO_APPROVE_BILLING, "Auto-approve billing",
-            Set.of(Role.ADMIN), false, false, true, autoApproveBillingResolver));
-    matrix.add(
-        new MatrixEntry(
-            STATE_APPROVED, EVENT_APPROVE_BILLING, "Approve for billing",
-            ministryStaffAndAdmin, false, true, false, ctx -> STATE_BILLING_APPROVED));
+    // Billing transitions (APPROVE_BILLING, AUTO_APPROVE_BILLING) are deferred until
+    // HBS invoice integration (#1552) lands.
 
     // ERROR resolution transitions
     matrix.add(
@@ -292,6 +274,43 @@ public class TransitionPolicyService {
         normalizedEvent,
         role);
     return TransitionEvaluationResult.allowed(targetState);
+  }
+
+  /**
+   * Checks whether the given event name exists in the transition matrix.
+   *
+   * @param event transition event name
+   * @return true if the event is defined in the transition matrix
+   */
+  public boolean isKnownEvent(String event) {
+    if (event == null || event.isBlank()) {
+      return false;
+    }
+    String normalizedEvent = event.trim().toUpperCase(Locale.ROOT);
+    return transitionMatrix.stream().anyMatch(entry -> entry.event().equals(normalizedEvent));
+  }
+
+  /**
+   * Checks whether an event from the given state is marked as system-only (cannot be triggered
+   * directly via HTTP).
+   *
+   * @param currentState current lifecycle state
+   * @param event transition event name
+   * @return true if the matching transition is system-only
+   */
+  public boolean isSystemOnly(String currentState, String event) {
+    if (event == null || event.isBlank()) {
+      return false;
+    }
+    String normalizedEvent = event.trim().toUpperCase(Locale.ROOT);
+    String normalizedCurrentState =
+        (currentState == null || currentState.isBlank())
+            ? STATE_DRAFT
+            : currentState.trim().toUpperCase(Locale.ROOT);
+    return transitionMatrix.stream()
+        .filter(entry -> entry.fromState().equalsIgnoreCase(normalizedCurrentState))
+        .filter(entry -> entry.event().equalsIgnoreCase(normalizedEvent))
+        .anyMatch(MatrixEntry::isSystemOnly);
   }
 
   /**

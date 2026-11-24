@@ -51,10 +51,7 @@ public class LifecycleEventController {
    * @param request event payload specifying the transition
    * @return 200 OK with the lifecycle event response and strong ETag header
    */
-  @PostMapping({
-    "/{reportingUnitId}/{blockId}/lifecycle-events",
-    "/{reportingUnitId}/blocks/{blockId}/lifecycle-events"
-  })
+  @PostMapping("/{reportingUnitId}/{blockId}/lifecycle-events")
   public ResponseEntity<LifecycleEventResponseDto> submitBlockLifecycleEvent(
       HttpServletRequest servletRequest,
       @AuthenticationPrincipal Jwt jwt,
@@ -144,10 +141,7 @@ public class LifecycleEventController {
    * @param blockId target block identifier
    * @return 200 OK with the lifecycle details and strong ETag header
    */
-  @GetMapping({
-    "/{reportingUnitId}/{blockId}/lifecycle",
-    "/{reportingUnitId}/blocks/{blockId}/lifecycle"
-  })
+  @GetMapping("/{reportingUnitId}/{blockId}/lifecycle")
   public ResponseEntity<LifecycleDetailsDto> getBlockLifecycle(
       @AuthenticationPrincipal Jwt jwt,
       @PathVariable Long reportingUnitId,

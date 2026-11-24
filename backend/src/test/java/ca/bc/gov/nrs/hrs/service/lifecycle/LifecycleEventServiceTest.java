@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -112,6 +113,8 @@ class LifecycleEventServiceTest {
     block.setRevision(5L);
     block.setPlcDate(LocalDate.now().minusMonths(2));
 
+    lenient().when(transitionPolicyService.isKnownEvent(any())).thenReturn(true);
+
     submitterJwt =
         Jwt.withTokenValue("mock-token")
             .header("alg", "none")
@@ -183,6 +186,8 @@ class LifecycleEventServiceTest {
       assertThat(captured.getReportingUnitId()).isNull(); // XOR subject check
       assertThat(captured.getStatus()).isEqualTo("SUBMITTED");
       assertThat(captured.getEventType()).isEqualTo("SUBMIT");
+      assertThat(captured.getDetails().get("previousState").asText()).isEqualTo("DRAFT");
+      assertThat(captured.getDetails().get("hasComment").asBoolean()).isTrue();
 
       ArgumentCaptor<BlockCommentEntity> commentCaptor =
           ArgumentCaptor.forClass(BlockCommentEntity.class);
@@ -192,6 +197,103 @@ class LifecycleEventServiceTest {
       assertThat(capturedComment.getContext()).isEqualTo("LIFECYCLE");
       assertThat(capturedComment.getComment()).isEqualTo("Submission comments");
       assertThat(capturedComment.getStatusEventId()).isEqualTo(999L);
+    }
+
+    @Test
+    @DisplayName("Unknown event code throws 400 BAD_REQUEST before state lookup")
+    void recordBlockLifecycleEvent_unknownEvent_throws400() {
+      MockHttpServletRequest request = new MockHttpServletRequest();
+      request.addHeader("If-Match", "\"5\"");
+
+      when(transitionPolicyService.isKnownEvent("UNKNOWN_EVENT")).thenReturn(false);
+
+      LifecycleEventRequestDto requestDto = new LifecycleEventRequestDto(" unknown_event ", null);
+
+      assertThatThrownBy(
+              () ->
+                  lifecycleEventService.recordBlockLifecycleEvent(
+                      request, submitterJwt, RU_ID, BLOCK_ID, requestDto))
+          .isInstanceOf(ResponseStatusException.class)
+          .satisfies(
+              ex ->
+                  assertThat(((ResponseStatusException) ex).getStatusCode())
+                      .isEqualTo(HttpStatus.BAD_REQUEST));
+
+      verify(reportingUnitRepository, never()).findByIdAndDeletedFalse(any());
+      verify(statusEventRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("Padded ' submit ' with null plcDate still triggers readiness check and throws 422")
+    void recordBlockLifecycleEvent_paddedSubmitWithNullPlcDate_throws422() {
+      MockHttpServletRequest request = new MockHttpServletRequest();
+      request.addHeader("If-Match", "\"5\"");
+      block.setPlcDate(null);
+
+      when(reportingUnitRepository.findByIdAndDeletedFalse(RU_ID))
+          .thenReturn(Optional.of(reportingUnit));
+      when(blockRepository.findByIdAndReportingUnitIdAndDeletedFalse(BLOCK_ID, RU_ID))
+          .thenReturn(Optional.of(block));
+      when(statusEventRepository.findFirstByBlockIdOrderByCreatedAtDescIdDesc(BLOCK_ID))
+          .thenReturn(Optional.empty());
+      when(blockRequirementRepository.findByBlockIdAndDeletedFalse(BLOCK_ID))
+          .thenReturn(Collections.emptyList());
+      when(transitionPolicyService.evaluate(
+              eq("DRAFT"),
+              eq("SUBMIT"),
+              eq(Role.SUBMITTER),
+              eq(IdentityProvider.BUSINESS_BCEID),
+              any()))
+          .thenReturn(TransitionEvaluationResult.allowed("SUBMITTED"));
+
+      LifecycleEventRequestDto requestDto = new LifecycleEventRequestDto(" submit ", null);
+
+      assertThatThrownBy(
+              () ->
+                  lifecycleEventService.recordBlockLifecycleEvent(
+                      request, submitterJwt, RU_ID, BLOCK_ID, requestDto))
+          .isInstanceOf(ResponseStatusException.class)
+          .satisfies(
+              ex -> {
+                ResponseStatusException rse = (ResponseStatusException) ex;
+                assertThat(rse.getStatusCode()).isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY);
+                assertThat(rse.getBody().getProperties())
+                    .containsEntry("code", "PRECONDITION_FAILED");
+              });
+
+      verify(statusEventRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("System-only event triggered over HTTP throws 403 FORBIDDEN")
+    void recordBlockLifecycleEvent_systemOnlyEvent_throws403() {
+      MockHttpServletRequest request = new MockHttpServletRequest();
+      request.addHeader("If-Match", "\"5\"");
+
+      when(reportingUnitRepository.findByIdAndDeletedFalse(RU_ID))
+          .thenReturn(Optional.of(reportingUnit));
+      when(blockRepository.findByIdAndReportingUnitIdAndDeletedFalse(BLOCK_ID, RU_ID))
+          .thenReturn(Optional.of(block));
+      when(statusEventRepository.findFirstByBlockIdOrderByCreatedAtDescIdDesc(BLOCK_ID))
+          .thenReturn(Optional.empty());
+      when(transitionPolicyService.isSystemOnly("DRAFT", "SUBMIT")).thenReturn(true);
+
+      LifecycleEventRequestDto requestDto = new LifecycleEventRequestDto("SUBMIT", null);
+
+      assertThatThrownBy(
+              () ->
+                  lifecycleEventService.recordBlockLifecycleEvent(
+                      request, submitterJwt, RU_ID, BLOCK_ID, requestDto))
+          .isInstanceOf(ResponseStatusException.class)
+          .satisfies(
+              ex -> {
+                ResponseStatusException rse = (ResponseStatusException) ex;
+                assertThat(rse.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+                assertThat(rse.getBody().getProperties())
+                    .containsEntry("code", "SYSTEM_ONLY_EVENT");
+              });
+
+      verify(statusEventRepository, never()).save(any());
     }
 
     @Test

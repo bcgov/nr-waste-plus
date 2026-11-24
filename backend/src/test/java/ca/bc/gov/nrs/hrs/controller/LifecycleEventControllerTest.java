@@ -120,32 +120,6 @@ class LifecycleEventControllerTest {
   }
 
   @Test
-  @DisplayName("POST /{ruId}/blocks/{blockId}/lifecycle-events returns 200 with alias path")
-  void submitBlockLifecycleEvent_blocksAliasPath_returnsOk() throws Exception {
-    Instant occurredAt = Instant.parse("2026-08-24T12:00:00Z");
-    LifecycleEventResponseDto responseDto =
-        new LifecycleEventResponseDto(
-            RU_ID, BLOCK_ID, "DRAFT", "SUBMITTED", "SUBMIT", 15L, occurredAt);
-
-    when(lifecycleEventService.recordBlockLifecycleEvent(
-            any(), isNull(), eq(RU_ID), eq(BLOCK_ID), any(LifecycleEventRequestDto.class)))
-        .thenReturn(responseDto);
-
-    mockMvc
-        .perform(
-            post("/api/reporting-units/{ruId}/blocks/{blockId}/lifecycle-events", RU_ID, BLOCK_ID)
-                .contentType(MediaType.APPLICATION_JSON)
-                .header("Idempotency-Key", IDEMPOTENCY_KEY)
-                .header(HttpHeaders.IF_MATCH, "\"14\"")
-                .content("""
-                    { "event": "SUBMIT", "comment": "Ready for review" }
-                    """))
-        .andExpect(status().isOk())
-        .andExpect(header().string(HttpHeaders.ETAG, "\"15\""))
-        .andExpect(jsonPath("$.state").value("SUBMITTED"));
-  }
-
-  @Test
   @DisplayName("POST /{ruId}/lifecycle-events returns 200 for reporting-unit scoped transition")
   void submitReportingUnitLifecycleEvent_returnsOkWithETag() throws Exception {
     Instant occurredAt = Instant.parse("2026-08-24T12:00:00Z");
@@ -353,25 +327,6 @@ class LifecycleEventControllerTest {
         .andExpect(jsonPath("$.history[0].fromState").value("DRAFT"))
         .andExpect(jsonPath("$.history[0].toState").value("SUBMITTED"))
         .andExpect(jsonPath("$.history[0].actor").value("idir\\jdoe"));
-
-    verify(resourceScopeGuard).verify(isNull(Jwt.class), eq(RU_ID), eq("GET"));
-  }
-
-  @Test
-  @DisplayName("GET /{ruId}/blocks/{blockId}/lifecycle returns 200 with alias path")
-  void getBlockLifecycle_blocksAliasPath_returnsOk() throws Exception {
-    LifecycleDetailsDto detailsDto =
-        new LifecycleDetailsDto("SUBMITTED", List.of(), List.of());
-    LifecycleViewResult viewResult = new LifecycleViewResult(detailsDto, 15L);
-
-    when(lifecycleEventService.viewBlockLifecycle(isNull(), eq(RU_ID), eq(BLOCK_ID)))
-        .thenReturn(viewResult);
-
-    mockMvc
-        .perform(get("/api/reporting-units/{ruId}/blocks/{blockId}/lifecycle", RU_ID, BLOCK_ID))
-        .andExpect(status().isOk())
-        .andExpect(header().string(HttpHeaders.ETAG, "\"15\""))
-        .andExpect(jsonPath("$.state").value("SUBMITTED"));
 
     verify(resourceScopeGuard).verify(isNull(Jwt.class), eq(RU_ID), eq("GET"));
   }

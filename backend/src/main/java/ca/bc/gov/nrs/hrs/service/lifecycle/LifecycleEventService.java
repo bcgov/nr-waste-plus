@@ -93,7 +93,7 @@ public class LifecycleEventService {
       Long blockId,
       LifecycleEventRequestDto request) {
 
-    validateRequest(request);
+    String normalizedEvent = validateAndNormalizeEvent(request);
 
     ReportingUnitEntity reportingUnit =
         reportingUnitRepository
@@ -111,12 +111,25 @@ public class LifecycleEventService {
 
     String currentState = resolveBlockState(blockId, block.isDraft());
 
+    if (transitionPolicyService.isSystemOnly(currentState, normalizedEvent)) {
+      ResponseStatusException ex =
+          new ResponseStatusException(
+              HttpStatus.FORBIDDEN,
+              "Event '" + normalizedEvent + "' is system-only and cannot be triggered via HTTP");
+      ex.getBody().setProperty("code", "SYSTEM_ONLY_EVENT");
+      ex.getBody().setProperty("state", currentState);
+      ex.getBody().setProperty("blockState", currentState);
+      ex.getBody().setProperty("retryable", false);
+      throw ex;
+    }
+
     Role role = resolveActorRole(jwt, reportingUnit.getClientNumber());
     IdentityProvider provider = JwtPrincipalUtil.getIdentityProvider(jwt);
     TransitionContext context = buildBlockTransitionContext(blockId, block.getPlcDate());
 
     TransitionEvaluationResult result =
-        transitionPolicyService.evaluate(currentState, request.event(), role, provider, context);
+        transitionPolicyService.evaluate(
+            currentState, normalizedEvent, role, provider, context);
 
     if (!result.allowed()) {
       log.warn(
@@ -137,7 +150,7 @@ public class LifecycleEventService {
           result.reason(), "ILLEGAL_TRANSITION", currentState, false);
     }
 
-    if (transitionPolicyService.isCommentRequired(currentState, request.event())) {
+    if (transitionPolicyService.isCommentRequired(currentState, normalizedEvent)) {
       if (request.comment() == null || request.comment().isBlank()) {
         ResponseStatusException ex =
             new ResponseStatusException(
@@ -150,7 +163,7 @@ public class LifecycleEventService {
       }
     }
 
-    if (TransitionPolicyService.EVENT_SUBMIT.equalsIgnoreCase(request.event())) {
+    if (TransitionPolicyService.EVENT_SUBMIT.equals(normalizedEvent)) {
       validateBlockSubmissionReadiness(block, currentState);
     }
 
@@ -163,17 +176,16 @@ public class LifecycleEventService {
     statusEvent.setBlockId(block.getId());
     statusEvent.setReportingUnitId(null);
     statusEvent.setStatus(targetState);
-    statusEvent.setEventType(request.event().trim().toUpperCase(Locale.ROOT));
+    statusEvent.setEventType(normalizedEvent);
 
+    boolean hasComment = request.comment() != null && !request.comment().isBlank();
     var detailsNode = OBJECT_MAPPER.createObjectNode();
-    detailsNode.put("fromState", currentState);
-    if (request.comment() != null && !request.comment().isBlank()) {
-      detailsNode.put("comment", request.comment().trim());
-    }
+    detailsNode.put("previousState", currentState);
+    detailsNode.put("hasComment", hasComment);
     statusEvent.setDetails(detailsNode);
     statusEvent = statusEventRepository.save(statusEvent);
 
-    if (request.comment() != null && !request.comment().isBlank()) {
+    if (hasComment) {
       BlockCommentEntity commentEntity = new BlockCommentEntity();
       commentEntity.setBlockId(block.getId());
       commentEntity.setContext(CONTEXT_LIFECYCLE);
@@ -192,7 +204,7 @@ public class LifecycleEventService {
         block.getId(),
         currentState,
         targetState,
-        request.event().trim().toUpperCase(Locale.ROOT),
+        normalizedEvent,
         block.getRevision(),
         occurredAt);
   }
@@ -214,7 +226,7 @@ public class LifecycleEventService {
       Long reportingUnitId,
       LifecycleEventRequestDto request) {
 
-    validateRequest(request);
+    String normalizedEvent = validateAndNormalizeEvent(request);
 
     ReportingUnitEntity reportingUnit =
         reportingUnitRepository
@@ -227,12 +239,24 @@ public class LifecycleEventService {
 
     String currentState = resolveReportingUnitState(reportingUnitId);
 
+    if (transitionPolicyService.isSystemOnly(currentState, normalizedEvent)) {
+      ResponseStatusException ex =
+          new ResponseStatusException(
+              HttpStatus.FORBIDDEN,
+              "Event '" + normalizedEvent + "' is system-only and cannot be triggered via HTTP");
+      ex.getBody().setProperty("code", "SYSTEM_ONLY_EVENT");
+      ex.getBody().setProperty("state", currentState);
+      ex.getBody().setProperty("blockState", currentState);
+      ex.getBody().setProperty("retryable", false);
+      throw ex;
+    }
+
     Role role = resolveActorRole(jwt, reportingUnit.getClientNumber());
     IdentityProvider provider = JwtPrincipalUtil.getIdentityProvider(jwt);
 
     TransitionEvaluationResult result =
         transitionPolicyService.evaluate(
-            currentState, request.event(), role, provider, TransitionContext.empty());
+            currentState, normalizedEvent, role, provider, TransitionContext.empty());
 
     if (!result.allowed()) {
       log.warn(
@@ -252,7 +276,7 @@ public class LifecycleEventService {
           result.reason(), "ILLEGAL_TRANSITION", currentState, false);
     }
 
-    if (transitionPolicyService.isCommentRequired(currentState, request.event())) {
+    if (transitionPolicyService.isCommentRequired(currentState, normalizedEvent)) {
       if (request.comment() == null || request.comment().isBlank()) {
         ResponseStatusException ex =
             new ResponseStatusException(
@@ -273,13 +297,12 @@ public class LifecycleEventService {
     statusEvent.setReportingUnitId(reportingUnit.getId());
     statusEvent.setBlockId(null);
     statusEvent.setStatus(targetState);
-    statusEvent.setEventType(request.event().trim().toUpperCase(Locale.ROOT));
+    statusEvent.setEventType(normalizedEvent);
 
+    boolean hasComment = request.comment() != null && !request.comment().isBlank();
     var detailsNode = OBJECT_MAPPER.createObjectNode();
-    detailsNode.put("fromState", currentState);
-    if (request.comment() != null && !request.comment().isBlank()) {
-      detailsNode.put("comment", request.comment().trim());
-    }
+    detailsNode.put("previousState", currentState);
+    detailsNode.put("hasComment", hasComment);
     statusEvent.setDetails(detailsNode);
     statusEvent = statusEventRepository.save(statusEvent);
     entityManager.flush();
@@ -292,15 +315,21 @@ public class LifecycleEventService {
         null,
         currentState,
         targetState,
-        request.event().trim().toUpperCase(Locale.ROOT),
+        normalizedEvent,
         reportingUnit.getRevision(),
         occurredAt);
   }
 
-  private void validateRequest(LifecycleEventRequestDto request) {
+  private String validateAndNormalizeEvent(LifecycleEventRequestDto request) {
     if (request == null || request.event() == null || request.event().isBlank()) {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Event is required");
     }
+    String normalizedEvent = request.event().trim().toUpperCase(Locale.ROOT);
+    if (!transitionPolicyService.isKnownEvent(normalizedEvent)) {
+      throw new ResponseStatusException(
+          HttpStatus.BAD_REQUEST, "Unknown lifecycle event: " + normalizedEvent);
+    }
+    return normalizedEvent;
   }
 
   private void validateTenantAccess(Jwt jwt, ReportingUnitEntity reportingUnit) {
@@ -514,7 +543,9 @@ public class LifecycleEventService {
     String previousState = defaultInitialState;
     for (StatusEventEntity se : events) {
       String fromState = previousState;
-      if (se.getDetails() != null && se.getDetails().has("fromState")) {
+      if (se.getDetails() != null && se.getDetails().has("previousState")) {
+        fromState = se.getDetails().get("previousState").asText();
+      } else if (se.getDetails() != null && se.getDetails().has("fromState")) {
         fromState = se.getDetails().get("fromState").asText();
       }
       String comment = null;
