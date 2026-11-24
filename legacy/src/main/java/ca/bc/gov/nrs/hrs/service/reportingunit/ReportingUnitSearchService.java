@@ -98,7 +98,8 @@ public class ReportingUnitSearchService {
    * Narrows {@code filters.reportingUnitIds} to reporting units matching {@code filters.timberMark}
    * so the main query can drive off the reporting-unit primary key.
    *
-   * @return {@code true} if the main search should proceed, or {@code false} if no results can match
+   * @return {@code true} if the main search should proceed, or {@code false} if no results can
+   *     match
    */
   private boolean applyTimberMarkPreFilter(ReportingUnitSearchParametersDto filters) {
     String rawTimberMark = filters.getTimberMark();
