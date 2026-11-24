@@ -5,27 +5,32 @@ import java.net.URI;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
+import org.springframework.lang.Nullable;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.context.request.ServletWebRequest;
+import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
 /**
- * Renders {@link ResponseStatusException} as an RFC 9457 problem whose {@code instance} is the
- * request path.
+ * Renders Spring MVC errors as RFC 9457 problems whose {@code instance} is the request path.
  *
- * <p>Spring Boot's ProblemDetails handler is ordered at 0, so it takes
- * {@code ResponseStatusException} before {@link GlobalExceptionHandler} does. Spring Framework
- * 7.1 also stopped filling in the {@code instance} by default. This advice runs first and sets it
- * explicitly.
+ * <p>Spring Boot's ProblemDetails handler is ordered at 0, so it takes the MVC exceptions it
+ * handles before {@link GlobalExceptionHandler} does. Spring Framework 7.1 also stopped filling in
+ * the {@code instance} by default. This advice runs first: it stamps {@code instance} on every
+ * problem it renders and keeps the explicit rendering of {@link ResponseStatusException}.
  */
 @RestControllerAdvice
 @Order(Ordered.HIGHEST_PRECEDENCE)
 @Slf4j
-public class ResponseStatusExceptionAdvice {
+public class MvcProblemDetailAdvice extends ResponseEntityExceptionHandler {
 
   /**
    * Handles {@link ResponseStatusException} instances raised by application code.
@@ -58,5 +63,31 @@ public class ResponseStatusExceptionAdvice {
     return ResponseEntity.status(status)
         .contentType(MediaType.APPLICATION_PROBLEM_JSON)
         .body(problem);
+  }
+
+  /**
+   * Stamps the request path as {@code instance} on problems rendered by the base handler.
+   *
+   * <p>Spring Framework 7.1 no longer fills in {@code instance}, so 405, 404, 415 and the other
+   * MVC errors that {@link ResponseEntityExceptionHandler} handles would render without it.
+   */
+  @Override
+  protected ResponseEntity<Object> handleExceptionInternal(
+      Exception ex,
+      @Nullable Object body,
+      HttpHeaders headers,
+      HttpStatusCode statusCode,
+      WebRequest request) {
+
+    ResponseEntity<Object> response =
+        super.handleExceptionInternal(ex, body, headers, statusCode, request);
+
+    if (response.getBody() instanceof ProblemDetail problem
+        && problem.getInstance() == null
+        && request instanceof ServletWebRequest servletRequest) {
+      problem.setInstance(URI.create(servletRequest.getRequest().getRequestURI()));
+    }
+
+    return response;
   }
 }

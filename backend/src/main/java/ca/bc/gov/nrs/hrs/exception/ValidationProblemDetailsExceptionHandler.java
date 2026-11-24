@@ -10,6 +10,7 @@ import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
+import org.springframework.lang.Nullable;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.context.request.ServletWebRequest;
@@ -38,7 +39,9 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
  *
  * <p>Every exception path except {@link MethodArgumentNotValidException} is inherited unchanged
  * from {@link ResponseEntityExceptionHandler}, so status codes and bodies stay identical to the
- * previous behavior.
+ * previous behavior. Spring Framework 7.1 stopped filling in the ProblemDetail {@code instance}
+ * field on those inherited paths, so {@code handleExceptionInternal} stamps it with the request
+ * path whenever the base handler leaves it empty.
  */
 @ControllerAdvice
 @Order(0)
@@ -86,6 +89,31 @@ public class ValidationProblemDetailsExceptionHandler extends ResponseEntityExce
 
     return handleExceptionInternal(
         ex, problem, responseHeaders, HttpStatus.UNPROCESSABLE_CONTENT, request);
+  }
+
+  /**
+   * Stamps the request path as {@code instance} on problems rendered by the base handler.
+   *
+   * <p>Spring Framework 7.1 no longer fills in {@code instance}, so 405, 404, 415 and the other
+   * MVC errors that {@link ResponseEntityExceptionHandler} handles would render without it.
+   * Validation responses already set their own instance, so they pass through untouched.
+   */
+  @Override
+  protected ResponseEntity<Object> handleExceptionInternal(
+      Exception ex,
+      @Nullable Object body,
+      HttpHeaders headers,
+      HttpStatusCode statusCode,
+      WebRequest request) {
+
+    ResponseEntity<Object> response =
+        super.handleExceptionInternal(ex, body, headers, statusCode, request);
+
+    if (response.getBody() instanceof ProblemDetail problem && problem.getInstance() == null) {
+      problem.setInstance(instanceUri(request));
+    }
+
+    return response;
   }
 
   private static URI instanceUri(WebRequest request) {
