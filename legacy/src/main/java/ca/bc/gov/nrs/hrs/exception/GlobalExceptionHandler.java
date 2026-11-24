@@ -14,7 +14,6 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import org.springframework.web.server.ResponseStatusException;
 
 /**
  * Global exception handler that converts exceptions into RFC 7807 ProblemDetail
@@ -94,39 +93,6 @@ public class GlobalExceptionHandler {
     problem.setInstance(URI.create(request.getRequestURI()));
 
     return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-        .contentType(MediaType.APPLICATION_PROBLEM_JSON)
-        .body(problem);
-  }
-
-  /**
-   * Handles {@link ResponseStatusException} instances raised by application code.
-   *
-   * @param ex the exception to translate
-   * @param request the current HTTP request
-   * @return a {@link ProblemDetail} response using the exception status
-   */
-  @ExceptionHandler(ResponseStatusException.class)
-  public ResponseEntity<ProblemDetail> handleResponseStatusException(
-      ResponseStatusException ex, HttpServletRequest request) {
-
-    var status = ex.getStatusCode();
-
-    if (status.is5xxServerError()) {
-      log.error("ResponseStatusException: {}", ex.getMessage(), ex);
-    } else {
-      log.warn("ResponseStatusException: {}", ex.getMessage());
-    }
-
-    String title = HttpStatus.resolve(status.value()) != null
-        ? HttpStatus.resolve(status.value()).getReasonPhrase()
-        : status.toString();
-
-    ProblemDetail problem = ProblemDetail.forStatus(status);
-    problem.setTitle(title);
-    problem.setDetail(ex.getReason() != null ? ex.getReason() : ex.getMessage());
-    problem.setInstance(URI.create(request.getRequestURI()));
-
-    return ResponseEntity.status(status)
         .contentType(MediaType.APPLICATION_PROBLEM_JSON)
         .body(problem);
   }
