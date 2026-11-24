@@ -563,6 +563,9 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
     var tree = (tools.jackson.databind.node.ObjectNode) jsonMapper.readTree(body);
     tree.putNull("createdAt");
     tree.putNull("updatedAt");
+    assertThat(tree.get("plcDate").asString())
+        .isEqualTo(java.time.LocalDate.now().minusDays(1).toString());
+    tree.putNull("plcDate");
 
     GoldenFiles.assertMatches(
         "reporting-units/block-details.json", jsonMapper.writeValueAsString(tree));

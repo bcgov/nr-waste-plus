@@ -4,6 +4,7 @@ import ca.bc.gov.nrs.hrs.dto.base.CodeDescriptionDto;
 import ca.bc.gov.nrs.hrs.dto.block.BlockListItemDto;
 import ca.bc.gov.nrs.hrs.dto.reportingunit.CreateReportingUnitRequestDto;
 import ca.bc.gov.nrs.hrs.dto.reportingunit.ReportingUnitLegacyDetailsDto;
+import ca.bc.gov.nrs.hrs.dto.search.DistrictAverageVolumeLegacyDto;
 import ca.bc.gov.nrs.hrs.dto.search.MyForestClientSearchResultDto;
 import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchExpandedDto;
 import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchParametersDto;
@@ -83,6 +84,32 @@ public class LegacyApiProvider implements ReportingUnitSearchProvider {
   }
 
   /**
+   * Retrieve harvest status codes from the legacy API.
+   *
+   * <p>Delegates to {@link LegacyCodesClient} to fetch a list of all available harvest status
+   * codes. If the legacy API is unavailable, returns an empty list.
+   *
+   * @return a list of {@link CodeDescriptionDto} containing harvest status codes and descriptions;
+   *     never null, may be empty if API call fails or no codes are available
+   */
+  public List<CodeDescriptionDto> getHarvestStatusCodes() {
+    return codesClient.getHarvestStatusCodes();
+  }
+
+  /**
+   * Retrieve waste maturity type codes from the legacy API.
+   *
+   * <p>Delegates to {@link LegacyCodesClient} to fetch a list of all available maturity type codes.
+   * If the legacy API is unavailable, returns an empty list.
+   *
+   * @return a list of {@link CodeDescriptionDto} containing maturity type codes and descriptions;
+   *     never null, may be empty if API call fails or no codes are available
+   */
+  public List<CodeDescriptionDto> getMaturityTypeCodes() {
+    return codesClient.getMaturityTypeCodes();
+  }
+
+  /**
    * Search reporting units in the legacy API using provided filters and pageable information.
    *
    * <p>The legacy API responds with a paged payload; the delegated client converts the content into
@@ -135,6 +162,19 @@ public class LegacyApiProvider implements ReportingUnitSearchProvider {
       Set<String> values, Pageable pageable) {
     return myForestClientClient.searchMyClients(values, pageable);
   }
+
+  /**
+   * Retrieve district average volume/stratum rows for a block from the legacy API.
+   *
+   * @param ruId the reporting unit ID
+   * @param wasteAssessmentAreaId the block/waste assessment area ID
+   * @return district average volume rows; never null
+   */
+  public List<DistrictAverageVolumeLegacyDto> getDistrictAverageVolumes(
+      Long ruId, Long wasteAssessmentAreaId) {
+    return reportingUnitClient.getDistrictAverageVolumes(ruId, wasteAssessmentAreaId);
+  }
+
 
   /**
    * Retrieve detailed information for a specific reporting unit from the legacy API.
