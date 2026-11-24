@@ -10,10 +10,20 @@ import { freshTotp, generateTotp } from "./cypress/support/helpers/totp";
 dotenv.config();
 
 const cypressCredentials = {
-  idir_username: process.env.idir_username ?? process.env.CYPRESS_idir_username,
-  idir_password: process.env.idir_password ?? process.env.CYPRESS_idir_password,
+  // `idir_username2`/`idir_password2` are the MFA-exempt local accounts; they
+  // take precedence over the older local values. CI supplies CYPRESS_* values.
+  idir_username:
+    process.env.idir_username2 ??
+    process.env.idir_username ??
+    process.env.CYPRESS_idir_username,
+  idir_password:
+    process.env.idir_password2 ??
+    process.env.idir_password ??
+    process.env.CYPRESS_idir_password,
   bceid_username: process.env.bceid_username ?? process.env.CYPRESS_bceid_username,
   bceid_password: process.env.bceid_password ?? process.env.CYPRESS_bceid_password,
+  idir_totp_secret:
+    process.env.idir_totp_secret ?? process.env.CYPRESS_idir_totp_secret,
 };
 
 const A11Y_REPORT_FILE = path.resolve(__dirname, "reports", "a11y", "a11y-results.json");

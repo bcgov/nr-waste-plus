@@ -103,6 +103,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CYPRESS_idir_password: ${{ secrets.IDIR_CSS_PASSWORD }}
           CYPRESS_idir_username: ${{ secrets.IDIR_CSS_USERNAME }}
+          CYPRESS_idir_totp_secret: ${{ secrets.IDIR_CSS_TOTP_SECRET }}
           CYPRESS_bceid_password: ${{ secrets.BCEID_UAT_PASSWORD2 }}
           CYPRESS_bceid_username: ${{ secrets.BCEID_UAT_USERNAME2 }}
 
