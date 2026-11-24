@@ -153,7 +153,7 @@ public final class ReportingUnitQueryConstants {
   /**
    * Lookup query to resolve matching reporting unit IDs for a given timber mark,
    * including both the direct reporting unit and any parent block reporting units.
-   * Uses a CTE to scan WASTE_ASSESSMENT_AREA once and joins parent rows by primary key.
+   * Uses a CTE for matched assessment areas and joins parent rows by primary key.
    */
   public static final String FIND_RU_IDS_BY_TIMBER_MARK = """
       WITH matched AS (
