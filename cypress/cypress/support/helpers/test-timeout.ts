@@ -9,12 +9,17 @@
  *
  * Budget = 9.8 min (slowest non-hung CI failure) * 1.1 / 53 test cases
  *        = 12.2 s. The slowest passing test body measured locally was 11.6 s.
- * Adding tests therefore grows the suite's runtime budget automatically.
- * Retune `TEST_BUDGET_MS` below if the slowest healthy test body changes.
+ * Business BCeID post-login steps take noticeably longer than IDIR ones, so
+ * authenticated BCeID tests get a 2x buffer. Adding tests grows the suite's
+ * runtime budget automatically. Retune the constants below if the slowest
+ * healthy test body changes.
  */
-const TEST_BUDGET_MS = 12_200;
+export const TEST_BUDGET_MS = 12_200;
+export const BCEID_TEST_BUDGET_MS = TEST_BUDGET_MS * 2;
 
 let timer: ReturnType<typeof setTimeout> | undefined;
+let paused = false;
+let restartedAfterLogin = false;
 
 const clearTimer = (): void => {
   if (timer !== undefined) {
@@ -32,21 +37,38 @@ const armTimer = (ms: number): void => {
   }, ms);
 };
 
-Cypress.on("test:after:run", clearTimer);
+Cypress.on("test:after:run", () => {
+  clearTimer();
+  paused = false;
+  restartedAfterLogin = false;
+});
 
 /** Suspends the budget while a login hook runs its own timed commands. */
 export const pauseTestBudget = (): void => {
+  paused = true;
   clearTimer();
 };
 
 /** Starts a fresh budget, used after login so it bounds only the test body. */
 export const restartTestBudget = (ms: number = TEST_BUDGET_MS): void => {
+  paused = false;
+  restartedAfterLogin = true;
   armTimer(ms);
 };
 
-/** Installs the per-test budget in a support-file `beforeEach`. */
+/**
+ * Installs the per-test budget in a support-file `beforeEach`.
+ *
+ * Gherkin `Before` hooks and support `beforeEach` hooks can run in either
+ * order, so a pause issued before this hook runs is honoured instead of being
+ * overwritten by a fresh timer.
+ */
 export const installTestTimeouts = (): void => {
   beforeEach(() => {
+    if (paused || restartedAfterLogin) {
+      paused = false;
+      return;
+    }
     armTimer(TEST_BUDGET_MS);
   });
 };

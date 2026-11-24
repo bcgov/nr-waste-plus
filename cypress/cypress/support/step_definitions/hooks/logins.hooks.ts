@@ -1,5 +1,6 @@
 import { Before, Step } from "@badeball/cypress-cucumber-preprocessor";
 import {
+  BCEID_TEST_BUDGET_MS,
   pauseTestBudget,
   restartTestBudget,
 } from "../../helpers/test-timeout";
@@ -131,26 +132,29 @@ const assertBackendAcceptsSession = (): void => {
 };
 
 /**
- * Waits until the browser origin stops changing across the broker redirect
- * chain.
+ * Waits until the browser has left the app origin and settled on the IdP
+ * origin across the broker redirect chain.
  *
  * The realm hands off through several hosted pages before the login form
  * appears (app → loginproxy realm → the broker's own login page, e.g.
- * `logontest7.gov.bc.ca` for BCeID or Azure AD for IDIR). The first
- * cross-origin hop is therefore not necessarily the last, and `cy.origin`
- * must be pinned to the origin that actually hosts the form.
- *
- * Samples the origin repeatedly until two consecutive samples agree (or the
- * hop budget runs out).
+ * `logontest7.gov.bc.ca` for BCeID or Azure AD for IDIR). Two consecutive
+ * samples that agree are not enough on their own: sampling before the first
+ * hop yields the app origin twice, and `cy.origin()` then rejects it as
+ * identical to the top origin. Only a stable non-app origin is usable.
  */
-const waitForStableOrigin = (): Cypress.Chainable<string> => {
+const waitForStableOrigin = (appOrigin: string): Cypress.Chainable<string> => {
   const settle = (previous: string, hops: number): Cypress.Chainable<string> =>
     cy
       .wait(750, { log: false })
       .then(() => cy.location("origin", { timeout: 30_000 }))
       .then((current) => {
-        if (current === previous || hops >= 12) {
+        if (current !== appOrigin && current === previous) {
           return cy.wrap(current, { log: false });
+        }
+        if (hops >= 20) {
+          throw new Error(
+            `IdP redirect never left the app origin (${appOrigin}); last seen ${current}`,
+          );
         }
         return settle(current, hops + 1);
       });
@@ -296,7 +300,7 @@ const doLogin = (
         // stays inside `cy.origin` and nothing depends on a hardcoded IdP host.
         const appOrigin = new URL(Cypress.config("baseUrl") as string).origin;
 
-        waitForStableOrigin().then((loginOrigin) => {
+        waitForStableOrigin(appOrigin).then((loginOrigin) => {
           cy.origin(
             loginOrigin,
             { args: { provider, username, password } },
@@ -360,7 +364,9 @@ const doLogin = (
         // spec, instead of replaying a dead session into every later one.
         cacheAcrossSpecs: true,
       },
-    ).then(() => restartTestBudget());
+    ).then(() =>
+      restartTestBudget(provider === "bceid" ? BCEID_TEST_BUDGET_MS : undefined),
+    );
     cy.visit(afterLoginLocation);
   });
 };
