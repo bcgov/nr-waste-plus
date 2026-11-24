@@ -155,12 +155,12 @@ public final class ReportingUnitQueryConstants {
    * including both the direct reporting unit and any parent block reporting units.
    */
   public static final String FIND_RU_IDS_BY_TIMBER_MARK = """
-      SELECT DISTINCT tm.REPORTING_UNIT_ID
+      SELECT tm.REPORTING_UNIT_ID
       FROM WASTE_ASSESSMENT_AREA tm
       WHERE UPPER(tm.TIMBER_MARK) = UPPER(:timberMark)
          OR UPPER(tm.DRAFT_TIMBER_MARK) = UPPER(:timberMark)
       UNION
-      SELECT DISTINCT parent.REPORTING_UNIT_ID
+      SELECT parent.REPORTING_UNIT_ID
       FROM WASTE_ASSESSMENT_AREA tm_child
       JOIN WASTE_ASSESSMENT_AREA parent
         ON parent.WASTE_ASSESSMENT_AREA_ID = tm_child.PARENT_WAA_ID

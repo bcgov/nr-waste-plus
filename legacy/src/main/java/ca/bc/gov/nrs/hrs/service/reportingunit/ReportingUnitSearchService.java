@@ -88,19 +88,35 @@ public class ReportingUnitSearchService {
     if (filters.getTimberMark() != null && !filters.getTimberMark().isBlank()
         && !LegacyConstants.NOVALUE.equalsIgnoreCase(filters.getTimberMark())) {
       String trimmedTimberMark = filters.getTimberMark().trim();
-      List<Long> matchingRuIds = ruRepository.findReportingUnitIdsByTimberMark(trimmedTimberMark);
+      List<Long> matchingRuIds = ruRepository.findReportingUnitIdsByTimberMark(trimmedTimberMark)
+          .stream()
+          .filter(Objects::nonNull)
+          .map(Number::longValue)
+          .toList();
       if (matchingRuIds.isEmpty()) {
         return Page.empty(pageRequest);
       }
-      List<Long> existingRuIds = filters.getReportingUnitIds();
-      if (existingRuIds != null && !existingRuIds.contains(-1L)) {
-        List<Long> intersected = matchingRuIds.stream().filter(existingRuIds::contains).toList();
-        if (intersected.isEmpty()) {
-          return Page.empty(pageRequest);
+      // Oracle rejects IN lists exceeding 1000 expressions (ORA-01795).
+      if (matchingRuIds.size() <= 1000) {
+        // getReportingUnitIds() returns [-1L] as a sentinel when no RU ID filter is set.
+        List<Long> existingRuIds = filters.getReportingUnitIds();
+        if (existingRuIds != null && !existingRuIds.contains(-1L)) {
+          List<Long> intersected = matchingRuIds.stream()
+              .filter(existingRuIds::contains)
+              .toList();
+          if (intersected.isEmpty()) {
+            return Page.empty(pageRequest);
+          }
+          filters.setReportingUnitIds(intersected);
+        } else {
+          filters.setReportingUnitIds(matchingRuIds);
         }
-        filters.setReportingUnitIds(intersected);
       } else {
-        filters.setReportingUnitIds(matchingRuIds);
+        log.warn(
+            "Timber mark {} matched {} reporting units (>1000); skipping RU ID pre-filter",
+            trimmedTimberMark,
+            matchingRuIds.size()
+        );
       }
     }
 

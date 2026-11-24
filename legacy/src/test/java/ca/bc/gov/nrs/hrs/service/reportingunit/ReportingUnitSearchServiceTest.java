@@ -16,9 +16,11 @@ import ca.bc.gov.nrs.hrs.entity.search.ReportingUnitSearchProjection;
 import ca.bc.gov.nrs.hrs.mappers.search.ReportingUnitSearchExpandedMapper;
 import ca.bc.gov.nrs.hrs.mappers.search.ReportingUnitSearchMapper;
 import ca.bc.gov.nrs.hrs.repository.ReportingUnitRepository;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.LongStream;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -232,7 +234,7 @@ class ReportingUnitSearchServiceTest {
       PageRequest pageable = PageRequest.of(0, 10, Sort.unsorted());
 
       when(ruRepository.findReportingUnitIdsByTimberMark("ER9210"))
-          .thenReturn(List.of(36301L));
+          .thenReturn(List.of(BigDecimal.valueOf(36301L)));
       when(ruRepository.searchReportingUnits(any(), any()))
           .thenReturn(Page.empty());
 
@@ -280,7 +282,7 @@ class ReportingUnitSearchServiceTest {
       PageRequest pageable = PageRequest.of(0, 10, Sort.unsorted());
 
       when(ruRepository.findReportingUnitIdsByTimberMark("ER9210"))
-          .thenReturn(List.of(36301L, 88888L));
+          .thenReturn(List.of(BigDecimal.valueOf(36301L), BigDecimal.valueOf(88888L)));
       when(ruRepository.searchReportingUnits(any(), any()))
           .thenReturn(Page.empty());
 
@@ -289,6 +291,31 @@ class ReportingUnitSearchServiceTest {
 
       // Assert
       assertThat(filters.getReportingUnitIds()).containsExactly(36301L);
+      verify(ruRepository).searchReportingUnits(any(), any());
+    }
+
+    @Test
+    @DisplayName("should skip RU ID pre-filter when matching reporting units exceed 1000")
+    void shouldSkipRuPreFilter_whenMatchingReportingUnitsExceedLimit() {
+      // Arrange
+      ReportingUnitSearchParametersDto filters =
+          new ReportingUnitSearchParametersDto();
+      filters.setTimberMark("WIDESPREAD");
+      PageRequest pageable = PageRequest.of(0, 10, Sort.unsorted());
+      List<Number> manyIds = LongStream.rangeClosed(1, 1001)
+          .<Number>mapToObj(BigDecimal::valueOf)
+          .toList();
+
+      when(ruRepository.findReportingUnitIdsByTimberMark("WIDESPREAD"))
+          .thenReturn(manyIds);
+      when(ruRepository.searchReportingUnits(any(), any()))
+          .thenReturn(Page.empty());
+
+      // Act
+      service.search(filters, pageable, CLIENT_NUMBERS, "user1");
+
+      // Assert
+      assertThat(filters.getReportingUnitIds()).containsExactly(-1L);
       verify(ruRepository).searchReportingUnits(any(), any());
     }
   }

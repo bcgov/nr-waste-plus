@@ -49,4 +49,29 @@ class ReportingUnitSearchRepositoryIntegrationTest extends AbstractTestContainer
     assertThat(results.getContent()).isEmpty();
     assertThat(results.getTotalElements()).isZero();
   }
+
+  @Test
+  @DisplayName("resolves reporting unit IDs for primary, draft, lowercase, and child timber marks")
+  void shouldFindReportingUnitIdsByTimberMark() {
+    List<Long> er9210Ids = reportingUnitRepository.findReportingUnitIdsByTimberMark("ER9210")
+        .stream()
+        .map(Number::longValue)
+        .toList();
+    assertThat(er9210Ids).containsExactly(36301L);
+
+    List<Long> lowercaseIds = reportingUnitRepository.findReportingUnitIdsByTimberMark("jy1009")
+        .stream()
+        .map(Number::longValue)
+        .toList();
+    assertThat(lowercaseIds).containsExactly(879L);
+
+    // WBMJEA matches WAA 167214 (RU 34752) directly and child WAA 184113 (RU 36834) via draft mark
+    List<Long> crossRuIds = reportingUnitRepository.findReportingUnitIdsByTimberMark("wbmjea")
+        .stream()
+        .map(Number::longValue)
+        .toList();
+    assertThat(crossRuIds).containsExactlyInAnyOrder(34752L, 36834L);
+
+    assertThat(reportingUnitRepository.findReportingUnitIdsByTimberMark("NONEXISTENT")).isEmpty();
+  }
 }
