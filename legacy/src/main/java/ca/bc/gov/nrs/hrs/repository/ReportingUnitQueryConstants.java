@@ -101,12 +101,9 @@ public final class ReportingUnitQueryConstants {
         )
         AND (
           NVL(:#{#filter.timberMark}, 'NOVALUE') = 'NOVALUE'
+          OR UPPER(waa.timber_mark) = UPPER(:#{#filter.timberMark})
+          OR UPPER(waa.draft_timber_mark) = UPPER(:#{#filter.timberMark})
           OR waa.waste_assessment_area_id IN (
-            SELECT tm_waa.waste_assessment_area_id
-            FROM WASTE_ASSESSMENT_AREA tm_waa
-            WHERE UPPER(tm_waa.timber_mark) = UPPER(:#{#filter.timberMark})
-               OR UPPER(tm_waa.draft_timber_mark) = UPPER(:#{#filter.timberMark})
-            UNION ALL
             SELECT tm_c.parent_waa_id
             FROM WASTE_ASSESSMENT_AREA tm_c
             WHERE tm_c.parent_waa_id IS NOT NULL
@@ -152,6 +149,28 @@ public final class ReportingUnitQueryConstants {
       "SELECT COUNT(1) "
       + SEARCH_REPORTING_UNIT_FROM_JOIN
       + SEARCH_REPORTING_UNIT_WHERE;
+
+  /**
+   * Lookup query to resolve matching reporting unit IDs for a given timber mark,
+   * including both the direct reporting unit and any parent block reporting units.
+   * Uses a CTE for matched assessment areas and joins parent rows by primary key.
+   */
+  public static final String FIND_RU_IDS_BY_TIMBER_MARK = """
+      WITH matched AS (
+        SELECT tm.REPORTING_UNIT_ID, tm.PARENT_WAA_ID
+        FROM WASTE_ASSESSMENT_AREA tm
+        WHERE UPPER(tm.TIMBER_MARK) = UPPER(:timberMark)
+           OR UPPER(tm.DRAFT_TIMBER_MARK) = UPPER(:timberMark)
+      )
+      SELECT REPORTING_UNIT_ID
+      FROM matched
+      UNION
+      SELECT parent.REPORTING_UNIT_ID
+      FROM matched m
+      JOIN WASTE_ASSESSMENT_AREA parent
+        ON parent.WASTE_ASSESSMENT_AREA_ID = m.PARENT_WAA_ID
+      WHERE m.PARENT_WAA_ID IS NOT NULL
+      """;
 
   private static final String GET_BLOCK_COUNT = """
       SELECT

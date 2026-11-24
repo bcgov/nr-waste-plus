@@ -52,6 +52,21 @@ public interface ReportingUnitRepository extends JpaRepository<ReportingUnitEnti
       Pageable page
   );
 
+  /**
+   * Lookup of distinct reporting unit IDs that have blocks matching the given timber mark.
+   *
+   * <p>Returns {@link Number} because native Oracle queries select {@code NUMBER} columns as
+   * {@link java.math.BigDecimal} at runtime.
+   *
+   * @param timberMark the timber mark to search for
+   * @return list of matching reporting unit IDs
+   */
+  @Query(
+      nativeQuery = true,
+      value = ReportingUnitQueryConstants.FIND_RU_IDS_BY_TIMBER_MARK
+  )
+  List<Number> findReportingUnitIdsByTimberMark(String timberMark);
+
   @Query(nativeQuery = true, value = ReportingUnitQueryConstants.GET_SEARCH_BLOCK_EXPANDED_CONTENT)
   Optional<ReportingUnitSearchExpandedProjection> getSearchExpandedContent(
       Long reportingUnit,
