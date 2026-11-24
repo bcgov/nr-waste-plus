@@ -3,6 +3,7 @@ package ca.bc.gov.nrs.hrs.service.reportingunit;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -15,9 +16,11 @@ import ca.bc.gov.nrs.hrs.entity.search.ReportingUnitSearchProjection;
 import ca.bc.gov.nrs.hrs.mappers.search.ReportingUnitSearchExpandedMapper;
 import ca.bc.gov.nrs.hrs.mappers.search.ReportingUnitSearchMapper;
 import ca.bc.gov.nrs.hrs.repository.ReportingUnitRepository;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.LongStream;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -218,6 +221,127 @@ class ReportingUnitSearchServiceTest {
 
       // Assert
       assertThat(filters.getRequestUserId()).isNullOrEmpty();
+    }
+
+    @Test
+    @DisplayName("should filter by timber mark when matching reporting units exist")
+    void shouldFilterByTimberMark_whenMatchingReportingUnitsExist() {
+      // Arrange
+      ReportingUnitSearchParametersDto filters =
+          new ReportingUnitSearchParametersDto();
+      filters.setTimberMark("ER9210");
+      filters.setClientNumbers(List.of("00001271"));
+      PageRequest pageable = PageRequest.of(0, 10, Sort.unsorted());
+
+      when(ruRepository.findReportingUnitIdsByTimberMark("ER9210"))
+          .thenReturn(List.of(BigDecimal.valueOf(36301L)));
+      when(ruRepository.searchReportingUnits(any(), any()))
+          .thenReturn(Page.empty());
+
+      // Act
+      service.search(filters, pageable, CLIENT_NUMBERS, "user1");
+
+      // Assert
+      assertThat(filters.getReportingUnitIds()).containsExactly(36301L);
+      verify(ruRepository).searchReportingUnits(any(), any());
+    }
+
+    @Test
+    @DisplayName(
+        "should return empty page immediately when no matching reporting units for timber mark"
+    )
+    void shouldReturnEmptyPage_whenNoMatchingReportingUnitsForTimberMark() {
+      // Arrange
+      ReportingUnitSearchParametersDto filters =
+          new ReportingUnitSearchParametersDto();
+      filters.setTimberMark("NONEXISTENT");
+      PageRequest pageable = PageRequest.of(0, 10, Sort.unsorted());
+
+      when(ruRepository.findReportingUnitIdsByTimberMark("NONEXISTENT"))
+          .thenReturn(List.of());
+
+      // Act
+      Page<ReportingUnitSearchResultDto> result =
+          service.search(filters, pageable, CLIENT_NUMBERS, "user1");
+
+      // Assert
+      assertThat(result).isEmpty();
+      verify(ruRepository, never()).searchReportingUnits(any(), any());
+    }
+
+    @Test
+    @DisplayName(
+        "should intersect reporting unit IDs when existing reporting unit filter is present"
+    )
+    void shouldIntersectReportingUnitIds_whenExistingRuIdsPresent() {
+      // Arrange
+      ReportingUnitSearchParametersDto filters =
+          new ReportingUnitSearchParametersDto();
+      filters.setTimberMark("ER9210");
+      filters.setReportingUnitIds(List.of(36301L, 99999L));
+      PageRequest pageable = PageRequest.of(0, 10, Sort.unsorted());
+
+      when(ruRepository.findReportingUnitIdsByTimberMark("ER9210"))
+          .thenReturn(List.of(BigDecimal.valueOf(36301L), BigDecimal.valueOf(88888L)));
+      when(ruRepository.searchReportingUnits(any(), any()))
+          .thenReturn(Page.empty());
+
+      // Act
+      service.search(filters, pageable, CLIENT_NUMBERS, "user1");
+
+      // Assert
+      assertThat(filters.getReportingUnitIds()).containsExactly(36301L);
+      verify(ruRepository).searchReportingUnits(any(), any());
+    }
+
+    @Test
+    @DisplayName("should skip RU ID pre-filter when matching reporting units exceed 1000")
+    void shouldSkipRuPreFilter_whenMatchingReportingUnitsExceedLimit() {
+      // Arrange
+      ReportingUnitSearchParametersDto filters =
+          new ReportingUnitSearchParametersDto();
+      filters.setTimberMark("WIDESPREAD");
+      PageRequest pageable = PageRequest.of(0, 10, Sort.unsorted());
+      List<Number> manyIds = LongStream.rangeClosed(1, 1001)
+          .<Number>mapToObj(BigDecimal::valueOf)
+          .toList();
+
+      when(ruRepository.findReportingUnitIdsByTimberMark("WIDESPREAD"))
+          .thenReturn(manyIds);
+      when(ruRepository.searchReportingUnits(any(), any()))
+          .thenReturn(Page.empty());
+
+      // Act
+      service.search(filters, pageable, CLIENT_NUMBERS, "user1");
+
+      // Assert
+      assertThat(filters.getReportingUnitIds()).containsExactly(-1L);
+      verify(ruRepository).searchReportingUnits(any(), any());
+    }
+
+    @Test
+    @DisplayName(
+        "should return empty page when existing RU IDs do not overlap timber mark matches"
+    )
+    void shouldReturnEmptyPage_whenTimberMarkAndExistingRuIdsDoNotOverlap() {
+      // Arrange
+      ReportingUnitSearchParametersDto filters =
+          new ReportingUnitSearchParametersDto();
+      filters.setTimberMark(" ER9210 ");
+      filters.setReportingUnitIds(List.of(99999L));
+      PageRequest pageable = PageRequest.of(0, 10, Sort.unsorted());
+
+      when(ruRepository.findReportingUnitIdsByTimberMark("ER9210"))
+          .thenReturn(List.of(BigDecimal.valueOf(36301L)));
+
+      // Act
+      Page<ReportingUnitSearchResultDto> result =
+          service.search(filters, pageable, CLIENT_NUMBERS, "user1");
+
+      // Assert
+      assertThat(result).isEmpty();
+      assertThat(filters.getTimberMark()).isEqualTo("ER9210");
+      verify(ruRepository, never()).searchReportingUnits(any(), any());
     }
   }
 
