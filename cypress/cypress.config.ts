@@ -133,13 +133,34 @@ async function setupNodeEvents(
   // This is required for the preprocessor to be able to generate JSON reports after each run, and more,
   await addCucumberPreprocessorPlugin(on, config);
 
-    on("before:browser:launch", (browser, launchOptions) => {
+  on("before:browser:launch", (browser, launchOptions) => {
     if (browser.family === "chromium") {
       const portArg = launchOptions.args.find((arg: string) =>
         arg.startsWith("--remote-debugging-port=")
       );
       if (portArg) {
         debugPort = Number.parseInt(portArg.split("=")[1], 10);
+      }
+
+      // Entra's hosted sign-in page keeps a session-check iframe alive. The
+      // AUT is already an iframe under Cypress, so that nested frame is a
+      // third-party context; with Chrome's 3PCD the check never sees its
+      // cookie and the page reloads the authorize URL in a loop (~300 times,
+      // captured in cypress.log). Allow third-party cookies for this run.
+      const cookieFeatures = [
+        "TrackingProtection3pcd",
+        "SameSiteByDefaultCookies",
+        "CookiesWithoutSameSiteMustBeSecure",
+      ];
+      const featureIndex = launchOptions.args.findIndex((arg: string) =>
+        arg.startsWith("--disable-features=")
+      );
+      if (featureIndex >= 0) {
+        const existing = launchOptions.args[featureIndex].slice("--disable-features=".length);
+        const merged = new Set([...existing.split(","), ...cookieFeatures]);
+        launchOptions.args[featureIndex] = `--disable-features=${[...merged].join(",")}`;
+      } else {
+        launchOptions.args.push(`--disable-features=${cookieFeatures.join(",")}`);
       }
     }
     return launchOptions;
