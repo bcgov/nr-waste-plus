@@ -260,94 +260,55 @@ const doLogin = (
                   { log: false },
                 );
                 cy.get('input[value="Sign in"]', { timeout: 30_000 }).click();
-                // Entra MFA (TOTP from the account's authenticator secret) and the
-                // post-sign-in interstitials. This is a polling state machine: Entra
-                // renders each step asynchronously after the previous submit, so a
-                // single look at the body right after "Sign in" always sees the
-                // password page and wrongly concludes the account is MFA-exempt.
-                //
-                // It is deliberately inlined: a `cy.origin()` callback is
-                // serialised and executed in a separate bundle, so it cannot call
-                // helpers (or constants) defined outside it.
+                // Entra MFA (TOTP from the account's authenticator secret).
+                // Condition-based, not a timed polling loop: Cypress retries
+                // `cy.get().should()` and `cy.origin()` handles top-level IdP
+                // navigation (nr-fspts uses the same one-shot pattern).
+                // Inlined because cy.origin() serialises its callback.
                 const OTC_FIELD = '#idTxtBx_SAOTCC_OTC, input[name="otc"]';
-                const OTC_SUBMIT =
-                  '#idSubmit_SAOTCC_Continue, input[type="submit"], button[type="submit"]';
-                const MAX_POLLS = 45;
 
-                const settleEntra = (poll: number, done: string[]): void => {
-                  if (poll >= MAX_POLLS) return;
-                  const seen = (step: string) => done.includes(step);
-
-                  cy.wait(1000, { log: false });
-                  cy.get("body", { timeout: 10_000, log: false }).then(($body) => {
-                    const text = $body.text();
-                    if (/your account or password is incorrect|sign-in was blocked/i.test(text)) {
-                      throw new Error("Entra rejected the IDIR credentials.");
-                    }
-
-                    const codeField = $body.find(OTC_FIELD);
-                    const method = $body.find('[data-value="PhoneAppOTP"]');
-                    const otherWay = $body.find("#signInAnotherWay");
-                    const stay = $body.find("input#idBtn_Back");
-
-                    // Entra rejects a reused code, and the field can linger for a
-                    // poll after submit, so each code is submitted once per 5 polls.
-                    const lastSubmit = done
-                      .filter((d) => d.startsWith("otc@"))
-                      .map((d) => Number(d.slice(4)))
-                      .pop();
-                    const recentlySubmitted = lastSubmit !== undefined && poll - lastSubmit < 5;
-
-                    if (codeField.length > 0) {
-                      if (recentlySubmitted) return settleEntra(poll + 1, done);
-                      if (!loginTotpSecret) {
-                        throw new Error(
-                          "Entra MFA prompt present but `idir_totp_secret` is not configured " +
-                            "(cypress/.env locally, IDIR_CSS_TOTP_SECRET in CI). Register a TOTP " +
-                            "authenticator on the test IDIR account and store its base32 key.",
-                        );
-                      }
-                      cy.task<string>("totp:fresh", loginTotpSecret, { log: false }).then((token) => {
-                        cy.get(OTC_FIELD).first().clear().type(token, { log: false });
-                        cy.get(OTC_SUBMIT).first().click();
-                      });
-                      return settleEntra(poll + 1, [...done, `otc@${poll}`]);
-                    }
-
-                    if (method.length > 0 && !seen("method")) {
-                      cy.wrap(method.first(), { log: false }).click();
-                      return settleEntra(poll + 1, [...done, "method"]);
-                    }
-
-                    if (otherWay.length > 0 && !seen("other")) {
-                      cy.wrap(otherWay.first(), { log: false }).click();
-                      return settleEntra(poll + 1, [...done, "other"]);
-                    }
-
-                    if (stay.length > 0 && !seen(`stay@${poll - 1}`)) {
-                      cy.wrap(stay.first(), { log: false }).click();
-                      return settleEntra(poll + 1, [...done, `stay@${poll}`]);
-                    }
-
-                    if (/pick an account/i.test(text) && !seen("pick")) {
-                      const localPart = loginUsername.split("\\").pop()!.split("@")[0];
-                      cy.contains(localPart, { matchCase: false }).first().click();
-                      return settleEntra(poll + 1, [...done, "pick"]);
-                    }
-
-                    return settleEntra(poll + 1, done);
-                  });
-                };
-
-                settleEntra(0, []);
-              } else {
-                cy.get("#user", { timeout: 30_000 }).type(loginUsername, {
-                  log: false,
+                cy.get('body', { timeout: 45_000 }).should(($body) => {
+                  const text = $body.text();
+                  if (/account or password is incorrect|sign-in was blocked/i.test(text)) {
+                    throw new Error('Entra rejected the IDIR credentials.');
+                  }
+                  expect(
+                    $body.find(OTC_FIELD).length > 0 ||
+                      $body.find('#signInAnotherWay').length > 0 ||
+                      /verify your identity|enter the code/i.test(text),
+                    'Entra MFA prompt or method picker',
+                  ).to.equal(true);
                 });
-                cy.get("#password", { timeout: 30_000 }).type(loginPassword, {
-                  log: false,
+
+                cy.get('body').then(($body) => {
+                  if ($body.find('#signInAnotherWay').length > 0 && $body.find(OTC_FIELD).length === 0) {
+                    cy.get('#signInAnotherWay').click();
+                    cy.get('[data-value="PhoneAppOTP"]').click();
+                  }
                 });
-                cy.get('input[type="submit"]', { timeout: 30_000 }).click();
+
+                cy.get(OTC_FIELD, { timeout: 30_000 }).should('be.visible');
+                if (!loginTotpSecret) {
+                  throw new Error(
+                    'Entra MFA prompt present but `idir_totp_secret` is not configured ' +
+                      '(cypress/.env locally, IDIR_CSS_TOTP_SECRET in CI).',
+                  );
+                }
+                cy.task<string>('totp:fresh', loginTotpSecret, { log: false }).then((token) => {
+                  cy.get(OTC_FIELD).first().clear().type(token, { log: false });
+                  cy.get('#idSubmit_SAOTCC_Continue, input[type="submit"]').first().click();
+                });
+
+                // Post-MFA interstitials: "Stay signed in?" and "Pick an account".
+                cy.get('body', { timeout: 30_000 }).then(($body) => {
+                  if ($body.find('input#idBtn_Back, input[value="No"]').length > 0) {
+                    cy.get('input#idBtn_Back, input[value="No"]').first().click();
+                  }
+                  if (/pick an account/i.test($body.text())) {
+                    const localPart = loginUsername.split('\\').pop()!.split('@')[0];
+                    cy.contains(localPart, { matchCase: false }).first().click();
+                  }
+                });
               }
             },
           );
