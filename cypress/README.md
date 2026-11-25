@@ -116,3 +116,31 @@ without that label is not automatically converted.
 | [Cypress Step Reference](https://github.com/bcgov/nr-waste-plus/wiki/Cypress-Step-Reference) | Scenario authors | Shared Gherkin steps available to use |
 | [Cypress Developer Guide](https://github.com/bcgov/nr-waste-plus/wiki/Cypress-Developer-Guide) | Developers | Environment setup, project structure, test runs, and CI |
 | [Repository overview](../README.md) | Everyone | Application modules and architecture links |
+
+## IDIR login (real account)
+
+Cypress does not drive the Microsoft login page directly: Entra's frame-busting
+script detects Cypress's AUT iframe and reloads the authorize URL with an
+ever-growing `iframe-request-id` until the test times out. Instead, the
+authenticated session is produced once by the Playwright spec and reused by
+Cypress.
+
+1. Export a fresh session (from the repo root):
+
+   ```bash
+   cd frontend
+   E2E_BASE_URL=https://nr-waste-plus-12-frontend.apps.silver.devops.gov.bc.ca \
+     npm run test:e2e:sso
+   ```
+
+   This writes `cypress/.auth/idir-state.json` (git-ignored). It uses the IDIR
+   credentials/TOTP secret from `cypress/.env` (or `IDIR_*` / `CYPRESS_IDIR_*`
+   env vars). To obtain or rotate the TOTP secret: Microsoft My Sign-Ins →
+   Add sign-in method → Microsoft Authenticator → set up a different app →
+   "Can't scan QR code?" → copy the secret key.
+
+2. Run Cypress. `cy.loginViaIdir()` loads that state into cookies and
+   sessionStorage, so no Microsoft page is opened in the Cypress iframe.
+
+The plain TS specs in `cypress/e2e/sso-*.cy.ts` are debug-only. To run them,
+temporarily set `specPattern: "**/*.cy.ts"` in `cypress.config.ts`.
