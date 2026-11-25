@@ -370,9 +370,9 @@ const doLogin = (
 };
 
 Before({ tags: "@loginAsIDIR" }, function () {
-  doLogin(this, "idir", "/search");
-  cy.waitForPageLoad(".cds--header__name");
-  restartTestBudget(IDIR_TEST_BUDGET_MS);
+  // Uses the Playwright-exported authenticated session: Cypress never loads
+  // Entra's frame-busting login page inside its AUT iframe.
+  cy.loginViaIdir();
 });
 
 Before({ tags: "@loginAsBCeID" }, function () {

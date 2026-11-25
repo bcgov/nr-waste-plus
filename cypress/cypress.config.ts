@@ -509,8 +509,6 @@ async function setupNodeEvents(
 
 export default defineConfig({
   e2e: {
-    // TEMP: plain TS debug specs run against the deployed PR build.
-    baseUrl: "https://nr-waste-plus-12-frontend.apps.silver.devops.gov.bc.ca",
     reporter: "mochawesome",
     reporterOptions: {
       reportDir: "reports/mochawesome",
@@ -518,9 +516,7 @@ export default defineConfig({
       html: false,
       json: true
     },
-    // TEMP: debug-only settings (no Cucumber)
-    experimentalModifyObstructiveThirdPartyCode: true,
-    specPattern: "**/*.cy.ts",
+    specPattern: "**/*.feature",
     setupNodeEvents,
     defaultCommandTimeout: 12_000,
     pageLoadTimeout: 12_000,
@@ -531,7 +527,7 @@ export default defineConfig({
       ...cypressCredentials,
     },
   },
-  video: false, // TEMP: debug runs; avoid ffmpeg noise
+  video: false, // auth state carries tokens; never record it
   trashAssetsBeforeRuns: true,
   includeShadowDom: false,
   viewportHeight: 1080,
