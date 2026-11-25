@@ -44,6 +44,26 @@ public record BlockResponseDto(
     WasteAssessmentAreaSummaryDto wasteAssessmentAreaSummary,
     DistrictAverageVolumesSummaryDto districtAverageVolumesSummary) {
 
+  /** Returns a copy of this DTO with an updated lifecycle state. */
+  public BlockResponseDto withState(String newState) {
+    return new BlockResponseDto(
+        id,
+        reportingUnitId,
+        blockType,
+        newState,
+        draft,
+        plcDate,
+        version,
+        revision,
+        isLegacy,
+        createdAt,
+        updatedAt,
+        secondaryTimberMarks,
+        roadPermitTimberMarks,
+        wasteAssessmentAreaSummary,
+        districtAverageVolumesSummary);
+  }
+
   /** Canonical constructor ensuring mark lists are never null. */
   public BlockResponseDto {
     secondaryTimberMarks =

@@ -155,6 +155,10 @@ public class GlobalExceptionHandler {
     problem.setDetail(ex.getReason() != null ? ex.getReason() : ex.getMessage());
     problem.setInstance(URI.create(request.getRequestURI()));
 
+    if (ex.getBody() != null && ex.getBody().getProperties() != null) {
+      ex.getBody().getProperties().forEach(problem::setProperty);
+    }
+
     return ResponseEntity.status(status)
         .contentType(MediaType.APPLICATION_PROBLEM_JSON)
         .body(problem);

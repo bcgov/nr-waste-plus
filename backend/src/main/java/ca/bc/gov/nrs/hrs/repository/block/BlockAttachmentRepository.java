@@ -61,6 +61,14 @@ public interface BlockAttachmentRepository extends JpaRepository<BlockAttachment
       Long blockId, String status, String scanStatus);
 
   /**
+   * Counts the total number of active non-deleted attachments for a block.
+   *
+   * @param blockId the block identifier
+   * @return count of non-deleted attachments
+   */
+  long countByBlockIdAndDeletedFalse(Long blockId);
+
+  /**
    * Finds all active attachments for a block matching the specified upload status and scan status.
    *
    * @param blockId the block identifier
