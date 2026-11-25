@@ -1,6 +1,7 @@
 import { Before, Step } from "@badeball/cypress-cucumber-preprocessor";
 import {
   BCEID_TEST_BUDGET_MS,
+  IDIR_TEST_BUDGET_MS,
   pauseTestBudget,
   restartTestBudget,
 } from "../../helpers/test-timeout";
@@ -372,9 +373,9 @@ const doLogin = (
         // spec, instead of replaying a dead session into every later one.
         cacheAcrossSpecs: true,
       },
-    ).then(() =>
-      restartTestBudget(provider === "bceid" ? BCEID_TEST_BUDGET_MS : undefined),
     );
+    // The budget stays paused through the visit and the app-shell wait below.
+    // Only the test body is timed; the IdP hop (including MFA polling) is not.
     cy.visit(afterLoginLocation);
   });
 };
@@ -382,9 +383,11 @@ const doLogin = (
 Before({ tags: "@loginAsIDIR" }, function () {
   doLogin(this, "idir", "/search");
   cy.waitForPageLoad(".cds--header__name");
+  restartTestBudget(IDIR_TEST_BUDGET_MS);
 });
 
 Before({ tags: "@loginAsBCeID" }, function () {
   doLogin(this, "bceid", "/search");
   cy.waitForPageLoad(".cds--header__name");
+  restartTestBudget(BCEID_TEST_BUDGET_MS);
 });

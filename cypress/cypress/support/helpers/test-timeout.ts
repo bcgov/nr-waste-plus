@@ -16,6 +16,10 @@
  */
 const BASELINE_BUDGET_MS = 12_200;
 export const TEST_BUDGET_MS = 30_000;
+// Entra's hosted sign-in page keeps polling the authorize endpoint while the
+// MFA step is open (a captured local run showed 309 repeat requests, ~65 s of
+// server time). The whole IDIR path must stay outside the test-body budget.
+export const IDIR_TEST_BUDGET_MS = 120_000;
 export const BCEID_TEST_BUDGET_MS = BASELINE_BUDGET_MS * 2;
 
 let timer: ReturnType<typeof setTimeout> | undefined;
