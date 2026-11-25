@@ -200,6 +200,7 @@ const doLogin = (
     // wrong account (seen with IDIR/BCeID smoke tests). Force a clean slate
     // before `cy.session` so the configured credentials are actually used.
     cy.task("session:clear", null, { log: false });
+    cy.clearCookies();
     cy.clearLocalStorage();
     cy.visit("/", {
       onBeforeLoad(win) {
@@ -220,6 +221,20 @@ const doLogin = (
         cy.waitForPageLoad("img");
 
         Step(context, 'I can read "Waste Plus"');
+
+        // Force a fresh IdP login. Without `prompt=login`, Keycloak/Entra can
+        // silently reuse a session from a previous identity (observed: the IDIR
+        // spec re-authenticated as the personal account). The parameter is
+        // injected into the outbound authorize request, before the click.
+        cy.intercept(
+          "**/auth/realms/**/protocol/openid-connect/auth**",
+          (req) => {
+            const url = new URL(req.url);
+            url.searchParams.set("prompt", "login");
+            req.url = url.toString();
+          },
+        );
+
         Step(
           context,
           `I click on the "${PROVIDERS[provider].loginButton}" button`,
@@ -345,7 +360,7 @@ const doLogin = (
         // one spec is now self-healing rather than poisonous: validate() fails
         // on the revoked token and Cypress re-runs setup once for the next
         // spec, instead of replaying a dead session into every later one.
-        cacheAcrossSpecs: true,
+        cacheAcrossSpecs: false,
       },
     );
     // The budget stays paused through the visit and the app-shell wait below.
