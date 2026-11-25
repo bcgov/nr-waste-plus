@@ -21,6 +21,14 @@ describe("SSO loop debug", () => {
     let authorizeCount = 0;
     cy.intercept("GET", "**/oauth2/v2.0/authorize*", (req) => {
       authorizeCount += 1;
+      req.on("response", (res) => {
+        const body = res.body;
+        if (typeof body === "string" && body.includes("iframe-request-id")) {
+          res.body = body
+            .replace(/e\.self===e\.self/g, "true")
+            .replace(/!i\.allowFrame/g, "false");
+        }
+      });
     });
 
     cy.contains("button", "Log in with IDIR", { timeout: 12_000 }).click();
@@ -32,7 +40,24 @@ describe("SSO loop debug", () => {
         { log: false },
       ),
     );
-    cy.get('input[name="loginfmt"], #i0116', { timeout: 12_000 }).should("be.visible");
+    cy.location("href").then((msUrl) => {
+      cy.origin(
+        "login.microsoftonline.com",
+        { args: { msUrl } },
+        ({ msUrl: url }) => {
+          cy.visit(url, {
+            onBeforeLoad(win) {
+              // Entra's frame-busting script checks $Config.allowFrame.
+              (win as Window & { $Config?: { allowFrame?: boolean } }).$Config = {
+                allowFrame: true,
+              };
+            },
+          });
+          cy.location("href").should("not.contain", "iframe-request-id");
+          cy.get('input[type="email"]', { timeout: 12_000 }).should("be.visible");
+        },
+      );
+    });
     cy.task("log:debug", `authorize requests seen: ${authorizeCount}`, { log: false });
   });
 });

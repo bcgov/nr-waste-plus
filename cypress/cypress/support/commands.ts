@@ -46,6 +46,12 @@ Cypress.Commands.add("shouldHaveStyle", { prevSubject: true }, shouldHaveStyle);
  * silent SSO, the TOTP comes from the generateTotp node task, and the budget is
  * paused while the IdP flow runs.
  */
+/**
+ * IDIR sign-in adapted from bcgov/sso-requests. Entra's frame-busting script
+ * reloads the authorize URL forever when the AUT is inside Cypress's iframe;
+ * we re-visit the authorize URL inside cy.origin with $Config.allowFrame=true
+ * so the real Microsoft form is rendered. TOTP comes from a node task.
+ */
 Cypress.Commands.add("loginViaIdir", (): Cypress.Chainable<void> => {
   pauseTestBudget();
   return cy.env(["idir_username", "idir_password"]).then((env) => {
@@ -74,33 +80,41 @@ Cypress.Commands.add("loginViaIdir", (): Cypress.Chainable<void> => {
 
           cy.contains("button", "Log in with IDIR", { timeout: 12_000 }).click();
           cy.url({ timeout: 12_000 }).should("include", "login.microsoftonline.com");
-
-          // Generate immediately before use; the task waits for a fresh window.
-          cy.task<string>("generateTotp", null, { log: false }).then((token) => {
-            cy.origin(
-              "login.microsoftonline.com",
-              { args: { username, password, token } },
-              ({ username: email, password: pass, token: code }) => {
-                cy.get('input[type="email"]', { timeout: 12_000 }).type(email, {
-                  delay: 15,
-                  log: false,
-                });
-                cy.contains("Next").click();
-                cy.get('input[type="password"]', { timeout: 12_000 }).type(pass, {
-                  delay: 15,
-                  log: false,
-                });
-                cy.contains("Sign in").click();
-                cy.get('input[type="tel"]', { timeout: 12_000 }).type(code, {
-                  delay: 15,
-                  log: false,
-                });
-                cy.contains("Verify").click();
-                cy.get('input[type="submit"][value="Yes"]', { timeout: 2000 }).then(($btn) => {
-                  if ($btn.length) cy.wrap($btn).click();
-                });
-              },
-            );
+          cy.location("href").then((msUrl) => {
+            cy.task<string>("generateTotp", null, { log: false }).then((token) => {
+              cy.origin(
+                "login.microsoftonline.com",
+                { args: { msUrl, username, password, token } },
+                ({ msUrl: url, username: email, password: pass, token: code }) => {
+                  cy.visit(url, {
+                    onBeforeLoad(win) {
+                      (win as Window & { $Config?: { allowFrame?: boolean } }).$Config = {
+                        allowFrame: true,
+                      };
+                    },
+                  });
+                  cy.location("href").should("not.contain", "iframe-request-id");
+                  cy.get('input[type="email"]', { timeout: 12_000 }).type(email, {
+                    delay: 15,
+                    log: false,
+                  });
+                  cy.contains("Next").click();
+                  cy.get('input[type="password"]', { timeout: 12_000 }).type(pass, {
+                    delay: 15,
+                    log: false,
+                  });
+                  cy.contains("Sign in").click();
+                  cy.get('input[type="tel"]', { timeout: 12_000 }).type(code, {
+                    delay: 15,
+                    log: false,
+                  });
+                  cy.contains("Verify").click();
+                  cy.get('input[type="submit"][value="Yes"]', { timeout: 2000 }).then(($btn) => {
+                    if ($btn.length) cy.wrap($btn).click();
+                  });
+                },
+              );
+            });
           });
 
           cy.url({ timeout: 12_000 }).should("include", Cypress.config("baseUrl") as string);
