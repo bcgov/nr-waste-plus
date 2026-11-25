@@ -24,8 +24,13 @@ describe("SSO loop debug", () => {
     });
 
     cy.contains("button", "Log in with IDIR", { timeout: 12_000 }).click();
-    cy.location("href", { timeout: 12_000 }).then((href) =>
-      cy.task("log:debug", `after click: ${href.slice(0, 180)}`, { log: false }),
+    cy.url({ timeout: 12_000 }).should("include", "login.microsoftonline.com");
+    cy.location("href").then((href) =>
+      cy.task(
+        "log:debug",
+        `MS URL prompt param: ${new URL(href).searchParams.get("prompt") ?? "absent"}`,
+        { log: false },
+      ),
     );
     cy.get('input[name="loginfmt"], #i0116', { timeout: 12_000 }).should("be.visible");
     cy.task("log:debug", `authorize requests seen: ${authorizeCount}`, { log: false });
