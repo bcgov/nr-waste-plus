@@ -137,10 +137,28 @@ public class LifecycleEventService {
           blockId,
           reportingUnitId,
           result.reason());
-      if (result.denialReason() == TransitionEvaluationResult.DenialReason.FORBIDDEN_ROLE) {
+      if (result.denialReason() == TransitionEvaluationResult.DenialReason.ROLE_NOT_ALLOWED) {
         ResponseStatusException ex =
             new ResponseStatusException(HttpStatus.FORBIDDEN, result.reason());
         ex.getBody().setProperty("code", "ROLE_NOT_ALLOWED");
+        ex.getBody().setProperty("state", currentState);
+        ex.getBody().setProperty("blockState", currentState);
+        ex.getBody().setProperty("retryable", false);
+        throw ex;
+      }
+      if (result.denialReason() == TransitionEvaluationResult.DenialReason.COMMENT_REQUIRED) {
+        ResponseStatusException ex =
+            new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, result.reason());
+        ex.getBody().setProperty("code", "COMMENT_REQUIRED");
+        ex.getBody().setProperty("state", currentState);
+        ex.getBody().setProperty("blockState", currentState);
+        ex.getBody().setProperty("retryable", false);
+        throw ex;
+      }
+      if (result.denialReason() == TransitionEvaluationResult.DenialReason.PRECONDITION_FAILED) {
+        ResponseStatusException ex =
+            new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, result.reason());
+        ex.getBody().setProperty("code", "PRECONDITION_FAILED");
         ex.getBody().setProperty("state", currentState);
         ex.getBody().setProperty("blockState", currentState);
         ex.getBody().setProperty("retryable", false);
@@ -263,7 +281,7 @@ public class LifecycleEventService {
           "Transition denied for RU {}: {}",
           reportingUnitId,
           result.reason());
-      if (result.denialReason() == TransitionEvaluationResult.DenialReason.FORBIDDEN_ROLE) {
+      if (result.denialReason() == TransitionEvaluationResult.DenialReason.ROLE_NOT_ALLOWED) {
         ResponseStatusException ex =
             new ResponseStatusException(HttpStatus.FORBIDDEN, result.reason());
         ex.getBody().setProperty("code", "ROLE_NOT_ALLOWED");
@@ -417,9 +435,80 @@ public class LifecycleEventService {
                         && Boolean.TRUE.equals(r.getAnsweredYes()));
 
     LocalDate submissionDate = resolveSubmissionDate(blockId);
+    LocalDate approvedDate = resolveApprovedDate(blockId);
 
     return new TransitionContext(
-        plcDate, submissionDate, rationaleRequired, burntPiles);
+        plcDate, submissionDate, approvedDate, rationaleRequired, burntPiles);
+  }
+
+  /**
+   * Executes a scheduled {@code SYSTEM} lifecycle event for a block, using the same policy
+   * evaluation and state-persistence path as HTTP transitions.
+   *
+   * @param blockId target block identifier
+   * @param event system event code (e.g. {@code AUTO_APPROVE}, {@code AUTO_APPROVE_BILLING})
+   * @return response DTO if the transition was applied, or {@code null} if preconditions were not
+   *     met or an external step (#1552) is deferred
+   */
+  @NewSpan
+  @Transactional
+  public LifecycleEventResponseDto recordSystemBlockLifecycleEvent(Long blockId, String event) {
+    BlockEntity block = blockRepository.findById(blockId).orElse(null);
+    if (block == null || block.isDeleted()) {
+      return null;
+    }
+
+    String normalizedEvent = event.trim().toUpperCase(Locale.ROOT);
+    String currentState = resolveBlockState(blockId, block.isDraft());
+    TransitionContext context = buildBlockTransitionContext(blockId, block.getPlcDate());
+
+    TransitionEvaluationResult result =
+        transitionPolicyService.evaluateAsSystem(currentState, normalizedEvent, context);
+    if (!result.allowed()) {
+      return null;
+    }
+
+    if (result.externalStep() != null && !result.externalStep().isBlank()) {
+      // HBS invoice post integration is owned by #1552; leave block in SUBMISSION_APPROVED until
+      // HbsBillingService is wired.
+      log.debug(
+          "Skipping system transition {} for block {}: external step '{}' awaits #1552.",
+          normalizedEvent,
+          blockId,
+          result.externalStep());
+      return null;
+    }
+
+    final String targetState = result.targetState();
+    updateBlockState(block, targetState);
+    block.setUpdatedAt(Instant.now());
+    block = blockRepository.saveAndFlush(block);
+
+    StatusEventEntity statusEvent = new StatusEventEntity();
+    statusEvent.setBlockId(block.getId());
+    statusEvent.setReportingUnitId(null);
+    statusEvent.setStatus(targetState);
+    statusEvent.setEventType(normalizedEvent);
+
+    var detailsNode = OBJECT_MAPPER.createObjectNode();
+    detailsNode.put("previousState", currentState);
+    detailsNode.put("hasComment", false);
+    detailsNode.put("actor", "SYSTEM");
+    statusEvent.setDetails(detailsNode);
+    statusEvent = statusEventRepository.save(statusEvent);
+    entityManager.flush();
+
+    Instant occurredAt =
+        statusEvent.getCreatedAt() != null ? statusEvent.getCreatedAt() : Instant.now();
+
+    return new LifecycleEventResponseDto(
+        block.getReportingUnitId(),
+        block.getId(),
+        currentState,
+        targetState,
+        normalizedEvent,
+        block.getRevision(),
+        occurredAt);
   }
 
   private void validateBlockSubmissionReadiness(BlockEntity block, String currentState) {
@@ -575,6 +664,15 @@ public class LifecycleEventService {
         .map(StatusEventEntity::getCreatedAt)
         .map(instant -> LocalDate.ofInstant(instant, ZoneOffset.UTC))
         .orElse(LocalDate.now(ZoneOffset.UTC));
+  }
+
+  private LocalDate resolveApprovedDate(Long blockId) {
+    return statusEventRepository
+        .findFirstByBlockIdAndStatusOrderByCreatedAtAsc(
+            blockId, TransitionPolicyService.STATE_SUBMISSION_APPROVED)
+        .map(StatusEventEntity::getCreatedAt)
+        .map(instant -> LocalDate.ofInstant(instant, ZoneOffset.UTC))
+        .orElse(null);
   }
 
   private void updateBlockState(BlockEntity block, String targetState) {

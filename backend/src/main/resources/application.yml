@@ -12,6 +12,8 @@ server:
         http-only: true
 
 spring:
+  config:
+    import: classpath:lifecycle-matrix.yml
   application:
     name: nr-waste-backend
   web:
@@ -238,6 +240,10 @@ ca:
             ttl: ${ATTACHMENT_CLEANUP_TTL:24h}
             cron: ${ATTACHMENT_CLEANUP_CRON:0 0 * * * *}
             enabled: ${ATTACHMENT_CLEANUP_ENABLED:true}
+        lifecycle:
+          timer:
+            cron: ${LIFECYCLE_TIMER_CRON:0 0 2 * * *}
+            enabled: ${LIFECYCLE_TIMER_ENABLED:true}
         block-rules:
           sampling:
             AVG:

@@ -1,0 +1,278 @@
+ca:
+  bc:
+    gov:
+      nrs:
+        lifecycle:
+          editable-states:
+            SUBMITTER:
+              - DRAFT
+              - REJECTED
+            AREA:
+              - DRAFT
+              - PLANNING
+              - SUBMISSION
+              - SUBMITTED
+              - HOLD
+              - SUBMISSION_APPROVED
+              - STAFF_REVIEW
+              - REJECTED
+              - ERROR
+            DISTRICT:
+              - DRAFT
+              - PLANNING
+              - SUBMISSION
+              - SUBMITTED
+              - HOLD
+              - SUBMISSION_APPROVED
+              - STAFF_REVIEW
+              - REJECTED
+              - ERROR
+            ADMIN:
+              - DRAFT
+              - PLANNING
+              - SUBMISSION
+              - SUBMITTED
+              - HOLD
+              - SUBMISSION_APPROVED
+              - STAFF_REVIEW
+              - REJECTED
+              - ERROR
+          transitions:
+            # --- Block: DRAFT ---
+            - from-state: DRAFT
+              event: SUBMIT
+              to-state: SUBMITTED
+              label: Submit
+              roles: [SUBMITTER, ADMIN]
+              actor: USER
+              condition: NO_HOLD
+              comment-required: false
+              confirmation-required: false
+            - from-state: DRAFT
+              event: SUBMIT
+              to-state: HOLD
+              label: Submit
+              roles: [SUBMITTER, ADMIN]
+              actor: USER
+              condition: HOLD_REQUIRED
+              comment-required: false
+              confirmation-required: false
+            - from-state: DRAFT
+              event: CANCEL
+              to-state: CANCELLED
+              label: Cancel
+              roles: [SUBMITTER, ADMIN]
+              actor: USER
+              condition: NONE
+              comment-required: true
+              confirmation-required: true
+
+            # --- Reporting Unit: PLANNING ---
+            - from-state: PLANNING
+              event: SUBMIT
+              to-state: STAFF_REVIEW
+              label: Submit
+              roles: [SUBMITTER, ADMIN]
+              actor: USER
+              condition: NONE
+              comment-required: false
+              confirmation-required: false
+
+            # --- Reporting Unit: SUBMISSION ---
+            - from-state: SUBMISSION
+              event: SUBMIT
+              to-state: STAFF_REVIEW
+              label: Submit
+              roles: [SUBMITTER, ADMIN]
+              actor: USER
+              condition: NONE
+              comment-required: false
+              confirmation-required: false
+            - from-state: SUBMISSION
+              event: CANCEL
+              to-state: CANCELLED
+              label: Cancel
+              roles: [SUBMITTER, ADMIN]
+              actor: USER
+              condition: NONE
+              comment-required: true
+              confirmation-required: true
+
+            # --- Reporting Unit: STAFF_REVIEW ---
+            - from-state: STAFF_REVIEW
+              event: APPROVE
+              to-state: CLOSED
+              label: Approve submission
+              roles: [AREA, DISTRICT, ADMIN]
+              actor: USER
+              condition: NONE
+              comment-required: false
+              confirmation-required: true
+            - from-state: STAFF_REVIEW
+              event: REJECT
+              to-state: SUBMISSION
+              label: Reject submission
+              roles: [AREA, DISTRICT, ADMIN]
+              actor: USER
+              condition: NONE
+              comment-required: true
+              confirmation-required: true
+
+            # --- Block: SUBMITTED ---
+            - from-state: SUBMITTED
+              event: HOLD
+              to-state: HOLD
+              label: Place on hold
+              roles: [AREA, DISTRICT, ADMIN]
+              actor: USER
+              condition: NONE
+              comment-required: false
+              confirmation-required: true
+            - from-state: SUBMITTED
+              event: APPROVE
+              to-state: SUBMISSION_APPROVED
+              label: Approve submission
+              roles: [AREA, DISTRICT, ADMIN]
+              actor: USER
+              condition: NONE
+              comment-required: false
+              confirmation-required: true
+            - from-state: SUBMITTED
+              event: AUTO_APPROVE
+              to-state: SUBMISSION_APPROVED
+              label: Auto-approve submission
+              roles: []
+              actor: SYSTEM
+              condition: AUTO_APPROVE_ELAPSED
+              comment-required: false
+              confirmation-required: false
+            - from-state: SUBMITTED
+              event: REJECT
+              to-state: REJECTED
+              label: Reject submission
+              roles: [AREA, DISTRICT, ADMIN]
+              actor: USER
+              condition: NONE
+              comment-required: true
+              confirmation-required: true
+            - from-state: SUBMITTED
+              event: CANCEL
+              to-state: CANCELLED
+              label: Cancel
+              roles: [SUBMITTER, ADMIN]
+              actor: USER
+              condition: NONE
+              comment-required: true
+              confirmation-required: true
+
+            # --- Block: HOLD ---
+            - from-state: HOLD
+              event: APPROVE
+              to-state: SUBMISSION_APPROVED
+              label: Approve submission
+              roles: [AREA, DISTRICT, ADMIN]
+              actor: USER
+              condition: NONE
+              comment-required: false
+              confirmation-required: true
+            - from-state: HOLD
+              event: REJECT
+              to-state: REJECTED
+              label: Reject submission
+              roles: [AREA, DISTRICT, ADMIN]
+              actor: USER
+              condition: NONE
+              comment-required: true
+              confirmation-required: true
+            - from-state: HOLD
+              event: UNHOLD
+              to-state: SUBMITTED
+              label: Release hold
+              roles: [AREA, DISTRICT, ADMIN]
+              actor: USER
+              condition: NONE
+              comment-required: false
+              confirmation-required: true
+
+            # --- Block: REJECTED ---
+            - from-state: REJECTED
+              event: SUBMIT
+              to-state: SUBMITTED
+              label: Submit
+              roles: [SUBMITTER, ADMIN]
+              actor: USER
+              condition: NO_HOLD
+              comment-required: false
+              confirmation-required: false
+            - from-state: REJECTED
+              event: SUBMIT
+              to-state: HOLD
+              label: Submit
+              roles: [SUBMITTER, ADMIN]
+              actor: USER
+              condition: HOLD_REQUIRED
+              comment-required: false
+              confirmation-required: false
+            - from-state: REJECTED
+              event: CANCEL
+              to-state: CANCELLED
+              label: Cancel
+              roles: [SUBMITTER, ADMIN]
+              actor: USER
+              condition: NONE
+              comment-required: true
+              confirmation-required: true
+
+            # --- Block: SUBMISSION_APPROVED ---
+            - from-state: SUBMISSION_APPROVED
+              event: APPROVE_FOR_BILLING
+              to-state: BILLING_APPROVED
+              label: Approve for billing
+              roles: [AREA, DISTRICT, ADMIN]
+              actor: USER
+              condition: NONE
+              comment-required: false
+              confirmation-required: true
+              external-step: HBS_INVOICE_POST
+            - from-state: SUBMISSION_APPROVED
+              event: AUTO_APPROVE_BILLING
+              to-state: BILLING_APPROVED
+              label: Auto-approve for billing
+              roles: []
+              actor: SYSTEM
+              condition: BILLING_DELAY_ELAPSED
+              comment-required: false
+              confirmation-required: false
+              external-step: HBS_INVOICE_POST
+            - from-state: SUBMISSION_APPROVED
+              event: HBS_OUTCOME_INDETERMINATE
+              to-state: ERROR
+              label: HBS outcome indeterminate
+              roles: []
+              actor: SYSTEM
+              condition: NONE
+              comment-required: false
+              confirmation-required: false
+              external-step: HBS_INVOICE_POST
+
+            # --- Block: ERROR ---
+            - from-state: ERROR
+              event: CONFIRM_BILLED
+              to-state: BILLING_APPROVED
+              label: Confirm billed
+              roles: [ADMIN]
+              actor: USER
+              condition: NONE
+              comment-required: false
+              confirmation-required: true
+              external-step: HBS_INVOICE_LOOKUP
+            - from-state: ERROR
+              event: RETURN_TO_APPROVED
+              to-state: SUBMISSION_APPROVED
+              label: Return to approved
+              roles: [ADMIN]
+              actor: USER
+              condition: NONE
+              comment-required: false
+              confirmation-required: true
+              external-step: HBS_INVOICE_LOOKUP
