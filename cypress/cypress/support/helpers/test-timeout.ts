@@ -20,7 +20,9 @@ export const TEST_BUDGET_MS = 120_000;
 // MFA step is open (a captured local run showed 309 repeat requests, ~65 s of
 // server time). The whole IDIR path must stay outside the test-body budget.
 export const IDIR_TEST_BUDGET_MS = 120_000;
-export const BCEID_TEST_BUDGET_MS = BASELINE_BUDGET_MS * 2;
+// BCeID observed at 27 s locally (audit endpoints are slow); 120 s avoids a
+// budget failure on the login path.
+export const BCEID_TEST_BUDGET_MS = 120_000;
 
 let timer: ReturnType<typeof setTimeout> | undefined;
 let paused = false;
