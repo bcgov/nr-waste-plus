@@ -51,6 +51,12 @@ declare namespace Cypress {
      * Legacy command - Validate that an element has a specific CSS property/value pair.
      */
     shouldHaveStyle(property: string, expected: string): Chainable<Subject>;
+
+    /**
+     * Signs in through the real IDIR/Entra flow (with TOTP) and caches the
+     * session with cy.session for reuse across specs.
+     */
+    loginViaIdir(): Chainable<void>;
   }
 }
 
