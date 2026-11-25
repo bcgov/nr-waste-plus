@@ -196,13 +196,21 @@ class ReportingUnitBlockServiceTest {
 
   @ParameterizedTest(name = "shouldResolveStatusAliasAndKnownCode_whenStatusIs {0}")
   @ValueSource(
-      strings = {"DFT", "SUB", "APP", "BIS", "OREJ", "HLD", "draft", " submitted "})
+      strings = {
+        "DFT", "SUB", "APP", "BIS", "OREJ", "HLD", "REJ", "RTB",
+        "draft", " submitted ", "hold", "submission_approved", "approved", "rejected",
+        "billing_approved"
+      })
   @DisplayName("shouldResolveKnownStatusCodesAndAliases_whenStatusIsSupported")
   void shouldResolveKnownStatusCodesAndAliases_whenStatusIsSupported(String rawStatus) {
     String expectedCode =
         switch (rawStatus.trim().toUpperCase(java.util.Locale.ROOT)) {
           case "DRAFT" -> "DFT";
           case "SUBMITTED" -> "SUB";
+          case "HOLD" -> "HLD";
+          case "SUBMISSION_APPROVED", "APPROVED" -> "APP";
+          case "REJECTED" -> "REJ";
+          case "BILLING_APPROVED" -> "RTB";
           default -> rawStatus.trim().toUpperCase(java.util.Locale.ROOT);
         };
     String expectedDescription =
@@ -212,7 +220,9 @@ class ReportingUnitBlockServiceTest {
                 "APP", "Approved",
                 "BIS", "Billing Issued",
                 "OREJ", "Office Rejected",
-                "HLD", "Hold")
+                "HLD", "Hold",
+                "REJ", "Rejected",
+                "RTB", "Ready To Bill")
             .get(expectedCode);
 
     var result = readOnePostgresBlockWithStatus(rawStatus);
