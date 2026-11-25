@@ -461,3 +461,5 @@ reports/
 summary.md
 **/*.code-workspace
 cypress.env.json
+
+.auth/

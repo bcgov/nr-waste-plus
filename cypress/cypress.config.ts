@@ -184,6 +184,32 @@ async function setupNodeEvents(
     // Cypress's cookie API does not reach third-party partitions, so an
     // Entra ESTSAUTHPERSISTENT cookie can silently sign a later spec in as a
     // different account. Clear every cookie at the browser level via CDP.
+    // Reads the auth state exported by frontend/e2e-sso/sso-login.spec.ts.
+    "session:load"() {
+      const file = path.resolve(__dirname, "cypress", ".auth", "idir-state.json");
+      return JSON.parse(fs.readFileSync(file, "utf8"));
+    },
+    async "session:applyCookies"(cookies: Array<Record<string, unknown>>) {
+      if (!debugPort) throw new Error("Chrome debug port unavailable.");
+      const CDP = (await import("chrome-remote-interface")).default;
+      const client = await CDP({ port: debugPort, hostname: "127.0.0.1" });
+      try {
+        await client.Network.enable();
+        await client.Network.setCookies({
+          cookies: cookies.map((c) => ({
+            name: String(c.name),
+            value: String(c.value),
+            domain: String(c.domain),
+            path: String(c.path ?? "/"),
+            secure: Boolean(c.secure),
+            httpOnly: Boolean(c.httpOnly),
+          })),
+        });
+      } finally {
+        await client.close();
+      }
+      return null;
+    },
     async "session:clear"() {
       if (!debugPort) return null;
       const CDP = (await import("chrome-remote-interface")).default;

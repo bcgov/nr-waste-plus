@@ -52,73 +52,33 @@ Cypress.Commands.add("shouldHaveStyle", { prevSubject: true }, shouldHaveStyle);
  * we re-visit the authorize URL inside cy.origin with $Config.allowFrame=true
  * so the real Microsoft form is rendered. TOTP comes from a node task.
  */
+/**
+ * Authenticated session from the state exported by the Playwright SSO spec.
+ * This bypasses Entra's frame-busting script entirely: Cypress never loads the
+ * Microsoft UI, so there is no iframe-request-id redirect loop.
+ */
 Cypress.Commands.add("loginViaIdir", (): Cypress.Chainable<void> => {
   pauseTestBudget();
-  return cy.env(["idir_username", "idir_password"]).then((env) => {
-    const username = env.idir_username as string | undefined;
-    const password = env.idir_password as string | undefined;
-    if (!username || !password) {
-      throw new Error("IDIR username/password are not configured in Cypress env.");
-    }
-
+  return cy.task<{
+    cookies: Array<Record<string, unknown>>;
+    session: Record<string, string>;
+    local: Record<string, string>;
+  }>("session:load", null, { log: false }).then((state) => {
     return cy
       .session(
         "idir",
         () => {
-          cy.task("session:clear", null, { log: false });
-          cy.clearCookies();
-          cy.clearLocalStorage();
-          cy.visit("/", { onBeforeLoad: (win) => win.sessionStorage.clear() });
-
-          cy.intercept("GET", "**/protocol/openid-connect/auth*", (req) => {
-            const url = new URL(req.url);
-            if (!url.searchParams.has("prompt")) {
-              url.searchParams.set("prompt", "login");
-              req.redirect(url.toString());
-            }
-          });
-
-          cy.contains("button", "Log in with IDIR", { timeout: 12_000 }).click();
-          cy.url({ timeout: 12_000 }).should("include", "login.microsoftonline.com");
-          cy.location("href").then((msUrl) => {
-            cy.task<string>("generateTotp", null, { log: false }).then((token) => {
-              cy.origin(
-                "login.microsoftonline.com",
-                { args: { msUrl, username, password, token } },
-                ({ msUrl: url, username: email, password: pass, token: code }) => {
-                  cy.visit(url, {
-                    onBeforeLoad(win) {
-                      (win as Window & { $Config?: { allowFrame?: boolean } }).$Config = {
-                        allowFrame: true,
-                      };
-                    },
-                  });
-                  cy.location("href").should("not.contain", "iframe-request-id");
-                  cy.get('input[type="email"]', { timeout: 12_000 }).type(email, {
-                    delay: 15,
-                    log: false,
-                  });
-                  cy.contains("Next").click();
-                  cy.get('input[type="password"]', { timeout: 12_000 }).type(pass, {
-                    delay: 15,
-                    log: false,
-                  });
-                  cy.contains("Sign in").click();
-                  cy.get('input[type="tel"]', { timeout: 12_000 }).type(code, {
-                    delay: 15,
-                    log: false,
-                  });
-                  cy.contains("Verify").click();
-                  cy.get('input[type="submit"][value="Yes"]', { timeout: 2000 }).then(($btn) => {
-                    if ($btn.length) cy.wrap($btn).click();
-                  });
-                },
+          cy.task("session:applyCookies", state.cookies, { log: false });
+          cy.visit("/", {
+            onBeforeLoad(win) {
+              Object.entries(state.session).forEach(([key, value]) =>
+                win.sessionStorage.setItem(key, String(value)),
               );
-            });
+              Object.entries(state.local).forEach(([key, value]) =>
+                win.localStorage.setItem(key, String(value)),
+              );
+            },
           });
-
-          cy.url({ timeout: 12_000 }).should("include", Cypress.config("baseUrl") as string);
-          cy.get(".cds--header__name", { timeout: 12_000 }).should("be.visible");
         },
         {
           cacheAcrossSpecs: true,

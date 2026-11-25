@@ -1,3 +1,5 @@
+import { mkdirSync, writeFileSync } from 'node:fs';
+
 import { expect, test, type Locator, type Page } from '@playwright/test';
 
 import { freshTotp } from './totp';
@@ -92,4 +94,17 @@ test('IDIR login lands on the configured E2E account', async ({ page }) => {
   await expect(panel.getByRole('heading', { name: 'My Profile' })).toBeVisible();
   await expect(panel).toContainText(`Email: ${user}`);
   await expect(panel).toContainText(`IDIR\\${user!.split('@')[0].toUpperCase()}`);
+});
+
+test.afterEach(async ({ page }) => {
+  // Export a fresh authenticated state for the Cypress debug run. Git-ignored.
+  const cookies = await page.context().cookies();
+  const session = await page.evaluate(() => ({ ...window.sessionStorage }));
+  const local = await page.evaluate(() => ({ ...window.localStorage }));
+  const dir = '../cypress/.auth';
+  mkdirSync(dir, { recursive: true });
+  writeFileSync(
+    `${dir}/idir-state.json`,
+    JSON.stringify({ cookies, session, local }, null, 2),
+  );
 });
