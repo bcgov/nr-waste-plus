@@ -92,28 +92,45 @@ Cypress.Commands.add("loginViaIdir", (): Cypress.Chainable<void> => {
           },
         );
 
-        // Generate a fresh code immediately before the second origin segment.
-        cy.task<string>("generateTotp", { log: false }).then((token) => {
-          cy.origin(
-            "https://login.microsoftonline.com",
-            { args: { token, username } },
-            ({ token: code, username: user }) => {
-              cy.get('#idTxtBx_SAOTCC_OTC, input[name="otc"]', { timeout: 60_000 })
-                .first()
-                .type(code, { log: false });
-              cy.get('#idSubmit_SAOTCC_Continue, input[type="submit"]', { timeout: 30_000 })
-                .first()
-                .click();
-              cy.get("body", { timeout: 30_000 }).then(($body) => {
-                if ($body.find("input#idBtn_Back, input[value='No']").length > 0) {
-                  cy.get("input#idBtn_Back, input[value='No']").first().click();
-                }
-                if (/pick an account/i.test($body.text())) {
-                  cy.contains(user, { matchCase: false }).first().click();
-                }
-              });
-            },
-          );
+        // MFA is conditional: a remembered device may skip the code prompt.
+        // Only enter the second origin if Entra is still showing its page.
+        cy.location("hostname").then((hostname) => {
+          if (!hostname.includes("microsoftonline")) return;
+
+          cy.task<string>("generateTotp", null, { log: false }).then((token) => {
+            cy.origin(
+              "https://login.microsoftonline.com",
+              { args: { token, username } },
+              ({ token: code, username: user }) => {
+                cy.get("body", { timeout: 30_000 }).then(($body) => {
+                  let field = $body.find('#idTxtBx_SAOTCC_OTC, input[name="otc"]');
+                  if (field.length === 0 && $body.find("#signInAnotherWay").length > 0) {
+                    cy.get("#signInAnotherWay").click();
+                    cy.get('[data-value="PhoneAppOTP"]').first().click();
+                    cy.get('#idTxtBx_SAOTCC_OTC, input[name="otc"]', { timeout: 30_000 })
+                      .first()
+                      .should("be.visible");
+                    field = $body.find('#idTxtBx_SAOTCC_OTC, input[name="otc"]');
+                  }
+                  if (field.length > 0) {
+                    cy.get('#idTxtBx_SAOTCC_OTC, input[name="otc"]')
+                      .first()
+                      .clear()
+                      .type(code, { log: false });
+                    cy.get('#idSubmit_SAOTCC_Continue, input[type="submit"]', { timeout: 30_000 })
+                      .first()
+                      .click();
+                  }
+                  if ($body.find("input#idBtn_Back, input[value='No']").length > 0) {
+                    cy.get("input#idBtn_Back, input[value='No']").first().click();
+                  }
+                  if (/pick an account/i.test($body.text())) {
+                    cy.contains(user, { matchCase: false }).first().click();
+                  }
+                });
+              },
+            );
+          });
         });
 
         cy.url({ timeout: 60_000 }).should("include", Cypress.config("baseUrl") as string);
