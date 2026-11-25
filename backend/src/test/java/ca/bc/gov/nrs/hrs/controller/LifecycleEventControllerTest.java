@@ -162,7 +162,7 @@ class LifecycleEventControllerTest {
                 .content("""
                     { "event": "", "comment": "Empty event" }
                     """))
-        .andExpect(status().isUnprocessableEntity());
+        .andExpect(status().isUnprocessableContent());
   }
 
   @Test

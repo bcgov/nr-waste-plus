@@ -12,13 +12,11 @@ import static org.mockito.Mockito.when;
 import ca.bc.gov.nrs.hrs.dto.base.IdentityProvider;
 import ca.bc.gov.nrs.hrs.dto.base.Role;
 import ca.bc.gov.nrs.hrs.dto.block.AvailableLifecycleEventDto;
-import ca.bc.gov.nrs.hrs.dto.block.LifecycleDetailsDto;
 import ca.bc.gov.nrs.hrs.dto.block.LifecycleEventRequestDto;
 import ca.bc.gov.nrs.hrs.dto.block.LifecycleEventResponseDto;
 import ca.bc.gov.nrs.hrs.dto.block.LifecycleViewResult;
 import ca.bc.gov.nrs.hrs.entity.block.BlockCommentEntity;
 import ca.bc.gov.nrs.hrs.entity.block.BlockEntity;
-import ca.bc.gov.nrs.hrs.entity.block.BlockRequirementEntity;
 import ca.bc.gov.nrs.hrs.entity.block.ReportingUnitEntity;
 import ca.bc.gov.nrs.hrs.entity.block.StatusEventEntity;
 import ca.bc.gov.nrs.hrs.exception.BlockNotFoundException;
@@ -33,13 +31,11 @@ import ca.bc.gov.nrs.hrs.repository.block.ReportingUnitRepository;
 import ca.bc.gov.nrs.hrs.repository.block.StatusEventRepository;
 import ca.bc.gov.nrs.hrs.security.ResourceScopeGuard;
 import jakarta.persistence.EntityManager;
-import jakarta.servlet.http.HttpServletRequest;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.Month;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
@@ -256,7 +252,7 @@ class LifecycleEventServiceTest {
           .satisfies(
               ex -> {
                 ResponseStatusException rse = (ResponseStatusException) ex;
-                assertThat(rse.getStatusCode()).isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY);
+                assertThat(rse.getStatusCode()).isEqualTo(HttpStatus.UNPROCESSABLE_CONTENT);
                 assertThat(rse.getBody().getProperties())
                     .containsEntry("code", "PRECONDITION_FAILED");
               });
@@ -396,7 +392,7 @@ class LifecycleEventServiceTest {
           .satisfies(
               ex -> {
                 ResponseStatusException rse = (ResponseStatusException) ex;
-                assertThat(rse.getStatusCode()).isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY);
+                assertThat(rse.getStatusCode()).isEqualTo(HttpStatus.UNPROCESSABLE_CONTENT);
                 assertThat(rse.getReason()).contains("planned completion date (plcDate) is required");
               });
     }
@@ -428,7 +424,7 @@ class LifecycleEventServiceTest {
           .satisfies(
               ex -> {
                 ResponseStatusException rse = (ResponseStatusException) ex;
-                assertThat(rse.getStatusCode()).isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY);
+                assertThat(rse.getStatusCode()).isEqualTo(HttpStatus.UNPROCESSABLE_CONTENT);
                 assertThat(rse.getReason()).contains("all attachments must be finalized and clean");
               });
     }
@@ -457,7 +453,7 @@ class LifecycleEventServiceTest {
           .satisfies(
               ex -> {
                 ResponseStatusException rse = (ResponseStatusException) ex;
-                assertThat(rse.getStatusCode()).isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY);
+                assertThat(rse.getStatusCode()).isEqualTo(HttpStatus.UNPROCESSABLE_CONTENT);
                 assertThat(rse.getReason()).contains("A comment is required for this event");
               });
     }

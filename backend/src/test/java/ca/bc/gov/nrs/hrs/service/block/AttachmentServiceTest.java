@@ -23,7 +23,6 @@ import ca.bc.gov.nrs.hrs.exception.AttachmentConflictException;
 import ca.bc.gov.nrs.hrs.exception.AttachmentNotFoundException;
 import ca.bc.gov.nrs.hrs.exception.AttachmentSizeExceededException;
 import ca.bc.gov.nrs.hrs.exception.BlockNotFoundException;
-import ca.bc.gov.nrs.hrs.exception.ForbiddenException;
 import ca.bc.gov.nrs.hrs.exception.InvalidDocumentTypeException;
 import ca.bc.gov.nrs.hrs.exception.InvalidFileNameException;
 import ca.bc.gov.nrs.hrs.exception.ReportingUnitNotFoundException;

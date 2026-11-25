@@ -33,13 +33,8 @@ public class DistrictGradeSupportRepository {
       return;
     }
 
-    jdbcTemplate.batchUpdate(
-        INSERT_SUPPORTED_PAIR,
-        districtCodes,
-        districtCodes.size(),
-        (preparedStatement, districtCode) -> {
-          preparedStatement.setString(1, districtCode);
-          preparedStatement.setString(2, area.name());
-        });
+    List<Object[]> batchArgs =
+        districtCodes.stream().map(code -> new Object[] {code, area.name()}).toList();
+    jdbcTemplate.batchUpdate(INSERT_SUPPORTED_PAIR, batchArgs);
   }
 }
