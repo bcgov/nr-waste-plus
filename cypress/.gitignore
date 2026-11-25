@@ -460,3 +460,4 @@ $RECYCLE.BIN/
 reports/
 summary.md
 **/*.code-workspace
+cypress.env.json

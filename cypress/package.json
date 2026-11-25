@@ -17,7 +17,7 @@
     "precy:run:md:local": "npm run report:clean",
     "cy:run:md:local": "cypress run  --browser chrome --config \"baseUrl=http://localhost:3000\"",
     "postcy:run:md:local": "npm run report:md",
-    "cy:open:local": "cypress open --config \"baseUrl=https://nr-waste-plus-40-frontend.apps.silver.devops.gov.bc.ca/\""
+    "cy:open:local": "cypress open --config \"baseUrl=https://nr-waste-plus-12-frontend.apps.silver.devops.gov.bc.ca/\""
   },
   "engines": {
     "node": ">=22.19.0"
@@ -50,6 +50,7 @@
     "globals": "^17.13.0",
     "lighthouse": "^13.0.0",
     "mochawesome": "^8.0.0",
+    "otplib": "^12.0.1",
     "ts-loader": "^9.4.2",
     "typescript": "^5.0.4",
     "typescript-eslint": "^8.71.1",

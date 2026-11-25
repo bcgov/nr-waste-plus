@@ -2,6 +2,7 @@ import { defineConfig } from "cypress";
 import webpack from "@cypress/webpack-preprocessor";
 import { addCucumberPreprocessorPlugin } from "@badeball/cypress-cucumber-preprocessor";
 import * as dotenv from "dotenv";
+import { authenticator } from "otplib";
 import fs from "node:fs";
 import path from "node:path";
 
@@ -13,12 +14,25 @@ const cypressCredentials = {
   // The first `idir_*` entry is the MFA-protected account (TOTP supplied via
   // `idir_totp_secret`). `idir_*2` is only a fallback and must never shadow it.
   // CI supplies CYPRESS_* values.
-  idir_username: process.env.idir_username ?? process.env.CYPRESS_idir_username ?? process.env.idir_username2,
-  idir_password: process.env.idir_password ?? process.env.CYPRESS_idir_password ?? process.env.idir_password2,
+  idir_username:
+    process.env.CYPRESS_IDIR_USERNAME ??
+    process.env.IDIR_USERNAME ??
+    process.env.idir_username ??
+    process.env.CYPRESS_idir_username ??
+    process.env.idir_username2,
+  idir_password:
+    process.env.CYPRESS_IDIR_PASSWORD ??
+    process.env.IDIR_PASSWORD ??
+    process.env.idir_password ??
+    process.env.CYPRESS_idir_password ??
+    process.env.idir_password2,
   bceid_username: process.env.bceid_username ?? process.env.CYPRESS_bceid_username,
   bceid_password: process.env.bceid_password ?? process.env.CYPRESS_bceid_password,
   idir_totp_secret:
-    process.env.idir_totp_secret ?? process.env.CYPRESS_idir_totp_secret,
+    process.env.CYPRESS_IDIR_TOTP_SECRET ??
+    process.env.IDIR_TOTP_SECRET ??
+    process.env.idir_totp_secret ??
+    process.env.CYPRESS_idir_totp_secret,
 };
 
 const A11Y_REPORT_FILE = path.resolve(__dirname, "reports", "a11y", "a11y-results.json");
@@ -185,6 +199,27 @@ async function setupNodeEvents(
         await client.close();
       }
       return null;
+    },
+    "log:debug": (msg: string) => {
+      console.log("[DEBUG]", msg);
+      return null;
+    },
+    // Generates the current Entra TOTP code from the configured secret.
+    // Never accepts a secret from the spec: it is read from CI/Cypress env
+    // only, so it cannot end up in the browser bundle or a report.
+    async "generateTotp"(secretFromSpec?: string) {
+      const secret =
+        secretFromSpec ??
+        (config.env.idir_totp_secret as string | undefined) ??
+        process.env.IDIR_TOTP_SECRET;
+      if (!secret) throw new Error("IDIR TOTP secret is not configured.");
+
+      const stepMs = 30_000;
+      const remaining = stepMs - (Date.now() % stepMs);
+      if (remaining < 5_000) {
+        await new Promise((resolve) => setTimeout(resolve, remaining + 250));
+      }
+      return authenticator.generate(secret);
     },
     "totp:generate": (secret: string) => generateTotp(secret),
     "totp:fresh": async (secret: string) => freshTotp(secret),
@@ -448,6 +483,8 @@ async function setupNodeEvents(
 
 export default defineConfig({
   e2e: {
+    // TEMP: plain TS debug specs run against the deployed PR build.
+    baseUrl: "https://nr-waste-plus-12-frontend.apps.silver.devops.gov.bc.ca",
     reporter: "mochawesome",
     reporterOptions: {
       reportDir: "reports/mochawesome",
@@ -455,7 +492,8 @@ export default defineConfig({
       html: false,
       json: true
     },
-    specPattern: "**/*.feature",
+    // TEMP: plain TS debug specs (no Cucumber)
+    specPattern: "**/*.cy.ts",
     setupNodeEvents,
     defaultCommandTimeout: 10000,
     pageLoadTimeout: 120000,
