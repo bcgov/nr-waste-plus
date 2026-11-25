@@ -1,0 +1,124 @@
+{
+  "mappings": [
+    {
+      "name": "Block lifecycle details - GET",
+      "request": {
+        "urlPattern": "/api/reporting-units/[0-9]+/[0-9]+/lifecycle",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "Content-Type": "application/json",
+          "ETag": "\"15\""
+        },
+        "jsonBody": {
+          "state": "SUBMITTED",
+          "availableEvents": [
+            {
+              "event": "APPROVE",
+              "label": "Approve submission",
+              "commentRequired": false,
+              "confirmationRequired": true
+            },
+            {
+              "event": "REJECT",
+              "label": "Reject submission",
+              "commentRequired": true,
+              "confirmationRequired": true
+            }
+          ],
+          "history": [
+            {
+              "statusEventId": 901,
+              "event": "SUBMIT",
+              "fromState": "DRAFT",
+              "toState": "SUBMITTED",
+              "actor": "idir\\jdoe",
+              "occurredAt": "2026-08-24T12:00:00Z",
+              "comment": null
+            }
+          ]
+        }
+      },
+      "priority": 5
+    },
+    {
+      "name": "Reporting unit lifecycle details - GET",
+      "request": {
+        "urlPattern": "/api/reporting-units/[0-9]+/lifecycle",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "Content-Type": "application/json",
+          "ETag": "\"10\""
+        },
+        "jsonBody": {
+          "state": "SUBMISSION",
+          "availableEvents": [
+            {
+              "event": "SUBMIT",
+              "label": "Submit",
+              "commentRequired": false,
+              "confirmationRequired": false
+            }
+          ],
+          "history": []
+        }
+      },
+      "priority": 6
+    },
+    {
+      "name": "Block lifecycle event - POST",
+      "request": {
+        "urlPattern": "/api/reporting-units/[0-9]+/[0-9]+/lifecycle-events",
+        "method": "POST"
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "Content-Type": "application/json",
+          "ETag": "\"15\""
+        },
+        "jsonBody": {
+          "reportingUnitId": 37870,
+          "blockId": 12345,
+          "previousState": "DRAFT",
+          "state": "SUBMITTED",
+          "event": "SUBMIT",
+          "version": 15,
+          "occurredAt": "2026-08-24T12:00:00Z",
+          "hbsStatus": null
+        }
+      },
+      "priority": 5
+    },
+    {
+      "name": "Reporting unit lifecycle event - POST",
+      "request": {
+        "urlPattern": "/api/reporting-units/[0-9]+/lifecycle-events",
+        "method": "POST"
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "Content-Type": "application/json",
+          "ETag": "\"11\""
+        },
+        "jsonBody": {
+          "reportingUnitId": 37870,
+          "blockId": null,
+          "previousState": "SUBMISSION",
+          "state": "SUBMISSION",
+          "event": "SUBMIT",
+          "version": 11,
+          "occurredAt": "2026-08-24T12:00:00Z",
+          "hbsStatus": null
+        }
+      },
+      "priority": 6
+    }
+  ]
+}
