@@ -186,7 +186,7 @@ async function setupNodeEvents(
     // different account. Clear every cookie at the browser level via CDP.
     // Reads the auth state exported by frontend/e2e-sso/sso-login.spec.ts.
     "session:load"() {
-      const file = path.resolve(__dirname, "cypress", ".auth", "idir-state.json");
+      const file = path.resolve(__dirname, ".auth", "idir-state.json");
       return JSON.parse(fs.readFileSync(file, "utf8"));
     },
     async "session:applyCookies"(cookies: Array<Record<string, unknown>>) {

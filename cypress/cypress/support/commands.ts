@@ -96,6 +96,11 @@ Cypress.Commands.add("loginViaIdir", (): Cypress.Chainable<void> => {
           },
         },
       )
-      .then(() => restartTestBudget(12_000));
+      .then(() => {
+        // cy.session leaves the browser on its own reset page; land back on
+        // the app so the caller sees the authenticated shell.
+        cy.visit("/search");
+        restartTestBudget(12_000);
+      });
   });
 });
