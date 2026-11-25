@@ -218,7 +218,8 @@ class DefaultEndpointAuthorizationCheckerTest {
 
     assertThatThrownBy(() -> checker.checkAuthorization(request, auth))
         .isInstanceOf(ForbiddenException.class)
-        .hasMessageContaining("User is not authorized to create a reporting unit for client 00012797");
+        .hasMessageContaining(
+            "User is not authorized to create a reporting unit for client 00012797");
     verifyNoInteractions(resourceScopeGuard);
   }
 
@@ -235,7 +236,8 @@ class DefaultEndpointAuthorizationCheckerTest {
     MockHttpServletRequest rawRequest =
         new MockHttpServletRequest("POST", "/api/reporting-units");
     rawRequest.setContent("{\"clientNumber\": \"00012797\"}".getBytes());
-    CachedBodyHttpServletRequest request = new CachedBodyHttpServletRequest(rawRequest, 1024 * 1024);
+    CachedBodyHttpServletRequest request =
+        new CachedBodyHttpServletRequest(rawRequest, 1024 * 1024);
 
     assertThatCode(() -> checker.checkAuthorization(request, auth)).doesNotThrowAnyException();
     verifyNoInteractions(resourceScopeGuard);
@@ -248,7 +250,8 @@ class DefaultEndpointAuthorizationCheckerTest {
     MockHttpServletRequest rawRequest =
         new MockHttpServletRequest("POST", "/api/reporting-units");
     rawRequest.setContent("{\"clientNumber\": \"00012797\"}".getBytes());
-    CachedBodyHttpServletRequest request = new CachedBodyHttpServletRequest(rawRequest, 1024 * 1024);
+    CachedBodyHttpServletRequest request =
+        new CachedBodyHttpServletRequest(rawRequest, 1024 * 1024);
 
     assertThatThrownBy(() -> checker.checkAuthorization(request, auth))
         .isInstanceOf(ForbiddenException.class)
@@ -267,7 +270,8 @@ class DefaultEndpointAuthorizationCheckerTest {
 
     assertThatThrownBy(() -> checker.checkAuthorization(request, null))
         .isInstanceOf(ForbiddenException.class)
-        .hasMessageContaining("Unauthenticated caller is not authorized to create a reporting unit");
+        .hasMessageContaining(
+            "Unauthenticated caller is not authorized to create a reporting unit");
     verifyNoInteractions(resourceScopeGuard);
   }
 
@@ -290,7 +294,8 @@ class DefaultEndpointAuthorizationCheckerTest {
 
     assertThatThrownBy(() -> checker.checkAuthorization(request, auth))
         .isInstanceOf(ForbiddenException.class)
-        .hasMessageContaining("Missing or invalid client number in reporting unit creation request");
+        .hasMessageContaining(
+            "Missing or invalid client number in reporting unit creation request");
     verifyNoInteractions(resourceScopeGuard);
   }
 }

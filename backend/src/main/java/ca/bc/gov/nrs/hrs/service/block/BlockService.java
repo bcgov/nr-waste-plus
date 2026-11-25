@@ -89,7 +89,8 @@ public class BlockService {
    * @param expectedReportingUnitState expected lifecycle state precondition (e.g. "SUBMISSION")
    * @return newly created and persisted block entity
    * @throws ReportingUnitNotFoundException if reporting unit is unknown or outside caller scope
-   * @throws ForbiddenException if caller lacks submitter permissions for the reporting unit's client
+   * @throws ForbiddenException if caller lacks submitter permissions for the reporting unit's
+   *     client
    * @throws ReportingUnitStateConflictException if expected state does not match actual state
    * @throws DuplicateBlockException if creating a duplicate DA block for the reporting unit
    */
@@ -98,6 +99,33 @@ public class BlockService {
   public BlockEntity create(
       Jwt jwt, Long reportingUnitId, BlockType blockType, String expectedReportingUnitState) {
     return doCreate(jwt, reportingUnitId, blockType, expectedReportingUnitState);
+  }
+
+  /**
+   * Creates a new submission block under the specified reporting unit.
+   *
+   * @param jwt caller JWT for tenant authorization
+   * @param reportingUnitId target reporting unit
+   * @param blockType block subtype to create
+   * @return newly created and persisted block entity
+   */
+  @NewSpan
+  @Transactional
+  public BlockEntity create(Jwt jwt, Long reportingUnitId, BlockType blockType) {
+    return doCreate(jwt, reportingUnitId, blockType, null);
+  }
+
+  /**
+   * Creates a new submission block without JWT tenant scoping.
+   *
+   * @param reportingUnitId target reporting unit
+   * @param blockType block subtype to create
+   * @return newly created and persisted block entity
+   */
+  @NewSpan
+  @Transactional
+  public BlockEntity create(Long reportingUnitId, BlockType blockType) {
+    return doCreate(null, reportingUnitId, blockType, null);
   }
 
   /**
@@ -137,33 +165,6 @@ public class BlockService {
   }
 
   /**
-   * Creates a new submission block under the specified reporting unit.
-   *
-   * @param jwt caller JWT for tenant authorization
-   * @param reportingUnitId target reporting unit
-   * @param blockType block subtype to create
-   * @return newly created and persisted block entity
-   */
-  @NewSpan
-  @Transactional
-  public BlockEntity create(Jwt jwt, Long reportingUnitId, BlockType blockType) {
-    return doCreate(jwt, reportingUnitId, blockType, null);
-  }
-
-  /**
-   * Creates a new submission block without JWT tenant scoping.
-   *
-   * @param reportingUnitId target reporting unit
-   * @param blockType block subtype to create
-   * @return newly created and persisted block entity
-   */
-  @NewSpan
-  @Transactional
-  public BlockEntity create(Long reportingUnitId, BlockType blockType) {
-    return doCreate(null, reportingUnitId, blockType, null);
-  }
-
-  /**
    * Retrieves a non-deleted block that belongs to the specified reporting unit.
    *
    * @param jwt caller JWT for tenant authorization
@@ -180,7 +181,8 @@ public class BlockService {
   }
 
   /**
-   * Retrieves a non-deleted block that belongs to the specified reporting unit without JWT tenant scoping.
+   * Retrieves a non-deleted block that belongs to the specified reporting unit without JWT tenant
+   * scoping.
    *
    * @param reportingUnitId owning reporting unit
    * @param blockId target block identifier
@@ -220,7 +222,8 @@ public class BlockService {
   }
 
   /**
-   * Retrieves all non-deleted blocks for a reporting unit ordered by ID ascending without JWT scoping.
+   * Retrieves all non-deleted blocks for a reporting unit ordered by ID ascending without JWT
+   * scoping.
    *
    * @param reportingUnitId target reporting unit
    * @return list of non-deleted blocks

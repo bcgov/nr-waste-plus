@@ -449,7 +449,7 @@ class AttachmentServiceTest {
   @Test
   @DisplayName("Finalizes attachment idempotently when already FINALIZED without re-copying")
   void finalizeAttachment_whenAlreadyFinalized_returnsExistingWithoutCopy() {
-    BlockAttachmentEntity entity = persistedAttachment();
+    final BlockAttachmentEntity entity = persistedAttachment();
     entity.setStatus(AttachmentStatus.FINALIZED.name());
     entity.setObjectKey("hrs/block/2/attachment/501/report_FINAL-MAP.pdf");
     entity.setChecksum("abc123");
@@ -476,7 +476,7 @@ class AttachmentServiceTest {
   @Test
   @DisplayName("Finalize handles race condition where staging is deleted but permanent exists")
   void finalizeAttachment_whenStagingDeletedAndPermanentExists_resolvesCleanly() {
-    BlockAttachmentEntity entity = persistedAttachment();
+    final BlockAttachmentEntity entity = persistedAttachment();
     BlockAttachmentEntity reloadedFinalized = persistedAttachment();
     reloadedFinalized.setStatus(AttachmentStatus.FINALIZED.name());
     reloadedFinalized.setObjectKey("hrs/block/2/attachment/501/report_FINAL-MAP.pdf");
@@ -760,7 +760,8 @@ class AttachmentServiceTest {
   // --- Quarantine gating download tests ---
 
   @Test
-  @DisplayName("getDownloadUrl returns presigned download URL when attachment is FINALIZED and CLEAN")
+  @DisplayName(
+      "getDownloadUrl returns presigned download URL when attachment is FINALIZED and CLEAN")
   void getDownloadUrl_whenFinalizedAndClean_returnsPresignedUrl() {
     BlockAttachmentEntity attachment = persistedAttachment();
     attachment.setStatus(AttachmentStatus.FINALIZED.name());
