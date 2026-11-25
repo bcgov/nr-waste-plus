@@ -492,7 +492,8 @@ export default defineConfig({
       html: false,
       json: true
     },
-    // TEMP: plain TS debug specs (no Cucumber)
+    // TEMP: debug-only settings (no Cucumber)
+    experimentalModifyObstructiveThirdPartyCode: true,
     specPattern: "**/*.cy.ts",
     setupNodeEvents,
     defaultCommandTimeout: 10000,
@@ -504,7 +505,7 @@ export default defineConfig({
       ...cypressCredentials,
     },
   },
-  video: true,
+  video: false, // TEMP: debug runs; avoid ffmpeg noise
   trashAssetsBeforeRuns: true,
   includeShadowDom: false,
   viewportHeight: 1080,
