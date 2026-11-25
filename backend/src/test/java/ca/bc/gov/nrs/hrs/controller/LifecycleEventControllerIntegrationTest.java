@@ -65,7 +65,7 @@ class LifecycleEventControllerIntegrationTest extends AbstractTestContainerInteg
     ReportingUnitEntity ru = new ReportingUnitEntity();
     ru.setClientNumber(CLIENT_NUMBER);
     ru.setClientLocnCode("LC-" + unique);
-    ru.setGeographicCode("DKA");
+    ru.setGeographicCode("DKM");
     ru.setGradeCode("COASTAL");
     ru.setSamplingCode("AVG");
     audit(ru);
