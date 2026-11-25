@@ -166,95 +166,6 @@ const waitForStableOrigin = (appOrigin: string): Cypress.Chainable<string> => {
 };
 
 /**
- * Answers the Entra MFA prompt with a TOTP code derived from the test
- * account's authenticator secret (pattern:
- * https://bcgov.github.io/sso-docs/advanced/automating-mfa-totp). Entra shows
- * the code entry on the same origin as the password form; if the account's
- * default method is an authenticator push instead, switches to "Use a
- * verification code" first. No prompt at all (MFA-exempt account) returns
- * quietly.
- *
- * Requires `idir_totp_secret` — the base32 key from My Sign-Ins → Add
- * sign-in method → Microsoft Authenticator → "Can't scan QR code?".
- */
-const completeTotpChallenge = (username: string): Cypress.Chainable<void> =>
-  cy
-    .env(["idir_totp_secret"])
-    .then((env) => cy.wrap(env.idir_totp_secret as string | undefined))
-    .then((secret) =>
-      cy
-        .get("body", { timeout: 20_000 })
-        .then(($body) => {
-          const codeField = $body.find('#idTxtBx_SAOTCC_OTC, input[name="otc"]');
-          const otherWay = $body.find("#signInAnotherWay");
-
-          if (codeField.length === 0 && otherWay.length === 0) {
-            return cy.wrap(null); // no MFA prompt — exempt account
-          }
-
-          if (!secret) {
-            throw new Error(
-              "Entra MFA prompt present but `idir_totp_secret` is not configured in " +
-                "cypress/.env — register a TOTP authenticator on the test IDIR account " +
-                "and store its base32 key.",
-            );
-          }
-
-          if (codeField.length === 0) {
-            cy.get("#signInAnotherWay").click();
-            cy.get('[data-value="PhoneAppOTP"]').click();
-          }
-
-          return cy
-            .task<string>("totp:fresh", secret, { log: false })
-            .then((token) => {
-              cy.get('#idTxtBx_SAOTCC_OTC, input[name="otc"]')
-                .first()
-                .type(token, { log: false });
-              cy.get('#idSubmit_SAOTCC_Continue, input[type="submit"], button[type="submit"]')
-                .first()
-                .click();
-              return cy.wrap(null);
-            });
-        })
-        .then(() => undefined),
-    );
-
-/**
- * Clears the interstitials Entra can show between MFA and the redirect back
- * to the app — "Pick an account" (clicks the tile for the signing-in user)
- * and "Stay signed in?" (declines) — in whatever order they come. Bounded
- * poll: returns once neither screen is present or the hop budget runs out;
- * the outer pathname wait fails the run if the redirect never arrives.
- */
-const finishEntraInterstitials = (username: string, hops: number): Cypress.Chainable<void> =>
-  cy
-    .get("body", { timeout: 10_000 })
-    .then(($body) => {
-      const staySignedIn = $body.find("input#idBtn_Back, input[value='No']");
-      if (staySignedIn.length > 0) {
-        cy.wrap(staySignedIn.first(), { log: false }).click();
-        return finishEntraInterstitials(username, hops + 1);
-      }
-
-      if (/pick an account/i.test($body.text())) {
-        const localPart = username.split("\\").pop()!.split("@")[0];
-        const escaped = localPart.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-        cy.contains(new RegExp(`^${escaped}`), { matchCase: false }).first().click();
-        return finishEntraInterstitials(username, hops + 1);
-      }
-
-      return undefined;
-    })
-    .then(() => undefined)
-    .then(() => {
-      if (hops >= 10) {
-        return undefined;
-      }
-      return finishEntraInterstitials(username, hops + 1);
-    });
-
-/**
  * Logs in as the given provider and lands on `afterLoginLocation`.
  *
  * @param context Mocha context, used to record `Step()` entries in the report.
@@ -273,9 +184,10 @@ const doLogin = (
   // runs support beforeEach and Gherkin Before hooks as command chains, so
   // pausing inside cy.env().then() is too late when the IdP hop is slow.
   pauseTestBudget();
-  cy.env([usernameKey, passwordKey]).then((env) => {
+  cy.env([usernameKey, passwordKey, "idir_totp_secret"]).then((env) => {
     const username = env[usernameKey];
     const password = env[passwordKey];
+    const totpSecret = env.idir_totp_secret as string | undefined;
 
     if (!username || !password) {
       throw new Error(`Username or password for ${provider} not found.`);
@@ -318,8 +230,13 @@ const doLogin = (
 
           cy.origin(
             loginOrigin,
-            { args: { provider, username, password } },
-            ({ provider: loginProvider, username: loginUsername, password: loginPassword }) => {
+            { args: { provider, username, password, totpSecret } },
+            ({
+              provider: loginProvider,
+              username: loginUsername,
+              password: loginPassword,
+              totpSecret: loginTotpSecret,
+            }) => {
               // Fail loudly when the IdP rejects the test account instead of
               // letting cy.session wait forever for a redirect that never comes.
               cy.get("body", { timeout: 30_000 }).should(
@@ -342,10 +259,86 @@ const doLogin = (
                   { log: false },
                 );
                 cy.get('input[value="Sign in"]', { timeout: 30_000 }).click();
-                // Entra MFA (TOTP from the account's authenticator secret) and
-                // the post-sign-in interstitials — both on this origin.
-                completeTotpChallenge(loginUsername);
-                finishEntraInterstitials(loginUsername, 0);
+                // Entra MFA (TOTP from the account's authenticator secret) and the
+                // post-sign-in interstitials. This is a polling state machine: Entra
+                // renders each step asynchronously after the previous submit, so a
+                // single look at the body right after "Sign in" always sees the
+                // password page and wrongly concludes the account is MFA-exempt.
+                //
+                // It is deliberately inlined: a `cy.origin()` callback is
+                // serialised and executed in a separate bundle, so it cannot call
+                // helpers (or constants) defined outside it.
+                const OTC_FIELD = '#idTxtBx_SAOTCC_OTC, input[name="otc"]';
+                const OTC_SUBMIT =
+                  '#idSubmit_SAOTCC_Continue, input[type="submit"], button[type="submit"]';
+                const MAX_POLLS = 45;
+
+                const settleEntra = (poll: number, done: string[]): void => {
+                  if (poll >= MAX_POLLS) return;
+                  const seen = (step: string) => done.includes(step);
+
+                  cy.wait(1000, { log: false });
+                  cy.get("body", { timeout: 10_000, log: false }).then(($body) => {
+                    const text = $body.text();
+                    if (/your account or password is incorrect|sign-in was blocked/i.test(text)) {
+                      throw new Error("Entra rejected the IDIR credentials.");
+                    }
+
+                    const codeField = $body.find(OTC_FIELD);
+                    const method = $body.find('[data-value="PhoneAppOTP"]');
+                    const otherWay = $body.find("#signInAnotherWay");
+                    const stay = $body.find("input#idBtn_Back");
+
+                    // Entra rejects a reused code, and the field can linger for a
+                    // poll after submit, so each code is submitted once per 5 polls.
+                    const lastSubmit = done
+                      .filter((d) => d.startsWith("otc@"))
+                      .map((d) => Number(d.slice(4)))
+                      .pop();
+                    const recentlySubmitted = lastSubmit !== undefined && poll - lastSubmit < 5;
+
+                    if (codeField.length > 0) {
+                      if (recentlySubmitted) return settleEntra(poll + 1, done);
+                      if (!loginTotpSecret) {
+                        throw new Error(
+                          "Entra MFA prompt present but `idir_totp_secret` is not configured " +
+                            "(cypress/.env locally, IDIR_CSS_TOTP_SECRET in CI). Register a TOTP " +
+                            "authenticator on the test IDIR account and store its base32 key.",
+                        );
+                      }
+                      cy.task<string>("totp:fresh", loginTotpSecret, { log: false }).then((token) => {
+                        cy.get(OTC_FIELD).first().clear().type(token, { log: false });
+                        cy.get(OTC_SUBMIT).first().click();
+                      });
+                      return settleEntra(poll + 1, [...done, `otc@${poll}`]);
+                    }
+
+                    if (method.length > 0 && !seen("method")) {
+                      cy.wrap(method.first(), { log: false }).click();
+                      return settleEntra(poll + 1, [...done, "method"]);
+                    }
+
+                    if (otherWay.length > 0 && !seen("other")) {
+                      cy.wrap(otherWay.first(), { log: false }).click();
+                      return settleEntra(poll + 1, [...done, "other"]);
+                    }
+
+                    if (stay.length > 0 && !seen(`stay@${poll - 1}`)) {
+                      cy.wrap(stay.first(), { log: false }).click();
+                      return settleEntra(poll + 1, [...done, `stay@${poll}`]);
+                    }
+
+                    if (/pick an account/i.test(text) && !seen("pick")) {
+                      const localPart = loginUsername.split("\\").pop()!.split("@")[0];
+                      cy.contains(localPart, { matchCase: false }).first().click();
+                      return settleEntra(poll + 1, [...done, "pick"]);
+                    }
+
+                    return settleEntra(poll + 1, done);
+                  });
+                };
+
+                settleEntra(0, []);
               } else {
                 cy.get("#user", { timeout: 30_000 }).type(loginUsername, {
                   log: false,

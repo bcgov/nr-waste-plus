@@ -23,8 +23,8 @@ for shared steps and hooks.
 - Local BCeID or IDIR credentials for scenarios that perform real login
 
 Provide login credentials in local environment configuration. The Cypress
-configuration prefers `idir_username2`/`idir_password2` (the MFA-exempt local
-IDIR accounts) over `idir_username`/`idir_password`, and accepts
+configuration uses the first `idir_username`/`idir_password` entry
+(`idir_username2`/`idir_password2` is only a fallback, never a replacement), and accepts
 `bceid_username`, `bceid_password`, and optionally `idir_totp_secret`, as well
 as their `CYPRESS_`-prefixed forms. Do not put real credentials in source
 control, issue content, or feature files. CI injects its test credentials
