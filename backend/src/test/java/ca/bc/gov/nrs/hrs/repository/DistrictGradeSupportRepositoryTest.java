@@ -6,14 +6,15 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import ca.bc.gov.nrs.hrs.entity.districtaveragevolume.Area;
 import ca.bc.gov.nrs.hrs.extensions.AbstractTestContainerIntegrationTest;
 import java.util.List;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.transaction.annotation.Transactional;
 
 /** Integration tests for {@link DistrictGradeSupportRepository}. */
+@Transactional
 @DisplayName("Integration Test | District Grade Support Repository")
 public class DistrictGradeSupportRepositoryTest extends AbstractTestContainerIntegrationTest {
 
@@ -22,13 +23,6 @@ public class DistrictGradeSupportRepositoryTest extends AbstractTestContainerInt
 
   @Autowired
   private JdbcTemplate jdbcTemplate;
-
-  @AfterEach
-  void cleanUpTestRows() {
-    jdbcTemplate.update(
-        "DELETE FROM wasteplus.district_grade_support "
-            + "WHERE geographic_code IN ('DCC', 'DCS', 'DOS') AND grade_code = 'INTERIOR'");
-  }
 
   @Test
   @DisplayName("insertSupportedPairs persists new pairs and ignores duplicates via ON CONFLICT")
