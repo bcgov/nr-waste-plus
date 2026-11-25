@@ -167,6 +167,25 @@ async function setupNodeEvents(
   });
 
   on("task", {
+    // Cypress's cookie API does not reach third-party partitions, so an
+    // Entra ESTSAUTHPERSISTENT cookie can silently sign a later spec in as a
+    // different account. Clear every cookie at the browser level via CDP.
+    async "session:clear"() {
+      if (!debugPort) return null;
+      const CDP = (await import("chrome-remote-interface")).default;
+      const client = await CDP({ port: debugPort, hostname: "127.0.0.1" });
+      try {
+        await client.Network.enable();
+        await client.Network.clearBrowserCookies();
+        await client.Storage.clearDataForOrigin({
+          origin: "*",
+          storageTypes: "local_storage,session_storage,cookies",
+        });
+      } finally {
+        await client.close();
+      }
+      return null;
+    },
     "totp:generate": (secret: string) => generateTotp(secret),
     "totp:fresh": async (secret: string) => freshTotp(secret),
     "a11y:getSource": () => {

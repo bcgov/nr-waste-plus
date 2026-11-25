@@ -12,3 +12,23 @@ Then("I am presented with a sign-in challenge or an unauthorized error", () => {
     timeout: DENIAL_TIMEOUT,
   }).should("be.visible");
 });
+
+/**
+ * Asserts the authenticated user is the test account configured in Cypress env,
+ * not a personal session left over from a previous browser profile. The email
+ * is read from env at run time so no account identifier lives in the feature.
+ */
+Then("the profile email should match the configured {string}", (envKey: string) => {
+  cy.env([envKey]).then((env) => {
+    const expected = env[envKey] as string | undefined;
+    if (!expected) {
+      throw new Error(`Missing Cypress env value for ${envKey}.`);
+    }
+    // The profile panel renders `Email: <value>`; assert against the panel
+    // rather than global page text so a stale header cannot satisfy it.
+    cy.get('[data-testid="header-panel"]', { timeout: 30_000 }).should(
+      "contain.text",
+      `Email: ${expected}`,
+    );
+  });
+});

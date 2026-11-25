@@ -1,11 +1,13 @@
 Feature: SSO login smoke checks
 
   @loginAsBCeID
-  Scenario: Business BCeID user can reach the search page
+  Scenario: Business BCeID user reaches the search page as the configured test account
     Given I visit "/search"
-    Then the page should have at least one ARIA live region
+    When I click on the "Profile settings" button
+    Then the profile email should match the configured "bceid_username"
 
   @loginAsIDIR
-  Scenario: IDIR user can reach the search page
+  Scenario: IDIR user reaches the search page as the configured test account
     Given I visit "/search"
-    Then the page should have at least one ARIA live region
+    When I click on the "Profile settings" button
+    Then the profile email should match the configured "idir_username"

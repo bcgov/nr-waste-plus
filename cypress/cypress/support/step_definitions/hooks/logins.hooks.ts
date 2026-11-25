@@ -194,6 +194,19 @@ const doLogin = (
       throw new Error(`Username or password for ${provider} not found.`);
     }
 
+    // Cypress clears cookies and localStorage between tests but NOT
+    // sessionStorage. A previous spec's OIDC user can therefore survive into
+    // this login and silently re-authenticate through the IdP, giving us the
+    // wrong account (seen with IDIR/BCeID smoke tests). Force a clean slate
+    // before `cy.session` so the configured credentials are actually used.
+    cy.task("session:clear", null, { log: false });
+    cy.clearLocalStorage();
+    cy.visit("/", {
+      onBeforeLoad(win) {
+        win.sessionStorage.clear();
+      },
+    });
+
     // Login is bounded by its own command timeouts; the budget restarts after
     // the session is established so it covers only the test body.
     cy.session(
