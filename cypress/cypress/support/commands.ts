@@ -47,19 +47,27 @@ Cypress.Commands.add("loginViaIdir", (): Cypress.Chainable<void> => {
       throw new Error("IDIR username/password are not configured in Cypress env.");
     }
 
+    cy.task("log:debug", "loginViaIdir: env resolved", { log: false });
     return cy.session(
       "idir",
       () => {
+        cy.task("log:debug", "loginViaIdir: setup start", { log: false });
         // Force an interactive login: without prompt=login, Keycloak/Entra can
         // silently reuse a previous session and sign in as the wrong account.
-        cy.intercept({ url: "**/protocol/openid-connect/auth*" }, (req) => {
+        // Test-only: force an interactive login so a previous Keycloak/Entra
+        // session cannot silently sign us in as a different account.
+        cy.intercept("GET", "**/protocol/openid-connect/auth*", (req) => {
           const url = new URL(req.url);
-          url.searchParams.set("prompt", "login");
-          req.url = url.toString();
+          if (!url.searchParams.has("prompt")) {
+            url.searchParams.set("prompt", "login");
+            req.redirect(url.toString());
+          }
         });
 
         cy.visit("/");
+        cy.task("log:debug", "loginViaIdir: visited /", { log: false });
         cy.contains("button", "Log in with IDIR", { timeout: 30_000 }).click();
+        cy.task("log:debug", "loginViaIdir: clicked IDIR", { log: false });
         cy.url({ timeout: 60_000 }).should("include", "login.microsoftonline.com");
 
         // Segment 1: credentials. The callback is serialised, so everything it
