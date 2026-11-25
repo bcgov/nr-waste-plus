@@ -10,6 +10,7 @@ import {
   validateTypography,
   waitForPageLoad,
 } from "./helpers";
+import { pauseTestBudget, restartTestBudget } from "./helpers/test-timeout";
 
 Cypress.Commands.add("waitForPageLoad", waitForPageLoad);
 Cypress.Commands.add("logAndScreenshot", logAndScreenshot);
@@ -40,6 +41,8 @@ Cypress.Commands.add("shouldHaveStyle", { prevSubject: true }, shouldHaveStyle);
  * `generateTotp` node task. Secrets are read from Cypress env and never logged.
  */
 Cypress.Commands.add("loginViaIdir", (): Cypress.Chainable<void> => {
+  pauseTestBudget();
+  cy.task("log:debug", "login: env", { log: false });
   return cy.env(["idir_username", "idir_password"]).then((env) => {
     const username = env.idir_username as string | undefined;
     const password = env.idir_password as string | undefined;
@@ -50,6 +53,7 @@ Cypress.Commands.add("loginViaIdir", (): Cypress.Chainable<void> => {
     return cy.session(
       "idir",
       () => {
+        cy.task("log:debug", "login: setup", { log: false });
         // Clean slate: a stale Keycloak/Entra session would silently sign in
         // as the wrong account instead of showing the email form.
         cy.task("session:clear", null, { log: false });
@@ -69,6 +73,7 @@ Cypress.Commands.add("loginViaIdir", (): Cypress.Chainable<void> => {
 
         cy.contains("button", "Log in with IDIR", { timeout: 12_000 }).click();
         cy.url({ timeout: 12_000 }).should("include", "login.microsoftonline.com");
+        cy.task("log:debug", "login: MS page reached", { log: false });
 
         // Segment 1: credentials. Everything used here comes through args.
         cy.origin(
@@ -79,6 +84,7 @@ Cypress.Commands.add("loginViaIdir", (): Cypress.Chainable<void> => {
             cy.get('#idSIButton9, input[value="Next"]', { timeout: 12_000 }).first().click();
             cy.get('#i0118, input[name="passwd"]', { timeout: 12_000 }).type(pass, { log: false });
             cy.get('#idSIButton9, input[value="Sign in"]', { timeout: 12_000 }).first().click();
+            cy.task("log:debug", "login: credentials submitted", { log: false });
 
             cy.get("body", { timeout: 12_000 }).then(($body) => {
               if ($body.find("#signInAnotherWay").length > 0) {
@@ -120,6 +126,7 @@ Cypress.Commands.add("loginViaIdir", (): Cypress.Chainable<void> => {
 
         cy.url({ timeout: 12_000 }).should("include", Cypress.config("baseUrl") as string);
         cy.get(".cds--header__name", { timeout: 12_000 }).should("be.visible");
+        cy.task("log:debug", "login: app reached", { log: false });
       },
       {
         validate: () => {
@@ -136,6 +143,6 @@ Cypress.Commands.add("loginViaIdir", (): Cypress.Chainable<void> => {
         },
         cacheAcrossSpecs: true,
       },
-    );
+    ).then(() => restartTestBudget(12_000));
   });
 });
