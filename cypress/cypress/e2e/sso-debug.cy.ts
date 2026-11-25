@@ -1,7 +1,7 @@
 /**
- * Minimal SSO debug spec. One variable at a time.
- * Experiment 2: experimentalModifyObstructiveThirdPartyCode = true +
- * prompt=login injected by cy.intercept (test-only, not an app toggle).
+ * Minimal SSO debug: one variable at a time.
+ * Current: experimentalModifyObstructiveThirdPartyCode + prompt=login intercept.
+ * Every wait is <= 12 s; no timeout increases.
  */
 describe("SSO loop debug", () => {
   it("clicking IDIR reaches the Microsoft email form", () => {
@@ -18,21 +18,16 @@ describe("SSO loop debug", () => {
       }
     });
 
-    let entraPrompt = "not-seen";
+    let authorizeCount = 0;
     cy.intercept("GET", "**/oauth2/v2.0/authorize*", (req) => {
-      entraPrompt = new URL(req.url).searchParams.get("prompt") ?? "absent";
+      authorizeCount += 1;
     });
 
-    cy.contains("button", "Log in with IDIR", { timeout: 30_000 }).click();
-
-    cy.location("href", { timeout: 20_000 }).then((href) =>
+    cy.contains("button", "Log in with IDIR", { timeout: 12_000 }).click();
+    cy.location("href", { timeout: 12_000 }).then((href) =>
       cy.task("log:debug", `after click: ${href.slice(0, 180)}`, { log: false }),
     );
-    cy.get("body", { timeout: 20_000 }).then(($body) => {
-      const text = $body.text().replace(/\s+/g, " ").slice(0, 200);
-      cy.task("log:debug", `body: ${text}`, { log: false });
-      cy.task("log:debug", `entra prompt param: ${entraPrompt}`, { log: false });
-      cy.get('input[name="loginfmt"], #i0116', { timeout: 20_000 }).should("be.visible");
-    });
+    cy.get('input[name="loginfmt"], #i0116', { timeout: 12_000 }).should("be.visible");
+    cy.task("log:debug", `authorize requests seen: ${authorizeCount}`, { log: false });
   });
 });
