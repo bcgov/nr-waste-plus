@@ -4,7 +4,8 @@ import { addCucumberPreprocessorPlugin } from "@badeball/cypress-cucumber-prepro
 import * as dotenv from "dotenv";
 import { authenticator } from "otplib";
 import fs from "node:fs";
-import { execFileSync } from "node:child_process";
+import { execFile } from "node:child_process";
+import { promisify } from "node:util";
 import path from "node:path";
 
 import { freshTotp, generateTotp } from "./cypress/support/helpers/totp";
@@ -188,10 +189,10 @@ async function setupNodeEvents(
     // Reads the auth state exported by frontend/e2e-sso/sso-login.spec.ts.
     // Refresh the exported Playwright auth state before a login-tagged spec.
     // Access tokens live ~5 minutes, far shorter than a full suite run.
-    "session:refresh"(kind: string) {
+    async "session:refresh"(kind: string) {
       const spec = kind === "bceid" ? "bceid-login.spec.ts" : "sso-login.spec.ts";
       const cwd = path.resolve(__dirname, "..", "frontend");
-      execFileSync(
+      await promisify(execFile)(
         "npx",
         ["playwright", "test", "-c", "playwright.sso.config.ts", spec, "--retries=2"],
         {
