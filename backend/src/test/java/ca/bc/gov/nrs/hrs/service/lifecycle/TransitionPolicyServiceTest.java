@@ -612,81 +612,53 @@ class TransitionPolicyServiceTest {
     @Test
     @DisplayName("AUTO_APPROVE fires at configured month boundary and not before")
     void autoApprove_respectsConfiguredMonthBoundary() {
-      LocalDate today = LocalDate.now(ZoneOffset.UTC);
-      TransitionContext beforeBoundary =
-          new TransitionContext(null, today.minusMonths(12).plusDays(1), null, false, false);
-      TransitionContext atBoundary =
-          new TransitionContext(null, today.minusMonths(12), null, false, false);
+      // Fixed leap-day submission: 2024-02-29 + 12 months = 2025-02-28
+      LocalDate submissionDate = LocalDate.of(2024, 2, 29);
+      TransitionContext context =
+          new TransitionContext(null, submissionDate, null, false, false);
 
-      assertThat(
-              transitionPolicyService
-                  .evaluateAsSystem(
-                      TransitionPolicyService.STATE_SUBMITTED,
-                      TransitionPolicyService.EVENT_AUTO_APPROVE,
-                      beforeBoundary)
-                  .allowed())
+      LocalDate dayBeforeDeadline = LocalDate.of(2025, 2, 27);
+      LocalDate deadline = LocalDate.of(2025, 2, 28);
+
+      assertThat(transitionPolicyService.isAutoApproveEligible(context, dayBeforeDeadline))
           .isFalse();
+      assertThat(transitionPolicyService.isAutoApproveEligible(context, deadline)).isTrue();
 
-      TransitionEvaluationResult allowed =
-          transitionPolicyService.evaluateAsSystem(
-              TransitionPolicyService.STATE_SUBMITTED,
-              TransitionPolicyService.EVENT_AUTO_APPROVE,
-              atBoundary);
-      assertThat(allowed.allowed()).isTrue();
-      assertThat(allowed.targetState())
-          .isEqualTo(TransitionPolicyService.STATE_SUBMISSION_APPROVED);
-
-      // Changing setting to 6 months moves the boundary without code changes
+      // Changing setting to 6 months moves the deadline to 2024-08-29 without code changes
       autoApproveMonths = 6;
-      TransitionContext sixMonthsAgo =
-          new TransitionContext(null, today.minusMonths(6), null, false, false);
       assertThat(
-              transitionPolicyService
-                  .evaluateAsSystem(
-                      TransitionPolicyService.STATE_SUBMITTED,
-                      TransitionPolicyService.EVENT_AUTO_APPROVE,
-                      sixMonthsAgo)
-                  .allowed())
+              transitionPolicyService.isAutoApproveEligible(
+                  context, LocalDate.of(2024, 8, 28)))
+          .isFalse();
+      assertThat(
+              transitionPolicyService.isAutoApproveEligible(
+                  context, LocalDate.of(2024, 8, 29)))
           .isTrue();
     }
 
     @Test
     @DisplayName("AUTO_APPROVE_BILLING fires at configured BILLING_DELAY_MONTHS boundary")
     void autoApproveBilling_respectsConfiguredDelayBoundary() {
-      LocalDate today = LocalDate.now(ZoneOffset.UTC);
-      TransitionContext beforeDelay =
-          new TransitionContext(null, null, today.minusMonths(1).plusDays(1), false, false);
-      TransitionContext atDelay =
-          new TransitionContext(null, null, today.minusMonths(1), false, false);
+      // Fixed month-end approval: 2026-10-31 + 1 month = 2026-11-30
+      LocalDate approvedDate = LocalDate.of(2026, 10, 31);
+      TransitionContext context =
+          new TransitionContext(null, null, approvedDate, false, false);
 
-      assertThat(
-              transitionPolicyService
-                  .evaluateAsSystem(
-                      TransitionPolicyService.STATE_SUBMISSION_APPROVED,
-                      TransitionPolicyService.EVENT_AUTO_APPROVE_BILLING,
-                      beforeDelay)
-                  .allowed())
+      LocalDate dayBeforeDeadline = LocalDate.of(2026, 11, 29);
+      LocalDate deadline = LocalDate.of(2026, 11, 30);
+
+      assertThat(transitionPolicyService.isAutoApproveBillingEligible(context, dayBeforeDeadline))
           .isFalse();
+      assertThat(transitionPolicyService.isAutoApproveBillingEligible(context, deadline)).isTrue();
 
-      TransitionEvaluationResult allowed =
-          transitionPolicyService.evaluateAsSystem(
-              TransitionPolicyService.STATE_SUBMISSION_APPROVED,
-              TransitionPolicyService.EVENT_AUTO_APPROVE_BILLING,
-              atDelay);
-      assertThat(allowed.allowed()).isTrue();
-      assertThat(allowed.targetState()).isEqualTo(TransitionPolicyService.STATE_BILLING_APPROVED);
-      assertThat(allowed.externalStep()).isEqualTo("HBS_INVOICE_POST");
-
-      // Changing setting to 3 months blocks the 1-month-old approval
+      // Changing setting to 3 months moves the deadline to 2027-01-31
       billingDelayMonths = 3;
-      assertThat(
-              transitionPolicyService
-                  .evaluateAsSystem(
-                      TransitionPolicyService.STATE_SUBMISSION_APPROVED,
-                      TransitionPolicyService.EVENT_AUTO_APPROVE_BILLING,
-                      atDelay)
-                  .allowed())
+      assertThat(transitionPolicyService.isAutoApproveBillingEligible(context, deadline))
           .isFalse();
+      assertThat(
+              transitionPolicyService.isAutoApproveBillingEligible(
+                  context, LocalDate.of(2027, 1, 31)))
+          .isTrue();
     }
   }
 

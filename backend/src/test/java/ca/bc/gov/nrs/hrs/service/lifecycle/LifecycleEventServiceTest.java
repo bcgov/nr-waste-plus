@@ -858,4 +858,71 @@ class LifecycleEventServiceTest {
       assertThat(result.details().history()).isEmpty();
     }
   }
+
+  @Nested
+  @DisplayName("System Transitions and External Step Guards")
+  class SystemAndExternalStepGuards {
+
+    @Test
+    @DisplayName("recordBlockLifecycleEvent rejects externalStep transitions before persisting")
+    void recordBlockLifecycleEvent_rejectsExternalStepBeforePersist() {
+      MockHttpServletRequest request = new MockHttpServletRequest();
+      request.addHeader("If-Match", "\"5\"");
+
+      when(reportingUnitRepository.findByIdAndDeletedFalse(RU_ID))
+          .thenReturn(Optional.of(reportingUnit));
+      when(blockRepository.findByIdAndReportingUnitIdAndDeletedFalse(BLOCK_ID, RU_ID))
+          .thenReturn(Optional.of(block));
+      when(statusEventRepository.findFirstByBlockIdOrderByCreatedAtDescIdDesc(BLOCK_ID))
+          .thenReturn(Optional.empty());
+      when(transitionPolicyService.evaluate(any(), any(), any(), any(), any()))
+          .thenReturn(
+              TransitionEvaluationResult.allowed("BILLING_APPROVED", "HBS_INVOICE_POST"));
+
+      assertThatThrownBy(
+              () ->
+                  lifecycleEventService.recordBlockLifecycleEvent(
+                      request,
+                      submitterJwt,
+                      RU_ID,
+                      BLOCK_ID,
+                      new LifecycleEventRequestDto("APPROVE_FOR_BILLING", null)))
+          .isInstanceOf(ResponseStatusException.class)
+          .extracting(ex -> ((ResponseStatusException) ex).getStatusCode())
+          .isEqualTo(HttpStatus.NOT_IMPLEMENTED);
+
+      verify(blockRepository, never()).saveAndFlush(any());
+      verify(statusEventRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("recordSystemBlockLifecycleEvent populates SYSTEM audit actors")
+    void recordSystemBlockLifecycleEvent_populatesSystemAuditActors() {
+      block.setDraft(false);
+      when(blockRepository.findById(BLOCK_ID)).thenReturn(Optional.of(block));
+      when(statusEventRepository.findFirstByBlockIdOrderByCreatedAtDescIdDesc(BLOCK_ID))
+          .thenReturn(Optional.empty());
+      when(transitionPolicyService.evaluateAsSystem(any(), any(), any()))
+          .thenReturn(TransitionEvaluationResult.allowed("SUBMISSION_APPROVED"));
+      when(blockRepository.saveAndFlush(any())).thenAnswer(inv -> inv.getArgument(0));
+      when(statusEventRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+      LifecycleEventResponseDto response =
+          lifecycleEventService.recordSystemBlockLifecycleEvent(
+              BLOCK_ID, TransitionPolicyService.EVENT_AUTO_APPROVE);
+
+      assertThat(response).isNotNull();
+      assertThat(response.state()).isEqualTo("SUBMISSION_APPROVED");
+
+      ArgumentCaptor<BlockEntity> blockCaptor = ArgumentCaptor.forClass(BlockEntity.class);
+      verify(blockRepository).saveAndFlush(blockCaptor.capture());
+      assertThat(blockCaptor.getValue().getUpdatedBy()).isEqualTo("SYSTEM");
+
+      ArgumentCaptor<StatusEventEntity> eventCaptor =
+          ArgumentCaptor.forClass(StatusEventEntity.class);
+      verify(statusEventRepository).save(eventCaptor.capture());
+      assertThat(eventCaptor.getValue().getCreatedBy()).isEqualTo("SYSTEM");
+      assertThat(eventCaptor.getValue().getUpdatedBy()).isEqualTo("SYSTEM");
+    }
+  }
 }

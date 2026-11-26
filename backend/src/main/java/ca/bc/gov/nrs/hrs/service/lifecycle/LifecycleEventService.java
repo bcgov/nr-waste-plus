@@ -184,6 +184,20 @@ public class LifecycleEventService {
       validateBlockSubmissionReadiness(block, currentState);
     }
 
+    if (result.externalStep() != null && !result.externalStep().isBlank()) {
+      ResponseStatusException ex =
+          new ResponseStatusException(
+              HttpStatus.NOT_IMPLEMENTED,
+              "External step '"
+                  + result.externalStep()
+                  + "' is not yet integrated (#1552).");
+      ex.getBody().setProperty("code", "EXTERNAL_STEP_NOT_IMPLEMENTED");
+      ex.getBody().setProperty("state", currentState);
+      ex.getBody().setProperty("blockState", currentState);
+      ex.getBody().setProperty("retryable", false);
+      throw ex;
+    }
+
     final String targetState = result.targetState();
     updateBlockState(block, targetState);
     block.setUpdatedAt(Instant.now());
@@ -481,6 +495,7 @@ public class LifecycleEventService {
     final String targetState = result.targetState();
     updateBlockState(block, targetState);
     block.setUpdatedAt(Instant.now());
+    block.setUpdatedBy("SYSTEM");
     block = blockRepository.saveAndFlush(block);
 
     StatusEventEntity statusEvent = new StatusEventEntity();
@@ -488,6 +503,8 @@ public class LifecycleEventService {
     statusEvent.setReportingUnitId(null);
     statusEvent.setStatus(targetState);
     statusEvent.setEventType(normalizedEvent);
+    statusEvent.setCreatedBy("SYSTEM");
+    statusEvent.setUpdatedBy("SYSTEM");
 
     var detailsNode = OBJECT_MAPPER.createObjectNode();
     detailsNode.put("previousState", currentState);
