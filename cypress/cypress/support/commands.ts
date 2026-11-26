@@ -59,7 +59,6 @@ Cypress.Commands.add("shouldHaveStyle", { prevSubject: true }, shouldHaveStyle);
  */
 Cypress.Commands.add("loginViaIdir", (): Cypress.Chainable<void> => {
   pauseTestBudget();
-  cy.task("session:refresh", "idir", { log: false });
   return cy.task<{
     cookies: Array<Record<string, unknown>>;
     session: Record<string, string>;
@@ -113,7 +112,6 @@ Cypress.Commands.add("loginViaIdir", (): Cypress.Chainable<void> => {
 
 Cypress.Commands.add("loginViaBceid", (): Cypress.Chainable<void> => {
   pauseTestBudget();
-  cy.task("session:refresh", "bceid", { log: false });
   return cy.task<{
     cookies: Array<Record<string, unknown>>;
     session: Record<string, string>;

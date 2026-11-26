@@ -187,28 +187,36 @@ async function setupNodeEvents(
     // Entra ESTSAUTHPERSISTENT cookie can silently sign a later spec in as a
     // different account. Clear every cookie at the browser level via CDP.
     // Reads the auth state exported by frontend/e2e-sso/sso-login.spec.ts.
-    // Refresh the exported Playwright auth state before a login-tagged spec.
-    // Access tokens live ~5 minutes, far shorter than a full suite run.
-    async "session:refresh"(kind: string) {
-      const spec = kind === "bceid" ? "bceid-login.spec.ts" : "sso-login.spec.ts";
-      const cwd = path.resolve(__dirname, "..", "frontend");
-      await promisify(execFile)(
-        "npx",
-        ["playwright", "test", "-c", "playwright.sso.config.ts", spec, "--retries=2"],
-        {
-          cwd,
-          env: {
-            ...process.env,
-            E2E_BASE_URL: config.baseUrl ?? process.env.E2E_BASE_URL ?? "",
-          },
-          stdio: "ignore",
-        },
-      );
-      return null;
-    },
-    "session:load"(kind: string | null = "idir") {
+    async "session:load"(kind: string | null = "idir") {
       const file = path.resolve(__dirname, ".auth", `${kind || "idir"}-state.json`);
-      return JSON.parse(fs.readFileSync(file, "utf8"));
+      const state = JSON.parse(fs.readFileSync(file, "utf8"));
+      const key = Object.keys(state.session).find((k) => k.startsWith("oidc.user:"));
+      if (!key) return state;
+
+      const user = JSON.parse(state.session[key]) as Record<string, unknown>;
+      const expiresAt = Number(user.expires_at ?? 0) * 1000;
+      const refreshToken = user.refresh_token as string | undefined;
+      if (refreshToken && expiresAt - Date.now() < 120_000) {
+        const [authority, clientId] = key.slice("oidc.user:".length).split(":");
+        const response = await fetch(`${authority}/protocol/openid-connect/token`, {
+          method: "POST",
+          headers: { "content-type": "application/x-www-form-urlencoded" },
+          body: new URLSearchParams({
+            grant_type: "refresh_token",
+            refresh_token: refreshToken,
+            client_id: clientId,
+          }),
+        });
+        if (response.ok) {
+          const tokens = (await response.json()) as Record<string, unknown>;
+          user.access_token = tokens.access_token;
+          user.refresh_token = tokens.refresh_token ?? refreshToken;
+          user.id_token = tokens.id_token ?? user.id_token;
+          user.expires_at = Math.floor(Date.now() / 1000) + Number(tokens.expires_in ?? 300);
+          state.session[key] = JSON.stringify(user);
+        }
+      }
+      return state;
     },
     async "session:applyCookies"(cookies: Array<Record<string, unknown>>) {
       if (!debugPort) throw new Error("Chrome debug port unavailable.");
