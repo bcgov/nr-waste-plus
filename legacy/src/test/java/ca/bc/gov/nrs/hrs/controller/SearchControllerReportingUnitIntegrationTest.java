@@ -509,4 +509,18 @@ class SearchControllerReportingUnitIntegrationTest
         .andReturn();
   }
 
+  @Test
+  @DisplayName("Should return instance on Not Found for an unmapped path")
+  void shouldReturnInstanceOnNotFound() throws Exception {
+    mockMvc
+        .perform(
+            get("/api/does-not-exist")
+                .header(HttpHeaders.CONTENT_TYPE, CONTENT_TYPE_JSON)
+                .accept(CONTENT_TYPE_JSON))
+        .andExpect(status().isNotFound())
+        .andExpect(content().contentType(CONTENT_TYPE_PROBLEM_JSON))
+        .andExpect(jsonPath("$.instance").value("/api/does-not-exist"))
+        .andReturn();
+  }
+
 }

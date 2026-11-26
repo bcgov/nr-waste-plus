@@ -37,7 +37,6 @@ import java.time.LocalDate;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -172,7 +171,7 @@ public class LifecycleEventService {
       if (request.comment() == null || request.comment().isBlank()) {
         ResponseStatusException ex =
             new ResponseStatusException(
-                HttpStatus.UNPROCESSABLE_ENTITY, "A comment is required for this event");
+                HttpStatus.UNPROCESSABLE_CONTENT, "A comment is required for this event");
         ex.getBody().setProperty("code", "COMMENT_REQUIRED");
         ex.getBody().setProperty("state", currentState);
         ex.getBody().setProperty("blockState", currentState);
@@ -298,7 +297,7 @@ public class LifecycleEventService {
       if (request.comment() == null || request.comment().isBlank()) {
         ResponseStatusException ex =
             new ResponseStatusException(
-                HttpStatus.UNPROCESSABLE_ENTITY, "A comment is required for this event");
+                HttpStatus.UNPROCESSABLE_CONTENT, "A comment is required for this event");
         ex.getBody().setProperty("code", "COMMENT_REQUIRED");
         ex.getBody().setProperty("state", currentState);
         ex.getBody().setProperty("blockState", currentState);
@@ -515,7 +514,7 @@ public class LifecycleEventService {
     if (block.getPlcDate() == null) {
       ResponseStatusException ex =
           new ResponseStatusException(
-              HttpStatus.UNPROCESSABLE_ENTITY,
+              HttpStatus.UNPROCESSABLE_CONTENT,
               "Cannot submit block: planned completion date (plcDate) is required.");
       ex.getBody().setProperty("code", "PRECONDITION_FAILED");
       ex.getBody().setProperty("state", currentState);
@@ -533,7 +532,7 @@ public class LifecycleEventService {
     if (totalAttachments != validAttachments) {
       ResponseStatusException ex =
           new ResponseStatusException(
-              HttpStatus.UNPROCESSABLE_ENTITY,
+              HttpStatus.UNPROCESSABLE_CONTENT,
               "Cannot submit block: all attachments must be finalized and clean of malware.");
       ex.getBody().setProperty("code", "PRECONDITION_FAILED");
       ex.getBody().setProperty("state", currentState);

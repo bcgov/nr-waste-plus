@@ -85,7 +85,7 @@ class LifecycleEventControllerTest {
 
   @Test
   @DisplayName("POST /{ruId}/{blockId}/lifecycle-events returns 200 with response body and ETag")
-  void submitBlockLifecycleEvent_returnsOkWithETag() throws Exception {
+  void submitBlockLifecycleEvent_returnsOkWithEtag() throws Exception {
     Instant occurredAt = Instant.parse("2026-08-24T12:00:00Z");
     LifecycleEventResponseDto responseDto =
         new LifecycleEventResponseDto(
@@ -121,7 +121,7 @@ class LifecycleEventControllerTest {
 
   @Test
   @DisplayName("POST /{ruId}/lifecycle-events returns 200 for reporting-unit scoped transition")
-  void submitReportingUnitLifecycleEvent_returnsOkWithETag() throws Exception {
+  void submitReportingUnitLifecycleEvent_returnsOkWithEtag() throws Exception {
     Instant occurredAt = Instant.parse("2026-08-24T12:00:00Z");
     LifecycleEventResponseDto responseDto =
         new LifecycleEventResponseDto(
@@ -162,7 +162,7 @@ class LifecycleEventControllerTest {
                 .content("""
                     { "event": "", "comment": "Empty event" }
                     """))
-        .andExpect(status().isUnprocessableEntity());
+        .andExpect(status().isUnprocessableContent());
   }
 
   @Test
@@ -196,7 +196,7 @@ class LifecycleEventControllerTest {
 
   @Test
   @DisplayName("Stale or missing ETag returns 412 Precondition Failed")
-  void submit_staleETag_returns412() throws Exception {
+  void submit_staleEtag_returns412() throws Exception {
     when(lifecycleEventService.recordBlockLifecycleEvent(
             any(), isNull(), eq(RU_ID), eq(BLOCK_ID), any(LifecycleEventRequestDto.class)))
         .thenThrow(new ConditionalRequestException());
@@ -273,7 +273,7 @@ class LifecycleEventControllerTest {
 
   @Test
   @DisplayName("Unknown reporting unit returns 404 Not Found")
-  void submit_unknownRU_returns404() throws Exception {
+  void submit_unknownRu_returns404() throws Exception {
     when(lifecycleEventService.recordReportingUnitLifecycleEvent(
             any(), isNull(), eq(RU_ID), any(LifecycleEventRequestDto.class)))
         .thenThrow(new ReportingUnitNotFoundException(RU_ID));
@@ -292,7 +292,7 @@ class LifecycleEventControllerTest {
 
   @Test
   @DisplayName("GET /{ruId}/{blockId}/lifecycle returns 200 with details and ETag")
-  void getBlockLifecycle_returnsOkWithETag() throws Exception {
+  void getBlockLifecycle_returnsOkWithEtag() throws Exception {
     AvailableLifecycleEventDto approveEvent =
         new AvailableLifecycleEventDto("APPROVE", "Approve submission", false, true);
     AvailableLifecycleEventDto rejectEvent =
@@ -303,7 +303,8 @@ class LifecycleEventControllerTest {
             Instant.parse("2026-08-24T12:00:00Z"), null);
 
     LifecycleDetailsDto detailsDto =
-        new LifecycleDetailsDto("SUBMITTED", List.of(approveEvent, rejectEvent), List.of(historyItem));
+        new LifecycleDetailsDto(
+            "SUBMITTED", List.of(approveEvent, rejectEvent), List.of(historyItem));
     LifecycleViewResult viewResult = new LifecycleViewResult(detailsDto, 15L);
 
     when(lifecycleEventService.viewBlockLifecycle(isNull(), eq(RU_ID), eq(BLOCK_ID)))
@@ -333,7 +334,7 @@ class LifecycleEventControllerTest {
 
   @Test
   @DisplayName("GET /{ruId}/lifecycle returns 200 with reporting unit details and ETag")
-  void getReportingUnitLifecycle_returnsOkWithETag() throws Exception {
+  void getReportingUnitLifecycle_returnsOkWithEtag() throws Exception {
     AvailableLifecycleEventDto submitEvent =
         new AvailableLifecycleEventDto("SUBMIT", "Submit", false, false);
     LifecycleDetailsDto detailsDto =
