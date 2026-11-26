@@ -116,7 +116,8 @@ public class LifecycleEventService {
 
     Role role = resolveActorRole(jwt, reportingUnit.getClientNumber());
     IdentityProvider provider = JwtPrincipalUtil.getIdentityProvider(jwt);
-    TransitionContext context = buildBlockTransitionContext(blockId, block.getPlcDate());
+    TransitionContext context =
+        buildBlockTransitionContext(blockId, block.getPlcDate(), currentState);
 
     TransitionEvaluationResult result =
         transitionPolicyService.evaluate(
@@ -400,7 +401,8 @@ public class LifecycleEventService {
         .orElse(TransitionPolicyService.STATE_SUBMISSION);
   }
 
-  private TransitionContext buildBlockTransitionContext(Long blockId, LocalDate plcDate) {
+  private TransitionContext buildBlockTransitionContext(
+      Long blockId, LocalDate plcDate, String currentState) {
     List<BlockRequirementEntity> requirements =
         blockRequirementRepository.findByBlockIdAndDeletedFalse(blockId);
     boolean rationaleRequired =
@@ -416,7 +418,10 @@ public class LifecycleEventService {
                     REQ_BURNT_PILES.equalsIgnoreCase(r.getRequirementCode())
                         && Boolean.TRUE.equals(r.getAnsweredYes()));
 
-    LocalDate submissionDate = resolveSubmissionDate(blockId);
+    LocalDate submissionDate =
+        isPreSubmissionState(currentState)
+            ? LocalDate.now(ZoneOffset.UTC)
+            : resolveSubmissionDate(blockId);
     LocalDate approvedDate = resolveApprovedDate(blockId);
 
     return new TransitionContext(
@@ -442,7 +447,8 @@ public class LifecycleEventService {
 
     String normalizedEvent = event.trim().toUpperCase(Locale.ROOT);
     String currentState = resolveBlockState(blockId, block.isDraft());
-    TransitionContext context = buildBlockTransitionContext(blockId, block.getPlcDate());
+    TransitionContext context =
+        buildBlockTransitionContext(blockId, block.getPlcDate(), currentState);
 
     TransitionEvaluationResult result =
         transitionPolicyService.evaluateAsSystem(currentState, normalizedEvent, context);
@@ -558,7 +564,8 @@ public class LifecycleEventService {
     String currentState = resolveBlockState(blockId, block.isDraft());
     Role role = resolveActorRole(jwt, reportingUnit.getClientNumber());
     IdentityProvider provider = JwtPrincipalUtil.getIdentityProvider(jwt);
-    TransitionContext context = buildBlockTransitionContext(blockId, block.getPlcDate());
+    TransitionContext context =
+        buildBlockTransitionContext(blockId, block.getPlcDate(), currentState);
 
     List<AvailableLifecycleEventDto> availableEvents =
         transitionPolicyService.availableEvents(currentState, role, provider, context);
@@ -642,18 +649,23 @@ public class LifecycleEventService {
     return Collections.unmodifiableList(history);
   }
 
+  private boolean isPreSubmissionState(String state) {
+    return TransitionPolicyService.STATE_DRAFT.equalsIgnoreCase(state)
+        || TransitionPolicyService.STATE_REJECTED.equalsIgnoreCase(state);
+  }
+
   private LocalDate resolveSubmissionDate(Long blockId) {
     return statusEventRepository
         .findFirstByBlockIdAndEventTypeOrderByCreatedAtDesc(
             blockId, TransitionPolicyService.EVENT_SUBMIT)
         .map(StatusEventEntity::getCreatedAt)
         .map(instant -> LocalDate.ofInstant(instant, ZoneOffset.UTC))
-        .orElse(LocalDate.now(ZoneOffset.UTC));
+        .orElse(null);
   }
 
   private LocalDate resolveApprovedDate(Long blockId) {
     return statusEventRepository
-        .findFirstByBlockIdAndStatusOrderByCreatedAtAsc(
+        .findFirstByBlockIdAndStatusOrderByCreatedAtDesc(
             blockId, TransitionPolicyService.STATE_SUBMISSION_APPROVED)
         .map(StatusEventEntity::getCreatedAt)
         .map(instant -> LocalDate.ofInstant(instant, ZoneOffset.UTC))
@@ -683,6 +695,9 @@ public class LifecycleEventService {
     } else if (TransitionPolicyService.STATE_CANCELLED.equalsIgnoreCase(targetState)) {
       block.setDraft(false);
       block.setStatusCode("CAN");
+    } else if (TransitionPolicyService.STATE_ERROR.equalsIgnoreCase(targetState)) {
+      block.setDraft(false);
+      block.setStatusCode("ERR");
     }
   }
 }

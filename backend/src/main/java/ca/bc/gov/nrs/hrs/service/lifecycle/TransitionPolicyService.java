@@ -30,8 +30,10 @@ import org.springframework.stereotype.Service;
 @Slf4j
 public class TransitionPolicyService {
 
-  public static final int DEFAULT_AUTO_APPROVE_MONTHS = 12;
-  public static final int DEFAULT_BILLING_DELAY_MONTHS = 1;
+  public static final int DEFAULT_AUTO_APPROVE_MONTHS =
+      LifecycleSettingService.DEFAULT_AUTO_APPROVE_MONTHS;
+  public static final int DEFAULT_BILLING_DELAY_MONTHS =
+      LifecycleSettingService.DEFAULT_BILLING_DELAY_MONTHS;
 
   public static final String STATE_DRAFT = "DRAFT";
   public static final String STATE_PLANNING = "PLANNING";
