@@ -2,26 +2,62 @@ package ca.bc.gov.nrs.hrs.service.lifecycle;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import ca.bc.gov.nrs.hrs.configuration.LifecyclePolicyProperties;
+import ca.bc.gov.nrs.hrs.configuration.LifecyclePolicyProperties.ActorType;
+import ca.bc.gov.nrs.hrs.configuration.LifecyclePolicyProperties.TransitionRule;
 import ca.bc.gov.nrs.hrs.dto.base.IdentityProvider;
 import ca.bc.gov.nrs.hrs.dto.base.Role;
 import ca.bc.gov.nrs.hrs.dto.block.AvailableLifecycleEventDto;
 import java.time.LocalDate;
+import java.time.Month;
+import java.time.ZoneOffset;
 import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.springframework.beans.factory.config.YamlPropertiesFactoryBean;
+import org.springframework.boot.context.properties.bind.Binder;
+import org.springframework.boot.context.properties.source.MapConfigurationPropertySource;
+import org.springframework.core.io.ClassPathResource;
 
 @DisplayName("Unit Test | Transition Policy Service")
 class TransitionPolicyServiceTest {
 
+  private LifecyclePolicyProperties policyProperties;
+  private int autoApproveMonths = 12;
+  private int billingDelayMonths = 1;
   private TransitionPolicyService transitionPolicyService;
 
   @BeforeEach
   void setUp() {
-    transitionPolicyService = new TransitionPolicyService();
+    YamlPropertiesFactoryBean yaml = new YamlPropertiesFactoryBean();
+    yaml.setResources(new ClassPathResource("lifecycle-matrix.yml"));
+    Properties props = yaml.getObject();
+    policyProperties =
+        new Binder(new MapConfigurationPropertySource(props))
+            .bind("ca.bc.gov.nrs.lifecycle", LifecyclePolicyProperties.class)
+            .get();
+
+    LifecycleSettingService settingService =
+        new LifecycleSettingService(null) {
+          @Override
+          public int getAutoApproveMonths() {
+            return autoApproveMonths;
+          }
+
+          @Override
+          public int getBillingDelayMonths() {
+            return billingDelayMonths;
+          }
+        };
+
+    transitionPolicyService = new TransitionPolicyService(policyProperties, settingService);
   }
 
   @Nested
@@ -89,7 +125,7 @@ class TransitionPolicyServiceTest {
 
       assertThat(result.allowed()).isFalse();
       assertThat(result.denialReason())
-          .isEqualTo(TransitionEvaluationResult.DenialReason.ILLEGAL_STATE);
+          .isEqualTo(TransitionEvaluationResult.DenialReason.ILLEGAL_TRANSITION);
       assertThat(result.reason()).contains("Illegal transition");
     }
 
@@ -106,7 +142,7 @@ class TransitionPolicyServiceTest {
 
       assertThat(result.allowed()).isFalse();
       assertThat(result.denialReason())
-          .isEqualTo(TransitionEvaluationResult.DenialReason.ILLEGAL_STATE);
+          .isEqualTo(TransitionEvaluationResult.DenialReason.ILLEGAL_TRANSITION);
       assertThat(result.reason()).contains("Illegal transition");
     }
   }
@@ -115,7 +151,7 @@ class TransitionPolicyServiceTest {
   @DisplayName("Hold Rule Boundary Conditions (Issue #1231)")
   class HoldRuleBoundaryConditions {
 
-    private final LocalDate plcDate = LocalDate.of(2025, 6, 15);
+    private final LocalDate plcDate = LocalDate.of(2025, Month.JUNE, 15);
 
     @Test
     @DisplayName("Submission at PLC + 12mo - 1 day passes to SUBMITTED")
@@ -327,7 +363,7 @@ class TransitionPolicyServiceTest {
 
       assertThat(result.allowed()).isFalse();
       assertThat(result.denialReason())
-          .isEqualTo(TransitionEvaluationResult.DenialReason.FORBIDDEN_ROLE);
+          .isEqualTo(TransitionEvaluationResult.DenialReason.ROLE_NOT_ALLOWED);
       assertThat(result.reason()).contains("read-only");
     }
 
@@ -344,12 +380,12 @@ class TransitionPolicyServiceTest {
 
       assertThat(result.allowed()).isFalse();
       assertThat(result.denialReason())
-          .isEqualTo(TransitionEvaluationResult.DenialReason.FORBIDDEN_ROLE);
+          .isEqualTo(TransitionEvaluationResult.DenialReason.ROLE_NOT_ALLOWED);
       assertThat(result.reason()).contains("BCeID callers cannot exercise");
     }
 
     @Test
-    @DisplayName("Role not permitted for event returns FORBIDDEN_ROLE denial")
+    @DisplayName("Role not permitted for event returns ROLE_NOT_ALLOWED denial")
     void roleNotPermitted_returnsForbiddenRole() {
       TransitionEvaluationResult result =
           transitionPolicyService.evaluate(
@@ -361,7 +397,7 @@ class TransitionPolicyServiceTest {
 
       assertThat(result.allowed()).isFalse();
       assertThat(result.denialReason())
-          .isEqualTo(TransitionEvaluationResult.DenialReason.FORBIDDEN_ROLE);
+          .isEqualTo(TransitionEvaluationResult.DenialReason.ROLE_NOT_ALLOWED);
       assertThat(result.reason()).contains("is not permitted");
     }
 
@@ -495,6 +531,497 @@ class TransitionPolicyServiceTest {
               transitionPolicyService.isCommentRequired(
                   TransitionPolicyService.STATE_SUBMITTED, "APPROVE"))
           .isFalse();
+    }
+
+    @Test
+    @DisplayName("evaluate with blank comment returns COMMENT_REQUIRED for REJECT")
+    void evaluate_blankCommentForReject_returnsCommentRequired() {
+      TransitionEvaluationResult result =
+          transitionPolicyService.evaluate(
+              TransitionPolicyService.STATE_SUBMITTED,
+              TransitionPolicyService.EVENT_REJECT,
+              Role.AREA,
+              IdentityProvider.IDIR,
+              TransitionContext.empty(),
+              "   ");
+
+      assertThat(result.allowed()).isFalse();
+      assertThat(result.denialReason())
+          .isEqualTo(TransitionEvaluationResult.DenialReason.COMMENT_REQUIRED);
+    }
+  }
+
+  @Nested
+  @DisplayName("Billing, ERROR, and External Steps (Issue #1231)")
+  class BillingAndErrorTransitions {
+
+    @Test
+    @DisplayName("APPROVE_FOR_BILLING returns HBS_INVOICE_POST externalStep")
+    void approveForBilling_returnsExternalStep() {
+      TransitionEvaluationResult result =
+          transitionPolicyService.evaluate(
+              TransitionPolicyService.STATE_SUBMISSION_APPROVED,
+              TransitionPolicyService.EVENT_APPROVE_BILLING,
+              Role.DISTRICT,
+              IdentityProvider.IDIR,
+              TransitionContext.empty());
+
+      assertThat(result.allowed()).isTrue();
+      assertThat(result.targetState()).isEqualTo(TransitionPolicyService.STATE_BILLING_APPROVED);
+      assertThat(result.externalStep()).isEqualTo("HBS_INVOICE_POST");
+    }
+
+    @Test
+    @DisplayName("Only ADMIN can resolve ERROR state")
+    void errorResolution_adminOnly() {
+      TransitionEvaluationResult areaDenied =
+          transitionPolicyService.evaluate(
+              TransitionPolicyService.STATE_ERROR,
+              TransitionPolicyService.EVENT_CONFIRM_BILLED,
+              Role.AREA,
+              IdentityProvider.IDIR,
+              TransitionContext.empty());
+      assertThat(areaDenied.allowed()).isFalse();
+      assertThat(areaDenied.denialReason())
+          .isEqualTo(TransitionEvaluationResult.DenialReason.ROLE_NOT_ALLOWED);
+
+      TransitionEvaluationResult adminConfirmed =
+          transitionPolicyService.evaluate(
+              TransitionPolicyService.STATE_ERROR,
+              TransitionPolicyService.EVENT_CONFIRM_BILLED,
+              Role.ADMIN,
+              IdentityProvider.IDIR,
+              TransitionContext.empty());
+      assertThat(adminConfirmed.allowed()).isTrue();
+      assertThat(adminConfirmed.targetState())
+          .isEqualTo(TransitionPolicyService.STATE_BILLING_APPROVED);
+      assertThat(adminConfirmed.externalStep()).isEqualTo("HBS_INVOICE_LOOKUP");
+
+      TransitionEvaluationResult adminReturned =
+          transitionPolicyService.evaluate(
+              TransitionPolicyService.STATE_ERROR,
+              TransitionPolicyService.EVENT_RETURN_TO_APPROVED,
+              Role.ADMIN,
+              IdentityProvider.IDIR,
+              TransitionContext.empty());
+      assertThat(adminReturned.allowed()).isTrue();
+      assertThat(adminReturned.targetState())
+          .isEqualTo(TransitionPolicyService.STATE_SUBMISSION_APPROVED);
+    }
+  }
+
+  @Nested
+  @DisplayName("Timer Boundaries and Dynamic Settings (Issue #1231)")
+  class TimerBoundaries {
+
+    @Test
+    @DisplayName("AUTO_APPROVE fires at configured month boundary and not before")
+    void autoApprove_respectsConfiguredMonthBoundary() {
+      // Fixed leap-day submission: 2024-02-29 + 12 months = 2025-02-28
+      LocalDate submissionDate = LocalDate.of(2024, Month.FEBRUARY, 29);
+      TransitionContext context =
+          new TransitionContext(null, submissionDate, null, false, false);
+
+      LocalDate dayBeforeDeadline = LocalDate.of(2025, Month.FEBRUARY, 27);
+      LocalDate deadline = LocalDate.of(2025, Month.FEBRUARY, 28);
+
+      assertThat(transitionPolicyService.isAutoApproveEligible(context, dayBeforeDeadline))
+          .isFalse();
+      assertThat(transitionPolicyService.isAutoApproveEligible(context, deadline)).isTrue();
+
+      // Changing setting to 6 months moves the deadline to 2024-08-29 without code changes
+      autoApproveMonths = 6;
+      assertThat(
+              transitionPolicyService.isAutoApproveEligible(
+                  context, LocalDate.of(2024, Month.AUGUST, 28)))
+          .isFalse();
+      assertThat(
+              transitionPolicyService.isAutoApproveEligible(
+                  context, LocalDate.of(2024, Month.AUGUST, 29)))
+          .isTrue();
+    }
+
+    @Test
+    @DisplayName("AUTO_APPROVE_BILLING fires at configured BILLING_DELAY_MONTHS boundary")
+    void autoApproveBilling_respectsConfiguredDelayBoundary() {
+      // Fixed month-end approval: 2026-10-31 + 1 month = 2026-11-30
+      LocalDate approvedDate = LocalDate.of(2026, Month.OCTOBER, 31);
+      TransitionContext context =
+          new TransitionContext(null, null, approvedDate, false, false);
+
+      LocalDate dayBeforeDeadline = LocalDate.of(2026, Month.NOVEMBER, 29);
+      LocalDate deadline = LocalDate.of(2026, Month.NOVEMBER, 30);
+
+      assertThat(transitionPolicyService.isAutoApproveBillingEligible(context, dayBeforeDeadline))
+          .isFalse();
+      assertThat(transitionPolicyService.isAutoApproveBillingEligible(context, deadline)).isTrue();
+
+      // Changing setting to 3 months moves the deadline to 2027-01-31
+      billingDelayMonths = 3;
+      assertThat(transitionPolicyService.isAutoApproveBillingEligible(context, deadline))
+          .isFalse();
+      assertThat(
+              transitionPolicyService.isAutoApproveBillingEligible(
+                  context, LocalDate.of(2027, Month.JANUARY, 31)))
+          .isTrue();
+    }
+  }
+
+  @Nested
+  @DisplayName("Edit Permissions and Matrix Consistency (Issue #1231)")
+  class EditAndConsistency {
+
+    @Test
+    @DisplayName("canEdit enforces VIEWER read-only, SUBMITTER DRAFT/REJECTED, and staff states")
+    void canEdit_enforcesPerRoleAndState() {
+      for (String state :
+          List.of(
+              TransitionPolicyService.STATE_DRAFT,
+              TransitionPolicyService.STATE_SUBMITTED,
+              TransitionPolicyService.STATE_REJECTED,
+              TransitionPolicyService.STATE_BILLING_APPROVED,
+              TransitionPolicyService.STATE_CLOSED)) {
+        TransitionEvaluationResult viewerResult =
+            transitionPolicyService.canEdit(state, Role.VIEWER, IdentityProvider.IDIR);
+        assertThat(viewerResult.allowed()).isFalse();
+        assertThat(viewerResult.denialReason())
+            .isEqualTo(TransitionEvaluationResult.DenialReason.ROLE_NOT_ALLOWED);
+      }
+
+      assertThat(
+              transitionPolicyService
+                  .canEdit(
+                      TransitionPolicyService.STATE_DRAFT,
+                      Role.SUBMITTER,
+                      IdentityProvider.BUSINESS_BCEID)
+                  .allowed())
+          .isTrue();
+      assertThat(
+              transitionPolicyService
+                  .canEdit(
+                      TransitionPolicyService.STATE_REJECTED,
+                      Role.SUBMITTER,
+                      IdentityProvider.BUSINESS_BCEID)
+                  .allowed())
+          .isTrue();
+      TransitionEvaluationResult submitterSubmitted =
+          transitionPolicyService.canEdit(
+              TransitionPolicyService.STATE_SUBMITTED,
+              Role.SUBMITTER,
+              IdentityProvider.BUSINESS_BCEID);
+      assertThat(submitterSubmitted.allowed()).isFalse();
+      assertThat(submitterSubmitted.denialReason())
+          .isEqualTo(TransitionEvaluationResult.DenialReason.STATE_NOT_EDITABLE);
+
+      assertThat(
+              transitionPolicyService
+                  .canEdit(
+                      TransitionPolicyService.STATE_SUBMITTED,
+                      Role.DISTRICT,
+                      IdentityProvider.IDIR)
+                  .allowed())
+          .isTrue();
+      assertThat(
+              transitionPolicyService
+                  .canEdit(
+                      TransitionPolicyService.STATE_CLOSED, Role.ADMIN, IdentityProvider.IDIR)
+                  .denialReason())
+          .isEqualTo(TransitionEvaluationResult.DenialReason.STATE_NOT_EDITABLE);
+    }
+
+    @Test
+    @DisplayName("Property consistency: every event in availableEvents evaluates to ALLOWED")
+    void availableEvents_alwaysEvaluateToAllowed() {
+      List<String> allStates =
+          List.of(
+              TransitionPolicyService.STATE_DRAFT,
+              TransitionPolicyService.STATE_PLANNING,
+              TransitionPolicyService.STATE_SUBMISSION,
+              TransitionPolicyService.STATE_STAFF_REVIEW,
+              TransitionPolicyService.STATE_SUBMITTED,
+              TransitionPolicyService.STATE_HOLD,
+              TransitionPolicyService.STATE_REJECTED,
+              TransitionPolicyService.STATE_SUBMISSION_APPROVED,
+              TransitionPolicyService.STATE_BILLING_APPROVED,
+              TransitionPolicyService.STATE_ERROR,
+              TransitionPolicyService.STATE_CANCELLED,
+              TransitionPolicyService.STATE_CLOSED);
+
+      List<TransitionContext> contexts =
+          List.of(
+              TransitionContext.empty(),
+              new TransitionContext(
+                  LocalDate.of(2024, Month.JANUARY, 1),
+                  LocalDate.of(2026, Month.JANUARY, 1),
+                  true,
+                  true));
+
+      for (String state : allStates) {
+        for (Role role : Role.values()) {
+          IdentityProvider idp =
+              role == Role.SUBMITTER ? IdentityProvider.BUSINESS_BCEID : IdentityProvider.IDIR;
+          for (TransitionContext ctx : contexts) {
+            List<AvailableLifecycleEventDto> available =
+                transitionPolicyService.availableEvents(state, role, idp, ctx);
+            for (AvailableLifecycleEventDto dto : available) {
+              TransitionEvaluationResult eval =
+                  transitionPolicyService.evaluate(
+                      state, dto.event(), role, idp, ctx, "valid comment");
+              assertThat(eval.allowed())
+                  .as("Expected %s from %s for %s to be ALLOWED", dto.event(), state, role)
+                  .isTrue();
+            }
+          }
+        }
+      }
+    }
+  }
+
+  @Nested
+  @DisplayName("System Evaluation, Null Safety, and Edge Branches")
+  class EdgeCasesAndNullSafety {
+
+    @Test
+    @DisplayName("evaluateAsSystem handles blank, unknown, unmet precondition, and eligible events")
+    void evaluateAsSystem_coversAllBranches() {
+      assertThat(
+              transitionPolicyService
+                  .evaluateAsSystem(
+                      TransitionPolicyService.STATE_SUBMITTED, null, TransitionContext.empty())
+                  .denialReason())
+          .isEqualTo(TransitionEvaluationResult.DenialReason.ILLEGAL_TRANSITION);
+
+      assertThat(
+              transitionPolicyService
+                  .evaluateAsSystem(
+                      TransitionPolicyService.STATE_SUBMITTED, "  ", TransitionContext.empty())
+                  .denialReason())
+          .isEqualTo(TransitionEvaluationResult.DenialReason.ILLEGAL_TRANSITION);
+
+      assertThat(
+              transitionPolicyService
+                  .evaluateAsSystem(
+                      TransitionPolicyService.STATE_DRAFT,
+                      TransitionPolicyService.EVENT_SUBMIT,
+                      TransitionContext.empty())
+                  .denialReason())
+          .isEqualTo(TransitionEvaluationResult.DenialReason.ILLEGAL_TRANSITION);
+
+      LocalDate today = LocalDate.now(ZoneOffset.UTC);
+      TransitionContext tooRecent =
+          new TransitionContext(null, today.minusMonths(2), null, false, false);
+      assertThat(
+              transitionPolicyService
+                  .evaluateAsSystem(
+                      TransitionPolicyService.STATE_SUBMITTED,
+                      TransitionPolicyService.EVENT_AUTO_APPROVE,
+                      tooRecent)
+                  .denialReason())
+          .isEqualTo(TransitionEvaluationResult.DenialReason.PRECONDITION_FAILED);
+
+      TransitionContext eligible =
+          new TransitionContext(null, today.minusMonths(12), null, false, false);
+      TransitionEvaluationResult allowed =
+          transitionPolicyService.evaluateAsSystem(
+              TransitionPolicyService.STATE_SUBMITTED,
+              TransitionPolicyService.EVENT_AUTO_APPROVE,
+              eligible);
+      assertThat(allowed.allowed()).isTrue();
+      assertThat(allowed.targetState())
+          .isEqualTo(TransitionPolicyService.STATE_SUBMISSION_APPROVED);
+    }
+
+    @Test
+    @DisplayName("Null/blank inputs and null properties fail closed")
+    void nullAndBlankInputs_failClosed() {
+      assertThat(
+              transitionPolicyService
+                  .evaluate(
+                      null, null, Role.SUBMITTER, IdentityProvider.BUSINESS_BCEID, null, null)
+                  .denialReason())
+          .isEqualTo(TransitionEvaluationResult.DenialReason.ILLEGAL_TRANSITION);
+
+      assertThat(
+              transitionPolicyService
+                  .evaluate(
+                      " ",
+                      TransitionPolicyService.EVENT_SUBMIT,
+                      null,
+                      IdentityProvider.BUSINESS_BCEID,
+                      TransitionContext.empty())
+                  .denialReason())
+          .isEqualTo(TransitionEvaluationResult.DenialReason.ROLE_NOT_ALLOWED);
+
+      assertThat(
+              transitionPolicyService
+                  .evaluate(
+                      TransitionPolicyService.STATE_SUBMITTED,
+                      TransitionPolicyService.EVENT_REJECT,
+                      Role.AREA,
+                      IdentityProvider.IDIR,
+                      TransitionContext.empty(),
+                      null)
+                  .denialReason())
+          .isEqualTo(TransitionEvaluationResult.DenialReason.COMMENT_REQUIRED);
+
+      assertThat(transitionPolicyService.isKnownEvent(null)).isFalse();
+      assertThat(transitionPolicyService.isKnownEvent("  ")).isFalse();
+      assertThat(transitionPolicyService.isKnownEvent("SUBMIT")).isTrue();
+      assertThat(transitionPolicyService.isKnownEvent("UNKNOWN")).isFalse();
+
+      assertThat(transitionPolicyService.isSystemOnly(null, null)).isFalse();
+      assertThat(transitionPolicyService.isSystemOnly("DRAFT", " ")).isFalse();
+      assertThat(
+              transitionPolicyService.isSystemOnly(
+                  TransitionPolicyService.STATE_SUBMITTED,
+                  TransitionPolicyService.EVENT_AUTO_APPROVE))
+          .isTrue();
+      assertThat(
+              transitionPolicyService.isSystemOnly(
+                  TransitionPolicyService.STATE_DRAFT, TransitionPolicyService.EVENT_SUBMIT))
+          .isFalse();
+
+      assertThat(transitionPolicyService.isCommentRequired("DRAFT", null)).isFalse();
+      assertThat(transitionPolicyService.isCommentRequired("DRAFT", " ")).isFalse();
+
+      assertThat(
+              transitionPolicyService.availableEvents(
+                  null, null, IdentityProvider.IDIR, TransitionContext.empty()))
+          .isEmpty();
+      assertThat(
+              transitionPolicyService.availableEvents(
+                  " ", Role.SUBMITTER, IdentityProvider.BUSINESS_BCEID, TransitionContext.empty()))
+          .isNotEmpty();
+
+      TransitionPolicyService emptyPolicyService = new TransitionPolicyService(null, null);
+      assertThat(
+              emptyPolicyService
+                  .canEdit(
+                      TransitionPolicyService.STATE_DRAFT,
+                      Role.SUBMITTER,
+                      IdentityProvider.BUSINESS_BCEID)
+                  .denialReason())
+          .isEqualTo(TransitionEvaluationResult.DenialReason.STATE_NOT_EDITABLE);
+      assertThat(
+              emptyPolicyService.isAutoApproveEligible(
+                  new TransitionContext(
+                      null,
+                      LocalDate.now(ZoneOffset.UTC).minusMonths(12),
+                      null,
+                      false,
+                      false)))
+          .isTrue();
+      assertThat(
+              emptyPolicyService.isAutoApproveBillingEligible(
+                  new TransitionContext(
+                      null,
+                      LocalDate.now(ZoneOffset.UTC).minusMonths(1),
+                      null,
+                      false,
+                      false)))
+          .isTrue();
+    }
+
+    @Test
+    @DisplayName("canEdit and timer/hold helpers handle null and edge parameters")
+    void canEditAndHelpers_handleEdgeCases() {
+      assertThat(
+              transitionPolicyService
+                  .canEdit("DRAFT", null, IdentityProvider.IDIR)
+                  .denialReason())
+          .isEqualTo(TransitionEvaluationResult.DenialReason.ROLE_NOT_ALLOWED);
+      assertThat(
+              transitionPolicyService
+                  .canEdit("DRAFT", Role.ADMIN, IdentityProvider.BUSINESS_BCEID)
+                  .denialReason())
+          .isEqualTo(TransitionEvaluationResult.DenialReason.ROLE_NOT_ALLOWED);
+      assertThat(
+              transitionPolicyService
+                  .canEdit(null, Role.SUBMITTER, IdentityProvider.BUSINESS_BCEID)
+                  .allowed())
+          .isTrue();
+
+      assertThat(transitionPolicyService.isAutoApproveEligible(null)).isFalse();
+      assertThat(transitionPolicyService.isAutoApproveEligible(TransitionContext.empty()))
+          .isFalse();
+      TransitionContext janSubmission =
+          new TransitionContext(null, LocalDate.of(2025, Month.JANUARY, 1), null, false, false);
+      assertThat(transitionPolicyService.isAutoApproveEligible(janSubmission, null)).isFalse();
+
+      assertThat(transitionPolicyService.isAutoApproveBillingEligible(null)).isFalse();
+      assertThat(transitionPolicyService.isAutoApproveBillingEligible(TransitionContext.empty()))
+          .isFalse();
+      assertThat(transitionPolicyService.isAutoApproveBillingEligible(janSubmission, null))
+          .isFalse();
+      assertThat(
+              transitionPolicyService.isAutoApproveBillingEligible(
+                  new TransitionContext(
+                      null, LocalDate.of(2025, Month.JANUARY, 1), null, false, false),
+                  LocalDate.of(2025, Month.FEBRUARY, 1)))
+          .isTrue();
+
+      assertThat(transitionPolicyService.isHoldConditionMet(null)).isFalse();
+      assertThat(transitionPolicyService.isHoldConditionMet(TransitionContext.empty())).isFalse();
+      assertThat(
+              transitionPolicyService.isHoldConditionMet(
+                  new TransitionContext(
+                      LocalDate.now(ZoneOffset.UTC).minusMonths(13), null, null, false, false)))
+          .isTrue();
+    }
+
+    @Test
+    @DisplayName("Unknown or blank rule conditions behave safely")
+    void customRuleConditions_behaveSafely() {
+      LifecyclePolicyProperties customProps =
+          new LifecyclePolicyProperties(
+              List.of(
+                  new TransitionRule(
+                      "DRAFT",
+                      "CUSTOM_BLANK",
+                      "SUBMITTED",
+                      "Custom",
+                      Set.of(Role.SUBMITTER),
+                      ActorType.USER,
+                      " ",
+                      false,
+                      false,
+                      null),
+                  new TransitionRule(
+                      "DRAFT",
+                      "CUSTOM_UNKNOWN",
+                      "SUBMITTED",
+                      "Unknown",
+                      Set.of(Role.SUBMITTER),
+                      ActorType.USER,
+                      "UNKNOWN_COND",
+                      false,
+                      false,
+                      null)),
+              Map.of());
+
+      TransitionPolicyService customService = new TransitionPolicyService(customProps, null);
+
+      assertThat(
+              customService
+                  .evaluate(
+                      "DRAFT",
+                      "CUSTOM_BLANK",
+                      Role.SUBMITTER,
+                      IdentityProvider.BUSINESS_BCEID,
+                      TransitionContext.empty())
+                  .allowed())
+          .isTrue();
+
+      assertThat(
+              customService
+                  .evaluate(
+                      "DRAFT",
+                      "CUSTOM_UNKNOWN",
+                      Role.SUBMITTER,
+                      IdentityProvider.BUSINESS_BCEID,
+                      TransitionContext.empty())
+                  .denialReason())
+          .isEqualTo(TransitionEvaluationResult.DenialReason.PRECONDITION_FAILED);
     }
   }
 }

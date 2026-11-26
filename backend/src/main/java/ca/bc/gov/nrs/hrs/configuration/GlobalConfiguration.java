@@ -38,6 +38,7 @@ import ca.bc.gov.nrs.hrs.dto.reportingunit.ReportingUnitDetailsDto;
 import ca.bc.gov.nrs.hrs.dto.reportingunit.ReportingUnitLegacyDetailsDto;
 import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchParametersDto;
 import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchResultDto;
+import ca.bc.gov.nrs.hrs.entity.block.LifecycleSettingEntity;
 import ca.bc.gov.nrs.hrs.entity.block.ReportingUnitIdGenerator;
 import ca.bc.gov.nrs.hrs.entity.speciescomposition.SpeciesCompositionRow;
 import ca.bc.gov.nrs.hrs.entity.users.UserPreferenceEntity;
@@ -70,11 +71,14 @@ import io.micrometer.tracing.Tracer;
 import javax.sql.DataSource;
 import org.hibernate.cfg.JdbcSettings;
 import org.hibernate.engine.jdbc.connections.internal.DatasourceConnectionProviderImpl;
+import org.springframework.aot.hint.RuntimeHints;
+import org.springframework.aot.hint.RuntimeHintsRegistrar;
 import org.springframework.aot.hint.annotation.RegisterReflectionForBinding;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.hibernate.autoconfigure.HibernatePropertiesCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.ImportRuntimeHints;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -156,10 +160,25 @@ import tools.jackson.databind.json.JsonMapper.Builder;
   LifecycleEventResponseDto.class,
   AvailableLifecycleEventDto.class,
   LifecycleHistoryItemDto.class,
-  LifecycleDetailsDto.class
+  LifecycleDetailsDto.class,
+  LifecyclePolicyProperties.class,
+  LifecyclePolicyProperties.TransitionRule.class,
+  LifecyclePolicyProperties.ActorType.class,
+  LifecycleSettingEntity.class
 })
+@ImportRuntimeHints(GlobalConfiguration.LifecycleResourceHints.class)
 @EnableJpaAuditing(auditorAwareRef = "databaseAuditor")
 public class GlobalConfiguration {
+
+  /**
+   * Registers {@code lifecycle-matrix.yml} so GraalVM native images include it on the classpath.
+   */
+  static class LifecycleResourceHints implements RuntimeHintsRegistrar {
+    @Override
+    public void registerHints(RuntimeHints hints, ClassLoader classLoader) {
+      hints.resources().registerPattern("lifecycle-matrix.yml");
+    }
+  }
 
   /**
    * Builds a {@link RestClient} configured to call the Cognito userInfo endpoint.

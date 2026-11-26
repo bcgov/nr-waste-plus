@@ -20,8 +20,8 @@ public interface StatusEventRepository
   /** Returns the most recent status event recorded for a block with id tiebreaker. */
   Optional<StatusEventEntity> findFirstByBlockIdOrderByCreatedAtDescIdDesc(Long blockId);
 
-  /** Returns the first status event recorded for a block with a given status, if any. */
-  Optional<StatusEventEntity> findFirstByBlockIdAndStatusOrderByCreatedAtAsc(
+  /** Returns the most recent status event recorded for a block with a given status, if any. */
+  Optional<StatusEventEntity> findFirstByBlockIdAndStatusOrderByCreatedAtDesc(
       Long blockId, String status);
 
   /** Returns the most recent status event recorded for a block with a given event type. */

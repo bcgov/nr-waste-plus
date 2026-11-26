@@ -1,5 +1,8 @@
 package ca.bc.gov.nrs.hrs.service.lifecycle;
 
+import ca.bc.gov.nrs.hrs.configuration.LifecyclePolicyProperties;
+import ca.bc.gov.nrs.hrs.configuration.LifecyclePolicyProperties.ActorType;
+import ca.bc.gov.nrs.hrs.configuration.LifecyclePolicyProperties.TransitionRule;
 import ca.bc.gov.nrs.hrs.dto.base.IdentityProvider;
 import ca.bc.gov.nrs.hrs.dto.base.Role;
 import ca.bc.gov.nrs.hrs.dto.block.AvailableLifecycleEventDto;
@@ -10,22 +13,27 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
-import java.util.function.Function;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 /**
- * Domain policy engine enforcing lifecycle state transitions for blocks and reporting units.
+ * Data-driven policy engine enforcing lifecycle state transitions and edit permissions for blocks
+ * and reporting units.
  *
- * <p>Validates state legality, actor roles, identity provider constraints, and hold conditions
- * against a structured transition matrix artifact.
+ * <p>All transition edges and per-role edit permissions are loaded from {@link
+ * LifecyclePolicyProperties} (bound from {@code lifecycle-matrix.yml}) and timer thresholds from
+ * {@link LifecycleSettingService}. Unknown states, roles, or events fail closed.
  */
 @Service
 @Slf4j
 public class TransitionPolicyService {
 
-  public static final int DEFAULT_AUTO_APPROVE_MONTHS = 12;
+  public static final int DEFAULT_AUTO_APPROVE_MONTHS =
+      LifecycleSettingService.DEFAULT_AUTO_APPROVE_MONTHS;
+  public static final int DEFAULT_BILLING_DELAY_MONTHS =
+      LifecycleSettingService.DEFAULT_BILLING_DELAY_MONTHS;
 
   public static final String STATE_DRAFT = "DRAFT";
   public static final String STATE_PLANNING = "PLANNING";
@@ -45,145 +53,42 @@ public class TransitionPolicyService {
   public static final String EVENT_HOLD = "HOLD";
   public static final String EVENT_UNHOLD = "UNHOLD";
   public static final String EVENT_APPROVE = "APPROVE";
+  public static final String EVENT_AUTO_APPROVE = "AUTO_APPROVE";
   public static final String EVENT_REJECT = "REJECT";
   public static final String EVENT_CANCEL = "CANCEL";
   public static final String EVENT_AUTO_APPROVE_BILLING = "AUTO_APPROVE_BILLING";
-  public static final String EVENT_APPROVE_BILLING = "APPROVE_BILLING";
+  public static final String EVENT_APPROVE_BILLING = "APPROVE_FOR_BILLING";
   public static final String EVENT_CONFIRM_BILLED = "CONFIRM_BILLED";
   public static final String EVENT_RETURN_TO_APPROVED = "RETURN_TO_APPROVED";
+  public static final String EVENT_HBS_OUTCOME_INDETERMINATE = "HBS_OUTCOME_INDETERMINATE";
 
-  /**
-   * Internal transition matrix entry defining the conditions under which an event may fire.
-   */
-  public record MatrixEntry(
-      String fromState,
-      String event,
-      String label,
-      Set<Role> allowedRoles,
-      boolean commentRequired,
-      boolean confirmationRequired,
-      boolean isSystemOnly,
-      Function<TransitionContext, String> targetStateResolver) {}
+  public static final String CONDITION_NONE = "NONE";
+  public static final String CONDITION_NO_HOLD = "NO_HOLD";
+  public static final String CONDITION_HOLD_REQUIRED = "HOLD_REQUIRED";
+  public static final String CONDITION_AUTO_APPROVE_ELAPSED = "AUTO_APPROVE_ELAPSED";
+  public static final String CONDITION_BILLING_DELAY_ELAPSED = "BILLING_DELAY_ELAPSED";
 
-  private final List<MatrixEntry> transitionMatrix;
+  private final List<TransitionRule> transitionMatrix;
+  private final Map<Role, Set<String>> editableStates;
+  private final LifecycleSettingService lifecycleSettingService;
 
-  /** Constructs the transition policy service and initializes the immutable transition matrix. */
-  public TransitionPolicyService() {
-    this.transitionMatrix = Collections.unmodifiableList(initializeMatrix());
-  }
-
-  private List<MatrixEntry> initializeMatrix() {
-    List<MatrixEntry> matrix = new ArrayList<>();
-
-    Function<TransitionContext, String> submitResolver =
-        context -> isHoldConditionMet(context) ? STATE_HOLD : STATE_SUBMITTED;
-
-    Set<Role> submitterAndAdmin = Set.of(Role.SUBMITTER, Role.ADMIN);
-    Set<Role> ministryStaffAndAdmin = Set.of(Role.AREA, Role.DISTRICT, Role.ADMIN);
-
-    // DRAFT transitions
-    matrix.add(
-        new MatrixEntry(
-            STATE_DRAFT, EVENT_SUBMIT, "Submit", submitterAndAdmin, false, false, false,
-            submitResolver));
-    matrix.add(
-        new MatrixEntry(
-            STATE_DRAFT, EVENT_CANCEL, "Cancel", submitterAndAdmin, true, true, false,
-            ctx -> STATE_CANCELLED));
-
-    // PLANNING (reporting-unit initial state)
-    matrix.add(
-        new MatrixEntry(
-            STATE_PLANNING, EVENT_SUBMIT, "Submit", submitterAndAdmin, false, false, false,
-            ctx -> STATE_STAFF_REVIEW));
-
-    // SUBMISSION (reporting-unit state)
-    matrix.add(
-        new MatrixEntry(
-            STATE_SUBMISSION, EVENT_SUBMIT, "Submit", submitterAndAdmin, false, false, false,
-            submitResolver));
-    matrix.add(
-        new MatrixEntry(
-            STATE_SUBMISSION, EVENT_CANCEL, "Cancel", submitterAndAdmin, true, true, false,
-            ctx -> STATE_CANCELLED));
-
-    // SUBMITTED transitions
-    matrix.add(
-        new MatrixEntry(
-            STATE_SUBMITTED, EVENT_HOLD, "Place on hold", ministryStaffAndAdmin, false, true, false,
-            ctx -> STATE_HOLD));
-    matrix.add(
-        new MatrixEntry(
-            STATE_SUBMITTED, EVENT_APPROVE, "Approve submission", ministryStaffAndAdmin, false,
-            true, false, ctx -> STATE_SUBMISSION_APPROVED));
-    matrix.add(
-        new MatrixEntry(
-            STATE_SUBMITTED, EVENT_REJECT, "Reject submission", ministryStaffAndAdmin, true, true,
-            false, ctx -> STATE_REJECTED));
-    matrix.add(
-        new MatrixEntry(
-            STATE_SUBMITTED, EVENT_CANCEL, "Cancel", submitterAndAdmin, true, true, false,
-            ctx -> STATE_CANCELLED));
-
-    // STAFF_REVIEW (reporting-unit review state)
-    matrix.add(
-        new MatrixEntry(
-            STATE_STAFF_REVIEW, EVENT_APPROVE, "Approve submission", ministryStaffAndAdmin, false,
-            true, false, ctx -> STATE_CLOSED));
-    matrix.add(
-        new MatrixEntry(
-            STATE_STAFF_REVIEW, EVENT_REJECT, "Reject submission", ministryStaffAndAdmin, true,
-            true, false, ctx -> STATE_SUBMISSION));
-
-    // HOLD transitions
-    matrix.add(
-        new MatrixEntry(
-            STATE_HOLD, EVENT_APPROVE, "Approve submission", ministryStaffAndAdmin, false, true,
-            false, ctx -> STATE_SUBMISSION_APPROVED));
-    matrix.add(
-        new MatrixEntry(
-            STATE_HOLD, EVENT_REJECT, "Reject submission", ministryStaffAndAdmin, true, true,
-            false, ctx -> STATE_REJECTED));
-    matrix.add(
-        new MatrixEntry(
-            STATE_HOLD, EVENT_UNHOLD, "Release hold", ministryStaffAndAdmin, false, true, false,
-            ctx -> STATE_SUBMITTED));
-
-    // REJECTED transitions
-    matrix.add(
-        new MatrixEntry(
-            STATE_REJECTED, EVENT_SUBMIT, "Submit", submitterAndAdmin, false, false, false,
-            submitResolver));
-    matrix.add(
-        new MatrixEntry(
-            STATE_REJECTED, EVENT_CANCEL, "Cancel", submitterAndAdmin, true, true, false,
-            ctx -> STATE_CANCELLED));
-
-    // Billing transitions (APPROVE_BILLING, AUTO_APPROVE_BILLING) are deferred until
-    // HBS invoice integration (#1552) lands.
-
-    // ERROR resolution transitions
-    matrix.add(
-        new MatrixEntry(
-            STATE_ERROR, EVENT_CONFIRM_BILLED, "Confirm billed", Set.of(Role.ADMIN), false, true,
-            false, ctx -> STATE_BILLING_APPROVED));
-    matrix.add(
-        new MatrixEntry(
-            STATE_ERROR, EVENT_RETURN_TO_APPROVED, "Return to approved", Set.of(Role.ADMIN), false,
-            true, false, ctx -> STATE_SUBMISSION_APPROVED));
-
-    return matrix;
+  /** Constructs the policy engine from configuration properties and lifecycle settings. */
+  public TransitionPolicyService(
+      LifecyclePolicyProperties properties, LifecycleSettingService lifecycleSettingService) {
+    this.transitionMatrix =
+        properties != null && properties.getTransitions() != null
+            ? List.copyOf(properties.getTransitions())
+            : List.of();
+    this.editableStates =
+        properties != null && properties.getEditableStates() != null
+            ? Map.copyOf(properties.getEditableStates())
+            : Map.of();
+    this.lifecycleSettingService = lifecycleSettingService;
   }
 
   /**
-   * Evaluates whether a requested lifecycle transition is permitted.
-   *
-   * @param currentState current lifecycle state; defaults to DRAFT if null or blank
-   * @param event transition event requested; must not be null
-   * @param role user role performing the transition
-   * @param provider identity provider of the authenticated user
-   * @param context contextual attributes such as PLC date and requirement responses
-   * @return evaluation result indicating whether the transition is allowed and the target state
+   * Evaluates whether a requested user lifecycle transition is permitted (without checking comment
+   * presence).
    */
   public TransitionEvaluationResult evaluate(
       String currentState,
@@ -191,37 +96,103 @@ public class TransitionPolicyService {
       Role role,
       IdentityProvider provider,
       TransitionContext context) {
+    return evaluateInternal(currentState, event, role, provider, context, null, false);
+  }
+
+  /**
+   * Evaluates whether a requested user lifecycle transition is permitted, including comment
+   * requirement validation.
+   */
+  public TransitionEvaluationResult evaluate(
+      String currentState,
+      String event,
+      Role role,
+      IdentityProvider provider,
+      TransitionContext context,
+      String comment) {
+    return evaluateInternal(currentState, event, role, provider, context, comment, true);
+  }
+
+  /**
+   * Evaluates whether a scheduled {@code SYSTEM} actor transition is permitted from the given
+   * state.
+   */
+  public TransitionEvaluationResult evaluateAsSystem(
+      String currentState, String event, TransitionContext context) {
+    if (event == null || event.isBlank()) {
+      return TransitionEvaluationResult.denied("Transition event must not be blank.");
+    }
+
+    String normalizedEvent = event.trim().toUpperCase(Locale.ROOT);
+    String normalizedCurrentState = normalizeState(currentState);
+
+    List<TransitionRule> matchingRules =
+        transitionMatrix.stream()
+            .filter(rule -> rule.actor() == ActorType.SYSTEM)
+            .filter(rule -> rule.fromState().equalsIgnoreCase(normalizedCurrentState))
+            .filter(rule -> rule.event().equalsIgnoreCase(normalizedEvent))
+            .toList();
+
+    if (matchingRules.isEmpty()) {
+      return TransitionEvaluationResult.denied(
+          String.format(
+              "Illegal transition: system event '%s' is not permitted from state '%s'.",
+              normalizedEvent, normalizedCurrentState));
+    }
+
+    TransitionRule matchedRule =
+        matchingRules.stream()
+            .filter(rule -> matchesCondition(rule, context))
+            .findFirst()
+            .orElse(null);
+
+    if (matchedRule == null) {
+      return TransitionEvaluationResult.preconditionFailed(
+          String.format(
+              "Precondition not met for system event '%s' from state '%s'.",
+              normalizedEvent, normalizedCurrentState));
+    }
+
+    log.info(
+        "System transition allowed: {} -> {} via {}",
+        normalizedCurrentState,
+        matchedRule.toState(),
+        normalizedEvent);
+    return TransitionEvaluationResult.allowed(matchedRule.toState(), matchedRule.externalStep());
+  }
+
+  private TransitionEvaluationResult evaluateInternal(
+      String currentState,
+      String event,
+      Role role,
+      IdentityProvider provider,
+      TransitionContext context,
+      String comment,
+      boolean validateComment) {
 
     if (event == null || event.isBlank()) {
       return TransitionEvaluationResult.denied("Transition event must not be blank.");
     }
 
     String normalizedEvent = event.trim().toUpperCase(Locale.ROOT);
-    String normalizedCurrentState =
-        (currentState == null || currentState.isBlank())
-            ? STATE_DRAFT
-            : currentState.trim().toUpperCase(Locale.ROOT);
+    String normalizedCurrentState = normalizeState(currentState);
 
-    // Rule 4: Viewer role is read-only in every state;
-    // Submitter may only edit while DRAFT or REJECTED
     if (role == null || role == Role.VIEWER) {
       log.debug("Transition denied: viewer role is read-only.");
       return TransitionEvaluationResult.forbidden("Viewer role is read-only in every state.");
     }
 
-    // BCeID users cannot perform internal IDIR roles
-    if (provider == IdentityProvider.BUSINESS_BCEID
-        && (role == Role.ADMIN || role == Role.AREA || role == Role.DISTRICT)) {
+    if (provider == IdentityProvider.BUSINESS_BCEID && isInternalRole(role)) {
       log.warn("Transition denied: BCeID caller claimed internal role {}", role);
       return TransitionEvaluationResult.forbidden(
           "BCeID callers cannot exercise administrative or ministry roles.");
     }
 
-    // Match candidate entries in the matrix
-    List<MatrixEntry> matchingEventAndState =
+    List<TransitionRule> matchingEventAndState =
         transitionMatrix.stream()
-            .filter(entry -> entry.fromState().equalsIgnoreCase(normalizedCurrentState))
-            .filter(entry -> entry.event().equalsIgnoreCase(normalizedEvent))
+            .filter(rule -> rule.actor() == ActorType.USER)
+            .filter(rule -> rule.fromState().equalsIgnoreCase(normalizedCurrentState))
+            .filter(rule -> rule.event().equalsIgnoreCase(normalizedEvent))
             .toList();
 
     if (matchingEventAndState.isEmpty()) {
@@ -235,14 +206,12 @@ public class TransitionPolicyService {
               normalizedEvent, normalizedCurrentState));
     }
 
-    // Check role permission
-    MatrixEntry matchedEntry =
+    List<TransitionRule> roleMatchedRules =
         matchingEventAndState.stream()
-            .filter(entry -> entry.allowedRoles().contains(role))
-            .findFirst()
-            .orElse(null);
+            .filter(rule -> rule.roles() != null && rule.roles().contains(role))
+            .toList();
 
-    if (matchedEntry == null) {
+    if (roleMatchedRules.isEmpty()) {
       log.debug(
           "Transition denied: role '{}' not permitted for event '{}' from state '{}'",
           role,
@@ -254,95 +223,105 @@ public class TransitionPolicyService {
               role, normalizedEvent, normalizedCurrentState));
     }
 
-    String targetState = matchedEntry.targetStateResolver().apply(context);
-    if (targetState == null) {
+    TransitionRule matchedRule =
+        roleMatchedRules.stream()
+            .filter(rule -> matchesCondition(rule, context))
+            .findFirst()
+            .orElse(null);
+
+    if (matchedRule == null) {
       log.debug(
           "Transition denied: precondition not met for event '{}' from state '{}'",
           normalizedEvent,
           normalizedCurrentState);
-      return TransitionEvaluationResult.denied(
+      return TransitionEvaluationResult.preconditionFailed(
           String.format(
               "Precondition not met for event '%s' from state '%s'.",
               normalizedEvent, normalizedCurrentState));
     }
 
+    if (validateComment
+        && matchedRule.commentRequired()
+        && (comment == null || comment.isBlank())) {
+      return TransitionEvaluationResult.commentRequired(
+          String.format("A comment is required for event '%s'.", normalizedEvent));
+    }
+
     log.info(
         "Transition allowed: {} -> {} via {} by role {}",
         normalizedCurrentState,
-        targetState,
+        matchedRule.toState(),
         normalizedEvent,
         role);
-    return TransitionEvaluationResult.allowed(targetState);
+    return TransitionEvaluationResult.allowed(matchedRule.toState(), matchedRule.externalStep());
   }
 
   /**
-   * Checks whether the given event name exists in the transition matrix.
-   *
-   * @param event transition event name
-   * @return true if the event is defined in the transition matrix
+   * Evaluates whether a caller with the given role and identity provider may edit data in the
+   * specified state.
    */
+  public TransitionEvaluationResult canEdit(
+      String currentState, Role role, IdentityProvider provider) {
+    if (role == null || role == Role.VIEWER) {
+      return TransitionEvaluationResult.forbidden("Viewer role is read-only in every state.");
+    }
+    if (provider == IdentityProvider.BUSINESS_BCEID && isInternalRole(role)) {
+      return TransitionEvaluationResult.forbidden(
+          "BCeID callers cannot exercise administrative or ministry roles.");
+    }
+    String normalizedState = normalizeState(currentState);
+    Set<String> allowedStates = editableStates.get(role);
+    if (allowedStates == null
+        || allowedStates.stream().noneMatch(s -> s.equalsIgnoreCase(normalizedState))) {
+      return TransitionEvaluationResult.stateNotEditable(
+          String.format("Role '%s' cannot edit in state '%s'.", role, normalizedState));
+    }
+    return TransitionEvaluationResult.editAllowed();
+  }
+
+  /** Checks whether the given event name exists in the transition matrix. */
   public boolean isKnownEvent(String event) {
     if (event == null || event.isBlank()) {
       return false;
     }
     String normalizedEvent = event.trim().toUpperCase(Locale.ROOT);
-    return transitionMatrix.stream().anyMatch(entry -> entry.event().equals(normalizedEvent));
+    return transitionMatrix.stream()
+        .anyMatch(rule -> rule.event().equalsIgnoreCase(normalizedEvent));
   }
 
-  /**
-   * Checks whether an event from the given state is marked as system-only (cannot be triggered
-   * directly via HTTP).
-   *
-   * @param currentState current lifecycle state
-   * @param event transition event name
-   * @return true if the matching transition is system-only
-   */
+  /** Checks whether an event from the given state is marked as {@code SYSTEM}-only. */
   public boolean isSystemOnly(String currentState, String event) {
     if (event == null || event.isBlank()) {
       return false;
     }
     String normalizedEvent = event.trim().toUpperCase(Locale.ROOT);
-    String normalizedCurrentState =
-        (currentState == null || currentState.isBlank())
-            ? STATE_DRAFT
-            : currentState.trim().toUpperCase(Locale.ROOT);
-    return transitionMatrix.stream()
-        .filter(entry -> entry.fromState().equalsIgnoreCase(normalizedCurrentState))
-        .filter(entry -> entry.event().equalsIgnoreCase(normalizedEvent))
-        .anyMatch(MatrixEntry::isSystemOnly);
+    String normalizedCurrentState = normalizeState(currentState);
+    List<TransitionRule> matching =
+        transitionMatrix.stream()
+            .filter(rule -> rule.fromState().equalsIgnoreCase(normalizedCurrentState))
+            .filter(rule -> rule.event().equalsIgnoreCase(normalizedEvent))
+            .toList();
+    return !matching.isEmpty()
+        && matching.stream().allMatch(rule -> rule.actor() == ActorType.SYSTEM);
   }
 
-  /**
-   * Checks whether a comment is mandatory for a given event from the current state.
-   *
-   * @param currentState current lifecycle state
-   * @param event transition event name
-   * @return true if the event requires a non-blank comment
-   */
+  /** Checks whether a comment is mandatory for a given event from the current state. */
   public boolean isCommentRequired(String currentState, String event) {
     if (event == null || event.isBlank()) {
       return false;
     }
     String normalizedEvent = event.trim().toUpperCase(Locale.ROOT);
-    String normalizedCurrentState =
-        (currentState == null || currentState.isBlank())
-            ? STATE_DRAFT
-            : currentState.trim().toUpperCase(Locale.ROOT);
+    String normalizedCurrentState = normalizeState(currentState);
 
     return transitionMatrix.stream()
-        .filter(entry -> entry.fromState().equalsIgnoreCase(normalizedCurrentState))
-        .filter(entry -> entry.event().equalsIgnoreCase(normalizedEvent))
-        .anyMatch(MatrixEntry::commentRequired);
+        .filter(rule -> rule.fromState().equalsIgnoreCase(normalizedCurrentState))
+        .filter(rule -> rule.event().equalsIgnoreCase(normalizedEvent))
+        .anyMatch(TransitionRule::commentRequired);
   }
 
   /**
-   * Computes the list of events available to the caller from the specified lifecycle state.
-   *
-   * @param currentState current lifecycle state of the subject
-   * @param role user role performing the query
-   * @param provider identity provider of the authenticated user
-   * @param context contextual attributes
-   * @return list of available lifecycle event metadata
+   * Computes the list of user events available to the caller from the specified lifecycle state.
+   * Applies the exact same matrix rules and conditions as {@link #evaluate}.
    */
   public List<AvailableLifecycleEventDto> availableEvents(
       String currentState,
@@ -353,73 +332,87 @@ public class TransitionPolicyService {
     if (role == null || role == Role.VIEWER) {
       return Collections.emptyList();
     }
-
-    if (provider == IdentityProvider.BUSINESS_BCEID
-        && (role == Role.ADMIN || role == Role.AREA || role == Role.DISTRICT)) {
+    if (provider == IdentityProvider.BUSINESS_BCEID && isInternalRole(role)) {
       return Collections.emptyList();
     }
 
-    String normalizedCurrentState =
-        (currentState == null || currentState.isBlank())
-            ? STATE_DRAFT
-            : currentState.trim().toUpperCase(Locale.ROOT);
-
+    String normalizedCurrentState = normalizeState(currentState);
     Set<String> seenEvents = new HashSet<>();
     List<AvailableLifecycleEventDto> result = new ArrayList<>();
 
-    for (MatrixEntry entry : transitionMatrix) {
-      if (!entry.fromState().equalsIgnoreCase(normalizedCurrentState)) {
-        continue;
-      }
-      if (entry.isSystemOnly()) {
-        continue;
-      }
-      if (!entry.allowedRoles().contains(role)) {
-        continue;
-      }
-      if (entry.targetStateResolver().apply(context) == null) {
-        continue;
-      }
-      if (seenEvents.add(entry.event())) {
+    for (TransitionRule rule : transitionMatrix) {
+      if (isAvailableUserRule(rule, normalizedCurrentState, role, context)
+          && seenEvents.add(rule.event().toUpperCase(Locale.ROOT))) {
         result.add(
             new AvailableLifecycleEventDto(
-                entry.event(),
-                entry.label(),
-                entry.commentRequired(),
-                entry.confirmationRequired()));
+                rule.event(),
+                rule.label(),
+                rule.commentRequired(),
+                rule.confirmationRequired()));
       }
     }
 
     return Collections.unmodifiableList(result);
   }
 
-  /**
-   * Checks whether the 12-month elapsed time requirement from submission has been met
-   * for system auto-approval of billing.
-   *
-   * @param context transition context carrying submission date
-   * @return true if at least 12 months have elapsed since submission, false otherwise
-   */
-  public boolean isAutoApproveBillingEligible(TransitionContext context) {
-    if (context == null || context.submissionDate() == null) {
-      return false;
-    }
-    LocalDate now = LocalDate.now(ZoneOffset.UTC);
-    return !now.isBefore(context.submissionDate().plusMonths(DEFAULT_AUTO_APPROVE_MONTHS));
+  private boolean isAvailableUserRule(
+      TransitionRule rule, String normalizedCurrentState, Role role, TransitionContext context) {
+    return rule.actor() == ActorType.USER
+        && rule.fromState().equalsIgnoreCase(normalizedCurrentState)
+        && rule.roles() != null
+        && rule.roles().contains(role)
+        && matchesCondition(rule, context);
   }
 
   /**
-   * Checks whether the conditions to hold a block transition are met.
-   *
-   * <p>Hold conditions per Issue #1231:
-   * <ul>
-   *   <li>Submission date is later than PLC date + 12 months (strictly after)</li>
-   *   <li>Rationale required is answered affirmative</li>
-   *   <li>Burnt piles question is answered affirmative</li>
-   * </ul>
-   *
-   * @param context transition context
-   * @return true if hold conditions are met, false otherwise
+   * Checks whether the configured {@code AUTO_APPROVE_MONTHS} has elapsed from the block's
+   * submission date.
+   */
+  public boolean isAutoApproveEligible(TransitionContext context) {
+    return isAutoApproveEligible(context, LocalDate.now(ZoneOffset.UTC));
+  }
+
+  /** Package-private / testable overload accepting an explicit evaluation date. */
+  boolean isAutoApproveEligible(TransitionContext context, LocalDate asOfDate) {
+    if (context == null || context.submissionDate() == null || asOfDate == null) {
+      return false;
+    }
+    int months =
+        lifecycleSettingService != null
+            ? lifecycleSettingService.getAutoApproveMonths()
+            : DEFAULT_AUTO_APPROVE_MONTHS;
+    return !asOfDate.isBefore(context.submissionDate().plusMonths(months));
+  }
+
+  /**
+   * Checks whether the configured {@code BILLING_DELAY_MONTHS} has elapsed from the block's
+   * approval date (falling back to submission date if approval date is absent).
+   */
+  public boolean isAutoApproveBillingEligible(TransitionContext context) {
+    return isAutoApproveBillingEligible(context, LocalDate.now(ZoneOffset.UTC));
+  }
+
+  /** Package-private / testable overload accepting an explicit evaluation date. */
+  boolean isAutoApproveBillingEligible(TransitionContext context, LocalDate asOfDate) {
+    if (context == null || asOfDate == null) {
+      return false;
+    }
+    LocalDate referenceDate =
+        context.approvedDate() != null ? context.approvedDate() : context.submissionDate();
+    if (referenceDate == null) {
+      return false;
+    }
+    int months =
+        lifecycleSettingService != null
+            ? lifecycleSettingService.getBillingDelayMonths()
+            : DEFAULT_BILLING_DELAY_MONTHS;
+    return !asOfDate.isBefore(referenceDate.plusMonths(months));
+  }
+
+  /**
+   * Checks whether the conditions to hold a block transition are met:
+   * submission date strictly after PLC date + 12 months, or {@code RATIONALE_REQUIRED}/{@code
+   * BURNT_PILES} answered yes.
    */
   public boolean isHoldConditionMet(TransitionContext context) {
     if (context == null) {
@@ -437,5 +430,32 @@ public class TransitionPolicyService {
       return effectiveDate.isAfter(holdThreshold);
     }
     return false;
+  }
+
+  private boolean matchesCondition(TransitionRule rule, TransitionContext context) {
+    String condition = rule.condition();
+    if (condition == null || condition.isBlank() || CONDITION_NONE.equalsIgnoreCase(condition)) {
+      return true;
+    }
+    return switch (condition.trim().toUpperCase(Locale.ROOT)) {
+      case CONDITION_NO_HOLD -> !isHoldConditionMet(context);
+      case CONDITION_HOLD_REQUIRED -> isHoldConditionMet(context);
+      case CONDITION_AUTO_APPROVE_ELAPSED -> isAutoApproveEligible(context);
+      case CONDITION_BILLING_DELAY_ELAPSED -> isAutoApproveBillingEligible(context);
+      default -> {
+        log.warn("Unknown transition condition '{}'; failing closed.", condition);
+        yield false;
+      }
+    };
+  }
+
+  private String normalizeState(String currentState) {
+    return (currentState == null || currentState.isBlank())
+        ? STATE_DRAFT
+        : currentState.trim().toUpperCase(Locale.ROOT);
+  }
+
+  private boolean isInternalRole(Role role) {
+    return role == Role.ADMIN || role == Role.AREA || role == Role.DISTRICT;
   }
 }

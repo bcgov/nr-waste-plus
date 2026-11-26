@@ -13,6 +13,8 @@ import org.springframework.stereotype.Repository;
 public interface BlockRepository extends JpaRepository<BlockEntity, Long> {
   Optional<BlockEntity> findByReportingUnitIdAndDeletedFalse(Long reportingUnitId);
 
+  List<BlockEntity> findByStatusCodeAndDeletedFalse(String statusCode);
+
   /** Returns each live block with the scalar data needed by the reporting-unit block list. */
   @Query(
       value =
