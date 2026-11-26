@@ -39,7 +39,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -113,18 +112,7 @@ public class LifecycleEventService {
     ConditionalRequestSupport.requireMatch(servletRequest, block.getRevision());
 
     String currentState = resolveBlockState(blockId, block.isDraft());
-
-    if (transitionPolicyService.isSystemOnly(currentState, normalizedEvent)) {
-      ResponseStatusException ex =
-          new ResponseStatusException(
-              HttpStatus.FORBIDDEN,
-              "Event '" + normalizedEvent + "' is system-only and cannot be triggered via HTTP");
-      ex.getBody().setProperty("code", "SYSTEM_ONLY_EVENT");
-      ex.getBody().setProperty("state", currentState);
-      ex.getBody().setProperty("blockState", currentState);
-      ex.getBody().setProperty("retryable", false);
-      throw ex;
-    }
+    rejectSystemOnlyEvent(currentState, normalizedEvent);
 
     Role role = resolveActorRole(jwt, reportingUnit.getClientNumber());
     IdentityProvider provider = JwtPrincipalUtil.getIdentityProvider(jwt);
@@ -140,67 +128,16 @@ public class LifecycleEventService {
           blockId,
           reportingUnitId,
           result.reason());
-      if (result.denialReason() == TransitionEvaluationResult.DenialReason.ROLE_NOT_ALLOWED) {
-        ResponseStatusException ex =
-            new ResponseStatusException(HttpStatus.FORBIDDEN, result.reason());
-        ex.getBody().setProperty("code", "ROLE_NOT_ALLOWED");
-        ex.getBody().setProperty("state", currentState);
-        ex.getBody().setProperty("blockState", currentState);
-        ex.getBody().setProperty("retryable", false);
-        throw ex;
-      }
-      if (result.denialReason() == TransitionEvaluationResult.DenialReason.COMMENT_REQUIRED) {
-        ResponseStatusException ex =
-            new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, result.reason());
-        ex.getBody().setProperty("code", CODE_COMMENT_REQUIRED);
-        ex.getBody().setProperty("state", currentState);
-        ex.getBody().setProperty("blockState", currentState);
-        ex.getBody().setProperty("retryable", false);
-        throw ex;
-      }
-      if (result.denialReason() == TransitionEvaluationResult.DenialReason.PRECONDITION_FAILED) {
-        ResponseStatusException ex =
-            new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, result.reason());
-        ex.getBody().setProperty("code", CODE_PRECONDITION_FAILED);
-        ex.getBody().setProperty("state", currentState);
-        ex.getBody().setProperty("blockState", currentState);
-        ex.getBody().setProperty("retryable", false);
-        throw ex;
-      }
-      throw new IllegalTransitionException(
-          result.reason(), "ILLEGAL_TRANSITION", currentState, false);
+      throwTransitionDenied(result, currentState);
     }
 
-    if (transitionPolicyService.isCommentRequired(currentState, normalizedEvent)) {
-      if (request.comment() == null || request.comment().isBlank()) {
-        ResponseStatusException ex =
-            new ResponseStatusException(
-                HttpStatus.UNPROCESSABLE_CONTENT, "A comment is required for this event");
-        ex.getBody().setProperty("code", CODE_COMMENT_REQUIRED);
-        ex.getBody().setProperty("state", currentState);
-        ex.getBody().setProperty("blockState", currentState);
-        ex.getBody().setProperty("retryable", false);
-        throw ex;
-      }
-    }
+    validateRequiredComment(currentState, normalizedEvent, request.comment());
 
     if (TransitionPolicyService.EVENT_SUBMIT.equals(normalizedEvent)) {
       validateBlockSubmissionReadiness(block, currentState);
     }
 
-    if (result.externalStep() != null && !result.externalStep().isBlank()) {
-      ResponseStatusException ex =
-          new ResponseStatusException(
-              HttpStatus.NOT_IMPLEMENTED,
-              "External step '"
-                  + result.externalStep()
-                  + "' is not yet integrated (#1552).");
-      ex.getBody().setProperty("code", "EXTERNAL_STEP_NOT_IMPLEMENTED");
-      ex.getBody().setProperty("state", currentState);
-      ex.getBody().setProperty("blockState", currentState);
-      ex.getBody().setProperty("retryable", false);
-      throw ex;
-    }
+    rejectUnimplementedExternalStep(result, currentState);
 
     final String targetState = result.targetState();
     updateBlockState(block, targetState);
@@ -273,18 +210,7 @@ public class LifecycleEventService {
     ConditionalRequestSupport.requireMatch(servletRequest, reportingUnit.getRevision());
 
     String currentState = resolveReportingUnitState(reportingUnitId);
-
-    if (transitionPolicyService.isSystemOnly(currentState, normalizedEvent)) {
-      ResponseStatusException ex =
-          new ResponseStatusException(
-              HttpStatus.FORBIDDEN,
-              "Event '" + normalizedEvent + "' is system-only and cannot be triggered via HTTP");
-      ex.getBody().setProperty("code", "SYSTEM_ONLY_EVENT");
-      ex.getBody().setProperty("state", currentState);
-      ex.getBody().setProperty("blockState", currentState);
-      ex.getBody().setProperty("retryable", false);
-      throw ex;
-    }
+    rejectSystemOnlyEvent(currentState, normalizedEvent);
 
     Role role = resolveActorRole(jwt, reportingUnit.getClientNumber());
     IdentityProvider provider = JwtPrincipalUtil.getIdentityProvider(jwt);
@@ -294,35 +220,11 @@ public class LifecycleEventService {
             currentState, normalizedEvent, role, provider, TransitionContext.empty());
 
     if (!result.allowed()) {
-      log.warn(
-          "Transition denied for RU {}: {}",
-          reportingUnitId,
-          result.reason());
-      if (result.denialReason() == TransitionEvaluationResult.DenialReason.ROLE_NOT_ALLOWED) {
-        ResponseStatusException ex =
-            new ResponseStatusException(HttpStatus.FORBIDDEN, result.reason());
-        ex.getBody().setProperty("code", "ROLE_NOT_ALLOWED");
-        ex.getBody().setProperty("state", currentState);
-        ex.getBody().setProperty("blockState", currentState);
-        ex.getBody().setProperty("retryable", false);
-        throw ex;
-      }
-      throw new IllegalTransitionException(
-          result.reason(), "ILLEGAL_TRANSITION", currentState, false);
+      log.warn("Transition denied for RU {}: {}", reportingUnitId, result.reason());
+      throwTransitionDenied(result, currentState);
     }
 
-    if (transitionPolicyService.isCommentRequired(currentState, normalizedEvent)) {
-      if (request.comment() == null || request.comment().isBlank()) {
-        ResponseStatusException ex =
-            new ResponseStatusException(
-                HttpStatus.UNPROCESSABLE_CONTENT, "A comment is required for this event");
-        ex.getBody().setProperty("code", CODE_COMMENT_REQUIRED);
-        ex.getBody().setProperty("state", currentState);
-        ex.getBody().setProperty("blockState", currentState);
-        ex.getBody().setProperty("retryable", false);
-        throw ex;
-      }
-    }
+    validateRequiredComment(currentState, normalizedEvent, request.comment());
 
     final String targetState = result.targetState();
     reportingUnit.setUpdatedAt(Instant.now());
@@ -353,6 +255,69 @@ public class LifecycleEventService {
         normalizedEvent,
         reportingUnit.getRevision(),
         occurredAt);
+  }
+
+  private void rejectSystemOnlyEvent(String currentState, String normalizedEvent) {
+    if (transitionPolicyService.isSystemOnly(currentState, normalizedEvent)) {
+      throw lifecycleStatusException(
+          HttpStatus.FORBIDDEN,
+          "Event '" + normalizedEvent + "' is system-only and cannot be triggered via HTTP",
+          "SYSTEM_ONLY_EVENT",
+          currentState);
+    }
+  }
+
+  private void throwTransitionDenied(TransitionEvaluationResult result, String currentState) {
+    if (result.denialReason() == TransitionEvaluationResult.DenialReason.ROLE_NOT_ALLOWED) {
+      throw lifecycleStatusException(
+          HttpStatus.FORBIDDEN, result.reason(), "ROLE_NOT_ALLOWED", currentState);
+    }
+    if (result.denialReason() == TransitionEvaluationResult.DenialReason.COMMENT_REQUIRED) {
+      throw lifecycleStatusException(
+          HttpStatus.UNPROCESSABLE_CONTENT, result.reason(), CODE_COMMENT_REQUIRED, currentState);
+    }
+    if (result.denialReason() == TransitionEvaluationResult.DenialReason.PRECONDITION_FAILED) {
+      throw lifecycleStatusException(
+          HttpStatus.UNPROCESSABLE_CONTENT,
+          result.reason(),
+          CODE_PRECONDITION_FAILED,
+          currentState);
+    }
+    throw new IllegalTransitionException(
+        result.reason(), "ILLEGAL_TRANSITION", currentState, false);
+  }
+
+  private void validateRequiredComment(
+      String currentState, String normalizedEvent, String comment) {
+    if (transitionPolicyService.isCommentRequired(currentState, normalizedEvent)
+        && (comment == null || comment.isBlank())) {
+      throw lifecycleStatusException(
+          HttpStatus.UNPROCESSABLE_CONTENT,
+          "A comment is required for this event",
+          CODE_COMMENT_REQUIRED,
+          currentState);
+    }
+  }
+
+  private void rejectUnimplementedExternalStep(
+      TransitionEvaluationResult result, String currentState) {
+    if (result.externalStep() != null && !result.externalStep().isBlank()) {
+      throw lifecycleStatusException(
+          HttpStatus.NOT_IMPLEMENTED,
+          "External step '" + result.externalStep() + "' is not yet integrated (#1552).",
+          "EXTERNAL_STEP_NOT_IMPLEMENTED",
+          currentState);
+    }
+  }
+
+  private ResponseStatusException lifecycleStatusException(
+      HttpStatus status, String message, String code, String currentState) {
+    ResponseStatusException ex = new ResponseStatusException(status, message);
+    ex.getBody().setProperty("code", code);
+    ex.getBody().setProperty("state", currentState);
+    ex.getBody().setProperty("blockState", currentState);
+    ex.getBody().setProperty("retryable", false);
+    return ex;
   }
 
   private String validateAndNormalizeEvent(LifecycleEventRequestDto request) {

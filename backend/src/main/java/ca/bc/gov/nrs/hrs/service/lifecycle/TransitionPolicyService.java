@@ -339,19 +339,8 @@ public class TransitionPolicyService {
     List<AvailableLifecycleEventDto> result = new ArrayList<>();
 
     for (TransitionRule rule : transitionMatrix) {
-      if (rule.actor() != ActorType.USER) {
-        continue;
-      }
-      if (!rule.fromState().equalsIgnoreCase(normalizedCurrentState)) {
-        continue;
-      }
-      if (rule.roles() == null || !rule.roles().contains(role)) {
-        continue;
-      }
-      if (!matchesCondition(rule, context)) {
-        continue;
-      }
-      if (seenEvents.add(rule.event().toUpperCase(Locale.ROOT))) {
+      if (isAvailableUserRule(rule, normalizedCurrentState, role, context)
+          && seenEvents.add(rule.event().toUpperCase(Locale.ROOT))) {
         result.add(
             new AvailableLifecycleEventDto(
                 rule.event(),
@@ -362,6 +351,15 @@ public class TransitionPolicyService {
     }
 
     return Collections.unmodifiableList(result);
+  }
+
+  private boolean isAvailableUserRule(
+      TransitionRule rule, String normalizedCurrentState, Role role, TransitionContext context) {
+    return rule.actor() == ActorType.USER
+        && rule.fromState().equalsIgnoreCase(normalizedCurrentState)
+        && rule.roles() != null
+        && rule.roles().contains(role)
+        && matchesCondition(rule, context);
   }
 
   /**

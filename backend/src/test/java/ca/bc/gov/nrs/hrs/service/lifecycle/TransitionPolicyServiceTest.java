@@ -8,7 +8,6 @@ import ca.bc.gov.nrs.hrs.dto.base.Role;
 import ca.bc.gov.nrs.hrs.dto.block.AvailableLifecycleEventDto;
 import java.time.LocalDate;
 import java.time.Month;
-import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Properties;
 import org.junit.jupiter.api.BeforeEach;
