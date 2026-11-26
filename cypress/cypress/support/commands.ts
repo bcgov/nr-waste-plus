@@ -68,9 +68,14 @@ Cypress.Commands.add("loginViaIdir", (): Cypress.Chainable<void> => {
       .session(
         "idir",
         () => {
+          cy.clearCookies();
+          cy.clearLocalStorage();
+          cy.task("session:clear", null, { log: false });
           cy.task("session:applyCookies", state.cookies, { log: false });
           cy.visit("/", {
             onBeforeLoad(win) {
+              win.sessionStorage.clear();
+              win.localStorage.clear();
               Object.entries(state.session).forEach(([key, value]) =>
                 win.sessionStorage.setItem(key, String(value)),
               );
@@ -81,7 +86,7 @@ Cypress.Commands.add("loginViaIdir", (): Cypress.Chainable<void> => {
           });
         },
         {
-          cacheAcrossSpecs: true,
+          cacheAcrossSpecs: false,
           validate: () => {
             cy.window({ log: false }).then((win) => {
               const store = win.sessionStorage;
@@ -116,9 +121,14 @@ Cypress.Commands.add("loginViaBceid", (): Cypress.Chainable<void> => {
       .session(
         "idir",
         () => {
+          cy.clearCookies();
+          cy.clearLocalStorage();
+          cy.task("session:clear", null, { log: false });
           cy.task("session:applyCookies", state.cookies, { log: false });
           cy.visit("/", {
             onBeforeLoad(win) {
+              win.sessionStorage.clear();
+              win.localStorage.clear();
               Object.entries(state.session).forEach(([key, value]) =>
                 win.sessionStorage.setItem(key, String(value)),
               );
@@ -129,7 +139,7 @@ Cypress.Commands.add("loginViaBceid", (): Cypress.Chainable<void> => {
           });
         },
         {
-          cacheAcrossSpecs: true,
+          cacheAcrossSpecs: false,
           validate: () => {
             cy.window({ log: false }).then((win) => {
               const store = win.sessionStorage;
