@@ -196,6 +196,7 @@ async function setupNodeEvents(
       const user = JSON.parse(state.session[key]) as Record<string, unknown>;
       const expiresAt = Number(user.expires_at ?? 0) * 1000;
       const refreshToken = user.refresh_token as string | undefined;
+      console.log("[TOKEN]", kind, "remaining min", Math.round((expiresAt - Date.now()) / 60000));
       if (refreshToken && expiresAt - Date.now() < 120_000) {
         const [authority, clientId] = key.slice("oidc.user:".length).split(":");
         const response = await fetch(`${authority}/protocol/openid-connect/token`, {
@@ -207,6 +208,7 @@ async function setupNodeEvents(
             client_id: clientId,
           }),
         });
+        console.log("[TOKEN]", kind, "refresh status", response.status);
         if (response.ok) {
           const tokens = (await response.json()) as Record<string, unknown>;
           user.access_token = tokens.access_token;

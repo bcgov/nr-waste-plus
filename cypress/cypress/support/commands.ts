@@ -72,6 +72,8 @@ Cypress.Commands.add("loginViaIdir", (): Cypress.Chainable<void> => {
           cy.clearLocalStorage();
           cy.task("session:applyCookies", state.cookies, { log: false });
           cy.visit("/", {
+            retryOnNetworkFailure: true,
+            retryOnStatusCodeFailure: true,
             onBeforeLoad(win) {
               win.sessionStorage.clear();
               win.localStorage.clear();
@@ -103,7 +105,10 @@ Cypress.Commands.add("loginViaIdir", (): Cypress.Chainable<void> => {
       .then(() => {
         // cy.session leaves the browser on its own reset page; land back on
         // the app so the caller sees the authenticated shell.
-        cy.visit("/search");
+        cy.visit("/search", {
+          retryOnNetworkFailure: true,
+          retryOnStatusCodeFailure: true,
+        });
         cy.reload();
         restartTestBudget(TEST_BUDGET_MS);
       });
@@ -125,6 +130,8 @@ Cypress.Commands.add("loginViaBceid", (): Cypress.Chainable<void> => {
           cy.clearLocalStorage();
           cy.task("session:applyCookies", state.cookies, { log: false });
           cy.visit("/", {
+            retryOnNetworkFailure: true,
+            retryOnStatusCodeFailure: true,
             onBeforeLoad(win) {
               win.sessionStorage.clear();
               win.localStorage.clear();
@@ -156,7 +163,10 @@ Cypress.Commands.add("loginViaBceid", (): Cypress.Chainable<void> => {
       .then(() => {
         // cy.session leaves the browser on its own reset page; land back on
         // the app so the caller sees the authenticated shell.
-        cy.visit("/search");
+        cy.visit("/search", {
+          retryOnNetworkFailure: true,
+          retryOnStatusCodeFailure: true,
+        });
         restartTestBudget(TEST_BUDGET_MS);
       });
   });
