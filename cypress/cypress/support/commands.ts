@@ -59,18 +59,18 @@ Cypress.Commands.add("shouldHaveStyle", { prevSubject: true }, shouldHaveStyle);
  */
 Cypress.Commands.add("loginViaIdir", (): Cypress.Chainable<void> => {
   pauseTestBudget();
+  cy.task("session:refresh", "idir", { log: false });
   return cy.task<{
     cookies: Array<Record<string, unknown>>;
     session: Record<string, string>;
     local: Record<string, string>;
-  }>("session:load", null, { log: false }).then((state) => {
+  }>("session:load", "idir", { log: false }).then((state) => {
     return cy
       .session(
         "idir",
         () => {
           cy.clearCookies();
           cy.clearLocalStorage();
-          cy.task("session:clear", null, { log: false });
           cy.task("session:applyCookies", state.cookies, { log: false });
           cy.visit("/", {
             onBeforeLoad(win) {
@@ -105,6 +105,7 @@ Cypress.Commands.add("loginViaIdir", (): Cypress.Chainable<void> => {
         // cy.session leaves the browser on its own reset page; land back on
         // the app so the caller sees the authenticated shell.
         cy.visit("/search");
+        cy.reload();
         restartTestBudget(TEST_BUDGET_MS);
       });
   });
@@ -112,6 +113,7 @@ Cypress.Commands.add("loginViaIdir", (): Cypress.Chainable<void> => {
 
 Cypress.Commands.add("loginViaBceid", (): Cypress.Chainable<void> => {
   pauseTestBudget();
+  cy.task("session:refresh", "bceid", { log: false });
   return cy.task<{
     cookies: Array<Record<string, unknown>>;
     session: Record<string, string>;
@@ -119,11 +121,10 @@ Cypress.Commands.add("loginViaBceid", (): Cypress.Chainable<void> => {
   }>("session:load", "bceid", { log: false }).then((state) => {
     return cy
       .session(
-        "idir",
+        "bceid",
         () => {
           cy.clearCookies();
           cy.clearLocalStorage();
-          cy.task("session:clear", null, { log: false });
           cy.task("session:applyCookies", state.cookies, { log: false });
           cy.visit("/", {
             onBeforeLoad(win) {
