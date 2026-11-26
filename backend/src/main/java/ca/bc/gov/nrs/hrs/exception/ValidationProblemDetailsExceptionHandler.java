@@ -2,6 +2,7 @@ package ca.bc.gov.nrs.hrs.exception;
 
 import java.net.URI;
 import java.util.stream.Collectors;
+import org.jspecify.annotations.Nullable;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpHeaders;
@@ -10,7 +11,6 @@ import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
-import org.springframework.lang.Nullable;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.context.request.ServletWebRequest;
@@ -96,7 +96,8 @@ public class ValidationProblemDetailsExceptionHandler extends ResponseEntityExce
    *
    * <p>Spring Framework 7.1 no longer fills in {@code instance}, so 405, 404, 415 and the other
    * MVC errors that {@link ResponseEntityExceptionHandler} handles would render without it.
-   * Validation responses already set their own instance, so they pass through untouched.
+   * Validation responses already set their own instance, so they pass through untouched. A
+   * {@code null} response from the base handler (already committed) is returned unchanged.
    */
   @Override
   protected ResponseEntity<Object> handleExceptionInternal(
@@ -109,8 +110,13 @@ public class ValidationProblemDetailsExceptionHandler extends ResponseEntityExce
     ResponseEntity<Object> response =
         super.handleExceptionInternal(ex, body, headers, statusCode, request);
 
-    if (response.getBody() instanceof ProblemDetail problem && problem.getInstance() == null) {
-      problem.setInstance(instanceUri(request));
+    if (response != null
+        && response.getBody() instanceof ProblemDetail problem
+        && problem.getInstance() == null) {
+      URI instance = instanceUri(request);
+      if (instance != null) {
+        problem.setInstance(instance);
+      }
     }
 
     return response;

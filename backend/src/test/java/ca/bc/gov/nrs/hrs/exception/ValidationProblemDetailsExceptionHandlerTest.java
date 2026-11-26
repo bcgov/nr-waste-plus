@@ -15,6 +15,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
@@ -126,6 +127,22 @@ class ValidationProblemDetailsExceptionHandlerTest {
     ProblemDetail problem = (ProblemDetail) response.getBody();
     assertThat(problem).isNotNull();
     assertThat(problem.getInstance()).hasToString(REQUEST_URI);
+  }
+
+  @Test
+  @DisplayName("Returns null instead of failing when the response is already committed")
+  void shouldReturnNullWhenResponseAlreadyCommitted() throws Exception {
+    MockHttpServletResponse committed = new MockHttpServletResponse();
+    committed.flushBuffer();
+    ServletWebRequest request =
+        new ServletWebRequest(new MockHttpServletRequest("POST", REQUEST_URI), committed);
+
+    ResponseEntity<Object> response =
+        handler.handleException(
+            new HttpRequestMethodNotSupportedException("POST", Collections.singletonList("GET")),
+            request);
+
+    assertThat(response).isNull();
   }
 
   private static MethodArgumentNotValidException validationException(BindingResult bindingResult)

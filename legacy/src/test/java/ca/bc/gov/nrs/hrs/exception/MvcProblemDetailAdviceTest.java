@@ -7,6 +7,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.net.URI;
+import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
@@ -14,11 +15,14 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.context.request.ServletWebRequest;
 import org.springframework.web.server.ResponseStatusException;
 
 @DisplayName("Unit Test | MvcProblemDetailAdvice")
@@ -78,6 +82,22 @@ class MvcProblemDetailAdviceTest {
         .andExpect(content().contentType(MediaType.APPLICATION_PROBLEM_JSON))
         .andExpect(jsonPath("$.status").value(415))
         .andExpect(jsonPath("$.instance").value("/probe/consume"));
+  }
+
+  @Test
+  @DisplayName("returns null instead of failing when the response is already committed")
+  void baseHandler_returnsNullWhenResponseAlreadyCommitted() throws Exception {
+    MockHttpServletResponse committed = new MockHttpServletResponse();
+    committed.flushBuffer();
+    ServletWebRequest request =
+        new ServletWebRequest(
+            new MockHttpServletRequest("POST", "/api/search/reporting-units"), committed);
+
+    ResponseEntity<Object> response =
+        advice.handleException(
+            new HttpRequestMethodNotSupportedException("POST", List.of("GET")), request);
+
+    assertThat(response).isNull();
   }
 
   @RestController

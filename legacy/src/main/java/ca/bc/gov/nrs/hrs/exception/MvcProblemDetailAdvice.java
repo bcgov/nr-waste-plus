@@ -3,6 +3,7 @@ package ca.bc.gov.nrs.hrs.exception;
 import jakarta.servlet.http.HttpServletRequest;
 import java.net.URI;
 import lombok.extern.slf4j.Slf4j;
+import org.jspecify.annotations.Nullable;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpHeaders;
@@ -11,7 +12,6 @@ import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
-import org.springframework.lang.Nullable;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.ServletWebRequest;
@@ -69,7 +69,8 @@ public class MvcProblemDetailAdvice extends ResponseEntityExceptionHandler {
    * Stamps the request path as {@code instance} on problems rendered by the base handler.
    *
    * <p>Spring Framework 7.1 no longer fills in {@code instance}, so 405, 404, 415 and the other
-   * MVC errors that {@link ResponseEntityExceptionHandler} handles would render without it.
+   * MVC errors that {@link ResponseEntityExceptionHandler} handles would render without it. A
+   * {@code null} response from the base handler (already committed) is returned unchanged.
    */
   @Override
   protected ResponseEntity<Object> handleExceptionInternal(
@@ -82,7 +83,8 @@ public class MvcProblemDetailAdvice extends ResponseEntityExceptionHandler {
     ResponseEntity<Object> response =
         super.handleExceptionInternal(ex, body, headers, statusCode, request);
 
-    if (response.getBody() instanceof ProblemDetail problem
+    if (response != null
+        && response.getBody() instanceof ProblemDetail problem
         && problem.getInstance() == null
         && request instanceof ServletWebRequest servletRequest) {
       problem.setInstance(URI.create(servletRequest.getRequest().getRequestURI()));
