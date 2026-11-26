@@ -19,7 +19,7 @@ vi.mock('@/components/Form/ActiveMultiSelect', () => ({
       <button
         type="button"
         data-testid={`${id}-pick`}
-        onClick={() => onChange?.({ selectedItems: [{ code: '7' }, { value: '8' }] })}
+        onClick={() => onChange?.({ selectedItems: [{ code: '7' }, { value: '8' }, {}] })}
       >
         pick
       </button>

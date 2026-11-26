@@ -1,4 +1,4 @@
-import { Button, Checkbox, Toggle } from '@carbon/react';
+import { Button, Checkbox, Column, Grid, Toggle } from '@carbon/react';
 import { useState, type FC } from 'react';
 
 import ReadonlyInput from '@/components/Form/ReadonlyInput';
@@ -68,24 +68,27 @@ const AdditionalRequirementsCard: FC<AdditionalRequirementsCardProps> = ({
 
   return (
     <section className="additional-requirements-card" aria-label="Additional requirements">
-      <div className="additional-requirements-card__header">
-        <div className="additional-requirements-card__title-group">
+      <Grid className="detail-header-grid additional-requirements-card__header-grid">
+        <Column lg={8} md={8} sm={4} className="additional-requirements-card__title-column">
           <h2 className="additional-requirements-card__title">Additional requirements</h2>
           <p className="additional-requirements-card__helper">
             Please select &apos;yes&apos; if any of these conditions apply to this block
           </p>
-        </div>
-        <Button
-          kind="secondary"
-          className="additional-requirements-card__button"
-          onClick={onAddAttachments}
-        >
-          Add attachments
-        </Button>
-      </div>
+        </Column>
+        <Column lg={8} md={8} sm={4} className="additional-requirements-card__action-column">
+          <Button
+            kind="tertiary"
+            size="md"
+            className="additional-requirements-card__button"
+            onClick={onAddAttachments}
+          >
+            Add attachments
+          </Button>
+        </Column>
+      </Grid>
 
-      <div className="additional-requirements-card__questions">
-        <div className="additional-requirements-card__question">
+      <Grid className="detail-header-grid additional-requirements-card__questions-grid">
+        <Column lg={4} md={4} sm={4} className="additional-requirements-card__question">
           {isReadOnly ? (
             <ReadonlyInput label={PILE_BURN_QUESTION}>
               {werePilesBurnt ? 'Yes' : 'No'}
@@ -100,9 +103,9 @@ const AdditionalRequirementsCard: FC<AdditionalRequirementsCardProps> = ({
               onToggle={handleToggle(setWerePilesBurnt)}
             />
           )}
-        </div>
+        </Column>
 
-        <div className="additional-requirements-card__question">
+        <Column lg={4} md={4} sm={4} className="additional-requirements-card__question">
           {isReadOnly ? (
             <ReadonlyInput label={RATIONALE_QUESTION}>
               {requiresRationale ? 'Yes' : 'No'}
@@ -117,31 +120,32 @@ const AdditionalRequirementsCard: FC<AdditionalRequirementsCardProps> = ({
               onToggle={handleToggle(setRequiresRationale)}
             />
           )}
-        </div>
-      </div>
+        </Column>
+      </Grid>
 
-      {showCertify &&
-        (isReadOnly ? (
-          <div className="additional-requirements-card__certify">
-            <ReadonlyInput label={CERTIFY_LABEL}>{certified ? 'Yes' : 'No'}</ReadonlyInput>
-          </div>
-        ) : (
-          <div className="additional-requirements-card__certify">
-            <Checkbox
-              id="additional-requirements-certify"
-              labelText={CERTIFY_LABEL}
-              checked={certified}
-              required={showCertify}
-              invalid={Boolean(certifyError)}
-              invalidText={certifyError}
-              onBlur={() => setCertifyTouched(true)}
-              onChange={(_, { checked }) => {
-                setCertified(checked);
-                if (checked) setCertifyTouched(false);
-              }}
-            />
-          </div>
-        ))}
+      {showCertify && (
+        <Grid className="detail-header-grid additional-requirements-card__certify-grid">
+          <Column lg={12} md={8} sm={4} className="additional-requirements-card__certify">
+            {isReadOnly ? (
+              <ReadonlyInput label={CERTIFY_LABEL}>{certified ? 'Yes' : 'No'}</ReadonlyInput>
+            ) : (
+              <Checkbox
+                id="additional-requirements-certify"
+                labelText={CERTIFY_LABEL}
+                checked={certified}
+                required={showCertify}
+                invalid={Boolean(certifyError)}
+                invalidText={certifyError}
+                onBlur={() => setCertifyTouched(true)}
+                onChange={(_, { checked }) => {
+                  setCertified(checked);
+                  if (checked) setCertifyTouched(false);
+                }}
+              />
+            )}
+          </Column>
+        </Grid>
+      )}
     </section>
   );
 };

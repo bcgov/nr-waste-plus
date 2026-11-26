@@ -1,14 +1,22 @@
 import {
   Button,
+  Column,
+  Grid,
   StructuredListBody,
   StructuredListCell,
   StructuredListHead,
   StructuredListRow,
   StructuredListWrapper,
 } from '@carbon/react';
+
 import type { FC } from 'react';
 
 import './index.scss';
+
+export type WasteAssessmentAreaMark = {
+  timberMarkId?: string | null;
+  netWasteAreaHa?: string | number | null;
+};
 
 export type WasteAssessmentAreaRow = {
   markType?: string | null;
@@ -17,7 +25,8 @@ export type WasteAssessmentAreaRow = {
 };
 
 export type WasteAssessmentAreaSummaryCardProps = {
-  rows?: readonly WasteAssessmentAreaRow[];
+  primary?: WasteAssessmentAreaMark | null;
+  secondary?: readonly WasteAssessmentAreaMark[] | null;
   totalNetWasteAreaHa?: string | number | null;
   onGoToAreaCalculator?: () => void;
 };
@@ -28,78 +37,103 @@ const toDisplayValue = (value?: string | number | null): string => {
   return stringValue.trim() === '' ? '-' : stringValue;
 };
 
+/**
+ * Displays the waste assessment area summary (primary/secondary timber marks and
+ * backend-precomputed total net waste area). Renders missing values as `-` and
+ * never injects hardcoded placeholder marks.
+ */
 const WasteAssessmentAreaSummaryCard: FC<WasteAssessmentAreaSummaryCardProps> = ({
-  rows,
+  primary,
+  secondary,
   totalNetWasteAreaHa,
   onGoToAreaCalculator,
 }) => {
-  // Temporary hardcoded primary mark row (S7) until area-calculator data is wired.
-  const primaryMarkRow: WasteAssessmentAreaRow = {
-    markType: 'Primary mark',
-    timberMarkId: '74/1AD',
-    netWasteAreaHa: '-',
-  };
+  const displayRows: WasteAssessmentAreaRow[] = [];
 
-  const displayRows = [primaryMarkRow, ...(rows ?? [])];
-  const total = toDisplayValue(totalNetWasteAreaHa === undefined ? '0.0' : totalNetWasteAreaHa);
+  if (primary) {
+    displayRows.push({
+      markType: 'Primary mark',
+      timberMarkId: primary.timberMarkId,
+      netWasteAreaHa: primary.netWasteAreaHa,
+    });
+  }
+
+  for (const mark of secondary ?? []) {
+    displayRows.push({
+      markType: 'Secondary mark',
+      timberMarkId: mark.timberMarkId,
+      netWasteAreaHa: mark.netWasteAreaHa,
+    });
+  }
+
+  const total = toDisplayValue(totalNetWasteAreaHa);
 
   return (
     <section
       className="waste-assessment-area-summary-card"
       aria-label="Waste assessment area summary"
     >
-      <div className="waste-assessment-area-summary-card__header">
-        <div className="waste-assessment-area-summary-card__title-group">
+      <Grid className="detail-header-grid waste-assessment-area-summary-card__header-grid">
+        <Column lg={8} md={8} sm={4} className="waste-assessment-area-summary-card__title-column">
           <h2 className="waste-assessment-area-summary-card__title">
             Waste assessment area summary
           </h2>
           <p className="waste-assessment-area-summary-card__helper">
             Use area calculator to add waste assessment area details
           </p>
-        </div>
-        <Button
-          kind="secondary"
-          className="waste-assessment-area-summary-card__button"
-          onClick={onGoToAreaCalculator}
-        >
-          Go to area calculator
-        </Button>
-      </div>
+        </Column>
+        <Column lg={8} md={8} sm={4} className="waste-assessment-area-summary-card__action-column">
+          <Button
+            kind="tertiary"
+            size="md"
+            className="waste-assessment-area-summary-card__button"
+            onClick={onGoToAreaCalculator}
+          >
+            Go to area calculator
+          </Button>
+        </Column>
+      </Grid>
 
-      <StructuredListWrapper
-        isCondensed
-        selection={false}
-        className="waste-assessment-area-summary-card__table"
-        aria-label="Waste assessment area summary table"
-      >
-        <StructuredListHead>
-          <StructuredListRow head>
-            <StructuredListCell head>Timber mark type</StructuredListCell>
-            <StructuredListCell head>Timber mark ID</StructuredListCell>
-            <StructuredListCell head>Net waste area (ha)</StructuredListCell>
-          </StructuredListRow>
-        </StructuredListHead>
-        <StructuredListBody>
-          {displayRows.map((row, index) => (
-            <StructuredListRow
-              key={`${index}-${row.markType ?? 'row'}-${row.timberMarkId ?? 'mark'}`}
+      <Grid className="detail-header-grid waste-assessment-area-summary-card__table-grid">
+        <Column lg={8} md={8} sm={4} className="waste-assessment-area-summary-card__table-column">
+          <div className="waste-assessment-area-summary-card__table-scroll">
+            <StructuredListWrapper
+              isCondensed
+              selection={false}
+              className="waste-assessment-area-summary-card__table"
+              aria-label="Waste assessment area summary table"
             >
-              <StructuredListCell>{toDisplayValue(row.markType)}</StructuredListCell>
-              <StructuredListCell>{toDisplayValue(row.timberMarkId)}</StructuredListCell>
-              <StructuredListCell>{toDisplayValue(row.netWasteAreaHa)}</StructuredListCell>
-            </StructuredListRow>
-          ))}
-          <StructuredListRow>
-            <StructuredListCell className="waste-assessment-area-summary-card__total-cell">
-              Total net waste area (ha)
-            </StructuredListCell>
-            <StructuredListCell />
-            <StructuredListCell className="waste-assessment-area-summary-card__total-cell">
-              {total}
-            </StructuredListCell>
-          </StructuredListRow>
-        </StructuredListBody>
-      </StructuredListWrapper>
+              <StructuredListHead>
+                <StructuredListRow head>
+                  <StructuredListCell head>Timber mark type</StructuredListCell>
+                  <StructuredListCell head>Timber mark ID</StructuredListCell>
+                  <StructuredListCell head>Net waste area (ha)</StructuredListCell>
+                </StructuredListRow>
+              </StructuredListHead>
+              <StructuredListBody>
+                {displayRows.map((row, index) => (
+                  <StructuredListRow
+                    key={`${index}-${row.markType ?? 'row'}-${row.timberMarkId ?? 'mark'}`}
+                  >
+                    <StructuredListCell>{toDisplayValue(row.markType)}</StructuredListCell>
+                    <StructuredListCell>{toDisplayValue(row.timberMarkId)}</StructuredListCell>
+                    <StructuredListCell>{toDisplayValue(row.netWasteAreaHa)}</StructuredListCell>
+                  </StructuredListRow>
+                ))}
+                <StructuredListRow className="waste-assessment-area-summary-card__total-row">
+                  <StructuredListCell className="waste-assessment-area-summary-card__total-label">
+                    Total net waste area (ha)
+                  </StructuredListCell>
+                  <StructuredListCell />
+                  <StructuredListCell className="waste-assessment-area-summary-card__total-value">
+                    {total}
+                  </StructuredListCell>
+                </StructuredListRow>
+              </StructuredListBody>
+            </StructuredListWrapper>
+          </div>
+        </Column>
+      </Grid>
     </section>
   );
 };

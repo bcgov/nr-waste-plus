@@ -5,23 +5,24 @@
 .district-average-volumes-summary-card {
   display: flex;
   flex-direction: column;
+  gap: $spacing-06;
   padding: $spacing-07;
   border: 1px solid var(--cds-border-subtle-01);
   border-radius: $border-radius-08;
   background-color: var(--cds-background);
 
-  &__header {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: $spacing-05;
-    margin-bottom: $spacing-06;
-  }
-
-  &__title-group {
+  &__title-column {
     display: flex;
     flex-direction: column;
     gap: $spacing-02;
+  }
+
+  &__action-column {
+    display: flex;
+    // The action sits on the title's top edge, and the button keeps its
+    // Carbon size when the title column wraps onto a second line.
+    align-items: flex-start;
+    justify-content: flex-end;
   }
 
   &__title {
@@ -37,14 +38,84 @@
     color: var(--cds-text-secondary);
   }
 
-  &__button {
+  // The page shell re-imports Carbon's button styles after this file, so the
+  // card's button rules carry the Carbon class to outrank a plain `.cds--btn`.
+  &__button.cds--btn {
     flex-shrink: 0;
+    // Carbon's button radius token is unset in this app, so the global
+    // element reset squares off every button. The design uses 4px corners.
+    --cds-button-radius: #{$border-radius-04};
+    // Carbon reserves trailing inline space for an absolutely positioned
+    // icon. These buttons carry no icon, so the slot is reclaimed and the
+    // label keeps Carbon's standard inline padding on both sides.
+    padding-inline: calc(var(--cds-layout-density-padding-inline-local) - 0.0625rem);
   }
 
-  &__table {
-    margin-bottom: 0;
-    max-width: 100%;
+  // The eight columns need more room than a narrow card can give them, so the
+  // list scrolls sideways instead of overflowing the card.
+  &__table-scroll {
     overflow-x: auto;
+  }
+
+  // The design gives the list the full content width of the card. Below that
+  // width the list scrolls rather than squeezing the columns into narrow
+  // stacks of wrapped header text.
+  &__table {
+    min-width: 74.125rem; // 1186px, the width the design gives the list
+  }
+
+  // `StructuredListWrapper` renders the `.cds--structured-list` element itself,
+  // so the cell overrides are scoped to its row descendants.
+  .cds--structured-list {
+    .cds--structured-list-row {
+      .cds--structured-list-td,
+      .cds--structured-list-th {
+        padding-inline-end: $spacing-05;
+        color: var(--cds-text-primary);
+      }
+
+      // Carbon indents the first cell by 16px; the design keeps the list
+      // flush with the card's content edge.
+      .cds--structured-list-td:first-of-type,
+      .cds--structured-list-th:first-of-type {
+        padding-inline-start: 0;
+      }
+
+      // The header row is 52px in the design: 8px around a two-line label.
+      .cds--structured-list-th {
+        padding-block: $spacing-03;
+        block-size: auto;
+      }
+
+      .cds--structured-list-td {
+        @include type-style('body-compact-01');
+      }
+    }
+
+    // The data rows are 52px in the design with the content vertically
+    // centred, so the row height is fixed and the cell padding is dropped.
+    .cds--structured-list-tbody .cds--structured-list-row {
+      block-size: 3.25rem;
+
+      .cds--structured-list-td {
+        padding-block: 0;
+        vertical-align: middle;
+      }
+    }
+
+    // The total row is 34px in the design and carries the bold total type.
+    .cds--structured-list-tbody .district-average-volumes-summary-card__total-row {
+      block-size: auto;
+
+      .cds--structured-list-td {
+        padding-block: $spacing-03;
+      }
+
+      .district-average-volumes-summary-card__total-cell {
+        @include type-style('heading-compact-01');
+        font-weight: 600;
+      }
+    }
   }
 
   &__harvest-method-cell {
@@ -53,10 +124,5 @@
     .cds--dropdown__wrapper {
       margin-bottom: 0;
     }
-  }
-
-  &__total-cell {
-    @include type-style('heading-compact-01');
-    font-weight: 600;
   }
 }

@@ -132,4 +132,52 @@ describe('DistrictAverageVolumesSummaryCard', () => {
     await user.click(screen.getByRole('button', { name: 'View volume details' }));
     expect(onViewVolumeDetails).toHaveBeenCalledTimes(1);
   });
+
+  it('shows a dash in the read-only harvest method cell when the row has no method', () => {
+    render(
+      <DistrictAverageVolumesSummaryCard
+        mode="read-only"
+        rows={[
+          {
+            populationType: 'Dispersed',
+            wasteType: 'H– Historic waste information',
+            harvestMethodCode: null,
+            assessmentMethod: 'D - District average',
+            wasteLevel: 'X - Not stratified',
+            netWasteAreaHa: '1.2',
+            totalBillableVolumeM3: '3.4',
+            totalCutControlVolumeM3: '5.6',
+          },
+        ]}
+        harvestMethodOptions={harvestMethodOptions}
+      />,
+    );
+
+    const dataRow = screen.getByRole('row', { name: /Dispersed/ });
+    expect(within(dataRow).getAllByText('-')).toHaveLength(1);
+  });
+
+  it('shows the raw code in read-only mode when the option list lacks it', () => {
+    render(
+      <DistrictAverageVolumesSummaryCard
+        mode="read-only"
+        rows={[{ populationType: 'Dispersed', wasteType: 'H', harvestMethodCode: 'ZZ' }]}
+        harvestMethodOptions={harvestMethodOptions}
+      />,
+    );
+
+    expect(screen.getByText('ZZ')).toBeTruthy();
+  });
+
+  it('names the dropdown by row position when the row has no population or waste type', () => {
+    render(
+      <DistrictAverageVolumesSummaryCard
+        mode="form"
+        rows={[{ harvestMethodCode: null }]}
+        harvestMethodOptions={harvestMethodOptions}
+      />,
+    );
+
+    expect(screen.getByRole('combobox', { name: 'Harvest method for row 1' })).toBeTruthy();
+  });
 });

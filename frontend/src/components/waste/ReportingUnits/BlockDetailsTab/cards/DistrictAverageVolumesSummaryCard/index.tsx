@@ -1,6 +1,8 @@
 import {
   Button,
+  Column,
   Dropdown,
+  Grid,
   StructuredListBody,
   StructuredListCell,
   StructuredListHead,
@@ -66,108 +68,137 @@ const DistrictAverageVolumesSummaryCard: FC<DistrictAverageVolumesSummaryCardPro
       className="district-average-volumes-summary-card"
       aria-label="District average volumes summary"
     >
-      <div className="district-average-volumes-summary-card__header">
-        <div className="district-average-volumes-summary-card__title-group">
+      <Grid className="detail-header-grid district-average-volumes-summary-card__header-grid">
+        <Column
+          lg={8}
+          md={8}
+          sm={4}
+          className="district-average-volumes-summary-card__title-column"
+        >
           <h2 className="district-average-volumes-summary-card__title">
             District average volumes summary
           </h2>
           <p className="district-average-volumes-summary-card__helper">
             Estimated volumes are auto-calculated and may differ from final volumes
           </p>
-        </div>
-        <Button
-          kind="secondary"
-          className="district-average-volumes-summary-card__button"
-          onClick={onViewVolumeDetails}
+        </Column>
+        <Column
+          lg={8}
+          md={8}
+          sm={4}
+          className="district-average-volumes-summary-card__action-column"
         >
-          View volume details
-        </Button>
-      </div>
+          <Button
+            kind="tertiary"
+            size="md"
+            className="district-average-volumes-summary-card__button"
+            onClick={onViewVolumeDetails}
+          >
+            View volume details
+          </Button>
+        </Column>
+      </Grid>
 
-      <StructuredListWrapper
-        isCondensed
-        selection={false}
-        className="district-average-volumes-summary-card__table"
-        aria-label="District average volumes summary table"
-      >
-        <StructuredListHead>
-          <StructuredListRow head>
-            <StructuredListCell head>Population type</StructuredListCell>
-            <StructuredListCell head>Waste type</StructuredListCell>
-            <StructuredListCell head>Harvest method</StructuredListCell>
-            <StructuredListCell head>Assessment method</StructuredListCell>
-            <StructuredListCell head>Waste level</StructuredListCell>
-            <StructuredListCell head>Net waste area (ha)</StructuredListCell>
-            <StructuredListCell head>Total billable volume (m³)</StructuredListCell>
-            <StructuredListCell head>Total cut control volume (m³)</StructuredListCell>
-          </StructuredListRow>
-        </StructuredListHead>
-        <StructuredListBody>
-          {rows.map((row, index) => {
-            const selectedItem =
-              harvestMethodOptions.find((option) => option.code === row.harvestMethodCode) ?? null;
-            const rowLabel =
-              [row.populationType, row.wasteType].filter(Boolean).join(', ') || `row ${index + 1}`;
-            const harvestMethodLabel = `Harvest method for ${rowLabel}`;
+      <Grid className="detail-header-grid district-average-volumes-summary-card__table-grid">
+        <Column
+          lg={16}
+          md={8}
+          sm={4}
+          className="district-average-volumes-summary-card__table-column"
+        >
+          <div className="district-average-volumes-summary-card__table-scroll">
+            <StructuredListWrapper
+              selection={false}
+              className="district-average-volumes-summary-card__table"
+              aria-label="District average volumes summary table"
+            >
+              <StructuredListHead>
+                <StructuredListRow head>
+                  <StructuredListCell head>Population type</StructuredListCell>
+                  <StructuredListCell head>Waste type</StructuredListCell>
+                  <StructuredListCell head>Harvest method</StructuredListCell>
+                  <StructuredListCell head>Assessment method</StructuredListCell>
+                  <StructuredListCell head>Waste level</StructuredListCell>
+                  <StructuredListCell head>Net waste area (ha)</StructuredListCell>
+                  <StructuredListCell head>Total billable volume (m³)</StructuredListCell>
+                  <StructuredListCell head>Total cut control volume (m³)</StructuredListCell>
+                </StructuredListRow>
+              </StructuredListHead>
+              <StructuredListBody>
+                {rows.map((row, index) => {
+                  const selectedItem =
+                    harvestMethodOptions.find((option) => option.code === row.harvestMethodCode) ??
+                    null;
+                  const rowLabel =
+                    [row.populationType, row.wasteType].filter(Boolean).join(', ') ||
+                    `row ${index + 1}`;
+                  const harvestMethodLabel = `Harvest method for ${rowLabel}`;
 
-            return (
-              <StructuredListRow
-                key={`${index}-${row.populationType ?? 'pop'}-${row.wasteType ?? 'waste'}-${row.harvestMethodCode ?? 'method'}`}
-              >
-                <StructuredListCell>{toDisplayValue(row.populationType)}</StructuredListCell>
-                <StructuredListCell>{toDisplayValue(row.wasteType)}</StructuredListCell>
-                <StructuredListCell className="district-average-volumes-summary-card__harvest-method-cell">
-                  {isReadOnly ? (
-                    getHarvestMethodLabel(row.harvestMethodCode, harvestMethodOptions)
-                  ) : (
-                    <Dropdown
-                      id={`district-average-harvest-method-${index}`}
-                      titleText={harvestMethodLabel}
-                      aria-label={harvestMethodLabel}
-                      hideLabel
-                      label="Select one"
-                      items={[...harvestMethodOptions]}
-                      itemToString={(item: CodeDescriptionDto | null) =>
-                        item?.description ?? item?.code ?? ''
-                      }
-                      selectedItem={selectedItem}
-                      onChange={({ selectedItem: next }) => {
-                        if (next) {
-                          onHarvestMethodChange?.(index, next.code ?? '');
-                        }
-                      }}
-                      size="sm"
-                    />
-                  )}
-                </StructuredListCell>
-                <StructuredListCell>{toDisplayValue(row.assessmentMethod)}</StructuredListCell>
-                <StructuredListCell>{toDisplayValue(row.wasteLevel)}</StructuredListCell>
-                <StructuredListCell>{toDisplayValue(row.netWasteAreaHa)}</StructuredListCell>
-                <StructuredListCell>{toDisplayValue(row.totalBillableVolumeM3)}</StructuredListCell>
-                <StructuredListCell>
-                  {toDisplayValue(row.totalCutControlVolumeM3)}
-                </StructuredListCell>
-              </StructuredListRow>
-            );
-          })}
-          <StructuredListRow>
-            <StructuredListCell className="district-average-volumes-summary-card__total-cell">
-              Total
-            </StructuredListCell>
-            <StructuredListCell />
-            <StructuredListCell />
-            <StructuredListCell />
-            <StructuredListCell />
-            <StructuredListCell />
-            <StructuredListCell className="district-average-volumes-summary-card__total-cell">
-              {toDisplayValue(totals?.totalBillableVolumeM3)}
-            </StructuredListCell>
-            <StructuredListCell className="district-average-volumes-summary-card__total-cell">
-              {toDisplayValue(totals?.totalCutControlVolumeM3)}
-            </StructuredListCell>
-          </StructuredListRow>
-        </StructuredListBody>
-      </StructuredListWrapper>
+                  return (
+                    <StructuredListRow
+                      key={`${index}-${row.populationType ?? 'pop'}-${row.wasteType ?? 'waste'}-${row.harvestMethodCode ?? 'method'}`}
+                    >
+                      <StructuredListCell>{toDisplayValue(row.populationType)}</StructuredListCell>
+                      <StructuredListCell>{toDisplayValue(row.wasteType)}</StructuredListCell>
+                      <StructuredListCell className="district-average-volumes-summary-card__harvest-method-cell">
+                        {isReadOnly ? (
+                          getHarvestMethodLabel(row.harvestMethodCode, harvestMethodOptions)
+                        ) : (
+                          <Dropdown
+                            id={`district-average-harvest-method-${index}`}
+                            titleText={harvestMethodLabel}
+                            aria-label={harvestMethodLabel}
+                            hideLabel
+                            label="Select one"
+                            items={[...harvestMethodOptions]}
+                            itemToString={(item: CodeDescriptionDto | null) =>
+                              item?.description ?? item?.code ?? ''
+                            }
+                            selectedItem={selectedItem}
+                            onChange={({ selectedItem: next }) => {
+                              if (next) {
+                                onHarvestMethodChange?.(index, next.code ?? '');
+                              }
+                            }}
+                            size="sm"
+                          />
+                        )}
+                      </StructuredListCell>
+                      <StructuredListCell>
+                        {toDisplayValue(row.assessmentMethod)}
+                      </StructuredListCell>
+                      <StructuredListCell>{toDisplayValue(row.wasteLevel)}</StructuredListCell>
+                      <StructuredListCell>{toDisplayValue(row.netWasteAreaHa)}</StructuredListCell>
+                      <StructuredListCell>
+                        {toDisplayValue(row.totalBillableVolumeM3)}
+                      </StructuredListCell>
+                      <StructuredListCell>
+                        {toDisplayValue(row.totalCutControlVolumeM3)}
+                      </StructuredListCell>
+                    </StructuredListRow>
+                  );
+                })}
+                <StructuredListRow className="district-average-volumes-summary-card__total-row">
+                  <StructuredListCell className="district-average-volumes-summary-card__total-cell">
+                    Total
+                  </StructuredListCell>
+                  <StructuredListCell />
+                  <StructuredListCell />
+                  <StructuredListCell />
+                  <StructuredListCell />
+                  <StructuredListCell />
+                  <StructuredListCell className="district-average-volumes-summary-card__total-cell">
+                    {toDisplayValue(totals?.totalBillableVolumeM3)}
+                  </StructuredListCell>
+                  <StructuredListCell className="district-average-volumes-summary-card__total-cell">
+                    {toDisplayValue(totals?.totalCutControlVolumeM3)}
+                  </StructuredListCell>
+                </StructuredListRow>
+              </StructuredListBody>
+            </StructuredListWrapper>
+          </div>
+        </Column>
+      </Grid>
     </section>
   );
 };

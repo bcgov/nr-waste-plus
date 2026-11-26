@@ -63,7 +63,12 @@ describe('ReportingUnitService block endpoints', () => {
     Object.defineProperty(service, 'doRequest', { value: doRequest });
     const meta = { notificationTarget: 'reporting-unit-block-details' };
 
-    await expect(service.getBlockDetails(468, 12, meta)).resolves.toStrictEqual(response);
+    // blockDetailsSchema.parse defaults the timber mark collections to [].
+    await expect(service.getBlockDetails(468, 12, meta)).resolves.toStrictEqual({
+      ...response,
+      secondaryTimberMarks: [],
+      roadPermitTimberMarks: [],
+    });
 
     expect(doRequest).toHaveBeenCalledWith(config, {
       method: 'GET',
@@ -86,7 +91,12 @@ describe('ReportingUnitService block endpoints', () => {
     const doRequest = vi.fn().mockResolvedValue(response);
     Object.defineProperty(service, 'doRequest', { value: doRequest });
 
-    await expect(service.getBlockDetails(469, 7)).resolves.toStrictEqual(response);
+    // blockDetailsSchema.parse defaults the timber mark collections to [].
+    await expect(service.getBlockDetails(469, 7)).resolves.toStrictEqual({
+      ...response,
+      secondaryTimberMarks: [],
+      roadPermitTimberMarks: [],
+    });
 
     expect(doRequest).toHaveBeenCalledWith(config, {
       method: 'GET',

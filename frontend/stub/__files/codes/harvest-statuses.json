@@ -1,0 +1,14 @@
+[
+  {
+    "code": "COM",
+    "description": "Complete"
+  },
+  {
+    "code": "INC",
+    "description": "Incomplete"
+  },
+  {
+    "code": "NOA",
+    "description": "N/A"
+  }
+]

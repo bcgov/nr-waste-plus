@@ -14,12 +14,15 @@ import {
   useClientLookupQuery,
   useCodesQuery,
   useCreateBlock,
+  useDistrictAverageCriteriaCodesQuery,
   useDistrictOptionsQuery,
   useDistrictVolumeListQuery,
   useDistrictVolumeTableCreateMutation,
   useDistrictVolumeTableDeleteMutation,
   useDistrictVolumeTableDetailQuery,
   useForestClientsByNumbersQuery,
+  useHarvestStatusCodesQuery,
+  useMaturityTypeCodesQuery,
   useMyForestClientsQuery,
   useReportingUnitBlocksQuery,
   useReportingUnitCreateMutation,
@@ -45,6 +48,11 @@ vi.mock('@/services/APIs', () => ({
       getSamplingOptions: vi.fn().mockResolvedValue([{ code: 'S1', description: 'Sampling 1' }]),
       getDistricts: vi.fn().mockResolvedValue([{ code: 'D1', description: 'District 1' }]),
       getAssessAreaStatuses: vi.fn().mockResolvedValue([{ code: 'APP', description: 'Approved' }]),
+      getHarvestStatusCodes: vi.fn().mockResolvedValue([{ code: 'COM', description: 'Complete' }]),
+      getMaturityTypeCodes: vi.fn().mockResolvedValue([{ code: 'IM', description: 'Immature' }]),
+      getDistrictAverageCriteriaCodes: vi
+        .fn()
+        .mockResolvedValue([{ code: '1', description: 'Criterion 1', areas: [] }]),
     },
     search: {
       searchReportingUnit: vi.fn().mockResolvedValue({
@@ -239,6 +247,131 @@ describe('react-query hooks', () => {
         wrapper: createWrapper(),
       });
       await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    });
+  });
+
+  describe('useHarvestStatusCodesQuery', () => {
+    it('should fetch harvest status codes with context params', async () => {
+      const { result } = renderHook(
+        () =>
+          useHarvestStatusCodesQuery(
+            { reportingUnitId: 468, blockId: 12 },
+            { notificationTarget: 'reporting-unit-block-details' },
+          ),
+        { wrapper: createWrapper() },
+      );
+
+      await waitFor(() => expect(result.current.isSuccess).toBe(true));
+
+      expect(API.codes.getHarvestStatusCodes).toHaveBeenCalledWith(
+        { reportingUnitId: 468, blockId: 12 },
+        { notificationTarget: 'reporting-unit-block-details' },
+      );
+      expect(result.current.data).toEqual([{ code: 'COM', description: 'Complete' }]);
+    });
+
+    it('should dispatch error notification when notificationTarget is provided', async () => {
+      const mockError = new Error('Harvest statuses failed');
+      (mockError as unknown as { body: { detail: string; title: string } }).body = {
+        detail: 'Unable to load harvest statuses',
+        title: 'Request failed',
+      };
+      vi.mocked(API.codes.getHarvestStatusCodes).mockRejectedValueOnce(mockError);
+
+      const { result } = renderHook(
+        () => useHarvestStatusCodesQuery(undefined, { notificationTarget: 'panel' }),
+        { wrapper: createWrapper() },
+      );
+
+      await waitFor(() => expect(result.current.isError).toBe(true));
+      expect(sendEvent).toHaveBeenCalledWith(
+        expect.objectContaining({
+          eventType: 'error',
+          eventTarget: 'panel',
+          description: 'Unable to load harvest statuses',
+        }),
+      );
+    });
+  });
+
+  describe('useMaturityTypeCodesQuery', () => {
+    it('should fetch maturity type codes', async () => {
+      const { result } = renderHook(
+        () => useMaturityTypeCodesQuery({ notificationTarget: 'reporting-unit-block-details' }),
+        { wrapper: createWrapper() },
+      );
+
+      await waitFor(() => expect(result.current.isSuccess).toBe(true));
+
+      expect(API.codes.getMaturityTypeCodes).toHaveBeenCalledWith({
+        notificationTarget: 'reporting-unit-block-details',
+      });
+      expect(result.current.data).toEqual([{ code: 'IM', description: 'Immature' }]);
+    });
+
+    it('should dispatch error notification when notificationTarget is provided', async () => {
+      const mockError = new Error('Maturity types failed');
+      (mockError as unknown as { body: { detail: string; title: string } }).body = {
+        detail: 'Unable to load maturity types',
+        title: 'Request failed',
+      };
+      vi.mocked(API.codes.getMaturityTypeCodes).mockRejectedValueOnce(mockError);
+
+      const { result } = renderHook(
+        () => useMaturityTypeCodesQuery({ notificationTarget: 'panel' }),
+        { wrapper: createWrapper() },
+      );
+
+      await waitFor(() => expect(result.current.isError).toBe(true));
+      expect(sendEvent).toHaveBeenCalledWith(
+        expect.objectContaining({
+          eventType: 'error',
+          eventTarget: 'panel',
+          description: 'Unable to load maturity types',
+        }),
+      );
+    });
+  });
+
+  describe('useDistrictAverageCriteriaCodesQuery', () => {
+    it('should fetch district average criteria codes', async () => {
+      const { result } = renderHook(
+        () =>
+          useDistrictAverageCriteriaCodesQuery({
+            notificationTarget: 'reporting-unit-block-details',
+          }),
+        { wrapper: createWrapper() },
+      );
+
+      await waitFor(() => expect(result.current.isSuccess).toBe(true));
+
+      expect(API.codes.getDistrictAverageCriteriaCodes).toHaveBeenCalledWith({
+        notificationTarget: 'reporting-unit-block-details',
+      });
+      expect(result.current.data).toEqual([{ code: '1', description: 'Criterion 1', areas: [] }]);
+    });
+
+    it('should dispatch error notification when notificationTarget is provided', async () => {
+      const mockError = new Error('District average criteria failed');
+      (mockError as unknown as { body: { detail: string; title: string } }).body = {
+        detail: 'Unable to load district average criteria',
+        title: 'Request failed',
+      };
+      vi.mocked(API.codes.getDistrictAverageCriteriaCodes).mockRejectedValueOnce(mockError);
+
+      const { result } = renderHook(
+        () => useDistrictAverageCriteriaCodesQuery({ notificationTarget: 'panel' }),
+        { wrapper: createWrapper() },
+      );
+
+      await waitFor(() => expect(result.current.isError).toBe(true));
+      expect(sendEvent).toHaveBeenCalledWith(
+        expect.objectContaining({
+          eventType: 'error',
+          eventTarget: 'panel',
+          description: 'Unable to load district average criteria',
+        }),
+      );
     });
   });
 

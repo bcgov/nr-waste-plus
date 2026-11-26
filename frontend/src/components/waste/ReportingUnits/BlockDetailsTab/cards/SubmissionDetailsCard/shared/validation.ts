@@ -64,3 +64,16 @@ export const validateAdditionalRequirementsCertify = (
   if (werePilesBurnt || requiresRationale) return undefined;
   return certified ? undefined : 'Select the checkbox to confirm before continuing.';
 };
+
+/**
+ * District average criteria is a mandatory multi-select (D28). At least one criterion must be
+ * selected before submit.
+ */
+export const validateDistrictAverageCriteriaCodes = (
+  codes: readonly string[] | null | undefined,
+): string | undefined => {
+  if (!codes || codes.length === 0) {
+    return 'Select at least one district average criterion.';
+  }
+  return undefined;
+};

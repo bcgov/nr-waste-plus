@@ -37,6 +37,34 @@ const blockDetailsPayload = {
   isLegacy: false,
 };
 
+/**
+ * Block details payload with supplied area and volume summaries, so the audit covers the
+ * summary tables and the inline harvest-method dropdown rather than empty cards.
+ */
+const richBlockDetailsPayload = {
+  ...blockDetailsPayload,
+  wasteAssessmentAreaSummary: {
+    primary: { timberMarkId: 'TM-100', netWasteAreaHa: 1.25 },
+    secondary: [{ timberMarkId: 'TM-101', netWasteAreaHa: 0.5 }],
+    totalNetWasteAreaHa: 1.75,
+  },
+  districtAverageVolumesSummary: {
+    rows: [
+      {
+        populationType: 'Dispersed',
+        wasteType: 'H– Historic waste information',
+        harvestMethodCode: 'G',
+        assessmentMethod: 'D - District average',
+        wasteLevel: 'X - Not stratified',
+        netWasteAreaHa: 1.25,
+        totalBillableVolumeM3: 10.5,
+        totalCutControlVolumeM3: 4.2,
+      },
+    ],
+    totals: { totalBillableVolumeM3: 10.5, totalCutControlVolumeM3: 4.2 },
+  },
+};
+
 test.describe('<ReportingUnitBlockDetailsPage />', () => {
   test.beforeEach(async ({ page }, testInfo) => {
     const idirMetadata = { ...testInfo.project.metadata, userType: 'idir' };
@@ -79,6 +107,42 @@ test.describe('<ReportingUnitBlockDetailsPage />', () => {
     // Assert the audited page is the block details page, not a redirect target.
     const heading = page.locator('h1', { hasText: `Block ID ${BLOCK_ID}` });
     await expect(heading).toBeVisible();
+    await runA11yAudit(page, undefined);
+  });
+
+  test('audits the first tab with supplied area and volume summaries', async ({ page }) => {
+    await mockApiResponses(
+      page,
+      `reporting-units/${RU_ID}/${BLOCK_ID}`,
+      200,
+      'application/json',
+      richBlockDetailsPayload,
+    );
+    await page.reload({ waitUntil: 'networkidle' });
+    await injectAxe(page);
+
+    await expect(page.locator('h1', { hasText: `Block ID ${BLOCK_ID}` })).toBeVisible();
+    await expect(
+      page.getByRole('combobox', {
+        name: 'Harvest method for Dispersed, H– Historic waste information',
+      }),
+    ).toBeVisible();
+    await runA11yAudit(page, undefined);
+  });
+
+  test('audits the read-only first tab for a legacy block', async ({ page }) => {
+    await mockApiResponses(page, `reporting-units/${RU_ID}/${BLOCK_ID}`, 200, 'application/json', {
+      ...richBlockDetailsPayload,
+      isLegacy: true,
+    });
+    await page.reload({ waitUntil: 'networkidle' });
+    await injectAxe(page);
+
+    await expect(page.locator('h1', { hasText: `Block ID ${BLOCK_ID}` })).toBeVisible();
+    await expect(
+      page.getByRole('heading', { name: 'District average volumes summary' }),
+    ).toBeVisible();
+    await expect(page.getByRole('combobox', { name: /Harvest method for/ })).toHaveCount(0);
     await runA11yAudit(page, undefined);
   });
 });

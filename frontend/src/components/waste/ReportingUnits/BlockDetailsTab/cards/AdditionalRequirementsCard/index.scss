@@ -5,23 +5,24 @@
 .additional-requirements-card {
   display: flex;
   flex-direction: column;
+  gap: $spacing-06;
   padding: $spacing-07;
   border: 1px solid var(--cds-border-subtle-01);
   border-radius: $border-radius-08;
   background-color: var(--cds-background);
 
-  &__header {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: $spacing-05;
-    margin-bottom: $spacing-06;
-  }
-
-  &__title-group {
+  &__title-column {
     display: flex;
     flex-direction: column;
     gap: $spacing-02;
+  }
+
+  &__action-column {
+    display: flex;
+    // The action sits on the title's top edge, and the button keeps its
+    // Carbon size when the title column wraps onto a second line.
+    align-items: flex-start;
+    justify-content: flex-end;
   }
 
   &__title {
@@ -37,23 +38,16 @@
     color: var(--cds-text-secondary);
   }
 
-  &__button {
+  // The page shell re-imports Carbon's button styles after this file, so the
+  // card's button rules carry the Carbon class to outrank a plain `.cds--btn`.
+  &__button.cds--btn {
     flex-shrink: 0;
-  }
-
-  &__questions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: $spacing-06;
-    margin-bottom: $spacing-06;
-  }
-
-  &__question {
-    flex: 1 1 20rem;
-    min-width: 0;
-  }
-
-  &__certify {
-    max-width: 54rem;
+    // Carbon's button radius token is unset in this app, so the global
+    // element reset squares off every button. The design uses 4px corners.
+    --cds-button-radius: #{$border-radius-04};
+    // Carbon reserves trailing inline space for an absolutely positioned
+    // icon. These buttons carry no icon, so the slot is reclaimed and the
+    // label keeps Carbon's standard inline padding on both sides.
+    padding-inline: calc(var(--cds-layout-density-padding-inline-local) - 0.0625rem);
   }
 }

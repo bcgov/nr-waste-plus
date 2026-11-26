@@ -23,8 +23,16 @@ import UnderConstructionTag from '@/components/core/Tags/UnderConstructionTag';
 import BlockDetailsSkeleton from '@/components/waste/ReportingUnits/BlockDetailsSkeleton';
 import BlockDetailsSummary from '@/components/waste/ReportingUnits/BlockDetailsSummary';
 import BlockDetailsTab from '@/components/waste/ReportingUnits/BlockDetailsTab';
-import { useBlockDetailsQuery, useReportingUnitDetailsQuery } from '@/config/react-query/hooks';
+import {
+  useBlockDetailsQuery,
+  useDistrictAverageCriteriaCodesQuery,
+  useHarvestStatusCodesQuery,
+  useMaturityTypeCodesQuery,
+  useReportingUnitDetailsQuery,
+} from '@/config/react-query/hooks';
 import useDelayedFlag from '@/hooks/useDelayedFlag';
+
+import type { CodeDescriptionDto } from '@/types/search.types';
 
 import './index.scss';
 
@@ -33,6 +41,31 @@ import './index.scss';
  * {@link PageNotification} on this page.
  */
 const EVENT_TARGET = 'reporting-unit-block-details';
+
+/**
+ * Builds the harvest-method dropdown options for the district average volumes
+ * card from the codes already present on the supplied rows, so a supplied
+ * method always resolves to its label instead of rendering as an empty
+ * "Select one" dropdown. No harvest-method codes endpoint exists yet, and
+ * edits made against these options stay local to this page.
+ *
+ * @param rows - The supplied district average volume rows.
+ * @returns Unique harvest-method options derived from the supplied rows.
+ */
+const buildHarvestMethodOptions = (
+  rows: readonly { harvestMethodCode?: string | null }[],
+): CodeDescriptionDto[] => {
+  const seen = new Set<string>();
+  const options: CodeDescriptionDto[] = [];
+  for (const row of rows) {
+    const code = row.harvestMethodCode?.trim();
+    if (code && !seen.has(code)) {
+      seen.add(code);
+      options.push({ code, description: code });
+    }
+  }
+  return options;
+};
 
 /**
  * District Average block details page for a single reporting unit.
@@ -80,6 +113,17 @@ const ReportingUnitBlockDetailsPage: FC = () => {
     notificationTarget: EVENT_TARGET,
   });
 
+  const { data: harvestStatuses = [] } = useHarvestStatusCodesQuery(
+    { reportingUnitId: ruId, blockId },
+    { notificationTarget: EVENT_TARGET },
+  );
+  const { data: maturityOptions = [] } = useMaturityTypeCodesQuery({
+    notificationTarget: EVENT_TARGET,
+  });
+  const { data: districtAverageCriteria = [] } = useDistrictAverageCriteriaCodesQuery({
+    notificationTarget: EVENT_TARGET,
+  });
+
   const isLoading = isRuLoading || isBlockLoading;
   // The block query alone decides whether the page renders its not-found state;
   // a reporting-unit summary failure must not masquerade as a missing block.
@@ -95,6 +139,20 @@ const ReportingUnitBlockDetailsPage: FC = () => {
   const showSkeleton = useDelayedFlag(isLoading);
   const bannerRef = useRef<HTMLDivElement>(null);
   const [selectedTabIndex, setSelectedTabIndex] = useState(0);
+
+  // Local, non-persisted harvest-method edits for the district average volumes
+  // card: the card receives matching options plus this handler so supplied
+  // methods render as their label instead of an empty dropdown. Totals are
+  // preserved exactly as supplied — no recalculation, no persistence. The edits
+  // are keyed by block so navigating to another block derives an empty map
+  // without a reset effect.
+  const blockKey = `${ruId}:${blockId}`;
+  const [volumeHarvestEdits, setVolumeHarvestEdits] = useState<{
+    blockKey: string;
+    byIndex: Record<number, string>;
+  }>({ blockKey: '', byIndex: {} });
+  const activeVolumeHarvestEdits =
+    volumeHarvestEdits.blockKey === blockKey ? volumeHarvestEdits.byIndex : {};
 
   // Move focus to the h1 once the page has real content (after data resolves).
   useEffect(() => {
@@ -247,16 +305,57 @@ const ReportingUnitBlockDetailsPage: FC = () => {
           <TabPanels>
             <TabPanel>
               <BlockDetailsTab
+                key={blockKey}
                 grade={data?.grade}
                 mode={blockData.isLegacy ? 'read-only' : 'form'}
                 initialValues={{
                   primaryLoggingCompleteDate: blockData.plcDate ?? '',
+                  secondaryTimberMarks: (blockData.secondaryTimberMarks ?? []).map(
+                    (mark) => mark.mark ?? mark.timberMark ?? '',
+                  ),
+                  roadPermitTimberMarks: (blockData.roadPermitTimberMarks ?? []).map(
+                    (mark) => mark.mark ?? mark.timberMark ?? '',
+                  ),
                 }}
-                harvestStatuses={[]}
+                harvestStatuses={harvestStatuses}
                 becZones={[]}
                 becSubzoneVariants={[]}
-                maturityOptions={[]}
-                districtAverageCriteria={[]}
+                maturityOptions={maturityOptions}
+                districtAverageCriteria={districtAverageCriteria}
+                wasteAssessmentArea={
+                  blockData.wasteAssessmentAreaSummary
+                    ? {
+                        primary: blockData.wasteAssessmentAreaSummary.primary ?? null,
+                        secondary: blockData.wasteAssessmentAreaSummary.secondary ?? [],
+                        totalNetWasteAreaHa:
+                          blockData.wasteAssessmentAreaSummary.totalNetWasteAreaHa ?? null,
+                      }
+                    : undefined
+                }
+                districtAverageVolumes={
+                  blockData.districtAverageVolumesSummary
+                    ? {
+                        rows: (blockData.districtAverageVolumesSummary.rows ?? []).map(
+                          (row, index) =>
+                            activeVolumeHarvestEdits[index] !== undefined
+                              ? { ...row, harvestMethodCode: activeVolumeHarvestEdits[index] }
+                              : row,
+                        ),
+                        totals: blockData.districtAverageVolumesSummary.totals ?? undefined,
+                        harvestMethodOptions: buildHarvestMethodOptions(
+                          blockData.districtAverageVolumesSummary.rows ?? [],
+                        ),
+                        onHarvestMethodChange: (index, code) =>
+                          setVolumeHarvestEdits((previous) => ({
+                            blockKey,
+                            byIndex: {
+                              ...(previous.blockKey === blockKey ? previous.byIndex : {}),
+                              [index]: code,
+                            },
+                          })),
+                      }
+                    : undefined
+                }
                 onNavigateTab={setSelectedTabIndex}
               />
             </TabPanel>

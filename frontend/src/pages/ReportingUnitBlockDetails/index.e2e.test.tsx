@@ -33,9 +33,54 @@ const blockDetailsPayload = {
   plcDate: null,
   revision: 1,
   isLegacy: false,
+  wasteAssessmentAreaSummary: {
+    primary: {
+      timberMarkId: 'TM-PRIMARY',
+      netWasteAreaHa: null,
+    },
+    secondary: [{ timberMarkId: 'TM-SEC', netWasteAreaHa: 1.23 }],
+    totalNetWasteAreaHa: 1.23,
+  },
+  districtAverageVolumesSummary: {
+    rows: [
+      {
+        populationType: 'Dispersed',
+        wasteType: 'Roadside',
+        harvestMethodCode: 'Ground Skid',
+        assessmentMethod: 'Ocular Estimate',
+        wasteLevel: 'Stratum',
+        netWasteAreaHa: 2.5,
+        totalBillableVolumeM3: null,
+        totalCutControlVolumeM3: null,
+      },
+    ],
+    totals: {
+      totalBillableVolumeM3: 0,
+      totalCutControlVolumeM3: 0,
+    },
+  },
 };
 
 test.describe('Reporting Unit Block Details', () => {
+  const setupCodeMocks = async (page: Parameters<typeof mockApiResponses>[0]) => {
+    await mockApiResponses(page, 'codes/harvest-statuses*', 200, 'application/json', [
+      { code: 'COM', description: 'Complete' },
+      { code: 'INC', description: 'Incomplete' },
+      { code: 'NOA', description: 'N/A' },
+    ]);
+    await mockApiResponses(page, 'codes/maturity-types', 200, 'application/json', [
+      { code: 'IM', description: 'Immature' },
+      { code: 'MAT', description: 'Mature' },
+    ]);
+    // The page fires all three codes queries with a notification target, so an
+    // unstubbed one fails at the network level and replaces the alert under
+    // test with "Network Connection Failed".
+    await mockApiResponses(page, 'codes/district-average-criteria*', 200, 'application/json', [
+      { code: '1', description: 'Forestry Licence to Cut with a volume limit.', areas: [] },
+      { code: '7', description: 'A cutblock smaller than 2.0 ha.', areas: [] },
+    ]);
+  };
+
   test.beforeEach(async ({ page }, testInfo) => {
     await setupAppShellMocks(page, testInfo.project.metadata.userType);
     await mockJwt(page, testInfo.project.metadata);
@@ -59,6 +104,7 @@ test.describe('Reporting Unit Block Details', () => {
       'application/json',
       blockDetailsPayload,
     );
+    await setupCodeMocks(page);
     await page.goto(ROUTE_PATH);
     await page.waitForLoadState('domcontentloaded');
 
@@ -81,6 +127,33 @@ test.describe('Reporting Unit Block Details', () => {
     );
     await expect(page.getByTestId('card-item-content-created-on')).toHaveText('-');
 
+    const wasteAssessmentCard = page.getByRole('region', {
+      name: 'Waste assessment area summary',
+    });
+    await expect(wasteAssessmentCard).toBeVisible();
+    await expect(wasteAssessmentCard.getByText('Primary mark')).toBeVisible();
+    await expect(wasteAssessmentCard.getByText('TM-PRIMARY')).toBeVisible();
+    await expect(wasteAssessmentCard.getByText('Secondary mark')).toBeVisible();
+    await expect(wasteAssessmentCard.getByText('TM-SEC')).toBeVisible();
+    await expect(wasteAssessmentCard.getByText('1.23').first()).toBeVisible();
+    const totalRow = wasteAssessmentCard.getByRole('row').filter({
+      hasText: 'Total net waste area (ha)',
+    });
+    await expect(totalRow).toContainText('1.23');
+    const primaryRow = wasteAssessmentCard.getByRole('row').filter({ hasText: 'TM-PRIMARY' });
+    await expect(primaryRow).toContainText('-');
+
+    const volumesCard = page.getByRole('region', {
+      name: 'District average volumes summary',
+    });
+    await expect(volumesCard).toBeVisible();
+    // Scope to the cell: the harvest-method dropdown's hidden label also
+    // contains the population type ("Harvest method for Dispersed, …").
+    await expect(volumesCard.getByRole('cell', { name: 'Dispersed', exact: true })).toBeVisible();
+    await expect(volumesCard.getByText('Ground Skid')).toBeVisible();
+    const volumesTotalRow = volumesCard.getByRole('row').filter({ hasText: 'Total' }).last();
+    await expect(volumesTotalRow).toContainText('0');
+
     // No edit controls in the read-only design.
     await expect(page.getByRole('button', { name: /edit/i })).toHaveCount(0);
     await expect(page.getByRole('button', { name: /delete/i })).toHaveCount(0);
@@ -102,6 +175,7 @@ test.describe('Reporting Unit Block Details', () => {
       'application/json',
       blockDetailsPayload,
     );
+    await setupCodeMocks(page);
     await page.goto(ROUTE_PATH);
     await page.waitForLoadState('domcontentloaded');
 
@@ -135,6 +209,7 @@ test.describe('Reporting Unit Block Details', () => {
       'application/json',
       blockDetailsPayload,
     );
+    await setupCodeMocks(page);
     await page.goto(ROUTE_PATH);
 
     const heading = page.getByRole('heading', { level: 1, name: `Block ID ${BLOCK_ID}` });
@@ -160,6 +235,7 @@ test.describe('Reporting Unit Block Details', () => {
       'application/json',
       blockDetailsPayload,
     );
+    await setupCodeMocks(page);
 
     await mockApi(page, `reporting-units/${RU_ID}`, async (route) => {
       await route.fulfill({
@@ -201,6 +277,7 @@ test.describe('Reporting Unit Block Details', () => {
     await mockApiResponses(page, `reporting-units/${RU_ID}`, 200, 'application/json', {
       ...reportingUnitPayload,
     });
+    await setupCodeMocks(page);
 
     let attempts = 0;
     await mockApi(page, `reporting-units/${RU_ID}/${BLOCK_ID}`, async (route) => {
@@ -242,5 +319,119 @@ test.describe('Reporting Unit Block Details', () => {
     ).toBeVisible();
     await expect(page.getByTestId('block-details-summary')).toBeVisible();
     expect(attempts).toBeGreaterThan(1);
+  });
+
+  test('fetches and exposes harvest status and maturity code options on block details', async ({
+    page,
+  }) => {
+    test.skip(
+      test.info().project.metadata.userType === 'bceid',
+      'This scenario is validated on IDIR to avoid BCeID role-rule redirects.',
+    );
+
+    const maturityRequests: string[] = [];
+    const harvestRequests: string[] = [];
+
+    await mockApiResponses(page, `reporting-units/${RU_ID}`, 200, 'application/json', {
+      ...reportingUnitPayload,
+    });
+    await mockApiResponses(
+      page,
+      `reporting-units/${RU_ID}/${BLOCK_ID}`,
+      200,
+      'application/json',
+      blockDetailsPayload,
+    );
+    await mockApi(page, 'codes/harvest-statuses*', async (route) => {
+      harvestRequests.push(route.request().url());
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify([
+          { code: 'COM', description: 'Complete' },
+          { code: 'INC', description: 'Incomplete' },
+          { code: 'NOA', description: 'N/A' },
+        ]),
+      });
+    });
+    await mockApi(page, 'codes/maturity-types', async (route) => {
+      maturityRequests.push(route.request().url());
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify([
+          { code: 'IM', description: 'Immature' },
+          { code: 'MAT', description: 'Mature' },
+        ]),
+      });
+    });
+
+    await page.goto(ROUTE_PATH);
+    await page.waitForLoadState('domcontentloaded');
+
+    await expect(
+      page.getByRole('heading', { level: 1, name: `Block ID ${BLOCK_ID}` }),
+    ).toBeVisible();
+    await expect(page.getByRole('combobox', { name: 'Harvest status' })).toBeVisible();
+
+    await expect.poll(() => harvestRequests.length).toBeGreaterThan(0);
+    await expect.poll(() => maturityRequests.length).toBeGreaterThan(0);
+    expect(harvestRequests[0]).toContain('reportingUnitId=468');
+    expect(harvestRequests[0]).toContain('blockId=12');
+  });
+
+  test('fetches and exposes district average criteria code options on block details', async ({
+    page,
+  }) => {
+    test.skip(
+      test.info().project.metadata.userType === 'bceid',
+      'This scenario is validated on IDIR to avoid BCeID role-rule redirects.',
+    );
+
+    const districtAverageCriteriaRequests: string[] = [];
+
+    await mockApiResponses(page, `reporting-units/${RU_ID}`, 200, 'application/json', {
+      ...reportingUnitPayload,
+    });
+    await mockApiResponses(
+      page,
+      `reporting-units/${RU_ID}/${BLOCK_ID}`,
+      200,
+      'application/json',
+      blockDetailsPayload,
+    );
+    await mockApiResponses(page, 'codes/harvest-statuses*', 200, 'application/json', [
+      { code: 'COM', description: 'Complete' },
+    ]);
+    await mockApiResponses(page, 'codes/maturity-types', 200, 'application/json', [
+      { code: 'IM', description: 'Immature' },
+    ]);
+    await mockApi(page, 'codes/district-average-criteria*', async (route) => {
+      districtAverageCriteriaRequests.push(route.request().url());
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify([
+          {
+            code: '1',
+            description:
+              'Forestry Licence to Cut with a volume limit of 2,000 m3 or less, written in the licence agreement.',
+            areas: [],
+          },
+          { code: '7', description: 'A cutblock smaller than 2.0 ha.', areas: [] },
+        ]),
+      });
+    });
+
+    await page.goto(ROUTE_PATH);
+    await page.waitForLoadState('domcontentloaded');
+
+    await expect(
+      page.getByRole('heading', { level: 1, name: `Block ID ${BLOCK_ID}` }),
+    ).toBeVisible();
+    await expect(page.getByRole('combobox', { name: 'District average criteria' })).toBeVisible();
+
+    await expect.poll(() => districtAverageCriteriaRequests.length).toBeGreaterThan(0);
+    expect(districtAverageCriteriaRequests[0]).toContain('/api/codes/district-average-criteria');
   });
 });

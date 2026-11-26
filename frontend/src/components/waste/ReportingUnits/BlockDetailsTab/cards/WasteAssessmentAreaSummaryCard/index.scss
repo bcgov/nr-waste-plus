@@ -1,3 +1,4 @@
+@use '@carbon/react/scss/breakpoint' as *;
 @use '@carbon/react/scss/spacing' as *;
 @use '@carbon/styles/scss/border-radius' as *;
 @use '@carbon/type' as *;
@@ -5,23 +6,24 @@
 .waste-assessment-area-summary-card {
   display: flex;
   flex-direction: column;
+  gap: $spacing-06;
   padding: $spacing-07;
   border: 1px solid var(--cds-border-subtle-01);
   border-radius: $border-radius-08;
   background-color: var(--cds-background);
 
-  &__header {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: $spacing-05;
-    margin-bottom: $spacing-06;
-  }
-
-  &__title-group {
+  &__title-column {
     display: flex;
     flex-direction: column;
     gap: $spacing-02;
+  }
+
+  &__action-column {
+    display: flex;
+    // The action sits on the title's top edge, and the button keeps its
+    // Carbon size when the title column wraps onto a second line.
+    align-items: flex-start;
+    justify-content: flex-end;
   }
 
   &__title {
@@ -37,16 +39,78 @@
     color: var(--cds-text-secondary);
   }
 
-  &__button {
+  // The page shell re-imports Carbon's button styles after this file, so the
+  // card's button rules carry the Carbon class to outrank a plain `.cds--btn`.
+  &__button.cds--btn {
     flex-shrink: 0;
+    // Carbon's button radius token is unset in this app, so the global
+    // element reset squares off every button. The design uses 4px corners.
+    --cds-button-radius: #{$border-radius-04};
+    // Carbon reserves trailing inline space for an absolutely positioned
+    // icon. These buttons carry no icon, so the slot is reclaimed and the
+    // label keeps Carbon's standard inline padding on both sides.
+    padding-inline: calc(var(--cds-layout-density-padding-inline-local) - 0.0625rem);
+  }
+
+  // The design splits the list into three equal columns inside the 8-of-16
+  // grid column, so the width comes from the grid rather than a fixed value.
+  // The list fills its grid column at every size, so no column is ever
+  // hidden behind a horizontal scroll.
+  &__table-scroll {
+    overflow-x: auto;
   }
 
   &__table {
-    margin-bottom: 0;
+    table-layout: fixed;
   }
 
-  &__total-cell {
-    @include type-style('heading-compact-01');
-    font-weight: 600;
+  // `StructuredListWrapper` renders the `.cds--structured-list` element itself,
+  // so the cell overrides are scoped to its row descendants.
+  .cds--structured-list {
+    .cds--structured-list-row {
+      .cds--structured-list-td,
+      .cds--structured-list-th {
+        padding: $spacing-03 $spacing-05 $spacing-03 0;
+        color: var(--cds-text-primary);
+      }
+
+      // Carbon indents the first cell by 16px; the design keeps the list
+      // flush with the card's content edge.
+      .cds--structured-list-td:first-of-type,
+      .cds--structured-list-th:first-of-type {
+        padding-inline-start: 0;
+      }
+
+      .cds--structured-list-td {
+        @include type-style('body-compact-01');
+      }
+
+      // Carbon pins header cells to 40px; the design rows are content-sized.
+      .cds--structured-list-th {
+        block-size: auto;
+      }
+    }
+
+    // The total row carries the bold total type from the design.
+    .cds--structured-list-tbody .waste-assessment-area-summary-card__total-row {
+      .waste-assessment-area-summary-card__total-label,
+      .waste-assessment-area-summary-card__total-value {
+        @include type-style('heading-compact-01');
+        font-weight: 600;
+      }
+
+      // The design gives the total label the first two columns, which the
+      // list cannot span, so it stays on one line across the empty middle cell.
+      .waste-assessment-area-summary-card__total-label {
+        white-space: nowrap;
+
+        // Below the md breakpoint the columns are narrower than the total
+        // label, so the label wraps inside its own column instead of running
+        // into the total value.
+        @include breakpoint-down(md) {
+          white-space: normal;
+        }
+      }
+    }
   }
 }
