@@ -59,6 +59,10 @@ jobs:
     with:
       zone: ${{ github.event.number }}
       target: test
+      # PR deployments are the DEV environment, where automated browser tests
+      # run against the frontend from a single GitHub runner IP.
+      rate-limit-tcp: 300
+      rate-limit-http: 600
       oracledb-port: 1521
       oracledb-servicename: PR_${{ github.event.number }}
       oracledb-username: THE

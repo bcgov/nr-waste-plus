@@ -80,6 +80,16 @@ on:
         required: false
         type: string
         default: ""
+      rate-limit-tcp:
+        description: HAProxy TCP connection rate limit per client IP
+        required: false
+        type: string
+        default: "75"
+      rate-limit-http:
+        description: HAProxy HTTP request rate limit per client IP
+        required: false
+        type: string
+        default: "150"
 
 permissions: {}
 
@@ -195,6 +205,8 @@ jobs:
             overwrite: true
             parameters: -p URL=${{ inputs.url }}
               -p CONFIG_MAP="${{ inputs.configmap-frontend }}"
+              -p RATE_LIMIT_TCP=${{ inputs.rate-limit-tcp }}
+              -p RATE_LIMIT_HTTP=${{ inputs.rate-limit-http }}
           - name: backend
             overwrite: true
             parameters: -p FRONTEND_URL=${{ inputs.url }}
