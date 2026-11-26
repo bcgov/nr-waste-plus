@@ -139,7 +139,10 @@ public class TransitionPolicyService {
     }
 
     TransitionRule matchedRule =
-        matchingRules.stream().filter(rule -> matchesCondition(rule, context)).findFirst().orElse(null);
+        matchingRules.stream()
+            .filter(rule -> matchesCondition(rule, context))
+            .findFirst()
+            .orElse(null);
 
     if (matchedRule == null) {
       return TransitionEvaluationResult.preconditionFailed(
@@ -280,7 +283,8 @@ public class TransitionPolicyService {
       return false;
     }
     String normalizedEvent = event.trim().toUpperCase(Locale.ROOT);
-    return transitionMatrix.stream().anyMatch(rule -> rule.event().equalsIgnoreCase(normalizedEvent));
+    return transitionMatrix.stream()
+        .anyMatch(rule -> rule.event().equalsIgnoreCase(normalizedEvent));
   }
 
   /** Checks whether an event from the given state is marked as {@code SYSTEM}-only. */

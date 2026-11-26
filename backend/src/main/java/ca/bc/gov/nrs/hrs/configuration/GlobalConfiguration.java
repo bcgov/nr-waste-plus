@@ -170,7 +170,9 @@ import tools.jackson.databind.json.JsonMapper.Builder;
 @EnableJpaAuditing(auditorAwareRef = "databaseAuditor")
 public class GlobalConfiguration {
 
-  /** Registers {@code lifecycle-matrix.yml} so GraalVM native images include it on the classpath. */
+  /**
+   * Registers {@code lifecycle-matrix.yml} so GraalVM native images include it on the classpath.
+   */
   static class LifecycleResourceHints implements RuntimeHintsRegistrar {
     @Override
     public void registerHints(RuntimeHints hints, ClassLoader classLoader) {
