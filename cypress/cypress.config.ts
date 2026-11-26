@@ -185,8 +185,8 @@ async function setupNodeEvents(
     // Entra ESTSAUTHPERSISTENT cookie can silently sign a later spec in as a
     // different account. Clear every cookie at the browser level via CDP.
     // Reads the auth state exported by frontend/e2e-sso/sso-login.spec.ts.
-    "session:load"(kind: string = "idir") {
-      const file = path.resolve(__dirname, ".auth", `${kind}-state.json`);
+    "session:load"(kind: string | null = "idir") {
+      const file = path.resolve(__dirname, ".auth", `${kind || "idir"}-state.json`);
       return JSON.parse(fs.readFileSync(file, "utf8"));
     },
     async "session:applyCookies"(cookies: Array<Record<string, unknown>>) {
