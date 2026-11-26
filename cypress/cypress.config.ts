@@ -198,7 +198,12 @@ async function setupNodeEvents(
       const refreshToken = user.refresh_token as string | undefined;
       console.log("[TOKEN]", kind, "remaining min", Math.round((expiresAt - Date.now()) / 60000));
       if (refreshToken && expiresAt - Date.now() < 120_000) {
-        const [authority, clientId] = key.slice("oidc.user:".length).split(":");
+        // The authority itself contains a scheme colon, so split on the last
+        // colon only (the one before the client id).
+        const remainder = key.slice("oidc.user:".length);
+        const splitAt = remainder.lastIndexOf(":");
+        const authority = remainder.slice(0, splitAt);
+        const clientId = remainder.slice(splitAt + 1);
         const response = await fetch(`${authority}/protocol/openid-connect/token`, {
           method: "POST",
           headers: { "content-type": "application/x-www-form-urlencoded" },
