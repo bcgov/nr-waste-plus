@@ -5,6 +5,11 @@
   "main": "index.js",
   "scripts": {
     "lint": "eslint . --max-warnings=0",
+    "pw:test": "bddgen && playwright test",
+    "pw:test:local": "bddgen && playwright test --config=playwright.config.ts",
+    "pw:ui": "bddgen && playwright test --ui",
+    "pw:report": "playwright show-report",
+    "pw:typecheck": "tsc --noEmit -p tsconfig.playwright.json",
     "report:md": "node scripts/parse-report.js",
     "test:unit": "node --test scripts/*.test.js",
     "report:clean": "rm -rf reports/*",
@@ -39,9 +44,11 @@
     "@badeball/cypress-cucumber-preprocessor": "^28.0.0",
     "@cypress/webpack-preprocessor": "^8.0.0",
     "@eslint/js": "^10.0.1",
+    "@playwright/test": "1.65.1",
     "@testing-library/cypress": "^10.1.0",
     "@types/node": "^26.0.0",
     "axe-core": "^4.11.0",
+    "axe-playwright": "^2.2.2",
     "cypress": "^16.0.0",
     "cypress-real-events": "^1.14.0",
     "dotenv": "^18.0.0",
@@ -51,10 +58,13 @@
     "lighthouse": "^13.0.0",
     "mochawesome": "^8.0.0",
     "otplib": "^12.0.1",
+    "playwright-bdd": "^9.2.1",
+    "playwright-timeline-reporter": "^1.3.0",
     "ts-loader": "^9.4.2",
     "typescript": "^5.0.4",
     "typescript-eslint": "^8.71.1",
-    "webpack": "^5.81.0"
+    "webpack": "^5.81.0",
+    "zod": "^4.6.7"
   },
   "cypress-cucumber-preprocessor": {
     "nonGlobalStepDefinitions": true

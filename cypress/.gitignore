@@ -463,3 +463,9 @@ summary.md
 cypress.env.json
 
 .auth/
+
+# Playwright runner (migration)
+.features-gen/
+playwright-report/
+test-results/
+.spike/
