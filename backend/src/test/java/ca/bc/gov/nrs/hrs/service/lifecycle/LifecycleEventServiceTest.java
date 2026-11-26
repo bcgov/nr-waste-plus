@@ -879,14 +879,13 @@ class LifecycleEventServiceTest {
           .thenReturn(
               TransitionEvaluationResult.allowed("BILLING_APPROVED", "HBS_INVOICE_POST"));
 
+      LifecycleEventRequestDto requestDto =
+          new LifecycleEventRequestDto("APPROVE_FOR_BILLING", null);
+
       assertThatThrownBy(
               () ->
                   lifecycleEventService.recordBlockLifecycleEvent(
-                      request,
-                      submitterJwt,
-                      RU_ID,
-                      BLOCK_ID,
-                      new LifecycleEventRequestDto("APPROVE_FOR_BILLING", null)))
+                      request, submitterJwt, RU_ID, BLOCK_ID, requestDto))
           .isInstanceOf(ResponseStatusException.class)
           .extracting(ex -> ((ResponseStatusException) ex).getStatusCode())
           .isEqualTo(HttpStatus.NOT_IMPLEMENTED);
