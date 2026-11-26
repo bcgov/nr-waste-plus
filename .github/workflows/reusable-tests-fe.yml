@@ -32,9 +32,11 @@ jobs:
     steps:
       - name: Detect changed files for frontend triggers
         id: diff
-        uses: bcgov/action-diff-triggers@a80e4b3cf77b7e05f84e74030e3bfa08b717a574 # v1.2.1
+        uses: bcgov/actions/diff-triggers@acc058abf85bb183dad21b839a92a40a4ff47af3 # v0.14.0
         with:
-          triggers: ('frontend/', 'shared/contracts/')
+          triggers: |
+            frontend/
+            shared/contracts/
 
   unit:
     environment: test
@@ -50,7 +52,7 @@ jobs:
         run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
 
       - name: Run frontend unit tests without sonar
-        uses: bcgov/action-test-and-analyse@8f699e3fd3fadd9a6adf6f4b1f2638ef7ecfefb9 # v2.0.0
+        uses: bcgov/actions/test-and-analyse@acc058abf85bb183dad21b839a92a40a4ff47af3 # v0.14.0
         env:
           VITE_MOCK_AUTH: true
           VITE_COVERAGE: true
@@ -64,7 +66,7 @@ jobs:
             git config --global --add safe.directory "$GITHUB_WORKSPACE"
             npm ci
             npm run test:unit
-          dir: frontend
+          working_directory: frontend
 
       - name: Annotate PR with frontend unit test results
         uses: dorny/test-reporter@v3
@@ -102,7 +104,7 @@ jobs:
         run: git config --global --add safe.directory /__w/nr-waste-plus/nr-waste-plus
 
       - name: Run e2e tests without sonar
-        uses: bcgov/action-test-and-analyse@8f699e3fd3fadd9a6adf6f4b1f2638ef7ecfefb9 # v2.0.0
+        uses: bcgov/actions/test-and-analyse@acc058abf85bb183dad21b839a92a40a4ff47af3 # v0.14.0
         env:
           VITE_MOCK_AUTH: true
           VITE_COVERAGE: true
@@ -115,7 +117,7 @@ jobs:
             npx playwright install-deps
             npx playwright install
             npm run test:e2e:${{ matrix.target }}
-          dir: frontend
+          working_directory: frontend
 
       - name: Package e2e:${{ matrix.target }} coverage
         run: |
