@@ -61,6 +61,10 @@ public class LifecycleEventService {
   private static final String CONTEXT_LIFECYCLE = "LIFECYCLE";
   private static final String REQ_RATIONALE = "RATIONALE_REQUIRED";
   private static final String REQ_BURNT_PILES = "BURNT_PILES";
+  private static final String DETAIL_HAS_COMMENT = "hasComment";
+  private static final String CODE_COMMENT_REQUIRED = "COMMENT_REQUIRED";
+  private static final String CODE_PRECONDITION_FAILED = "PRECONDITION_FAILED";
+  private static final String SYSTEM_ACTOR = "SYSTEM";
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
   private final ReportingUnitRepository reportingUnitRepository;
@@ -148,7 +152,7 @@ public class LifecycleEventService {
       if (result.denialReason() == TransitionEvaluationResult.DenialReason.COMMENT_REQUIRED) {
         ResponseStatusException ex =
             new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, result.reason());
-        ex.getBody().setProperty("code", "COMMENT_REQUIRED");
+        ex.getBody().setProperty("code", CODE_COMMENT_REQUIRED);
         ex.getBody().setProperty("state", currentState);
         ex.getBody().setProperty("blockState", currentState);
         ex.getBody().setProperty("retryable", false);
@@ -157,7 +161,7 @@ public class LifecycleEventService {
       if (result.denialReason() == TransitionEvaluationResult.DenialReason.PRECONDITION_FAILED) {
         ResponseStatusException ex =
             new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, result.reason());
-        ex.getBody().setProperty("code", "PRECONDITION_FAILED");
+        ex.getBody().setProperty("code", CODE_PRECONDITION_FAILED);
         ex.getBody().setProperty("state", currentState);
         ex.getBody().setProperty("blockState", currentState);
         ex.getBody().setProperty("retryable", false);
@@ -172,7 +176,7 @@ public class LifecycleEventService {
         ResponseStatusException ex =
             new ResponseStatusException(
                 HttpStatus.UNPROCESSABLE_CONTENT, "A comment is required for this event");
-        ex.getBody().setProperty("code", "COMMENT_REQUIRED");
+        ex.getBody().setProperty("code", CODE_COMMENT_REQUIRED);
         ex.getBody().setProperty("state", currentState);
         ex.getBody().setProperty("blockState", currentState);
         ex.getBody().setProperty("retryable", false);
@@ -212,7 +216,7 @@ public class LifecycleEventService {
     boolean hasComment = request.comment() != null && !request.comment().isBlank();
     var detailsNode = OBJECT_MAPPER.createObjectNode();
     detailsNode.put("previousState", currentState);
-    detailsNode.put("hasComment", hasComment);
+    detailsNode.put(DETAIL_HAS_COMMENT, hasComment);
     statusEvent.setDetails(detailsNode);
     statusEvent = statusEventRepository.save(statusEvent);
 
@@ -312,7 +316,7 @@ public class LifecycleEventService {
         ResponseStatusException ex =
             new ResponseStatusException(
                 HttpStatus.UNPROCESSABLE_CONTENT, "A comment is required for this event");
-        ex.getBody().setProperty("code", "COMMENT_REQUIRED");
+        ex.getBody().setProperty("code", CODE_COMMENT_REQUIRED);
         ex.getBody().setProperty("state", currentState);
         ex.getBody().setProperty("blockState", currentState);
         ex.getBody().setProperty("retryable", false);
@@ -333,7 +337,7 @@ public class LifecycleEventService {
     boolean hasComment = request.comment() != null && !request.comment().isBlank();
     var detailsNode = OBJECT_MAPPER.createObjectNode();
     detailsNode.put("previousState", currentState);
-    detailsNode.put("hasComment", hasComment);
+    detailsNode.put(DETAIL_HAS_COMMENT, hasComment);
     statusEvent.setDetails(detailsNode);
     statusEvent = statusEventRepository.save(statusEvent);
     entityManager.flush();
@@ -495,7 +499,7 @@ public class LifecycleEventService {
     final String targetState = result.targetState();
     updateBlockState(block, targetState);
     block.setUpdatedAt(Instant.now());
-    block.setUpdatedBy("SYSTEM");
+    block.setUpdatedBy(SYSTEM_ACTOR);
     block = blockRepository.saveAndFlush(block);
 
     StatusEventEntity statusEvent = new StatusEventEntity();
@@ -503,13 +507,13 @@ public class LifecycleEventService {
     statusEvent.setReportingUnitId(null);
     statusEvent.setStatus(targetState);
     statusEvent.setEventType(normalizedEvent);
-    statusEvent.setCreatedBy("SYSTEM");
-    statusEvent.setUpdatedBy("SYSTEM");
+    statusEvent.setCreatedBy(SYSTEM_ACTOR);
+    statusEvent.setUpdatedBy(SYSTEM_ACTOR);
 
     var detailsNode = OBJECT_MAPPER.createObjectNode();
     detailsNode.put("previousState", currentState);
-    detailsNode.put("hasComment", false);
-    detailsNode.put("actor", "SYSTEM");
+    detailsNode.put(DETAIL_HAS_COMMENT, false);
+    detailsNode.put("actor", SYSTEM_ACTOR);
     statusEvent.setDetails(detailsNode);
     statusEvent = statusEventRepository.save(statusEvent);
     entityManager.flush();
@@ -533,7 +537,7 @@ public class LifecycleEventService {
           new ResponseStatusException(
               HttpStatus.UNPROCESSABLE_CONTENT,
               "Cannot submit block: planned completion date (plcDate) is required.");
-      ex.getBody().setProperty("code", "PRECONDITION_FAILED");
+      ex.getBody().setProperty("code", CODE_PRECONDITION_FAILED);
       ex.getBody().setProperty("state", currentState);
       ex.getBody().setProperty("blockState", currentState);
       ex.getBody().setProperty("retryable", false);
@@ -551,7 +555,7 @@ public class LifecycleEventService {
           new ResponseStatusException(
               HttpStatus.UNPROCESSABLE_CONTENT,
               "Cannot submit block: all attachments must be finalized and clean of malware.");
-      ex.getBody().setProperty("code", "PRECONDITION_FAILED");
+      ex.getBody().setProperty("code", CODE_PRECONDITION_FAILED);
       ex.getBody().setProperty("state", currentState);
       ex.getBody().setProperty("blockState", currentState);
       ex.getBody().setProperty("retryable", false);

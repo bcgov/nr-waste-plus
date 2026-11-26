@@ -7,6 +7,7 @@ import ca.bc.gov.nrs.hrs.dto.base.IdentityProvider;
 import ca.bc.gov.nrs.hrs.dto.base.Role;
 import ca.bc.gov.nrs.hrs.dto.block.AvailableLifecycleEventDto;
 import java.time.LocalDate;
+import java.time.Month;
 import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Properties;
@@ -146,7 +147,7 @@ class TransitionPolicyServiceTest {
   @DisplayName("Hold Rule Boundary Conditions (Issue #1231)")
   class HoldRuleBoundaryConditions {
 
-    private final LocalDate plcDate = LocalDate.of(2025, 6, 15);
+    private final LocalDate plcDate = LocalDate.of(2025, Month.JUNE, 15);
 
     @Test
     @DisplayName("Submission at PLC + 12mo - 1 day passes to SUBMITTED")
@@ -613,12 +614,12 @@ class TransitionPolicyServiceTest {
     @DisplayName("AUTO_APPROVE fires at configured month boundary and not before")
     void autoApprove_respectsConfiguredMonthBoundary() {
       // Fixed leap-day submission: 2024-02-29 + 12 months = 2025-02-28
-      LocalDate submissionDate = LocalDate.of(2024, 2, 29);
+      LocalDate submissionDate = LocalDate.of(2024, Month.FEBRUARY, 29);
       TransitionContext context =
           new TransitionContext(null, submissionDate, null, false, false);
 
-      LocalDate dayBeforeDeadline = LocalDate.of(2025, 2, 27);
-      LocalDate deadline = LocalDate.of(2025, 2, 28);
+      LocalDate dayBeforeDeadline = LocalDate.of(2025, Month.FEBRUARY, 27);
+      LocalDate deadline = LocalDate.of(2025, Month.FEBRUARY, 28);
 
       assertThat(transitionPolicyService.isAutoApproveEligible(context, dayBeforeDeadline))
           .isFalse();
@@ -628,11 +629,11 @@ class TransitionPolicyServiceTest {
       autoApproveMonths = 6;
       assertThat(
               transitionPolicyService.isAutoApproveEligible(
-                  context, LocalDate.of(2024, 8, 28)))
+                  context, LocalDate.of(2024, Month.AUGUST, 28)))
           .isFalse();
       assertThat(
               transitionPolicyService.isAutoApproveEligible(
-                  context, LocalDate.of(2024, 8, 29)))
+                  context, LocalDate.of(2024, Month.AUGUST, 29)))
           .isTrue();
     }
 
@@ -640,12 +641,12 @@ class TransitionPolicyServiceTest {
     @DisplayName("AUTO_APPROVE_BILLING fires at configured BILLING_DELAY_MONTHS boundary")
     void autoApproveBilling_respectsConfiguredDelayBoundary() {
       // Fixed month-end approval: 2026-10-31 + 1 month = 2026-11-30
-      LocalDate approvedDate = LocalDate.of(2026, 10, 31);
+      LocalDate approvedDate = LocalDate.of(2026, Month.OCTOBER, 31);
       TransitionContext context =
           new TransitionContext(null, null, approvedDate, false, false);
 
-      LocalDate dayBeforeDeadline = LocalDate.of(2026, 11, 29);
-      LocalDate deadline = LocalDate.of(2026, 11, 30);
+      LocalDate dayBeforeDeadline = LocalDate.of(2026, Month.NOVEMBER, 29);
+      LocalDate deadline = LocalDate.of(2026, Month.NOVEMBER, 30);
 
       assertThat(transitionPolicyService.isAutoApproveBillingEligible(context, dayBeforeDeadline))
           .isFalse();
@@ -657,7 +658,7 @@ class TransitionPolicyServiceTest {
           .isFalse();
       assertThat(
               transitionPolicyService.isAutoApproveBillingEligible(
-                  context, LocalDate.of(2027, 1, 31)))
+                  context, LocalDate.of(2027, Month.JANUARY, 31)))
           .isTrue();
     }
   }
@@ -745,7 +746,11 @@ class TransitionPolicyServiceTest {
       List<TransitionContext> contexts =
           List.of(
               TransitionContext.empty(),
-              new TransitionContext(LocalDate.of(2024, 1, 1), LocalDate.of(2026, 1, 1), true, true));
+              new TransitionContext(
+                  LocalDate.of(2024, Month.JANUARY, 1),
+                  LocalDate.of(2026, Month.JANUARY, 1),
+                  true,
+                  true));
 
       for (String state : allStates) {
         for (Role role : Role.values()) {
