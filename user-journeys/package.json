@@ -1,0 +1,40 @@
+{
+  "name": "nr-waste-plus-user-journeys",
+  "version": "1.0.0",
+  "description": "Playwright + BDD user journey tests for nr-waste-plus, migrated from the frozen cypress package.",
+  "private": true,
+  "type": "commonjs",
+  "engines": {
+    "node": ">=22.19.0"
+  },
+  "scripts": {
+    "lint": "eslint . --max-warnings=0",
+    "pw:test": "bddgen && playwright test",
+    "pw:ui": "bddgen && playwright test --ui",
+    "pw:report": "playwright show-report",
+    "pw:typecheck": "tsc --noEmit -p tsconfig.json",
+    "test:reporters": "node --experimental-strip-types --test playwright/reporters/quality/*.test.ts"
+  },
+  "author": "Team Alliance",
+  "license": "Apache-2.0",
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@playwright/test": "1.65.1",
+    "@types/node": "^26.0.0",
+    "axe-playwright": "^2.2.2",
+    "dotenv": "^18.0.0",
+    "eslint": "^10.12.0",
+    "eslint-config-prettier": "^10.1.8",
+    "globals": "^17.13.0",
+    "playwright-bdd": "^9.2.1",
+    "playwright-timeline-reporter": "^1.3.0",
+    "typescript": "~5.9",
+    "typescript-eslint": "^8.71.1",
+    "zod": "^4"
+  },
+  "overrides": {
+    "minimatch": "^11.0.4",
+    "fast-uri": "4.2.3",
+    "glob": "^14.0.4"
+  }
+}

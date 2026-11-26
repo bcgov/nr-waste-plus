@@ -1,6 +1,7 @@
 import * as dotenv from "dotenv";
 
 dotenv.config();
+dotenv.config({ path: "../cypress/.env" });
 
 export const baseURL =
   process.env.CYPRESS_baseUrl ??

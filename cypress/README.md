@@ -144,12 +144,3 @@ Cypress.
 
 The plain TS specs in `cypress/e2e/sso-*.cy.ts` are debug-only. To run them,
 temporarily set `specPattern: "**/*.cy.ts"` in `cypress.config.ts`.
-
-## Playwright runner (migration)
-
-The Playwright + `playwright-bdd` runner lives beside the **frozen** Cypress
-suite and reuses the `.feature` files in `cypress/e2e/` in place. Run
-`npm run pw:test` (all features) or `npm run pw:typecheck`; narrow a run with
-`PW_FEATURES=cypress/e2e/screen-load.feature npx bddgen && npx playwright test --project=journeys`.
-Local runs use `CYPRESS_baseUrl=http://localhost:3000`; CI uses the deployed URL.
-`npm run pw:report` opens the HTML report.

@@ -1,9 +1,35 @@
+import fs from "node:fs";
+
 import { defineConfig, devices } from "@playwright/test";
 import { defineBddConfig } from "playwright-bdd";
 import { baseURL, VIEWPORT } from "./playwright/env";
 
+const PORTED_FEATURES_FILE = "ported-features.txt";
+const DEFAULT_FEATURES = "../cypress/cypress/e2e/*.feature";
+
+function featureSources(): string[] {
+  if (process.env.PW_FEATURES) {
+    return process.env.PW_FEATURES.split(",")
+      .map((entry) => entry.trim())
+      .filter(Boolean);
+  }
+
+  if (fs.existsSync(PORTED_FEATURES_FILE)) {
+    return fs
+      .readFileSync(PORTED_FEATURES_FILE, "utf8")
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter((line) => line.length > 0 && !line.startsWith("#"));
+  }
+
+  return [DEFAULT_FEATURES];
+}
+
 const testDir = defineBddConfig({
-  features: process.env.PW_FEATURES ?? "cypress/e2e/*.feature",
+  features: featureSources(),
+  // Frozen features live outside this package; root at the worktree so the
+  // generated spec paths keep their cypress/cypress/e2e segment.
+  featuresRoot: "..",
   steps: ["playwright/fixtures/index.ts", "playwright/steps/**/*.ts"],
 });
 

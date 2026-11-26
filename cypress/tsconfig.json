@@ -9,6 +9,5 @@
     "resolveJsonModule": true,
     "skipLibCheck": true
   },
-  "include": ["**/*.ts"],
-  "exclude": ["playwright/**"]
+  "include": ["**/*.ts"]
 }
