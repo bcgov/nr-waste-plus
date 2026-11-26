@@ -12,13 +12,11 @@ import static org.mockito.Mockito.when;
 import ca.bc.gov.nrs.hrs.dto.base.IdentityProvider;
 import ca.bc.gov.nrs.hrs.dto.base.Role;
 import ca.bc.gov.nrs.hrs.dto.block.AvailableLifecycleEventDto;
-import ca.bc.gov.nrs.hrs.dto.block.LifecycleDetailsDto;
 import ca.bc.gov.nrs.hrs.dto.block.LifecycleEventRequestDto;
 import ca.bc.gov.nrs.hrs.dto.block.LifecycleEventResponseDto;
 import ca.bc.gov.nrs.hrs.dto.block.LifecycleViewResult;
 import ca.bc.gov.nrs.hrs.entity.block.BlockCommentEntity;
 import ca.bc.gov.nrs.hrs.entity.block.BlockEntity;
-import ca.bc.gov.nrs.hrs.entity.block.BlockRequirementEntity;
 import ca.bc.gov.nrs.hrs.entity.block.ReportingUnitEntity;
 import ca.bc.gov.nrs.hrs.entity.block.StatusEventEntity;
 import ca.bc.gov.nrs.hrs.exception.BlockNotFoundException;
@@ -33,13 +31,11 @@ import ca.bc.gov.nrs.hrs.repository.block.ReportingUnitRepository;
 import ca.bc.gov.nrs.hrs.repository.block.StatusEventRepository;
 import ca.bc.gov.nrs.hrs.security.ResourceScopeGuard;
 import jakarta.persistence.EntityManager;
-import jakarta.servlet.http.HttpServletRequest;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.Month;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
@@ -128,12 +124,13 @@ class LifecycleEventServiceTest {
   class BlockLifecycleEvents {
 
     @Test
-    @DisplayName("Legal SUBMIT transition creates status event, bumps revision, and returns 200 OK DTO")
+    @DisplayName(
+        "Legal SUBMIT transition creates status event, bumps revision, and returns 200 OK DTO")
     void recordBlockLifecycleEvent_success() {
       MockHttpServletRequest request = new MockHttpServletRequest();
       request.addHeader("If-Match", "\"5\"");
 
-      LifecycleEventRequestDto requestDto =
+      final LifecycleEventRequestDto requestDto =
           new LifecycleEventRequestDto("SUBMIT", "Submission comments");
 
       when(reportingUnitRepository.findByIdAndDeletedFalse(RU_ID))
@@ -146,7 +143,11 @@ class LifecycleEventServiceTest {
           .thenReturn(Collections.emptyList());
 
       when(transitionPolicyService.evaluate(
-              eq("DRAFT"), eq("SUBMIT"), eq(Role.SUBMITTER), eq(IdentityProvider.BUSINESS_BCEID), any()))
+              eq("DRAFT"),
+              eq("SUBMIT"),
+              eq(Role.SUBMITTER),
+              eq(IdentityProvider.BUSINESS_BCEID),
+              any()))
           .thenReturn(TransitionEvaluationResult.allowed("SUBMITTED"));
 
       when(blockRepository.saveAndFlush(any(BlockEntity.class)))
@@ -224,7 +225,8 @@ class LifecycleEventServiceTest {
     }
 
     @Test
-    @DisplayName("Padded ' submit ' with null plcDate still triggers readiness check and throws 422")
+    @DisplayName(
+        "Padded ' submit ' with null plcDate still triggers readiness check and throws 422")
     void recordBlockLifecycleEvent_paddedSubmitWithNullPlcDate_throws422() {
       MockHttpServletRequest request = new MockHttpServletRequest();
       request.addHeader("If-Match", "\"5\"");
@@ -256,7 +258,7 @@ class LifecycleEventServiceTest {
           .satisfies(
               ex -> {
                 ResponseStatusException rse = (ResponseStatusException) ex;
-                assertThat(rse.getStatusCode()).isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY);
+                assertThat(rse.getStatusCode()).isEqualTo(HttpStatus.UNPROCESSABLE_CONTENT);
                 assertThat(rse.getBody().getProperties())
                     .containsEntry("code", "PRECONDITION_FAILED");
               });
@@ -297,7 +299,8 @@ class LifecycleEventServiceTest {
     }
 
     @Test
-    @DisplayName("Illegal transition throws IllegalTransitionException and writes zero status events")
+    @DisplayName(
+        "Illegal transition throws IllegalTransitionException and writes zero status events")
     void recordBlockLifecycleEvent_illegalTransition_throwsAndWritesZeroRows() {
       MockHttpServletRequest request = new MockHttpServletRequest();
       request.addHeader("If-Match", "\"5\"");
@@ -315,7 +318,8 @@ class LifecycleEventServiceTest {
 
       when(transitionPolicyService.evaluate(any(), any(), any(), any(), any()))
           .thenReturn(
-              TransitionEvaluationResult.denied("Illegal transition: event SUBMIT is not permitted"));
+              TransitionEvaluationResult.denied(
+                  "Illegal transition: event SUBMIT is not permitted"));
 
       assertThatThrownBy(
               () ->
@@ -396,13 +400,15 @@ class LifecycleEventServiceTest {
           .satisfies(
               ex -> {
                 ResponseStatusException rse = (ResponseStatusException) ex;
-                assertThat(rse.getStatusCode()).isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY);
-                assertThat(rse.getReason()).contains("planned completion date (plcDate) is required");
+                assertThat(rse.getStatusCode()).isEqualTo(HttpStatus.UNPROCESSABLE_CONTENT);
+                assertThat(rse.getReason())
+                    .contains("planned completion date (plcDate) is required");
               });
     }
 
     @Test
-    @DisplayName("Submit with unfinalized or unclean attachments throws 422 ResponseStatusException")
+    @DisplayName(
+        "Submit with unfinalized or unclean attachments throws 422 ResponseStatusException")
     void recordBlockLifecycleEvent_submitWithInvalidAttachment_throws() {
       MockHttpServletRequest request = new MockHttpServletRequest();
       request.addHeader("If-Match", "\"5\"");
@@ -428,7 +434,7 @@ class LifecycleEventServiceTest {
           .satisfies(
               ex -> {
                 ResponseStatusException rse = (ResponseStatusException) ex;
-                assertThat(rse.getStatusCode()).isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY);
+                assertThat(rse.getStatusCode()).isEqualTo(HttpStatus.UNPROCESSABLE_CONTENT);
                 assertThat(rse.getReason()).contains("all attachments must be finalized and clean");
               });
     }
@@ -457,7 +463,7 @@ class LifecycleEventServiceTest {
           .satisfies(
               ex -> {
                 ResponseStatusException rse = (ResponseStatusException) ex;
-                assertThat(rse.getStatusCode()).isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY);
+                assertThat(rse.getStatusCode()).isEqualTo(HttpStatus.UNPROCESSABLE_CONTENT);
                 assertThat(rse.getReason()).contains("A comment is required for this event");
               });
     }
@@ -468,7 +474,7 @@ class LifecycleEventServiceTest {
       MockHttpServletRequest request = new MockHttpServletRequest();
       request.addHeader("If-Match", "\"5\"");
 
-      LifecycleEventRequestDto requestDto = new LifecycleEventRequestDto("APPROVE", null);
+      final LifecycleEventRequestDto requestDto = new LifecycleEventRequestDto("APPROVE", null);
 
       when(reportingUnitRepository.findByIdAndDeletedFalse(RU_ID))
           .thenReturn(Optional.of(reportingUnit));
@@ -512,7 +518,7 @@ class LifecycleEventServiceTest {
               .claim("cognito:groups", List.of("WASTE_PLUS_DISTRICT_DKA"))
               .build();
 
-      LifecycleEventRequestDto requestDto = new LifecycleEventRequestDto("APPROVE", null);
+      final LifecycleEventRequestDto requestDto = new LifecycleEventRequestDto("APPROVE", null);
 
       when(resourceScopeGuard.extractAssignedDistricts(districtJwt)).thenReturn(Set.of("DKA"));
       when(reportingUnitRepository.findByIdAndDeletedFalse(RU_ID))
@@ -559,7 +565,7 @@ class LifecycleEventServiceTest {
               .claim("cognito:groups", List.of("WASTE_PLUS_DISTRICT_DKA"))
               .build();
 
-      LifecycleEventRequestDto requestDto = new LifecycleEventRequestDto("APPROVE", null);
+      final LifecycleEventRequestDto requestDto = new LifecycleEventRequestDto("APPROVE", null);
 
       when(resourceScopeGuard.extractAssignedDistricts(districtJwt)).thenReturn(Set.of("DKA"));
       when(reportingUnitRepository.findByIdAndDeletedFalse(RU_ID))
@@ -603,7 +609,7 @@ class LifecycleEventServiceTest {
       MockHttpServletRequest request = new MockHttpServletRequest();
       request.addHeader("If-Match", "\"5\"");
 
-      LifecycleEventRequestDto requestDto =
+      final LifecycleEventRequestDto requestDto =
           new LifecycleEventRequestDto("CANCEL", "User cancelled draft");
 
       when(reportingUnitRepository.findByIdAndDeletedFalse(RU_ID))
@@ -671,7 +677,8 @@ class LifecycleEventServiceTest {
     }
 
     @Test
-    @DisplayName("resolveSubmissionDate anchors on SUBMIT event even when resulting status was HOLD")
+    @DisplayName(
+        "resolveSubmissionDate anchors on SUBMIT event even when resulting status was HOLD")
     void recordBlockLifecycleEvent_submissionDate_anchorsOnSubmitEvent() {
       MockHttpServletRequest request = new MockHttpServletRequest();
       request.addHeader("If-Match", "\"5\"");
@@ -726,12 +733,13 @@ class LifecycleEventServiceTest {
   class ReportingUnitLifecycleEvents {
 
     @Test
-    @DisplayName("Legal reporting unit transition updates revision, persists event with null blockId")
+    @DisplayName(
+        "Legal reporting unit transition updates revision, persists event with null blockId")
     void recordReportingUnitLifecycleEvent_success() {
       MockHttpServletRequest request = new MockHttpServletRequest();
       request.addHeader("If-Match", "\"10\"");
 
-      LifecycleEventRequestDto requestDto = new LifecycleEventRequestDto("SUBMIT", null);
+      final LifecycleEventRequestDto requestDto = new LifecycleEventRequestDto("SUBMIT", null);
 
       when(reportingUnitRepository.findByIdAndDeletedFalse(RU_ID))
           .thenReturn(Optional.of(reportingUnit));
@@ -739,7 +747,11 @@ class LifecycleEventServiceTest {
           .thenReturn(Optional.empty());
 
       when(transitionPolicyService.evaluate(
-              eq("SUBMISSION"), eq("SUBMIT"), eq(Role.SUBMITTER), eq(IdentityProvider.BUSINESS_BCEID), any()))
+              eq("SUBMISSION"),
+              eq("SUBMIT"),
+              eq(Role.SUBMITTER),
+              eq(IdentityProvider.BUSINESS_BCEID),
+              any()))
           .thenReturn(TransitionEvaluationResult.allowed("SUBMITTED"));
 
       when(reportingUnitRepository.saveAndFlush(any(ReportingUnitEntity.class)))
@@ -786,7 +798,8 @@ class LifecycleEventServiceTest {
   class LifecycleQueryViews {
 
     @Test
-    @DisplayName("viewBlockLifecycle returns current state, available events, history, and revision")
+    @DisplayName(
+        "viewBlockLifecycle returns current state, available events, history, and revision")
     void viewBlockLifecycle_success() {
       when(reportingUnitRepository.findByIdAndDeletedFalse(RU_ID))
           .thenReturn(Optional.of(reportingUnit));
@@ -823,7 +836,8 @@ class LifecycleEventServiceTest {
     }
 
     @Test
-    @DisplayName("viewReportingUnitLifecycle returns state, available events, history, and revision")
+    @DisplayName(
+        "viewReportingUnitLifecycle returns state, available events, history, and revision")
     void viewReportingUnitLifecycle_success() {
       when(reportingUnitRepository.findByIdAndDeletedFalse(RU_ID))
           .thenReturn(Optional.of(reportingUnit));

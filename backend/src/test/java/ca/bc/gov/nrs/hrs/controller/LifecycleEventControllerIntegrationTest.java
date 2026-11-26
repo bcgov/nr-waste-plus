@@ -30,6 +30,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
@@ -65,7 +66,7 @@ class LifecycleEventControllerIntegrationTest extends AbstractTestContainerInteg
     ReportingUnitEntity ru = new ReportingUnitEntity();
     ru.setClientNumber(CLIENT_NUMBER);
     ru.setClientLocnCode("LC-" + unique);
-    ru.setGeographicCode("DKA");
+    ru.setGeographicCode("DKM");
     ru.setGradeCode("COASTAL");
     ru.setSamplingCode("AVG");
     audit(ru);
@@ -134,7 +135,8 @@ class LifecycleEventControllerIntegrationTest extends AbstractTestContainerInteg
                     .contentType(MediaType.APPLICATION_JSON)
                     .header("Idempotency-Key", UUID.randomUUID().toString())
                     .header("If-Match", "\"" + initialRevision + "\"")
-                    .content(requestBody))
+                    .content(requestBody)
+                    .with(SecurityMockMvcRequestPostProcessors.csrf()))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.state").value("CANCELLED"))
             .andExpect(jsonPath("$.previousState").value("DRAFT"))
@@ -215,7 +217,8 @@ class LifecycleEventControllerIntegrationTest extends AbstractTestContainerInteg
                 .contentType(MediaType.APPLICATION_JSON)
                 .header("Idempotency-Key", UUID.randomUUID().toString())
                 .header("If-Match", "\"999999\"")
-                .content(requestBody))
+                .content(requestBody)
+                .with(SecurityMockMvcRequestPostProcessors.csrf()))
         .andExpect(status().isPreconditionFailed());
   }
 
@@ -246,7 +249,8 @@ class LifecycleEventControllerIntegrationTest extends AbstractTestContainerInteg
                 .contentType(MediaType.APPLICATION_JSON)
                 .header("Idempotency-Key", UUID.randomUUID().toString())
                 .header("If-Match", "\"" + initialRevision + "\"")
-                .content(requestBody))
+                .content(requestBody)
+                .with(SecurityMockMvcRequestPostProcessors.csrf()))
         .andExpect(status().isConflict())
         .andExpect(jsonPath("$.code").value("ILLEGAL_TRANSITION"));
 
