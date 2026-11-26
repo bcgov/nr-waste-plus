@@ -92,25 +92,6 @@ jobs:
             fi
           done
 
-      - name: Install frontend deps for SSO auth state
-        working-directory: frontend
-        run: |
-          npm ci --ignore-scripts --no-audit --no-fund
-          npx playwright install chromium
-
-      - name: Generate SSO auth states
-        working-directory: frontend
-        env:
-          E2E_BASE_URL: https://${{ inputs.url }}
-          idir_username: ${{ secrets.IDIR_CSS_USERNAME }}
-          idir_password: ${{ secrets.IDIR_CSS_PASSWORD }}
-          idir_totp_secret: ${{ secrets.IDIR_CSS_TOTP_SECRET }}
-          bceid_username: ${{ secrets.BCEID_UAT_USERNAME2 }}
-          bceid_password: ${{ secrets.BCEID_UAT_PASSWORD2 }}
-        run: |
-          npx playwright test -c playwright.sso.config.ts sso-login.spec.ts --retries=2
-          npx playwright test -c playwright.sso.config.ts bceid-login.spec.ts --retries=2
-
       - name: Run Cypress End-to-End
         uses: cypress-io/github-action@v7.4.10
         with:
