@@ -10,7 +10,7 @@ import {
   validateTypography,
   waitForPageLoad,
 } from "./helpers";
-import { pauseTestBudget, restartTestBudget } from "./helpers/test-timeout";
+import { pauseTestBudget, restartTestBudget, TEST_BUDGET_MS } from "./helpers/test-timeout";
 
 Cypress.Commands.add("waitForPageLoad", waitForPageLoad);
 Cypress.Commands.add("logAndScreenshot", logAndScreenshot);
@@ -105,7 +105,7 @@ Cypress.Commands.add("loginViaIdir", (): Cypress.Chainable<void> => {
         // cy.session leaves the browser on its own reset page; land back on
         // the app so the caller sees the authenticated shell.
         cy.visit("/search");
-        restartTestBudget(12_000);
+        restartTestBudget(TEST_BUDGET_MS);
       });
   });
 });
@@ -158,7 +158,7 @@ Cypress.Commands.add("loginViaBceid", (): Cypress.Chainable<void> => {
         // cy.session leaves the browser on its own reset page; land back on
         // the app so the caller sees the authenticated shell.
         cy.visit("/search");
-        restartTestBudget(12_000);
+        restartTestBudget(TEST_BUDGET_MS);
       });
   });
 });
