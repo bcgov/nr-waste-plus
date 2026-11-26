@@ -104,3 +104,51 @@ Cypress.Commands.add("loginViaIdir", (): Cypress.Chainable<void> => {
       });
   });
 });
+
+Cypress.Commands.add("loginViaBceid", (): Cypress.Chainable<void> => {
+  pauseTestBudget();
+  return cy.task<{
+    cookies: Array<Record<string, unknown>>;
+    session: Record<string, string>;
+    local: Record<string, string>;
+  }>("session:load", "bceid", { log: false }).then((state) => {
+    return cy
+      .session(
+        "idir",
+        () => {
+          cy.task("session:applyCookies", state.cookies, { log: false });
+          cy.visit("/", {
+            onBeforeLoad(win) {
+              Object.entries(state.session).forEach(([key, value]) =>
+                win.sessionStorage.setItem(key, String(value)),
+              );
+              Object.entries(state.local).forEach(([key, value]) =>
+                win.localStorage.setItem(key, String(value)),
+              );
+            },
+          });
+        },
+        {
+          cacheAcrossSpecs: true,
+          validate: () => {
+            cy.window({ log: false }).then((win) => {
+              const store = win.sessionStorage;
+              for (let i = 0; i < store.length; i += 1) {
+                const key = store.key(i);
+                if (key?.includes("user:") && JSON.parse(store.getItem(key) ?? "{}").access_token) {
+                  return;
+                }
+              }
+              throw new Error("No OIDC user found in sessionStorage.");
+            });
+          },
+        },
+      )
+      .then(() => {
+        // cy.session leaves the browser on its own reset page; land back on
+        // the app so the caller sees the authenticated shell.
+        cy.visit("/search");
+        restartTestBudget(12_000);
+      });
+  });
+});

@@ -57,6 +57,9 @@ declare namespace Cypress {
      * session with cy.session for reuse across specs.
      */
     loginViaIdir(): Chainable<void>;
+
+    /** Signs in as Business BCeID from the Playwright-exported auth state. */
+    loginViaBceid(): Chainable<void>;
   }
 }
 

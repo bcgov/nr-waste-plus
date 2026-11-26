@@ -376,7 +376,5 @@ Before({ tags: "@loginAsIDIR" }, function () {
 });
 
 Before({ tags: "@loginAsBCeID" }, function () {
-  doLogin(this, "bceid", "/search");
-  cy.waitForPageLoad(".cds--header__name");
-  restartTestBudget(BCEID_TEST_BUDGET_MS);
+  cy.loginViaBceid();
 });
