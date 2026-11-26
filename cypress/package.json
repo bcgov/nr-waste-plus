@@ -10,6 +10,7 @@
     "pw:ui": "bddgen && playwright test --ui",
     "pw:report": "playwright show-report",
     "pw:typecheck": "tsc --noEmit -p tsconfig.playwright.json",
+    "test:reporters": "node --experimental-strip-types --test playwright/reporters/quality/*.test.ts",
     "report:md": "node scripts/parse-report.js",
     "test:unit": "node --test scripts/*.test.js",
     "report:clean": "rm -rf reports/*",

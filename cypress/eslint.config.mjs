@@ -60,4 +60,19 @@ export default tseslint.config(
       "no-debugger": "error",
     },
   },
+  {
+    // Fixtures are CJS under "type": "commonjs"; they load the ESM quality schema
+    // with a dynamic import(), which Playwright's TS loader preserves.
+    files: ["playwright/fixtures/quality.ts", "playwright/fixtures/*.fixture.ts"],
+    rules: {
+      "@typescript-eslint/no-require-imports": "off",
+    },
+  },
+  {
+    // Playwright requires an object-destructuring fixture signature; {} declares no dependencies.
+    files: ["playwright/fixtures/index.ts"],
+    rules: {
+      "no-empty-pattern": "off",
+    },
+  },
 );

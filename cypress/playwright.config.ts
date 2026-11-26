@@ -34,6 +34,7 @@ export default defineConfig({
       "playwright-timeline-reporter",
       { outputFile: "reports/playwright/timeline.html" },
     ],
+    ["./playwright/reporters/quality/reporter.ts"],
     ...ciReporters,
   ],
   projects: [
