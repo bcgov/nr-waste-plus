@@ -15,7 +15,6 @@ on:
         description: Configuration map for params.js
         required: true
         type: string
-        default: ""
       environment:
         description: GitHub/OpenShift environment; usually PR number, test or prod
         default: ""
