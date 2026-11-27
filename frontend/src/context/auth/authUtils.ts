@@ -97,36 +97,98 @@ export const parseToken = (claims: Record<string, unknown> | undefined): FamLogi
 };
 
 /**
+ * Prefix marking application role names in a CSS token.
+ */
+const WASTE_PLUS_PREFIX = 'WASTE_PLUS_';
+
+/**
+ * FAM client-scope name carried in role suffixes, for example the
+ * `FOREST_CLIENT-00001271` portion of
+ * `WASTE_PLUS_SUBMITTER_FOREST_CLIENT-00001271`.
+ */
+const FAM_CLIENT_PREFIX = 'FOREST_CLIENT';
+
+/**
+ * Numeric client numbers are the only valid scoped privilege values.
+ */
+const NUMERIC_CLIENT = /^\d+$/;
+
+/**
+ * Splits a role name into its application role and optional scope suffix.
+ *
+ * Only the first underscore separates them: a FAM scope contains an
+ * underscore of its own (`FOREST_CLIENT-00001271`), so splitting on every
+ * underscore would truncate the suffix.
+ *
+ * @param entry Role name from the token, with or without `WASTE_PLUS_`.
+ * @returns The uppercased role name and, when present, the uppercased suffix.
+ */
+const splitRoleAssignment = (entry: string): { roleName: string; suffix?: string } => {
+  const uppercased = entry.toUpperCase();
+  const normalized = uppercased.startsWith(WASTE_PLUS_PREFIX)
+    ? uppercased.slice(WASTE_PLUS_PREFIX.length)
+    : uppercased;
+  const separatorIndex = normalized.indexOf('_');
+  if (separatorIndex === -1) return { roleName: normalized };
+  return {
+    roleName: normalized.slice(0, separatorIndex),
+    suffix: normalized.slice(separatorIndex + 1),
+  };
+};
+
+/**
+ * Reduces a FAM client scope to its bare client number while leaving legacy
+ * suffixes alone.
+ *
+ * `FOREST_CLIENT-00001271` and `FOREST_CLIENT_00001271` both become
+ * `00001271`; `00001271` and district codes such as `DKM` are returned
+ * unchanged. A FAM scope with a missing or non-numeric client yields no
+ * client so scoping never invents one from a malformed role name.
+ *
+ * @param suffix Role-name portion after the application role.
+ * @returns The client number, or undefined when a FAM scope has no usable client.
+ */
+const normalizeClientSuffix = (suffix: string): string | undefined => {
+  const normalized = suffix.toUpperCase();
+  if (normalized === '' || normalized === FAM_CLIENT_PREFIX) return undefined;
+  for (const delimiter of ['-', '_']) {
+    const famPrefix = `${FAM_CLIENT_PREFIX}${delimiter}`;
+    if (normalized.startsWith(famPrefix)) {
+      const clientNumber = normalized.slice(famPrefix.length);
+      return NUMERIC_CLIENT.test(clientNumber) ? clientNumber : undefined;
+    }
+  }
+  return normalized;
+};
+
+/**
  * Parses role names into the privilege map consumed by access checks.
  *
  * Roles arrive as bare application codes (`WASTE_PLUS_ADMIN`) or scope-
- * suffixed names (`WASTE_PLUS_VIEWER_00147603`); the numeric suffix carries
- * the scoped value (legacy client number).
+ * suffixed names (`WASTE_PLUS_VIEWER_00147603`,
+ * `WASTE_PLUS_SUBMITTER_FOREST_CLIENT-00001271`); the scoped value is a
+ * numeric client number.
  *
  * @param input Application role names with the FAM bookkeeping entries removed.
  * @returns The privilege map keyed by user-facing role label.
  */
 function parsePrivileges(input: string[]): USER_PRIVILEGE_TYPE {
   const result: USER_PRIVILEGE_TYPE = {};
-  const knownPrefix = 'WASTE_PLUS_';
+  const knownRoles = AVAILABLE_ROLES.map((role) => role.toUpperCase());
   for (const item of input) {
-    const normalized = item.toUpperCase().startsWith(knownPrefix)
-      ? item.toUpperCase().slice(knownPrefix.length)
-      : item.toUpperCase();
-    const parts = normalized.split('_');
-    const last = parts.at(-1) ?? '';
-    const isNumeric = last !== '' && Number.isFinite(Number(last));
-    if (isNumeric) {
-      const roleName = parts.slice(0, -1).join('_');
-      if (AVAILABLE_ROLES.map((role) => role.toUpperCase()).includes(roleName as ROLE_TYPE)) {
-        const role = roleName as ROLE_TYPE;
-        result[role] ??= [];
-        result[role].push(last);
+    const { roleName, suffix } = splitRoleAssignment(item);
+    if (!knownRoles.includes(roleName as ROLE_TYPE)) continue;
+    const role = roleName as ROLE_TYPE;
+    const client = suffix === undefined ? undefined : normalizeClientSuffix(suffix);
+    if (client !== undefined && NUMERIC_CLIENT.test(client)) {
+      const existing = result[role];
+      if (Array.isArray(existing)) {
+        existing.push(client);
+      } else {
+        result[role] = [client];
       }
-    } else if (
-      AVAILABLE_ROLES.map((role) => role.toUpperCase()).includes(normalized as ROLE_TYPE)
-    ) {
-      result[normalized as ROLE_TYPE] = null;
+    } else if (suffix === undefined) {
+      result[role] = null;
     }
   }
   return result;
@@ -141,15 +203,10 @@ function parsePrivileges(input: string[]): USER_PRIVILEGE_TYPE {
  */
 function extractRoles(roles: string[]): FamRole[] {
   const roleMap = new Map<Role, Set<string>>();
-  const knownPrefix = 'WASTE_PLUS_';
 
   for (const entry of roles) {
-    const normalized = entry.toUpperCase().startsWith(knownPrefix)
-      ? entry.toUpperCase().slice(knownPrefix.length)
-      : entry.toUpperCase();
-
-    const [rolePart, clientId] = normalized.split('_');
-    const role = rolePart.toUpperCase() as Role;
+    const { roleName, suffix } = splitRoleAssignment(entry);
+    const role = roleName as Role;
 
     if (!Object.values(Role).includes(role)) continue;
 
@@ -157,8 +214,9 @@ function extractRoles(roles: string[]): FamRole[] {
       roleMap.set(role, new Set());
     }
 
-    if (clientId) {
-      roleMap.get(role)?.add(clientId);
+    const client = suffix === undefined ? undefined : normalizeClientSuffix(suffix);
+    if (client) {
+      roleMap.get(role)?.add(client);
     }
   }
 

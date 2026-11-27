@@ -90,6 +90,73 @@ describe('parseToken', () => {
     expect(user?.privileges).toEqual({ VIEWER: ['00147603', '00010005'] });
   });
 
+  it('normalizes FAM forest-client scopes to the numeric client number', () => {
+    const user = parseToken({
+      ...idirClaims,
+      client_roles: [
+        'WASTE_PLUS_SUBMITTER_FOREST_CLIENT-00001271',
+        'WASTE_PLUS_SUBMITTER_forest_client-00001272',
+        'WASTE_PLUS_VIEWER_FOREST_CLIENT_00001273',
+      ],
+    });
+
+    expect(user?.roles).toEqual([
+      { role: Role.SUBMITTER, clients: ['00001271', '00001272'] },
+      { role: Role.VIEWER, clients: ['00001273'] },
+      { role: Role.IDIR, clients: [] },
+    ]);
+    expect(user?.privileges).toEqual({
+      SUBMITTER: ['00001271', '00001272'],
+      VIEWER: ['00001273'],
+    });
+  });
+
+  it('keeps legacy numeric client suffixes unchanged', () => {
+    const user = parseToken({
+      ...idirClaims,
+      client_roles: ['WASTE_PLUS_VIEWER_00001271'],
+    });
+
+    expect(user?.roles).toEqual([
+      { role: Role.VIEWER, clients: ['00001271'] },
+      { role: Role.IDIR, clients: [] },
+    ]);
+    expect(user?.privileges).toEqual({ VIEWER: ['00001271'] });
+  });
+
+  it('keeps IDIR district-code suffixes unchanged', () => {
+    const user = parseToken({
+      ...idirClaims,
+      client_roles: ['WASTE_PLUS_DISTRICT_DKM'],
+    });
+
+    expect(user?.roles).toEqual([
+      { role: Role.DISTRICT, clients: ['DKM'] },
+      { role: Role.IDIR, clients: [] },
+    ]);
+    expect(user?.privileges).toEqual({});
+  });
+
+  it('ignores malformed or empty FAM client suffixes', () => {
+    const user = parseToken({
+      ...idirClaims,
+      client_roles: [
+        'WASTE_PLUS_SUBMITTER_FOREST_CLIENT-',
+        'WASTE_PLUS_VIEWER_FOREST_CLIENT-NOT_A_NUMBER',
+        'WASTE_PLUS_SUBMITTER_FOREST_CLIENT',
+        'WASTE_PLUS_VIEWER_FOREST_CLIENT-00001271-extra',
+        'WASTE_PLUS_VIEWER_',
+      ],
+    });
+
+    expect(user?.roles).toEqual([
+      { role: Role.SUBMITTER, clients: [] },
+      { role: Role.VIEWER, clients: [] },
+      { role: Role.IDIR, clients: [] },
+    ]);
+    expect(user?.privileges).toEqual({});
+  });
+
   it('ignores entries that do not resolve to an application role', () => {
     const user = parseToken({
       ...idirClaims,
