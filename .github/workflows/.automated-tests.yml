@@ -103,6 +103,10 @@ jobs:
           CYPRESS_baseUrl: https://${{ inputs.url }}
           CI: "true"
           PW_MIN_LOAD_INTERVAL_MS: "1000"
+          # Playwright's failed-test page snapshot includes the aria text of the
+          # IdP form, which can contain the IDIR username. Public artifact: no
+          # snapshots/copy prompts. Trace/video are already off in the config.
+          PLAYWRIGHT_NO_COPY_PROMPT: "1"
           idir_username: ${{ secrets.IDIR_CSS_USERNAME }}
           idir_password: ${{ secrets.IDIR_CSS_PASSWORD }}
           idir_totp_secret: ${{ secrets.IDIR_CSS_TOTP_SECRET }}
