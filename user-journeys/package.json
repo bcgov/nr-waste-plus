@@ -13,7 +13,7 @@
     "pw:ui": "bddgen && playwright test --ui",
     "pw:report": "playwright show-report",
     "pw:typecheck": "tsc --noEmit -p tsconfig.json",
-    "test:reporters": "node --experimental-strip-types --test playwright/reporters/quality/*.test.ts playwright/fixtures/*.test.ts"
+    "test:reporters": "node --experimental-strip-types --test playwright/reporters/quality/*.test.ts playwright/fixtures/*.test.ts playwright/support/*.test.ts"
   },
   "author": "Team Alliance",
   "license": "Apache-2.0",

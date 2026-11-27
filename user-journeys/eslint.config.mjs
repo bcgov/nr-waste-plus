@@ -42,6 +42,7 @@ export default tseslint.config(
       "playwright/fixtures/quality.ts",
       "playwright/fixtures/*.fixture.ts",
       "playwright/fixtures/*.test.ts",
+      "playwright/support/*.test.ts",
     ],
     rules: {
       "@typescript-eslint/no-require-imports": "off",
