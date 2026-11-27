@@ -27,9 +27,12 @@ export interface SummarisableTest {
   outcome: TestOutcome;
   durationMs: number;
   events: QualityEvent[];
+  file?: string;
+  error?: string;
 }
 
 export interface QualitySummary {
+  generatedAt: string;
   totals: {
     total: number;
     passed: number;
@@ -45,7 +48,12 @@ export interface QualitySummary {
     title: string;
     status: TestResult["status"];
     durationMs: number;
+    file: string;
+    error: string;
   }>;
+  a11yEvents: A11yEvent[];
+  uiuxEvents: UiuxEvent[];
+  lighthouseEvents: LighthouseEvent[];
 }
 
 type Attachment = TestResult["attachments"][number];
@@ -83,7 +91,10 @@ const isUiux = (event: QualityEvent): event is UiuxEvent => event.kind === "uiux
 const isLighthouse = (event: QualityEvent): event is LighthouseEvent =>
   event.kind === "lighthouse";
 
-export function summarise(allTests: readonly SummarisableTest[]): QualitySummary {
+export function summarise(
+  allTests: readonly SummarisableTest[],
+  generatedAt = "",
+): QualitySummary {
   const totals: QualitySummary["totals"] = {
     total: allTests.length,
     passed: 0,
@@ -109,6 +120,8 @@ export function summarise(allTests: readonly SummarisableTest[]): QualitySummary
         title: test.title,
         status: test.status,
         durationMs: test.durationMs,
+        file: test.file ?? "",
+        error: test.error ?? "",
       });
     }
 
@@ -120,7 +133,11 @@ export function summarise(allTests: readonly SummarisableTest[]): QualitySummary
   }
 
   return {
+    generatedAt,
     totals,
+    a11yEvents,
+    uiuxEvents,
+    lighthouseEvents,
     a11y: {
       checks: a11yEvents.length,
       violations: a11yEvents.reduce((sum, event) => sum + event.violationCount, 0),

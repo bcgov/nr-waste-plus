@@ -10,7 +10,7 @@ import {
   type SummarisableTest,
 } from "./aggregate.ts";
 import { SCHEMA_VERSION, type QualityEvent } from "./schema.ts";
-import { renderers } from "./renderers/index.ts";
+import { renderQualityMarkdown } from "./renderers/index.ts";
 
 const QUALITY_KINDS = ["a11y", "uiux", "lighthouse"] as const;
 
@@ -53,18 +53,20 @@ export class QualityReporter implements Reporter {
       outcome: test.outcome(),
       durationMs: result.duration,
       events,
+      file: test.location?.file ?? "",
+      error: result.error?.message ?? "",
     });
   }
 
   onEnd(): void {
     const tests = [...this.testsByTest.values()];
-    const summary: QualitySummary = summarise(tests);
+    const generatedAt = new Date().toISOString();
+    const summary: QualitySummary = summarise(tests, generatedAt);
     const checks: QualityChecks = { a11y: [], uiux: [], lighthouse: [] };
     for (const test of tests) {
       for (const event of test.events) checks[event.kind].push(event);
     }
 
-    const generatedAt = new Date().toISOString();
     for (const kind of QUALITY_KINDS) {
       fs.writeFileSync(
         path.join(this.outputDir, `${kind}.json`),
@@ -76,11 +78,11 @@ export class QualityReporter implements Reporter {
       );
     }
 
-    const markdown = Object.values(renderers)
-      .map((render) => render(summary))
-      .filter((section) => section.length > 0)
-      .join("\n\n");
+    const markdown = renderQualityMarkdown(summary);
     fs.writeFileSync(path.join(this.outputDir, "summary.md"), markdown);
+
+    const stepSummary = process.env.GITHUB_STEP_SUMMARY;
+    if (stepSummary) fs.appendFileSync(stepSummary, markdown);
   }
 }
 

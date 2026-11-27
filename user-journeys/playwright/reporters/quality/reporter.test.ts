@@ -98,3 +98,119 @@ test("onTestEnd routes an attached event into its kind file", () => {
 
   fs.rmSync(outputDir, { recursive: true, force: true });
 });
+
+test("onEnd appends the same markdown to GITHUB_STEP_SUMMARY when set", () => {
+  const outputDir = tempOutputDir();
+  const stepSummary = path.join(outputDir, "step-summary.md");
+  const previous = process.env.GITHUB_STEP_SUMMARY;
+  process.env.GITHUB_STEP_SUMMARY = stepSummary;
+
+  try {
+    const reporter = new QualityReporter({ outputDir });
+    reporter.onBegin();
+    reporter.onEnd();
+
+    const markdown = fs.readFileSync(path.join(outputDir, "summary.md"), "utf8");
+    assert.equal(fs.readFileSync(stepSummary, "utf8"), markdown);
+  } finally {
+    if (previous === undefined) delete process.env.GITHUB_STEP_SUMMARY;
+    else process.env.GITHUB_STEP_SUMMARY = previous;
+  }
+
+  fs.rmSync(outputDir, { recursive: true, force: true });
+});
+
+test("failed tests render their title, file, duration and error", () => {
+  const outputDir = tempOutputDir();
+  const reporter = new QualityReporter({ outputDir });
+  const testCase = {
+    id: "failed-1",
+    results: [],
+    outcome: () => "unexpected",
+    titlePath: () => ["search.feature", "finds a record"],
+    location: { file: "cypress/cypress/e2e/search.feature", line: 12, column: 3 },
+  } as unknown as TestCase;
+  const result = {
+    attachments: [],
+    retry: 0,
+    status: "failed",
+    duration: 3210,
+    error: { message: "locator.resolve: expected visible" },
+  } as unknown as TestResult;
+
+  reporter.onBegin();
+  reporter.onTestEnd(testCase, result);
+  reporter.onEnd();
+
+  const markdown = fs.readFileSync(path.join(outputDir, "summary.md"), "utf8");
+  assert.match(markdown, /## Other failed tests/);
+  assert.match(
+    markdown,
+    /- \*\*search\.feature > finds a record\*\* \(cypress\/cypress\/e2e\/search\.feature\) - 3210ms/,
+  );
+  assert.match(markdown, / {2}- locator\.resolve: expected visible/);
+
+  fs.rmSync(outputDir, { recursive: true, force: true });
+});
+
+test("a run with quality attachments writes every summary section", () => {
+  const outputDir = tempOutputDir();
+  const reporter = new QualityReporter({ outputDir });
+  const goldenDir = path.resolve(
+    process.cwd(),
+    "playwright/reporters/quality/__golden__",
+  );
+  const input = JSON.parse(
+    fs.readFileSync(path.join(goldenDir, "input-with-events.json"), "utf8"),
+  ) as {
+    a11yEvents: unknown[];
+    uiuxEvents: unknown[];
+    lighthouseEvents: unknown[];
+  };
+  const attachments = [
+    ...input.a11yEvents.map((event) => ({
+      name: "quality:a11y",
+      contentType: "application/json",
+      body: Buffer.from(JSON.stringify(event)),
+    })),
+    ...input.uiuxEvents.map((event) => ({
+      name: "quality:uiux",
+      contentType: "application/json",
+      body: Buffer.from(JSON.stringify(event)),
+    })),
+    ...input.lighthouseEvents.map((event) => ({
+      name: "quality:lighthouse",
+      contentType: "application/json",
+      body: Buffer.from(JSON.stringify(event)),
+    })),
+  ];
+  const testCase = {
+    id: "full-1",
+    results: [],
+    outcome: () => "expected",
+    titlePath: () => ["lighthouse.feature", "audits the home page"],
+    location: { file: "cypress/cypress/e2e/lighthouse.feature" },
+  } as unknown as TestCase;
+  const result = {
+    attachments,
+    retry: 0,
+    status: "passed",
+    duration: 100,
+  } as unknown as TestResult;
+
+  reporter.onBegin();
+  reporter.onTestEnd(testCase, result);
+  reporter.onEnd();
+
+  const markdown = fs.readFileSync(path.join(outputDir, "summary.md"), "utf8");
+  for (const heading of [
+    "# Test Summary",
+    "## Accessibility checks",
+    "## Lighthouse Quality Report",
+    "## UI/UX Report Summary",
+  ]) {
+    assert.ok(markdown.includes(heading), `${heading} is missing`);
+  }
+
+  fs.rmSync(outputDir, { recursive: true, force: true });
+});

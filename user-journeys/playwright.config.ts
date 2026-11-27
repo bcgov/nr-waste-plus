@@ -59,7 +59,9 @@ const logoutsTestDir = defineBddConfig({
   outputDir: ".features-gen/logouts",
 });
 
-const ciReporters: ["github"][] = process.env.CI ? [["github"]] : [];
+const ciReporters: Array<["github"] | ["blob"]> = process.env.CI
+  ? [["github"], ["blob"]]
+  : [];
 
 export default defineConfig({
   timeout: 30_000,
