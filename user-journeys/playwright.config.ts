@@ -67,8 +67,16 @@ export default defineConfig({
   ],
   projects: [
     {
+      name: "setup",
+      testDir: "playwright/auth",
+      testMatch: /auth\.setup\.ts/,
+      timeout: 90_000,
+      use: { trace: "off", screenshot: "off", video: "off" },
+    },
+    {
       name: "journeys",
       testDir,
+      dependencies: ["setup"],
       use: { ...devices["Desktop Chrome"], viewport: VIEWPORT },
     },
   ],

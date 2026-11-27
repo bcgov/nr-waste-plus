@@ -4,7 +4,7 @@ import {
   createA11yRecorder,
   type A11yRecorder,
 } from "./a11y.fixture.ts";
-import { test as base } from "./shared-context.fixture.ts";
+import { test as base } from "./auth.fixture.ts";
 import {
   createLighthouseRecorder,
   type LighthouseRecorder,

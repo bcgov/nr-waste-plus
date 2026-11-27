@@ -1,1 +1,2 @@
 ../cypress/cypress/e2e/screen-load.feature
+../cypress/cypress/e2e/sso-smoke.feature

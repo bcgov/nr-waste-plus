@@ -16,6 +16,11 @@ export function requireValue(value: string | undefined, name: string): string {
   return value;
 }
 
+/** Reads a configured value (never printed) for step assertions. */
+export function envValue(name: string): string | undefined {
+  return process.env[name] ?? process.env[`CYPRESS_${name}`];
+}
+
 export function credentials() {
   return {
     idir: {
