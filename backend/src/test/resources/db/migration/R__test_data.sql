@@ -340,3 +340,32 @@ WHERE ru.client_number = '00001271'
   AND NOT ru.is_deleted
   AND b.created_by = 'test-seed:reporting-unit-block-list-v2'
   AND NOT b.is_deleted;
+
+-- Reporting Unit Details fixture (reporting_unit_details.feature, RU 36828).
+-- Mirrors legacy V3.0.15: client 00001271, location '00', org unit 18,
+-- sampling AGR. ReportingUnitService reads wasteplus.reporting_unit first and
+-- falls back to the legacy API only when the row is absent, so the legacy id
+-- is used directly instead of the locally offset sequence.
+-- DPG (Prince George) is seeded by V1.3.4; AGR resolves to "Aggregate" there.
+-- grade_code stays NULL: no DPG district-volume config means the service
+-- leaves grade empty, which drives the frontend "Legacy data" tag.
+-- No block rows: the details blocks section is expected to be empty.
+INSERT INTO wasteplus.reporting_unit (
+    reporting_unit_id, client_number, client_locn_code, geographic_code,
+    sampling_code, grade_code, created_by, updated_by
+)
+VALUES
+    (
+        36828, '00001271', '00', 'DPG', 'AGR', NULL,
+        'test-seed:reporting-unit-details-36828',
+        'test-seed:reporting-unit-details-36828'
+    )
+ON CONFLICT (reporting_unit_id) DO UPDATE SET
+    client_number = EXCLUDED.client_number,
+    client_locn_code = EXCLUDED.client_locn_code,
+    geographic_code = EXCLUDED.geographic_code,
+    sampling_code = EXCLUDED.sampling_code,
+    grade_code = EXCLUDED.grade_code,
+    is_deleted = FALSE,
+    updated_at = NOW(),
+    updated_by = EXCLUDED.updated_by;
