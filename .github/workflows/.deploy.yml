@@ -15,7 +15,6 @@ on:
         description: Configuration map for params.js
         required: true
         type: string
-        default: ""
       environment:
         description: GitHub/OpenShift environment; usually PR number, test or prod
         default: ""
@@ -93,7 +92,7 @@ jobs:
       # Get PR number for squash merges to main
       - name: PR Number
         id: pr
-        uses: bcgov/action-get-pr@28b0adf8e4d40720d41f9c87356ce24b0a4bd6af # v0.3.1
+        uses: bcgov/actions/get-pr@01c3fa1c94c8ccea526ce718b40d8a93bb0a2279 # v0.16.0
 
   init:
     name: Deploy (init)
@@ -128,7 +127,7 @@ jobs:
           fi
 
       - name: Deployment Init
-        uses: bcgov/action-deployer-openshift@e2d60eb9cacceb89c3b97d8dcf0a2c460eea5eab # v4.2.3
+        uses: bcgov/actions-openshift/deployer@b2757e12d08b7d3bf2c5df7cd58b4cdaf6b3ea71 # v0.11.1
         env:
           # PR deployments point at the in-cluster MinIO service and use its
           # root credentials. Other endpoints keep using the S3 secrets of the
@@ -200,7 +199,7 @@ jobs:
             parameters: -p ORACLEDB_PORT=${{ inputs.oracledb-port }}
             verification_path: actuator/health
     steps:
-      - uses: bcgov/action-deployer-openshift@e2d60eb9cacceb89c3b97d8dcf0a2c460eea5eab # v4.2.3
+      - uses: bcgov/actions-openshift/deployer@b2757e12d08b7d3bf2c5df7cd58b4cdaf6b3ea71 # v0.11.1
         id: deploys
         with:
           file: ${{ matrix.name }}/openshift.deploy.yml

@@ -17,12 +17,11 @@ jobs:
     steps:
       - name: Remove completed jobs for this PR
         continue-on-error: true
-        uses: bcgov/action-oc-runner@111868d1fc50db0a40417ba321d865ef5c931bbd # v1.7.0
+        uses: bcgov/actions-openshift/oc-runner@b2757e12d08b7d3bf2c5df7cd58b4cdaf6b3ea71 # v0.11.1
         with:
           oc_namespace: cffaf3-tools
           oc_server: ${{ secrets.oc_server }}
           oc_token: ${{ secrets.oc_token_tools }}
-          login_attempts: "8"
           commands: |
             # Scope to this PR: migration job and CronJob names include -pr<number>- / pr<number>-.
             # This runs before the parallel paths create their jobs so the
@@ -54,12 +53,11 @@ jobs:
           : "${MINIO_ROOT_PASSWORD:?MINIO_ROOT_PASSWORD repository secret is required}"
 
       - name: Remove the existing MinIO presign CronJob
-        uses: bcgov/action-oc-runner@111868d1fc50db0a40417ba321d865ef5c931bbd # v1.7.0
+        uses: bcgov/actions-openshift/oc-runner@b2757e12d08b7d3bf2c5df7cd58b4cdaf6b3ea71 # v0.11.1
         with:
           oc_namespace: cffaf3-tools
           oc_server: ${{ secrets.oc_server }}
           oc_token: ${{ secrets.oc_token_tools }}
-          login_attempts: "8"
           commands: |
             # The MinIO server is deployed only when it is missing, so the
             # existing Deployment, Service, PVC and Secret are left alone. The
@@ -68,7 +66,7 @@ jobs:
             oc delete cronjob/nr-waste-plus-tools-minio-presign --ignore-not-found
 
       - name: Initializing MinIO Deployment
-        uses: bcgov/action-deployer-openshift@e2d60eb9cacceb89c3b97d8dcf0a2c460eea5eab # v4.2.3
+        uses: bcgov/actions-openshift/deployer@b2757e12d08b7d3bf2c5df7cd58b4cdaf6b3ea71 # v0.11.1
         env:
           MINIO_ROOT_USER: ${{ secrets.MINIO_ROOT_USER }}
           MINIO_ROOT_PASSWORD: ${{ secrets.MINIO_ROOT_PASSWORD }}
@@ -77,7 +75,6 @@ jobs:
           oc_namespace: cffaf3-tools
           oc_server: ${{ secrets.oc_server }}
           oc_token: ${{ secrets.oc_token_tools }}
-          oc_login_attempts: "8"
           oc_version: "4.13"
           overwrite: false
           parameters:
@@ -133,7 +130,7 @@ jobs:
           : "${POSTGRES_PASSWORD:?POSTGRES_PASSWORD repository secret is required}"
 
       - name: Initializing PostgreSQL CronJobs
-        uses: bcgov/action-deployer-openshift@e2d60eb9cacceb89c3b97d8dcf0a2c460eea5eab # v4.2.3
+        uses: bcgov/actions-openshift/deployer@b2757e12d08b7d3bf2c5df7cd58b4cdaf6b3ea71 # v0.11.1
         env:
           POSTGRES_HOST: ${{ secrets.POSTGRES_HOST }}
           POSTGRES_PORT: ${{ secrets.POSTGRES_PORT }}
@@ -147,7 +144,6 @@ jobs:
           oc_namespace: cffaf3-tools
           oc_server: ${{ secrets.oc_server }}
           oc_token: ${{ secrets.oc_token_tools }}
-          oc_login_attempts: "8"
           oc_version: "4.13"
           overwrite: true
           parameters: >-
@@ -162,7 +158,7 @@ jobs:
             -p POSTGRES_PASSWORD="$POSTGRES_PASSWORD"
 
       - name: Stop backend, reset/migrate PR PostgreSQL, and start backend
-        uses: bcgov/action-oc-runner@111868d1fc50db0a40417ba321d865ef5c931bbd # v1.7.0
+        uses: bcgov/actions-openshift/oc-runner@b2757e12d08b7d3bf2c5df7cd58b4cdaf6b3ea71 # v0.11.1
         env:
           APP_NAMESPACE: ${{ secrets.OC_NAMESPACE }}
           APP_DEPLOYMENT: nr-waste-plus-${{ github.event.number }}-backend
@@ -175,7 +171,6 @@ jobs:
           oc_namespace: ${{ secrets.oc_namespace }}
           oc_server: ${{ secrets.oc_server }}
           oc_token: ${{ secrets.oc_token }}
-          login_attempts: "8"
           commands: |
             bash .github/scripts/manage-deployment.sh stop "$APP_NAMESPACE" "$APP_DEPLOYMENT" --wait
             OC_TOKEN="$OC_TOKEN_TOOLS" OC_NAMESPACE=cffaf3-tools bash .github/scripts/run-with-oc-login.sh \
@@ -193,21 +188,22 @@ jobs:
       # other change under legacydb/ (such as its deployment template) reuses
       # the :latest image, retagged for this PR. The Dockerfile copies only
       # removeDatabase, so those two files are the whole image input.
-      - uses: bcgov/action-builder-ghcr@cb2629351c87dd1c2130073e4ebb7233a9653a63 # v4.4.1
+      - uses: bcgov/actions/builder@01c3fa1c94c8ccea526ce718b40d8a93bb0a2279 # v0.16.0
         name: Build (legacydb)
         with:
           package: legacydb
           tag_fallback: latest
-          triggers: ('legacydb/Dockerfile' 'legacydb/removeDatabase')
+          triggers: |
+            legacydb/Dockerfile
+            legacydb/removeDatabase
 
       - name: Initializing Deployment
-        uses: bcgov/action-deployer-openshift@e2d60eb9cacceb89c3b97d8dcf0a2c460eea5eab # v4.2.3
+        uses: bcgov/actions-openshift/deployer@b2757e12d08b7d3bf2c5df7cd58b4cdaf6b3ea71 # v0.11.1
         with:
           file: tools/oracle.deploy.yml
           oc_namespace: cffaf3-tools
           oc_server: ${{ secrets.oc_server }}
           oc_token: ${{ secrets.oc_token_tools }}
-          oc_login_attempts: "8"
           oc_version: "4.13"
           overwrite: false
           parameters: -p ZONE=tools
@@ -215,7 +211,7 @@ jobs:
             -p TAG=${{ github.event.number }}
 
       - name: Stop legacy, reset/migrate PR Oracle, and start legacy
-        uses: bcgov/action-oc-runner@111868d1fc50db0a40417ba321d865ef5c931bbd # v1.7.0
+        uses: bcgov/actions-openshift/oc-runner@b2757e12d08b7d3bf2c5df7cd58b4cdaf6b3ea71 # v0.11.1
         env:
           APP_NAMESPACE: ${{ secrets.OC_NAMESPACE }}
           APP_DEPLOYMENT: nr-waste-plus-${{ github.event.number }}-legacy
@@ -229,7 +225,6 @@ jobs:
           oc_namespace: ${{ secrets.oc_namespace }}
           oc_server: ${{ secrets.oc_server }}
           oc_token: ${{ secrets.oc_token }}
-          login_attempts: "8"
           commands: |
             bash .github/scripts/manage-deployment.sh stop "$APP_NAMESPACE" "$APP_DEPLOYMENT" --wait
             OC_TOKEN="$OC_TOKEN_TOOLS" OC_NAMESPACE=cffaf3-tools bash .github/scripts/run-with-oc-login.sh \
@@ -243,6 +238,6 @@ jobs:
     runs-on: ubuntu-26.04
     timeout-minutes: 1
     steps:
-      - uses: bcgov/actions/workflow-results@acc058abf85bb183dad21b839a92a40a4ff47af3 # v0.14.0
+      - uses: bcgov/actions/workflow-results@01c3fa1c94c8ccea526ce718b40d8a93bb0a2279 # v0.16.0
         with:
           needs: ${{ toJson(needs) }}

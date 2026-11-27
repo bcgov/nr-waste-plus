@@ -20,14 +20,13 @@ jobs:
       # IMMEDIATE, and the PR deployment may already be gone.
       - name: Scale down legacy
         continue-on-error: true
-        uses: bcgov/action-oc-runner@111868d1fc50db0a40417ba321d865ef5c931bbd # v1.7.0
+        uses: bcgov/actions-openshift/oc-runner@b2757e12d08b7d3bf2c5df7cd58b4cdaf6b3ea71 # v0.11.1
         env:
           STOP_NAMESPACE: ${{ secrets.OC_NAMESPACE }}
           STOP_DEPLOYMENT: nr-waste-plus-${{ github.event.number }}-legacy
         with:
           oc_namespace: ${{ secrets.oc_namespace }}
           oc_token: ${{ secrets.oc_token }}
-          login_attempts: "8"
           oc_server: ${{ secrets.oc_server }}
           commands: bash .github/scripts/manage-deployment.sh stop "$STOP_NAMESPACE" "$STOP_DEPLOYMENT" --wait --after-stop-delay 10
 
@@ -36,27 +35,25 @@ jobs:
       # leaked pluggable database keeps using the instance's memory.
       - name: Remove the PR Oracle database
         if: ${{ !cancelled() }}
-        uses: bcgov/action-oc-runner@111868d1fc50db0a40417ba321d865ef5c931bbd # v1.7.0
+        uses: bcgov/actions-openshift/oc-runner@b2757e12d08b7d3bf2c5df7cd58b4cdaf6b3ea71 # v0.11.1
         env:
           PR_NUMBER: ${{ github.event.number }}
         with:
           oc_namespace: cffaf3-tools
           oc_server: ${{ secrets.oc_server }}
           oc_token: ${{ secrets.oc_token_tools }}
-          login_attempts: "8"
           commands: bash .github/scripts/remove-oracle-pr.sh cffaf3-tools "$PR_NUMBER"
 
       # Only this PR's bucket goes. The shared MinIO server and the base bucket
       # stay for the other open PRs.
       - name: Remove the PR MinIO bucket
         if: ${{ !cancelled() }}
-        uses: bcgov/action-oc-runner@111868d1fc50db0a40417ba321d865ef5c931bbd # v1.7.0
+        uses: bcgov/actions-openshift/oc-runner@b2757e12d08b7d3bf2c5df7cd58b4cdaf6b3ea71 # v0.11.1
         env:
           OBJECT_STORAGE_BUCKET: ${{ secrets.OBJECT_STORAGE_BUCKET || 'nr-waste' }}-pr-${{ github.event.number }}
         with:
           oc_namespace: cffaf3-tools
           oc_token: ${{ secrets.oc_token_tools }}
-          login_attempts: "8"
           oc_server: ${{ secrets.oc_server }}
           commands: bash .github/scripts/remove-minio-pr-bucket.sh cffaf3-tools "$OBJECT_STORAGE_BUCKET"
 
@@ -65,7 +62,7 @@ jobs:
       - name: Remove the PR PostgreSQL database
         id: remove-pg
         if: ${{ !cancelled() }}
-        uses: bcgov/action-oc-runner@111868d1fc50db0a40417ba321d865ef5c931bbd # v1.7.0
+        uses: bcgov/actions-openshift/oc-runner@b2757e12d08b7d3bf2c5df7cd58b4cdaf6b3ea71 # v0.11.1
         env:
           PR_NUMBER: ${{ github.event.number }}
           RUN_ATTEMPT: ${{ github.run_attempt }}
@@ -73,7 +70,6 @@ jobs:
           oc_namespace: cffaf3-tools
           oc_server: ${{ secrets.oc_server }}
           oc_token: ${{ secrets.oc_token_tools }}
-          login_attempts: "8"
           commands: bash .github/scripts/remove-postgres-pr-database.sh cffaf3-tools "$PR_NUMBER" "$RUN_ATTEMPT"
 
       # Only after the database is gone: the CronJobs and credentials are what
@@ -81,12 +77,11 @@ jobs:
       - name: Remove the PR PostgreSQL CronJobs and credentials
         if: ${{ !cancelled() && steps.remove-pg.outcome == 'success' }}
         continue-on-error: true
-        uses: bcgov/action-oc-runner@111868d1fc50db0a40417ba321d865ef5c931bbd # v1.7.0
+        uses: bcgov/actions-openshift/oc-runner@b2757e12d08b7d3bf2c5df7cd58b4cdaf6b3ea71 # v0.11.1
         with:
           oc_namespace: cffaf3-tools
           oc_server: ${{ secrets.oc_server }}
           oc_token: ${{ secrets.oc_token_tools }}
-          login_attempts: "8"
           commands: |
             oc delete cronjob/nr-waste-plus-pr${{ github.event.number }}-removepg \
               cronjob/nr-waste-plus-pr${{ github.event.number }}-createpg \
@@ -98,11 +93,10 @@ jobs:
       - name: Remove completed pods and jobs (cronjobs)
         if: ${{ !cancelled() }}
         continue-on-error: true
-        uses: bcgov/action-oc-runner@111868d1fc50db0a40417ba321d865ef5c931bbd # v1.7.0
+        uses: bcgov/actions-openshift/oc-runner@b2757e12d08b7d3bf2c5df7cd58b4cdaf6b3ea71 # v0.11.1
         with:
           oc_namespace: cffaf3-tools
           oc_token: ${{ secrets.oc_token_tools }}
-          login_attempts: "8"
           oc_server: ${{ secrets.oc_server }}
           commands: |
             # Scope to this PR: job names include -pr<number>-.

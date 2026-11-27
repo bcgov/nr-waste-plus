@@ -24,14 +24,14 @@ jobs:
         env:
           BASE_BUCKET: ${{ secrets.OBJECT_STORAGE_BUCKET || 'nr-waste' }}
         run: |
-          echo "url=${{ github.event.repository.name }}-$((${{ github.event.number }} % 50))-frontend.apps.silver.devops.gov.bc.ca" >> $GITHUB_OUTPUT
+          echo "url=${{ github.event.repository.name }}-$((${{ github.event.number }} % 50))-frontend.apps.silver.devops.gov.bc.ca" >> "$GITHUB_OUTPUT"
           echo "url=${{ github.event.repository.name }}-$((${{ github.event.number }} % 50))-frontend.apps.silver.devops.gov.bc.ca"
           # Reusable-workflow `with:` inputs cannot read the secrets context,
           # so the per-PR bucket is resolved here and passed as an output.
           # The bucket base must not be a secret: the runner drops any output
           # that may contain a secret value, and "nr-waste" is part of this
           # job's url and bucket outputs.
-          echo "bucket=${BASE_BUCKET}-pr-${{ github.event.number }}" >> $GITHUB_OUTPUT
+          echo "bucket=${BASE_BUCKET}-pr-${{ github.event.number }}" >> "$GITHUB_OUTPUT"
 
   builds:
     name: Builds
@@ -44,12 +44,13 @@ jobs:
       matrix:
         package: [frontend, backend, legacy]
     steps:
-      - uses: bcgov/action-builder-ghcr@cb2629351c87dd1c2130073e4ebb7233a9653a63 # v4.4.1
+      - uses: bcgov/actions/builder@01c3fa1c94c8ccea526ce718b40d8a93bb0a2279 # v0.16.0
         name: Build (${{ matrix.package }})
         with:
           package: ${{ matrix.package }}
           tag_fallback: latest
-          triggers: ('${{ matrix.package }}/')
+          triggers: |
+            ${{ matrix.package }}/
 
   deploy:
     name: Deploy (${{ github.event.number }})
@@ -57,6 +58,7 @@ jobs:
     secrets: inherit
     uses: ./.github/workflows/.deploy.yml
     with:
+      url: ${{ needs.vars.outputs.url }}
       zone: ${{ github.event.number }}
       target: test
       oracledb-port: 1521
@@ -75,27 +77,10 @@ jobs:
       # Each PR gets its own bucket on the shared tools MinIO instance. The
       # bucket is computed in `vars` because `with:` cannot read secrets.
       object-storage-bucket: ${{ needs.vars.outputs.bucket }}
-      configmap-backend: |-
-        info:
-          app:
-            component: backend
-        features:
-          flags:
-            bookmark-ru-enabled: true
-            reporting-unit-details-enabled: true
-            reporting-unit-create-enabled: true
-      configmap-frontend: |-
-        window.config = {
-          ...(window.config ?? {}),
-          VITE_FEATURE_FLAGS: {
-            'offline-mode-enabled': false,
-            'bookmark-ru-enabled': true,
-            'reporting-unit-details-enabled': true,
-            'reporting-unit-create-enabled': true,
-            'reporting-unit-block-details-enabled': true,
-            'configuration-enabled': true,
-          },
-        };
+      # Single-line values: the monorepo deployer parses parameters with xargs,
+      # which rejects newlines and unescaped double quotes.
+      configmap-backend: "{info: {app: {component: backend}}, features: {flags: {bookmark-ru-enabled: true, reporting-unit-details-enabled: true, reporting-unit-create-enabled: true}}}"
+      configmap-frontend: "window.config = { ...(window.config ?? {}), VITE_FEATURE_FLAGS: { 'offline-mode-enabled': false, 'bookmark-ru-enabled': true, 'reporting-unit-details-enabled': true, 'reporting-unit-create-enabled': true, 'reporting-unit-block-details-enabled': true, 'configuration-enabled': true, }, };"
 
   tests:
     name: Tests
@@ -119,6 +104,6 @@ jobs:
     runs-on: ubuntu-26.04
     timeout-minutes: 1
     steps:
-      - uses: bcgov/actions/workflow-results@acc058abf85bb183dad21b839a92a40a4ff47af3 # v0.14.0
+      - uses: bcgov/actions/workflow-results@01c3fa1c94c8ccea526ce718b40d8a93bb0a2279 # v0.16.0
         with:
           needs: ${{ toJson(needs) }}
