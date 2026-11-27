@@ -21,8 +21,8 @@ Feature: My profile
     Given I visit "/clients"
     When I click on the "Profile settings" button
     Then I can read "My Profile"
-    When I select the client "00147603"
-    Then the profile settings button should show "TOLKO INDUSTRIES LTD."
+    When I select the client "00001271"
+    Then the profile settings button should show "CANADIAN FOREST PRODUCTS LTD."
     When I select no client
     Then no client should be selected
 
@@ -30,11 +30,11 @@ Feature: My profile
   Scenario: Selected client is used as the search parameter
     Given I visit "/clients"
     When I click on the "Profile settings" button
-    When I select the client "00147603"
-    Then the profile settings button should show "TOLKO INDUSTRIES LTD."
+    When I select the client "00001271"
+    Then the profile settings button should show "CANADIAN FOREST PRODUCTS LTD."
     When I close the profile panel
     And I click on the "Waste search" link
-    Then the client filter for "00147603" should be visible
+    Then the client filter for "00001271" should be visible
     When I click on the "My clients" link
     And I click on the "Profile settings" button
     When I select no client
