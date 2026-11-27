@@ -13,7 +13,7 @@ on:
         type: string
       configmap-frontend:
         description: Configuration map for params.js
-        required: true
+        required: false
         type: string
         default: ""
       environment:

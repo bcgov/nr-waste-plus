@@ -36,18 +36,10 @@ jobs:
       target: test
       zone: test
       url: nr-waste-plus-test-frontend.apps.silver.devops.gov.bc.ca
-      configmap-backend: |-
-        info:
-          app:
-            component: backend
-      configmap-frontend: |-
-        window.config = {
-          ...(window.config ?? {}),
-          VITE_FEATURE_FLAGS: {
-            'offline-mode-enabled': false,
-            'configuration-enabled': true,
-          },
-        };
+      # Single-line values: the monorepo deployer parses parameters with xargs,
+      # which rejects newlines and unescaped double quotes.
+      configmap-backend: "{info: {app: {component: backend}}}"
+      configmap-frontend: "window.config = { ...(window.config ?? {}), VITE_FEATURE_FLAGS: { 'offline-mode-enabled': false, 'configuration-enabled': true, }, };"
 
   deploy-prod:
     name: Deploy (PROD)
@@ -59,25 +51,10 @@ jobs:
       target: prod
       zone: prod
       url: nr-waste-plus-prod-frontend.apps.silver.devops.gov.bc.ca
-      configmap-backend: |-
-        info:
-          app:
-            component: backend
-        ca:
-          bc:
-            gov:
-              nrs:
-                frontend:
-                  cors:
-                    origins:
-                      - https://wasteplus.nrs.gov.bc.ca
-      configmap-frontend: |-
-        window.config = {
-          ...(window.config ?? {}),
-          VITE_FEATURE_FLAGS: {
-            'offline-mode-enabled': false,
-          },
-        };
+      # Single-line values: the monorepo deployer parses parameters with xargs,
+      # which rejects newlines and unescaped double quotes.
+      configmap-backend: "{info: {app: {component: backend}}, ca: {bc: {gov: {nrs: {frontend: {cors: {origins: [https://wasteplus.nrs.gov.bc.ca]}}}}}}}"
+      configmap-frontend: "window.config = { ...(window.config ?? {}), VITE_FEATURE_FLAGS: { 'offline-mode-enabled': false, }, };"
 
   images-prod:
     name: Promote images to PROD

@@ -77,27 +77,10 @@ jobs:
       # Each PR gets its own bucket on the shared tools MinIO instance. The
       # bucket is computed in `vars` because `with:` cannot read secrets.
       object-storage-bucket: ${{ needs.vars.outputs.bucket }}
-      configmap-backend: |-
-        info:
-          app:
-            component: backend
-        features:
-          flags:
-            bookmark-ru-enabled: true
-            reporting-unit-details-enabled: true
-            reporting-unit-create-enabled: true
-      configmap-frontend: |-
-        window.config = {
-          ...(window.config ?? {}),
-          VITE_FEATURE_FLAGS: {
-            'offline-mode-enabled': false,
-            'bookmark-ru-enabled': true,
-            'reporting-unit-details-enabled': true,
-            'reporting-unit-create-enabled': true,
-            'reporting-unit-block-details-enabled': true,
-            'configuration-enabled': true,
-          },
-        };
+      # Single-line values: the monorepo deployer parses parameters with xargs,
+      # which rejects newlines and unescaped double quotes.
+      configmap-backend: "{info: {app: {component: backend}}, features: {flags: {bookmark-ru-enabled: true, reporting-unit-details-enabled: true, reporting-unit-create-enabled: true}}}"
+      configmap-frontend: "window.config = { ...(window.config ?? {}), VITE_FEATURE_FLAGS: { 'offline-mode-enabled': false, 'bookmark-ru-enabled': true, 'reporting-unit-details-enabled': true, 'reporting-unit-create-enabled': true, 'reporting-unit-block-details-enabled': true, 'configuration-enabled': true, }, };"
 
   tests:
     name: Tests
