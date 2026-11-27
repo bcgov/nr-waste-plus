@@ -6,6 +6,8 @@ import { baseURL, VIEWPORT } from "./playwright/env";
 
 const PORTED_FEATURES_FILE = "ported-features.txt";
 const DEFAULT_FEATURES = "../cypress/cypress/e2e/*.feature";
+const LOGOUTS_FEATURE = "../cypress/cypress/e2e/logouts.feature";
+const LOGOUTS_SPEC = /logouts\.feature\.spec\.js$/;
 
 function featureSources(): string[] {
   if (process.env.PW_FEATURES) {
@@ -25,12 +27,36 @@ function featureSources(): string[] {
   return [DEFAULT_FEATURES];
 }
 
+/*
+ * PW_FEATURES keeps working for both projects:
+ *   - unset: sources come from ported-features.txt; logouts.feature stays listed
+ *     there and is split out of journeys into the dedicated teardown project.
+ *   - set: comma-separated sources are split the same way. To run only the
+ *     logout journey, use
+ *     `PW_FEATURES=../cypress/cypress/e2e/logouts.feature npx bddgen && npx playwright test --project=logouts`
+ *     (omit --no-deps so `setup` still refreshes the BCeID session first).
+ */
+const requestedFeatures = featureSources();
+const logoutsRequested = requestedFeatures.includes(LOGOUTS_FEATURE);
+const journeysFeatures = requestedFeatures.filter((feature) => feature !== LOGOUTS_FEATURE);
+const steps = ["playwright/fixtures/index.ts", "playwright/steps/**/*.ts"];
+
+// Each project owns its generated specs: bddgen would otherwise overwrite the
+// other project's output (playwright-bdd multi-project contract).
 const testDir = defineBddConfig({
-  features: featureSources(),
+  features: journeysFeatures,
   // Frozen features live outside this package; root at the worktree so the
   // generated spec paths keep their cypress/cypress/e2e segment.
   featuresRoot: "..",
-  steps: ["playwright/fixtures/index.ts", "playwright/steps/**/*.ts"],
+  steps,
+  outputDir: ".features-gen/journeys",
+});
+
+const logoutsTestDir = defineBddConfig({
+  features: [LOGOUTS_FEATURE],
+  featuresRoot: "..",
+  steps,
+  outputDir: ".features-gen/logouts",
 });
 
 const ciReporters: ["github"][] = process.env.CI ? [["github"]] : [];
@@ -70,13 +96,27 @@ export default defineConfig({
       name: "setup",
       testDir: "playwright/auth",
       testMatch: /auth\.setup\.ts/,
+      // Playwright teardowns run after every project that depends on `setup`,
+      // and unlike a normal dependency they also run when a journey fails.
+      // The logout performs a real IdP logout, so it must be the last test.
+      teardown: "logouts",
       timeout: 90_000,
       use: { trace: "off", screenshot: "off", video: "off" },
     },
     {
       name: "journeys",
       testDir,
+      // Defense in depth: the split above already removes the feature, but a
+      // stale generated spec must never move the real logout into journeys.
+      testIgnore: LOGOUTS_SPEC,
       dependencies: ["setup"],
+      use: { ...devices["Desktop Chrome"], viewport: VIEWPORT },
+    },
+    {
+      name: "logouts",
+      testDir: logoutsTestDir,
+      // Keep the teardown project empty when logouts is not requested at all.
+      testIgnore: logoutsRequested ? undefined : LOGOUTS_SPEC,
       use: { ...devices["Desktop Chrome"], viewport: VIEWPORT },
     },
   ],

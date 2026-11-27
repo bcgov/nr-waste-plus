@@ -1,13 +1,22 @@
 import { expect } from "@playwright/test";
 
 import { Given, Then, When } from "../fixtures";
-import { clickButton } from "../support/locators.ts";
+import { kindFromTags } from "../fixtures/shared-context.fixture.ts";
+import { button, clickButton } from "../support/locators.ts";
 
 // Cypress' findButton accepts both buttons and links; the ordered locator probe
 // in support/locators.ts keeps that contract without force clicks or sleeps.
-When("I click on the {string} button", async ({ page }, name: string) => {
-  await clickButton(page, name);
-});
+When(
+  "I click on the {string} button",
+  async ({ page, sharedContexts, $tags }, name: string) => {
+    await clickButton(page, name);
+    if (name === "Log out") {
+      // Logout revokes the shared context's tokens. Discard it so the next
+      // scenario is reseeded from the saved state via ConnectionBudget.
+      sharedContexts.invalidate(kindFromTags($tags));
+    }
+  },
+);
 
 When("I click on the {string} link", async ({ page }, name: string) => {
   await clickButton(page, name);
@@ -105,6 +114,11 @@ When("I search", async ({ page }) => {
       response.request().method() === "GET",
     { timeout: 15_000 },
   );
-  await clickButton(page, "Search");
+  // The advanced modal covers the page's Search button. Cypress force-clicked
+  // through the overlay; Playwright uses the modal's own Search button instead.
+  // TODO(a11y-name): the modal button has no unique role name beyond "Search".
+  const modalSearch = page.locator("#as-modal-search-button-most");
+  const target = (await modalSearch.isVisible()) ? modalSearch : await button(page, "Search");
+  await target.click();
   await searchResponse;
 });

@@ -22,6 +22,8 @@ type SharedContextWorkerFixtures = {
 
 export interface SharedContexts {
   get(kind: ContextKind): Promise<BrowserContext>;
+  /** Marks a context unusable (e.g. after logout); the next get recreates it. */
+  invalidate(kind: ContextKind): void;
 }
 
 export function kindFromTags(tags: readonly string[]): ContextKind {
@@ -39,9 +41,17 @@ export const test = base.extend<
   sharedContexts: [
     async ({ browser }, use) => {
       const contexts = new Map<ContextKind, BrowserContext>();
+      const stale = new Set<ContextKind>();
 
       await use({
         async get(kind) {
+          if (stale.has(kind)) {
+            const invalid = contexts.get(kind);
+            if (invalid) await invalid.close();
+            contexts.delete(kind);
+            stale.delete(kind);
+          }
+
           const existing = contexts.get(kind);
           if (existing) return existing;
 
@@ -75,6 +85,9 @@ export const test = base.extend<
 
           contexts.set(kind, context);
           return context;
+        },
+        invalidate(kind) {
+          stale.add(kind);
         },
       });
 

@@ -1,15 +1,19 @@
 import { expect } from "@playwright/test";
 
 import { Then } from "../fixtures";
+import { openAppIfBlank } from "../fixtures/app-ready.ts";
 import { textPattern } from "../support/text.ts";
 
 Then("I can read {string}", async ({ page }, text: string) => {
+  // Cypress' login hook had already landed on /search for these scenarios.
+  await openAppIfBlank(page);
   await expect(page.getByText(textPattern(text)).first()).toBeVisible({
     timeout: 30_000,
   });
 });
 
 Then("I cannot see {string}", async ({ page }, text: string) => {
+  await openAppIfBlank(page);
   await expect(page.getByText(textPattern(text))).toHaveCount(0);
 });
 

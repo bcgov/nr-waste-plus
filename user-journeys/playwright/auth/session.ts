@@ -166,7 +166,12 @@ const withTimeout = <T>(promise: Promise<T>, ms: number): Promise<T> => {
 /** Best-effort write-back of tokens rotated during a scenario. */
 export async function persistSession(page: Page, kind: AuthKind): Promise<void> {
   try {
+    // A blank page (no app boot) or a post-logout page (tokens revoked) has no
+    // OIDC user. Overwriting the saved snapshot with either would invalidate
+    // every later scenario, so keep the last known good state instead.
+    if (page.url() === "about:blank") return;
     const snapshot = await withTimeout(snapshotFromPage(page), TEARDOWN_STEP_MS);
+    if (!findOidcKey(snapshot.session)) return;
     writeSession(kind, snapshot);
   } catch {
     // A closed or wedged page keeps the previous snapshot; never fail the run.

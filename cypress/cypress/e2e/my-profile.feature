@@ -5,7 +5,7 @@ Feature: My profile
     Given I visit "/clients"
     When I click on the "Profile settings" button
     Then I can read "My Profile"
-    And I can read "Role: VIEWER, SUBMITTER, BCeID"
+    And I can read "Role: SUBMITTER, BCeID"
     And I can read "Log out"
 
   @loginAsBCeID

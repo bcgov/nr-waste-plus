@@ -1,2 +1,6 @@
 ../cypress/cypress/e2e/screen-load.feature
 ../cypress/cypress/e2e/sso-smoke.feature
+../cypress/cypress/e2e/unauthorized-access.feature
+../cypress/cypress/e2e/theme-toggle.feature
+../cypress/cypress/e2e/search.feature
+../cypress/cypress/e2e/logouts.feature
