@@ -4,3 +4,4 @@
 ../cypress/cypress/e2e/theme-toggle.feature
 ../cypress/cypress/e2e/search.feature
 ../cypress/cypress/e2e/logouts.feature
+../cypress/cypress/e2e/block_details.feature

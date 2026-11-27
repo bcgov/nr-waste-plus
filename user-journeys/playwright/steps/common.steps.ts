@@ -78,7 +78,18 @@ Given(
   async ({ page }, reportingUnitId: string) => {
     await page.route(`**/api/reporting-units/${reportingUnitId}`, async (route) => {
       const response = await route.fetch();
-      const body = (await response.json()) as Record<string, unknown>;
+      // Cypress left non-object response bodies untouched; do the same when the
+      // backend answers with an error page or an empty body.
+      if (!(response.headers()["content-type"] ?? "").includes("application/json")) {
+        await route.fulfill({ response });
+        return;
+      }
+      const parsed: unknown = await response.json().catch(() => null);
+      if (typeof parsed !== "object" || parsed === null) {
+        await route.fulfill({ response });
+        return;
+      }
+      const body = parsed as Record<string, unknown>;
       body.grade = { code: null, description: null, areas: [] };
       await route.fulfill({ response, json: body });
     });

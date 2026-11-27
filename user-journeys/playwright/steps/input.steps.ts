@@ -75,7 +75,9 @@ async function setSwitch(
 ): Promise<void> {
   const control = page.getByRole("switch", { name: label });
   await expect(control).toHaveAttribute("aria-checked", expected);
-  await control.click();
+  // Carbon's decorative label sibling covers the switch centre, so a normal
+  // click is intercepted; Cypress force-clicked for the same reason.
+  await control.click({ force: true });
   await expect(control).toHaveAttribute(
     "aria-checked",
     expected === "true" ? "false" : "true",
