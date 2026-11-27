@@ -82,6 +82,13 @@ public class JwtPrincipalUtil {
   /** Prefix of FAM expiry-bookkeeping entries that never represent an application role. */
   private static final String FAM_EXPIRY_PREFIX = "FAM:";
 
+  /**
+   * Prefix of a FAM client scope, e.g. {@code FOREST_CLIENT-00001271} in {@code
+   * WASTE_PLUS_SUBMITTER_FOREST_CLIENT-00001271}. The scope carries the client number after the
+   * prefix and delimiter; the legacy shape {@code WASTE_PLUS_SUBMITTER_00001271} has no prefix.
+   */
+  private static final String FAM_CLIENT_PREFIX = "FOREST_CLIENT";
+
   /** Cognito BCSC broker prefix that normalizes to the {@code BCSC} audit string. */
   private static final String BCSC_BROKER_PREFIX = "ca.bc.gov.flnr.fam.";
 
@@ -545,7 +552,7 @@ public class JwtPrincipalUtil {
               if (r == null) {
                 return null;
               }
-              String client = parts.length > 1 ? parts[1] : null;
+              String client = parts.length > 1 ? normalizeClientSuffix(parts[1]) : null;
               return new java.util.AbstractMap.SimpleEntry<>(r, client);
             })
         .filter(Objects::nonNull)
@@ -555,6 +562,31 @@ public class JwtPrincipalUtil {
                 Collectors.mapping(
                     java.util.AbstractMap.SimpleEntry::getValue,
                     Collectors.filtering(Objects::nonNull, Collectors.toList()))));
+  }
+
+  /**
+   * Reduces a FAM client scope to its bare client number while leaving legacy role suffixes alone.
+   *
+   * <p>{@code FOREST_CLIENT-00001271} and {@code FOREST_CLIENT_00001271} both become {@code
+   * 00001271}; {@code 00001271} and district codes such as {@code DKM} are returned unchanged. A
+   * FAM scope with a missing or non-numeric client yields no client so authorization never invents
+   * one from a malformed role name.
+   *
+   * @param suffix the role-name portion after the role prefix
+   * @return the client number, or {@code null} when a FAM scope has no usable client
+   */
+  private static String normalizeClientSuffix(String suffix) {
+    if (suffix == null || StringUtils.equalsIgnoreCase(suffix, FAM_CLIENT_PREFIX)) {
+      return null;
+    }
+    for (String delimiter : List.of("-", "_")) {
+      String famPrefix = FAM_CLIENT_PREFIX + delimiter;
+      if (StringUtils.startsWithIgnoreCase(suffix, famPrefix)) {
+        String clientNumber = suffix.substring(famPrefix.length());
+        return StringUtils.isNumeric(clientNumber) ? clientNumber : null;
+      }
+    }
+    return suffix;
   }
 
   private static List<String> readClaimRoles(Map<String, Object> claims) {

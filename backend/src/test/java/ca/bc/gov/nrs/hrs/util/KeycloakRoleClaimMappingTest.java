@@ -20,11 +20,11 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 
 /**
- * Pins the CSS/Keycloak role-claim mapping used by the reporting-unit route gate and client scoping:
- * roles come from {@code client_roles} first, then {@code resource_access.<azp>.roles}, with the
- * legacy Cognito {@code cognito:groups} claim retained as a transitional fallback. Identity-provider
- * aliases are the ones the frontend maps in {@code authUtils.ts} ({@code azureidir}/{@code idir} and
- * {@code bceidbusiness}).
+ * Pins the CSS/Keycloak role-claim mapping used by the reporting-unit route gate and client
+ * scoping. Roles come from {@code client_roles} first, then {@code resource_access.<azp>.roles},
+ * with the legacy Cognito {@code cognito:groups} claim retained as a transitional fallback.
+ * Identity-provider aliases are the ones the frontend maps in {@code authUtils.ts}: {@code
+ * azureidir}/{@code idir} and {@code bceidbusiness}.
  */
 @DisplayName("Unit Test | CSS role and IDP claim mapping (epic #1506)")
 class KeycloakRoleClaimMappingTest {
@@ -162,6 +162,44 @@ class KeycloakRoleClaimMappingTest {
     assertThat(JwtPrincipalUtil.getIdentityProvider(token)).isEqualTo(expectedProvider);
     assertThat(JwtPrincipalUtil.getIdentityProvider(new JwtAuthenticationToken(token, List.of())))
         .isEqualTo(expectedProvider);
+  }
+
+  @ParameterizedTest(name = "{0} resolves to role {1} for client {2}")
+  @CsvSource({
+    "WASTE_PLUS_SUBMITTER_FOREST_CLIENT-00001271, SUBMITTER, 00001271",
+    "WASTE_PLUS_VIEWER_00001271, VIEWER, 00001271",
+    "WASTE_PLUS_SUBMITTER_forest_client-00001271, SUBMITTER, 00001271",
+    "WASTE_PLUS_VIEWER_FOREST_CLIENT_00001271, VIEWER, 00001271"
+  })
+  @DisplayName("FAM and legacy client-scoped role suffixes resolve to the same client number")
+  void shouldParseFamAndLegacyClientScopes(
+      String roleName, String expectedRoleName, String expectedClient) {
+    Map<String, Object> claims = bceidAccessTokenClaims();
+    claims.put(CLAIM_CLIENT_ROLES, List.of(roleName));
+    Jwt token = jwt(claims);
+    Role expectedRole = Role.valueOf(expectedRoleName);
+
+    assertThat(JwtPrincipalUtil.getRoles(token))
+        .containsEntry(expectedRole, List.of(expectedClient));
+    assertThat(JwtPrincipalUtil.getClientFromRoles(token)).containsExactly(expectedClient);
+    assertThat(JwtPrincipalUtil.hasAbstractRole(token, expectedRole, expectedClient)).isTrue();
+  }
+
+  @Test
+  @DisplayName("malformed FAM client scopes produce no client number")
+  void shouldNotInventClientFromMalformedFamScope() {
+    Map<String, Object> claims = bceidAccessTokenClaims();
+    claims.put(
+        CLAIM_CLIENT_ROLES,
+        List.of(
+            "WASTE_PLUS_SUBMITTER_FOREST_CLIENT-",
+            "WASTE_PLUS_VIEWER_FOREST_CLIENT-NOT_A_NUMBER",
+            "WASTE_PLUS_SUBMITTER_FOREST_CLIENT",
+            "WASTE_PLUS_VIEWER_FOREST_CLIENT-00001271-extra"));
+    Jwt token = jwt(claims);
+
+    assertThat(JwtPrincipalUtil.getClientFromRoles(token)).isEmpty();
+    assertThat(JwtPrincipalUtil.getRoles(token)).containsOnlyKeys(Role.SUBMITTER, Role.VIEWER);
   }
 
   private static Map<String, Object> bceidAccessTokenClaims() {
