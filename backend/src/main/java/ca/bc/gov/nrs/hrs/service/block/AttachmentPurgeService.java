@@ -47,8 +47,32 @@ public class AttachmentPurgeService {
       return 0;
     }
 
+    return deleteFromStorageAndRepository(stale);
+  }
+
+  /**
+   * Purges a single batch of soft-deleted attachments from object storage and removes their
+   * metadata rows once object removal succeeds. Retains rows when storage deletion fails so
+   * cleanup can retry.
+   *
+   * @param batchSize the maximum number of items to purge in this batch
+   * @return count of successfully purged soft-deleted attachments in this batch
+   */
+  @Transactional(propagation = Propagation.REQUIRES_NEW)
+  public int purgeSoftDeletedBatch(int batchSize) {
+    List<BlockAttachmentEntity> deleted =
+        attachmentRepository.findByDeletedTrueOrderByUpdatedAtAsc(PageRequest.of(0, batchSize));
+
+    if (deleted.isEmpty()) {
+      return 0;
+    }
+
+    return deleteFromStorageAndRepository(deleted);
+  }
+
+  private int deleteFromStorageAndRepository(List<BlockAttachmentEntity> entities) {
     int count = 0;
-    for (BlockAttachmentEntity entity : stale) {
+    for (BlockAttachmentEntity entity : entities) {
       try {
         objectStorage.deleteObject(entity.getObjectKey());
         attachmentRepository.delete(entity);

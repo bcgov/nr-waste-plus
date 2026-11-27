@@ -6,31 +6,45 @@ import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import ca.bc.gov.nrs.hrs.dto.block.AttachmentDownloadResponse;
 import ca.bc.gov.nrs.hrs.dto.block.AttachmentFinalizeResponse;
 import ca.bc.gov.nrs.hrs.dto.block.AttachmentIntentResponse;
+import ca.bc.gov.nrs.hrs.dto.block.BlockAttachmentListItemDto;
+import ca.bc.gov.nrs.hrs.dto.block.BlockAttachmentListResponse;
+import ca.bc.gov.nrs.hrs.entity.block.ReportingUnitEntity;
 import ca.bc.gov.nrs.hrs.exception.AttachmentConflictException;
 import ca.bc.gov.nrs.hrs.exception.AttachmentNotFoundException;
+import ca.bc.gov.nrs.hrs.exception.GlobalExceptionHandler;
 import ca.bc.gov.nrs.hrs.exception.ReportingUnitNotFoundException;
+import ca.bc.gov.nrs.hrs.extensions.WithMockJwtSecurityContextFactory;
+import ca.bc.gov.nrs.hrs.provider.legacy.LegacyApiProvider;
+import ca.bc.gov.nrs.hrs.repository.block.ReportingUnitRepository;
 import ca.bc.gov.nrs.hrs.security.ResourceScopeGuard;
 import ca.bc.gov.nrs.hrs.service.block.AttachmentService;
 import java.time.Instant;
+import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.json.JacksonJsonHttpMessageConverter;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.security.web.method.annotation.AuthenticationPrincipalArgumentResolver;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -359,5 +373,121 @@ class AttachmentControllerTest {
         .andExpect(status().isOk());
 
     verify(resourceScopeGuard).verify(nullable(Jwt.class), eq(1L));
+  }
+
+  @Test
+  @DisplayName("GET /attachments returns 200 with attachment list and ETag header")
+  void listAttachments_returnsOkWithETag() throws Exception {
+    Instant uploadedAt = Instant.parse("2026-08-24T12:00:00Z");
+    when(attachmentService.list(nullable(Jwt.class), eq(1L), eq(2L)))
+        .thenReturn(
+            new BlockAttachmentListResponse(
+                List.of(
+                    new BlockAttachmentListItemDto(
+                        501L,
+                        "FINAL_MAP",
+                        "final-map.pdf",
+                        "application/pdf",
+                        482331L,
+                        "FINALIZED",
+                        "CLEAN",
+                        true,
+                        null,
+                        "idir\\jdoe",
+                        uploadedAt))));
+    when(attachmentService.getBlockRevision(1L, 2L)).thenReturn(3L);
+
+    mockMvc
+        .perform(get("/api/reporting-units/1/2/attachments"))
+        .andExpect(status().isOk())
+        .andExpect(header().string("ETag", "\"3\""))
+        .andExpect(jsonPath("$.attachments[0].attachmentId").value(501))
+        .andExpect(jsonPath("$.attachments[0].documentType").value("FINAL_MAP"))
+        .andExpect(jsonPath("$.attachments[0].valid").value(true))
+        .andExpect(jsonPath("$.attachments[0].uploadedBy").value("idir\\jdoe"));
+
+    verify(resourceScopeGuard).verify(nullable(Jwt.class), eq(1L));
+  }
+
+  @Test
+  @DisplayName("GET /attachments returns 404 when RU is out of scope")
+  void listAttachments_whenOutOfScope_returns404() throws Exception {
+    doThrow(new ReportingUnitNotFoundException(1L))
+        .when(resourceScopeGuard)
+        .verify(nullable(Jwt.class), eq(1L));
+
+    mockMvc
+        .perform(get("/api/reporting-units/1/2/attachments"))
+        .andExpect(status().isNotFound());
+  }
+
+  @Test
+  @DisplayName("DELETE /{attachmentId} returns 204 when attachment is deleted")
+  void deleteAttachment_returnsNoContent() throws Exception {
+    mockMvc
+        .perform(
+            delete("/api/reporting-units/1/2/attachments/501")
+                .header("If-Match", "\"3\""))
+        .andExpect(status().isNoContent());
+
+    verify(resourceScopeGuard).verify(nullable(Jwt.class), eq(1L));
+    verify(attachmentService)
+        .delete(any(), nullable(Jwt.class), eq(1L), eq(2L), eq(501L));
+  }
+
+  @Test
+  @DisplayName("DELETE /{attachmentId} returns 403 when viewer role is rejected")
+  void deleteAttachment_whenViewer_returns403() throws Exception {
+    doThrow(new ResponseStatusException(HttpStatus.FORBIDDEN, "Viewer role is read-only"))
+        .when(resourceScopeGuard)
+        .verify(nullable(Jwt.class), eq(1L));
+
+    mockMvc
+        .perform(
+            delete("/api/reporting-units/1/2/attachments/501")
+                .header("If-Match", "\"3\""))
+        .andExpect(status().isForbidden());
+  }
+
+  @Test
+  @DisplayName(
+      "DELETE /{attachmentId} with real ResourceScopeGuard returns 403 with EDIT_NOT_ALLOWED"
+          + " for in-scope viewer")
+  void deleteAttachment_withRealGuard_whenInScopeViewer_returns403WithEditNotAllowed()
+      throws Exception {
+    ReportingUnitRepository ruRepo = Mockito.mock(ReportingUnitRepository.class);
+    LegacyApiProvider legacyApi = Mockito.mock(LegacyApiProvider.class);
+    ReportingUnitEntity ru = new ReportingUnitEntity();
+    ru.setId(1L);
+    ru.setClientNumber("00012797");
+    when(ruRepo.findByIdAndDeletedFalse(1L)).thenReturn(Optional.of(ru));
+
+    ResourceScopeGuard realGuard = new ResourceScopeGuard(ruRepo, legacyApi, null);
+    AttachmentController controllerWithRealGuard =
+        new AttachmentController(attachmentService, realGuard);
+    MockMvc mvc =
+        MockMvcBuilders.standaloneSetup(controllerWithRealGuard)
+            .setControllerAdvice(new GlobalExceptionHandler())
+            .setCustomArgumentResolvers(new AuthenticationPrincipalArgumentResolver())
+            .build();
+
+    Jwt viewerJwt =
+        WithMockJwtSecurityContextFactory.createJwt(
+            "bceid-viewer",
+            List.of("WASTE_PLUS_VIEWER_00012797"),
+            "bceidbusiness",
+            "Viewer User",
+            "viewer@example.com");
+
+    SecurityContextHolder.getContext().setAuthentication(new JwtAuthenticationToken(viewerJwt));
+    try {
+      mvc.perform(
+              delete("/api/reporting-units/1/2/attachments/501")
+                  .header("If-Match", "\"3\""))
+          .andExpect(status().isForbidden())
+          .andExpect(jsonPath("$.code").value("EDIT_NOT_ALLOWED"));
+    } finally {
+      SecurityContextHolder.clearContext();
+    }
   }
 }

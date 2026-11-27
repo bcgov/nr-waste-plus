@@ -58,4 +58,26 @@ public class AttachmentCleanupJob {
     }
     return totalPurged;
   }
+
+  /**
+   * Purges soft-deleted attachments from object storage in paged batches.
+   *
+   * @return the number of purged soft-deleted attachments
+   */
+  @Scheduled(cron = "${ca.bc.gov.nrs.attachment.cleanup.cron}")
+  @NewSpan
+  public int cleanSoftDeletedAttachments() {
+    int totalPurged = 0;
+
+    int purgedInBatch;
+    do {
+      purgedInBatch = purgeService.purgeSoftDeletedBatch(BATCH_SIZE);
+      totalPurged += purgedInBatch;
+    } while (purgedInBatch == BATCH_SIZE);
+
+    if (totalPurged > 0) {
+      log.info("Purged {} soft-deleted attachment(s).", totalPurged);
+    }
+    return totalPurged;
+  }
 }

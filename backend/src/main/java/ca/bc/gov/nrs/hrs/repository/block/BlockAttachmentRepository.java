@@ -78,4 +78,26 @@ public interface BlockAttachmentRepository extends JpaRepository<BlockAttachment
    */
   List<BlockAttachmentEntity> findByBlockIdAndStatusAndScanStatusAndDeletedFalse(
       Long blockId, String status, String scanStatus);
+
+  /**
+   * Finds all non-deleted attachments for a block excluding a given upload status (such as {@code
+   * UPLOADING}), ordered by creation timestamp ascending.
+   *
+   * @param blockId the block identifier
+   * @param excludedStatus the upload status to exclude
+   * @return ordered list of matching attachments
+   */
+  List<BlockAttachmentEntity> findByBlockIdAndStatusNotAndDeletedFalseOrderByCreatedAtAsc(
+      Long blockId, String excludedStatus);
+
+  /**
+   * Finds soft-deleted attachments using a lock-skip strategy to prevent multi-pod race
+   * conditions during asynchronous object-storage cleanup.
+   *
+   * @param pageable pagination limit and sorting
+   * @return list of soft-deleted attachment entities
+   */
+  @QueryHints(value = {@QueryHint(name = "jakarta.persistence.lock.timeout", value = "-2")})
+  @Lock(LockModeType.PESSIMISTIC_WRITE)
+  List<BlockAttachmentEntity> findByDeletedTrueOrderByUpdatedAtAsc(Pageable pageable);
 }

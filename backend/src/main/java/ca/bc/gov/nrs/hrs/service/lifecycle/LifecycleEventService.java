@@ -39,7 +39,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -61,6 +60,10 @@ public class LifecycleEventService {
   private static final String CONTEXT_LIFECYCLE = "LIFECYCLE";
   private static final String REQ_RATIONALE = "RATIONALE_REQUIRED";
   private static final String REQ_BURNT_PILES = "BURNT_PILES";
+  private static final String DETAIL_HAS_COMMENT = "hasComment";
+  private static final String CODE_COMMENT_REQUIRED = "COMMENT_REQUIRED";
+  private static final String CODE_PRECONDITION_FAILED = "PRECONDITION_FAILED";
+  private static final String SYSTEM_ACTOR = "SYSTEM";
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
   private final ReportingUnitRepository reportingUnitRepository;
@@ -109,22 +112,12 @@ public class LifecycleEventService {
     ConditionalRequestSupport.requireMatch(servletRequest, block.getRevision());
 
     String currentState = resolveBlockState(blockId, block.isDraft());
-
-    if (transitionPolicyService.isSystemOnly(currentState, normalizedEvent)) {
-      ResponseStatusException ex =
-          new ResponseStatusException(
-              HttpStatus.FORBIDDEN,
-              "Event '" + normalizedEvent + "' is system-only and cannot be triggered via HTTP");
-      ex.getBody().setProperty("code", "SYSTEM_ONLY_EVENT");
-      ex.getBody().setProperty("state", currentState);
-      ex.getBody().setProperty("blockState", currentState);
-      ex.getBody().setProperty("retryable", false);
-      throw ex;
-    }
+    rejectSystemOnlyEvent(currentState, normalizedEvent);
 
     Role role = resolveActorRole(jwt, reportingUnit.getClientNumber());
     IdentityProvider provider = JwtPrincipalUtil.getIdentityProvider(jwt);
-    TransitionContext context = buildBlockTransitionContext(blockId, block.getPlcDate());
+    TransitionContext context =
+        buildBlockTransitionContext(blockId, block.getPlcDate(), currentState);
 
     TransitionEvaluationResult result =
         transitionPolicyService.evaluate(
@@ -136,35 +129,16 @@ public class LifecycleEventService {
           blockId,
           reportingUnitId,
           result.reason());
-      if (result.denialReason() == TransitionEvaluationResult.DenialReason.FORBIDDEN_ROLE) {
-        ResponseStatusException ex =
-            new ResponseStatusException(HttpStatus.FORBIDDEN, result.reason());
-        ex.getBody().setProperty("code", "ROLE_NOT_ALLOWED");
-        ex.getBody().setProperty("state", currentState);
-        ex.getBody().setProperty("blockState", currentState);
-        ex.getBody().setProperty("retryable", false);
-        throw ex;
-      }
-      throw new IllegalTransitionException(
-          result.reason(), "ILLEGAL_TRANSITION", currentState, false);
+      throwTransitionDenied(result, currentState);
     }
 
-    if (transitionPolicyService.isCommentRequired(currentState, normalizedEvent)) {
-      if (request.comment() == null || request.comment().isBlank()) {
-        ResponseStatusException ex =
-            new ResponseStatusException(
-                HttpStatus.UNPROCESSABLE_CONTENT, "A comment is required for this event");
-        ex.getBody().setProperty("code", "COMMENT_REQUIRED");
-        ex.getBody().setProperty("state", currentState);
-        ex.getBody().setProperty("blockState", currentState);
-        ex.getBody().setProperty("retryable", false);
-        throw ex;
-      }
-    }
+    validateRequiredComment(currentState, normalizedEvent, request.comment());
 
     if (TransitionPolicyService.EVENT_SUBMIT.equals(normalizedEvent)) {
       validateBlockSubmissionReadiness(block, currentState);
     }
+
+    rejectUnimplementedExternalStep(result, currentState);
 
     final String targetState = result.targetState();
     updateBlockState(block, targetState);
@@ -180,7 +154,7 @@ public class LifecycleEventService {
     boolean hasComment = request.comment() != null && !request.comment().isBlank();
     var detailsNode = OBJECT_MAPPER.createObjectNode();
     detailsNode.put("previousState", currentState);
-    detailsNode.put("hasComment", hasComment);
+    detailsNode.put(DETAIL_HAS_COMMENT, hasComment);
     statusEvent.setDetails(detailsNode);
     statusEvent = statusEventRepository.save(statusEvent);
 
@@ -237,18 +211,7 @@ public class LifecycleEventService {
     ConditionalRequestSupport.requireMatch(servletRequest, reportingUnit.getRevision());
 
     String currentState = resolveReportingUnitState(reportingUnitId);
-
-    if (transitionPolicyService.isSystemOnly(currentState, normalizedEvent)) {
-      ResponseStatusException ex =
-          new ResponseStatusException(
-              HttpStatus.FORBIDDEN,
-              "Event '" + normalizedEvent + "' is system-only and cannot be triggered via HTTP");
-      ex.getBody().setProperty("code", "SYSTEM_ONLY_EVENT");
-      ex.getBody().setProperty("state", currentState);
-      ex.getBody().setProperty("blockState", currentState);
-      ex.getBody().setProperty("retryable", false);
-      throw ex;
-    }
+    rejectSystemOnlyEvent(currentState, normalizedEvent);
 
     Role role = resolveActorRole(jwt, reportingUnit.getClientNumber());
     IdentityProvider provider = JwtPrincipalUtil.getIdentityProvider(jwt);
@@ -258,35 +221,11 @@ public class LifecycleEventService {
             currentState, normalizedEvent, role, provider, TransitionContext.empty());
 
     if (!result.allowed()) {
-      log.warn(
-          "Transition denied for RU {}: {}",
-          reportingUnitId,
-          result.reason());
-      if (result.denialReason() == TransitionEvaluationResult.DenialReason.FORBIDDEN_ROLE) {
-        ResponseStatusException ex =
-            new ResponseStatusException(HttpStatus.FORBIDDEN, result.reason());
-        ex.getBody().setProperty("code", "ROLE_NOT_ALLOWED");
-        ex.getBody().setProperty("state", currentState);
-        ex.getBody().setProperty("blockState", currentState);
-        ex.getBody().setProperty("retryable", false);
-        throw ex;
-      }
-      throw new IllegalTransitionException(
-          result.reason(), "ILLEGAL_TRANSITION", currentState, false);
+      log.warn("Transition denied for RU {}: {}", reportingUnitId, result.reason());
+      throwTransitionDenied(result, currentState);
     }
 
-    if (transitionPolicyService.isCommentRequired(currentState, normalizedEvent)) {
-      if (request.comment() == null || request.comment().isBlank()) {
-        ResponseStatusException ex =
-            new ResponseStatusException(
-                HttpStatus.UNPROCESSABLE_CONTENT, "A comment is required for this event");
-        ex.getBody().setProperty("code", "COMMENT_REQUIRED");
-        ex.getBody().setProperty("state", currentState);
-        ex.getBody().setProperty("blockState", currentState);
-        ex.getBody().setProperty("retryable", false);
-        throw ex;
-      }
-    }
+    validateRequiredComment(currentState, normalizedEvent, request.comment());
 
     final String targetState = result.targetState();
     reportingUnit.setUpdatedAt(Instant.now());
@@ -301,7 +240,7 @@ public class LifecycleEventService {
     boolean hasComment = request.comment() != null && !request.comment().isBlank();
     var detailsNode = OBJECT_MAPPER.createObjectNode();
     detailsNode.put("previousState", currentState);
-    detailsNode.put("hasComment", hasComment);
+    detailsNode.put(DETAIL_HAS_COMMENT, hasComment);
     statusEvent.setDetails(detailsNode);
     statusEvent = statusEventRepository.save(statusEvent);
     entityManager.flush();
@@ -317,6 +256,69 @@ public class LifecycleEventService {
         normalizedEvent,
         reportingUnit.getRevision(),
         occurredAt);
+  }
+
+  private void rejectSystemOnlyEvent(String currentState, String normalizedEvent) {
+    if (transitionPolicyService.isSystemOnly(currentState, normalizedEvent)) {
+      throw lifecycleStatusException(
+          HttpStatus.FORBIDDEN,
+          "Event '" + normalizedEvent + "' is system-only and cannot be triggered via HTTP",
+          "SYSTEM_ONLY_EVENT",
+          currentState);
+    }
+  }
+
+  private void throwTransitionDenied(TransitionEvaluationResult result, String currentState) {
+    if (result.denialReason() == TransitionEvaluationResult.DenialReason.ROLE_NOT_ALLOWED) {
+      throw lifecycleStatusException(
+          HttpStatus.FORBIDDEN, result.reason(), "ROLE_NOT_ALLOWED", currentState);
+    }
+    if (result.denialReason() == TransitionEvaluationResult.DenialReason.COMMENT_REQUIRED) {
+      throw lifecycleStatusException(
+          HttpStatus.UNPROCESSABLE_CONTENT, result.reason(), CODE_COMMENT_REQUIRED, currentState);
+    }
+    if (result.denialReason() == TransitionEvaluationResult.DenialReason.PRECONDITION_FAILED) {
+      throw lifecycleStatusException(
+          HttpStatus.UNPROCESSABLE_CONTENT,
+          result.reason(),
+          CODE_PRECONDITION_FAILED,
+          currentState);
+    }
+    throw new IllegalTransitionException(
+        result.reason(), "ILLEGAL_TRANSITION", currentState, false);
+  }
+
+  private void validateRequiredComment(
+      String currentState, String normalizedEvent, String comment) {
+    if (transitionPolicyService.isCommentRequired(currentState, normalizedEvent)
+        && (comment == null || comment.isBlank())) {
+      throw lifecycleStatusException(
+          HttpStatus.UNPROCESSABLE_CONTENT,
+          "A comment is required for this event",
+          CODE_COMMENT_REQUIRED,
+          currentState);
+    }
+  }
+
+  private void rejectUnimplementedExternalStep(
+      TransitionEvaluationResult result, String currentState) {
+    if (result.externalStep() != null && !result.externalStep().isBlank()) {
+      throw lifecycleStatusException(
+          HttpStatus.NOT_IMPLEMENTED,
+          "External step '" + result.externalStep() + "' is not yet integrated (#1552).",
+          "EXTERNAL_STEP_NOT_IMPLEMENTED",
+          currentState);
+    }
+  }
+
+  private ResponseStatusException lifecycleStatusException(
+      HttpStatus status, String message, String code, String currentState) {
+    ResponseStatusException ex = new ResponseStatusException(status, message);
+    ex.getBody().setProperty("code", code);
+    ex.getBody().setProperty("state", currentState);
+    ex.getBody().setProperty("blockState", currentState);
+    ex.getBody().setProperty("retryable", false);
+    return ex;
   }
 
   private String validateAndNormalizeEvent(LifecycleEventRequestDto request) {
@@ -399,7 +401,8 @@ public class LifecycleEventService {
         .orElse(TransitionPolicyService.STATE_SUBMISSION);
   }
 
-  private TransitionContext buildBlockTransitionContext(Long blockId, LocalDate plcDate) {
+  private TransitionContext buildBlockTransitionContext(
+      Long blockId, LocalDate plcDate, String currentState) {
     List<BlockRequirementEntity> requirements =
         blockRequirementRepository.findByBlockIdAndDeletedFalse(blockId);
     boolean rationaleRequired =
@@ -415,10 +418,88 @@ public class LifecycleEventService {
                     REQ_BURNT_PILES.equalsIgnoreCase(r.getRequirementCode())
                         && Boolean.TRUE.equals(r.getAnsweredYes()));
 
-    LocalDate submissionDate = resolveSubmissionDate(blockId);
+    LocalDate submissionDate =
+        isPreSubmissionState(currentState)
+            ? LocalDate.now(ZoneOffset.UTC)
+            : resolveSubmissionDate(blockId);
+    LocalDate approvedDate = resolveApprovedDate(blockId);
 
     return new TransitionContext(
-        plcDate, submissionDate, rationaleRequired, burntPiles);
+        plcDate, submissionDate, approvedDate, rationaleRequired, burntPiles);
+  }
+
+  /**
+   * Executes a scheduled {@code SYSTEM} lifecycle event for a block, using the same policy
+   * evaluation and state-persistence path as HTTP transitions.
+   *
+   * @param blockId target block identifier
+   * @param event system event code (e.g. {@code AUTO_APPROVE}, {@code AUTO_APPROVE_BILLING})
+   * @return response DTO if the transition was applied, or {@code null} if preconditions were not
+   *     met or an external step (#1552) is deferred
+   */
+  @NewSpan
+  @Transactional
+  public LifecycleEventResponseDto recordSystemBlockLifecycleEvent(Long blockId, String event) {
+    BlockEntity block = blockRepository.findById(blockId).orElse(null);
+    if (block == null || block.isDeleted()) {
+      return null;
+    }
+
+    String normalizedEvent = event.trim().toUpperCase(Locale.ROOT);
+    String currentState = resolveBlockState(blockId, block.isDraft());
+    TransitionContext context =
+        buildBlockTransitionContext(blockId, block.getPlcDate(), currentState);
+
+    TransitionEvaluationResult result =
+        transitionPolicyService.evaluateAsSystem(currentState, normalizedEvent, context);
+    if (!result.allowed()) {
+      return null;
+    }
+
+    if (result.externalStep() != null && !result.externalStep().isBlank()) {
+      // HBS invoice post integration is owned by #1552; leave block in SUBMISSION_APPROVED until
+      // HbsBillingService is wired.
+      log.debug(
+          "Skipping system transition {} for block {}: external step '{}' awaits #1552.",
+          normalizedEvent,
+          blockId,
+          result.externalStep());
+      return null;
+    }
+
+    final String targetState = result.targetState();
+    updateBlockState(block, targetState);
+    block.setUpdatedAt(Instant.now());
+    block.setUpdatedBy(SYSTEM_ACTOR);
+    block = blockRepository.saveAndFlush(block);
+
+    StatusEventEntity statusEvent = new StatusEventEntity();
+    statusEvent.setBlockId(block.getId());
+    statusEvent.setReportingUnitId(null);
+    statusEvent.setStatus(targetState);
+    statusEvent.setEventType(normalizedEvent);
+    statusEvent.setCreatedBy(SYSTEM_ACTOR);
+    statusEvent.setUpdatedBy(SYSTEM_ACTOR);
+
+    var detailsNode = OBJECT_MAPPER.createObjectNode();
+    detailsNode.put("previousState", currentState);
+    detailsNode.put(DETAIL_HAS_COMMENT, false);
+    detailsNode.put("actor", SYSTEM_ACTOR);
+    statusEvent.setDetails(detailsNode);
+    statusEvent = statusEventRepository.save(statusEvent);
+    entityManager.flush();
+
+    Instant occurredAt =
+        statusEvent.getCreatedAt() != null ? statusEvent.getCreatedAt() : Instant.now();
+
+    return new LifecycleEventResponseDto(
+        block.getReportingUnitId(),
+        block.getId(),
+        currentState,
+        targetState,
+        normalizedEvent,
+        block.getRevision(),
+        occurredAt);
   }
 
   private void validateBlockSubmissionReadiness(BlockEntity block, String currentState) {
@@ -427,7 +508,7 @@ public class LifecycleEventService {
           new ResponseStatusException(
               HttpStatus.UNPROCESSABLE_CONTENT,
               "Cannot submit block: planned completion date (plcDate) is required.");
-      ex.getBody().setProperty("code", "PRECONDITION_FAILED");
+      ex.getBody().setProperty("code", CODE_PRECONDITION_FAILED);
       ex.getBody().setProperty("state", currentState);
       ex.getBody().setProperty("blockState", currentState);
       ex.getBody().setProperty("retryable", false);
@@ -445,7 +526,7 @@ public class LifecycleEventService {
           new ResponseStatusException(
               HttpStatus.UNPROCESSABLE_CONTENT,
               "Cannot submit block: all attachments must be finalized and clean of malware.");
-      ex.getBody().setProperty("code", "PRECONDITION_FAILED");
+      ex.getBody().setProperty("code", CODE_PRECONDITION_FAILED);
       ex.getBody().setProperty("state", currentState);
       ex.getBody().setProperty("blockState", currentState);
       ex.getBody().setProperty("retryable", false);
@@ -483,7 +564,8 @@ public class LifecycleEventService {
     String currentState = resolveBlockState(blockId, block.isDraft());
     Role role = resolveActorRole(jwt, reportingUnit.getClientNumber());
     IdentityProvider provider = JwtPrincipalUtil.getIdentityProvider(jwt);
-    TransitionContext context = buildBlockTransitionContext(blockId, block.getPlcDate());
+    TransitionContext context =
+        buildBlockTransitionContext(blockId, block.getPlcDate(), currentState);
 
     List<AvailableLifecycleEventDto> availableEvents =
         transitionPolicyService.availableEvents(currentState, role, provider, context);
@@ -567,13 +649,27 @@ public class LifecycleEventService {
     return Collections.unmodifiableList(history);
   }
 
+  private boolean isPreSubmissionState(String state) {
+    return TransitionPolicyService.STATE_DRAFT.equalsIgnoreCase(state)
+        || TransitionPolicyService.STATE_REJECTED.equalsIgnoreCase(state);
+  }
+
   private LocalDate resolveSubmissionDate(Long blockId) {
     return statusEventRepository
         .findFirstByBlockIdAndEventTypeOrderByCreatedAtDesc(
             blockId, TransitionPolicyService.EVENT_SUBMIT)
         .map(StatusEventEntity::getCreatedAt)
         .map(instant -> LocalDate.ofInstant(instant, ZoneOffset.UTC))
-        .orElse(LocalDate.now(ZoneOffset.UTC));
+        .orElse(null);
+  }
+
+  private LocalDate resolveApprovedDate(Long blockId) {
+    return statusEventRepository
+        .findFirstByBlockIdAndStatusOrderByCreatedAtDesc(
+            blockId, TransitionPolicyService.STATE_SUBMISSION_APPROVED)
+        .map(StatusEventEntity::getCreatedAt)
+        .map(instant -> LocalDate.ofInstant(instant, ZoneOffset.UTC))
+        .orElse(null);
   }
 
   private void updateBlockState(BlockEntity block, String targetState) {
@@ -599,6 +695,9 @@ public class LifecycleEventService {
     } else if (TransitionPolicyService.STATE_CANCELLED.equalsIgnoreCase(targetState)) {
       block.setDraft(false);
       block.setStatusCode("CAN");
+    } else if (TransitionPolicyService.STATE_ERROR.equalsIgnoreCase(targetState)) {
+      block.setDraft(false);
+      block.setStatusCode("ERR");
     }
   }
 }

@@ -86,4 +86,15 @@ class AttachmentCleanupJobTest {
         .isAfterOrEqualTo(before.minusSeconds(1))
         .isBeforeOrEqualTo(after.plusSeconds(1));
   }
+
+  @Test
+  @DisplayName("cleanSoftDeletedAttachments loops across full batches and sums total")
+  void cleanSoftDeletedAttachments_loopsAcrossFullBatches() {
+    given(purgeService.purgeSoftDeletedBatch(100)).willReturn(100).willReturn(7);
+
+    int purged = cleanupJob.cleanSoftDeletedAttachments();
+
+    assertThat(purged).isEqualTo(107);
+    verify(purgeService, times(2)).purgeSoftDeletedBatch(100);
+  }
 }

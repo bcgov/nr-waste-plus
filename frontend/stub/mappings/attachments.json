@@ -81,6 +81,47 @@
           "checksum": "d41d8cd98f00b204e9800998ecf8427e"
         }
       }
+    },
+    {
+      "name": "Block attachment list - success",
+      "request": {
+        "urlPathPattern": "/api/reporting-units/[0-9]+/[0-9]+/attachments",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "Content-Type": "application/json",
+          "ETag": "\"1\""
+        },
+        "jsonBody": {
+          "attachments": [
+            {
+              "attachmentId": 501,
+              "documentType": "FINAL_MAP",
+              "fileName": "final-map.pdf",
+              "contentType": "application/pdf",
+              "fileSizeBytes": 482331,
+              "status": "FINALIZED",
+              "scanStatus": "CLEAN",
+              "valid": true,
+              "linkedRequirementCode": null,
+              "uploadedBy": "idir\\jdoe",
+              "uploadedAt": "2026-08-24T12:00:00Z"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Block attachment delete - success",
+      "request": {
+        "urlPathPattern": "/api/reporting-units/[0-9]+/[0-9]+/attachments/[0-9]+",
+        "method": "DELETE"
+      },
+      "response": {
+        "status": 204
+      }
     }
   ]
 }
