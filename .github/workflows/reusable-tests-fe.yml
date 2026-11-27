@@ -32,7 +32,7 @@ jobs:
     steps:
       - name: Detect changed files for frontend triggers
         id: diff
-        uses: bcgov/actions/diff-triggers@acc058abf85bb183dad21b839a92a40a4ff47af3 # v0.14.0
+        uses: bcgov/actions/diff-triggers@0ed2b82c50ba113304b3b879e1dc7b9ea087d0fe # v0.15.0
         with:
           triggers: |
             frontend/
@@ -52,7 +52,7 @@ jobs:
         run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
 
       - name: Run frontend unit tests without sonar
-        uses: bcgov/actions/test-and-analyse@acc058abf85bb183dad21b839a92a40a4ff47af3 # v0.14.0
+        uses: bcgov/actions/test-and-analyse@0ed2b82c50ba113304b3b879e1dc7b9ea087d0fe # v0.15.0
         env:
           VITE_MOCK_AUTH: true
           VITE_COVERAGE: true
@@ -104,7 +104,7 @@ jobs:
         run: git config --global --add safe.directory /__w/nr-waste-plus/nr-waste-plus
 
       - name: Run e2e tests without sonar
-        uses: bcgov/actions/test-and-analyse@acc058abf85bb183dad21b839a92a40a4ff47af3 # v0.14.0
+        uses: bcgov/actions/test-and-analyse@0ed2b82c50ba113304b3b879e1dc7b9ea087d0fe # v0.15.0
         env:
           VITE_MOCK_AUTH: true
           VITE_COVERAGE: true

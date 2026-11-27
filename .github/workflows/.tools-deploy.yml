@@ -17,7 +17,7 @@ jobs:
     steps:
       - name: Remove completed jobs for this PR
         continue-on-error: true
-        uses: bcgov/actions-openshift/oc-runner@47805d2fc4e919382757c1fbeb68d39313abe64f # v0.11.0
+        uses: bcgov/actions-openshift/oc-runner@b2757e12d08b7d3bf2c5df7cd58b4cdaf6b3ea71 # v0.11.1
         with:
           oc_namespace: cffaf3-tools
           oc_server: ${{ secrets.oc_server }}
@@ -53,7 +53,7 @@ jobs:
           : "${MINIO_ROOT_PASSWORD:?MINIO_ROOT_PASSWORD repository secret is required}"
 
       - name: Remove the existing MinIO presign CronJob
-        uses: bcgov/actions-openshift/oc-runner@47805d2fc4e919382757c1fbeb68d39313abe64f # v0.11.0
+        uses: bcgov/actions-openshift/oc-runner@b2757e12d08b7d3bf2c5df7cd58b4cdaf6b3ea71 # v0.11.1
         with:
           oc_namespace: cffaf3-tools
           oc_server: ${{ secrets.oc_server }}
@@ -66,7 +66,7 @@ jobs:
             oc delete cronjob/nr-waste-plus-tools-minio-presign --ignore-not-found
 
       - name: Initializing MinIO Deployment
-        uses: bcgov/actions-openshift/deployer@47805d2fc4e919382757c1fbeb68d39313abe64f # v0.11.0
+        uses: bcgov/actions-openshift/deployer@b2757e12d08b7d3bf2c5df7cd58b4cdaf6b3ea71 # v0.11.1
         env:
           MINIO_ROOT_USER: ${{ secrets.MINIO_ROOT_USER }}
           MINIO_ROOT_PASSWORD: ${{ secrets.MINIO_ROOT_PASSWORD }}
@@ -130,7 +130,7 @@ jobs:
           : "${POSTGRES_PASSWORD:?POSTGRES_PASSWORD repository secret is required}"
 
       - name: Initializing PostgreSQL CronJobs
-        uses: bcgov/actions-openshift/deployer@47805d2fc4e919382757c1fbeb68d39313abe64f # v0.11.0
+        uses: bcgov/actions-openshift/deployer@b2757e12d08b7d3bf2c5df7cd58b4cdaf6b3ea71 # v0.11.1
         env:
           POSTGRES_HOST: ${{ secrets.POSTGRES_HOST }}
           POSTGRES_PORT: ${{ secrets.POSTGRES_PORT }}
@@ -158,7 +158,7 @@ jobs:
             -p POSTGRES_PASSWORD="$POSTGRES_PASSWORD"
 
       - name: Stop backend, reset/migrate PR PostgreSQL, and start backend
-        uses: bcgov/actions-openshift/oc-runner@47805d2fc4e919382757c1fbeb68d39313abe64f # v0.11.0
+        uses: bcgov/actions-openshift/oc-runner@b2757e12d08b7d3bf2c5df7cd58b4cdaf6b3ea71 # v0.11.1
         env:
           APP_NAMESPACE: ${{ secrets.OC_NAMESPACE }}
           APP_DEPLOYMENT: nr-waste-plus-${{ github.event.number }}-backend
@@ -188,7 +188,7 @@ jobs:
       # other change under legacydb/ (such as its deployment template) reuses
       # the :latest image, retagged for this PR. The Dockerfile copies only
       # removeDatabase, so those two files are the whole image input.
-      - uses: bcgov/actions/builder@acc058abf85bb183dad21b839a92a40a4ff47af3 # v0.14.0
+      - uses: bcgov/actions/builder@0ed2b82c50ba113304b3b879e1dc7b9ea087d0fe # v0.15.0
         name: Build (legacydb)
         with:
           package: legacydb
@@ -198,7 +198,7 @@ jobs:
             legacydb/removeDatabase
 
       - name: Initializing Deployment
-        uses: bcgov/actions-openshift/deployer@47805d2fc4e919382757c1fbeb68d39313abe64f # v0.11.0
+        uses: bcgov/actions-openshift/deployer@b2757e12d08b7d3bf2c5df7cd58b4cdaf6b3ea71 # v0.11.1
         with:
           file: tools/oracle.deploy.yml
           oc_namespace: cffaf3-tools
@@ -211,7 +211,7 @@ jobs:
             -p TAG=${{ github.event.number }}
 
       - name: Stop legacy, reset/migrate PR Oracle, and start legacy
-        uses: bcgov/actions-openshift/oc-runner@47805d2fc4e919382757c1fbeb68d39313abe64f # v0.11.0
+        uses: bcgov/actions-openshift/oc-runner@b2757e12d08b7d3bf2c5df7cd58b4cdaf6b3ea71 # v0.11.1
         env:
           APP_NAMESPACE: ${{ secrets.OC_NAMESPACE }}
           APP_DEPLOYMENT: nr-waste-plus-${{ github.event.number }}-legacy
@@ -238,6 +238,6 @@ jobs:
     runs-on: ubuntu-26.04
     timeout-minutes: 1
     steps:
-      - uses: bcgov/actions/workflow-results@acc058abf85bb183dad21b839a92a40a4ff47af3 # v0.14.0
+      - uses: bcgov/actions/workflow-results@0ed2b82c50ba113304b3b879e1dc7b9ea087d0fe # v0.15.0
         with:
           needs: ${{ toJson(needs) }}
