@@ -9,6 +9,8 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
 import ca.bc.gov.nrs.hrs.configuration.ObjectStorageProperties;
+import ca.bc.gov.nrs.hrs.dto.base.IdentityProvider;
+import ca.bc.gov.nrs.hrs.dto.base.Role;
 import ca.bc.gov.nrs.hrs.dto.block.AttachmentDocumentType;
 import ca.bc.gov.nrs.hrs.dto.block.AttachmentDownloadResponse;
 import ca.bc.gov.nrs.hrs.dto.block.AttachmentFinalizeResponse;
@@ -16,13 +18,17 @@ import ca.bc.gov.nrs.hrs.dto.block.AttachmentIntentRequest;
 import ca.bc.gov.nrs.hrs.dto.block.AttachmentIntentResponse;
 import ca.bc.gov.nrs.hrs.dto.block.AttachmentScanStatus;
 import ca.bc.gov.nrs.hrs.dto.block.AttachmentStatus;
+import ca.bc.gov.nrs.hrs.dto.block.BlockAttachmentListResponse;
 import ca.bc.gov.nrs.hrs.entity.block.BlockAttachmentEntity;
 import ca.bc.gov.nrs.hrs.entity.block.BlockEntity;
+import ca.bc.gov.nrs.hrs.entity.block.BlockRequirementEntity;
 import ca.bc.gov.nrs.hrs.entity.block.ReportingUnitEntity;
+import ca.bc.gov.nrs.hrs.entity.block.StatusEventEntity;
 import ca.bc.gov.nrs.hrs.exception.AttachmentConflictException;
 import ca.bc.gov.nrs.hrs.exception.AttachmentNotFoundException;
 import ca.bc.gov.nrs.hrs.exception.AttachmentSizeExceededException;
 import ca.bc.gov.nrs.hrs.exception.BlockNotFoundException;
+import ca.bc.gov.nrs.hrs.exception.ConditionalRequestException;
 import ca.bc.gov.nrs.hrs.exception.InvalidDocumentTypeException;
 import ca.bc.gov.nrs.hrs.exception.InvalidFileNameException;
 import ca.bc.gov.nrs.hrs.exception.ReportingUnitNotFoundException;
@@ -35,7 +41,11 @@ import ca.bc.gov.nrs.hrs.provider.objectstorage.PresignedUpload;
 import ca.bc.gov.nrs.hrs.provider.objectstorage.StoredObjectSummary;
 import ca.bc.gov.nrs.hrs.repository.block.BlockAttachmentRepository;
 import ca.bc.gov.nrs.hrs.repository.block.BlockRepository;
+import ca.bc.gov.nrs.hrs.repository.block.BlockRequirementRepository;
 import ca.bc.gov.nrs.hrs.repository.block.ReportingUnitRepository;
+import ca.bc.gov.nrs.hrs.repository.block.StatusEventRepository;
+import ca.bc.gov.nrs.hrs.service.lifecycle.TransitionEvaluationResult;
+import ca.bc.gov.nrs.hrs.service.lifecycle.TransitionPolicyService;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
@@ -48,7 +58,9 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -78,6 +90,15 @@ class AttachmentServiceTest {
 
   @Mock
   private AttachmentScanService scanService;
+
+  @Mock
+  private StatusEventRepository statusEventRepository;
+
+  @Mock
+  private BlockRequirementRepository blockRequirementRepository;
+
+  @Mock
+  private TransitionPolicyService transitionPolicyService;
 
   @InjectMocks
   private AttachmentService service;
@@ -889,5 +910,312 @@ class AttachmentServiceTest {
 
     assertThat(response.attachmentId()).isEqualTo(ATTACHMENT_ID);
     assertThat(response.fileSizeBytes()).isNull();
+  }
+
+  private BlockEntity draftBlock(long revision) {
+    BlockEntity b = new BlockEntity();
+    b.setId(BLOCK_ID);
+    b.setReportingUnitId(RU_ID);
+    b.setDraft(true);
+    b.setRevision(revision);
+    return b;
+  }
+
+  private Jwt submitterJwt() {
+    return WithMockJwtSecurityContextFactory.createJwt(
+        "bceid-user",
+        List.of("WASTE_PLUS_SUBMITTER_00012797"),
+        "bceidbusiness",
+        "BCeID User",
+        "bceid@example.com");
+  }
+
+  private Jwt areaJwt() {
+    return WithMockJwtSecurityContextFactory.createJwt(
+        "idir-area",
+        List.of("WASTE_PLUS_AREA"),
+        "idir",
+        "Area User",
+        "area@example.com");
+  }
+
+  private Jwt viewerJwt() {
+    return WithMockJwtSecurityContextFactory.createJwt(
+        "bceid-viewer",
+        List.of("WASTE_PLUS_VIEWER_00012797"),
+        "bceidbusiness",
+        "Viewer User",
+        "viewer@example.com");
+  }
+
+  private MockHttpServletRequest requestWithIfMatch(long revision) {
+    MockHttpServletRequest req = new MockHttpServletRequest();
+    req.addHeader(HttpHeaders.IF_MATCH, "\"" + revision + "\"");
+    return req;
+  }
+
+  @Test
+  @DisplayName("list returns finalized clean, pending, and quarantined attachments with valid flag")
+  void list_returnsAttachmentsWithServerComputedValidFlag() {
+    BlockAttachmentEntity clean = persistedAttachment();
+    clean.setId(501L);
+    clean.setStatus(AttachmentStatus.FINALIZED.name());
+    clean.setScanStatus(AttachmentScanStatus.CLEAN.name());
+    clean.setCreatedBy("idir\\jdoe");
+    clean.setCreatedAt(Instant.parse("2026-08-24T12:00:00Z"));
+
+    BlockAttachmentEntity pending = persistedAttachment();
+    pending.setId(502L);
+    pending.setStatus(AttachmentStatus.FINALIZED.name());
+    pending.setScanStatus(AttachmentScanStatus.PENDING.name());
+    pending.setCreatedBy("idir\\jdoe");
+    pending.setCreatedAt(Instant.parse("2026-08-24T12:01:00Z"));
+
+    BlockAttachmentEntity quarantined = persistedAttachment();
+    quarantined.setId(503L);
+    quarantined.setStatus(AttachmentStatus.FINALIZED.name());
+    quarantined.setScanStatus(AttachmentScanStatus.QUARANTINED.name());
+    quarantined.setCreatedBy("idir\\jdoe");
+    quarantined.setCreatedAt(Instant.parse("2026-08-24T12:02:00Z"));
+
+    given(blockRepository.findByIdAndReportingUnitIdAndDeletedFalse(BLOCK_ID, RU_ID))
+        .willReturn(Optional.of(draftBlock(1L)));
+    given(
+            attachmentRepository.findByBlockIdAndStatusNotAndDeletedFalseOrderByCreatedAtAsc(
+                BLOCK_ID, AttachmentStatus.UPLOADING.name()))
+        .willReturn(List.of(clean, pending, quarantined));
+    given(blockRequirementRepository.findByBlockIdAndDeletedFalse(BLOCK_ID))
+        .willReturn(List.of());
+
+    BlockAttachmentListResponse response = service.list(null, RU_ID, BLOCK_ID);
+
+    assertThat(response.attachments()).hasSize(3);
+    assertThat(response.attachments().get(0).attachmentId()).isEqualTo(501L);
+    assertThat(response.attachments().get(0).valid()).isTrue();
+    assertThat(response.attachments().get(0).linkedRequirementCode()).isNull();
+    assertThat(response.attachments().get(1).scanStatus())
+        .isEqualTo(AttachmentScanStatus.PENDING.name());
+    assertThat(response.attachments().get(1).valid()).isFalse();
+    assertThat(response.attachments().get(2).scanStatus())
+        .isEqualTo(AttachmentScanStatus.QUARANTINED.name());
+    assertThat(response.attachments().get(2).valid()).isFalse();
+  }
+
+  @Test
+  @DisplayName("list throws not found when BCeID caller accesses block of another client")
+  void list_whenOtherClient_throwsNotFound() {
+    Jwt otherClientJwt =
+        WithMockJwtSecurityContextFactory.createJwt(
+            "bceid-other",
+            List.of("WASTE_PLUS_SUBMITTER_99999999"),
+            "bceidbusiness",
+            "Other User",
+            "other@example.com");
+
+    assertThatThrownBy(() -> service.list(otherClientJwt, RU_ID, BLOCK_ID))
+        .isInstanceOf(ReportingUnitNotFoundException.class);
+  }
+
+  @Test
+  @DisplayName("delete soft-deletes attachment in DRAFT block for submitter without calling storage")
+  void delete_whenDraftAndSubmitter_softDeletesWithoutObjectStorageCall() {
+    BlockAttachmentEntity attachment = persistedAttachment();
+    attachment.setStatus(AttachmentStatus.FINALIZED.name());
+
+    given(blockRepository.findByIdAndReportingUnitIdAndDeletedFalse(BLOCK_ID, RU_ID))
+        .willReturn(Optional.of(draftBlock(3L)));
+    given(statusEventRepository.findFirstByBlockIdOrderByCreatedAtDescIdDesc(BLOCK_ID))
+        .willReturn(Optional.empty());
+    given(
+            transitionPolicyService.canEdit(
+                TransitionPolicyService.STATE_DRAFT,
+                Role.SUBMITTER,
+                IdentityProvider.BUSINESS_BCEID))
+        .willReturn(TransitionEvaluationResult.editAllowed());
+    given(attachmentRepository.findByIdAndDeletedFalse(ATTACHMENT_ID))
+        .willReturn(Optional.of(attachment));
+    given(
+            blockRequirementRepository.findByBlockIdAndLinkedAttachmentIdAndDeletedFalse(
+                BLOCK_ID, ATTACHMENT_ID))
+        .willReturn(List.of());
+
+    service.delete(requestWithIfMatch(3L), submitterJwt(), RU_ID, BLOCK_ID, ATTACHMENT_ID);
+
+    assertThat(attachment.isDeleted()).isTrue();
+    verify(attachmentRepository).save(attachment);
+    verify(objectStorage, never()).deleteObject(any());
+  }
+
+  @Test
+  @DisplayName("delete throws 409 EDIT_NOT_ALLOWED when block is SUBMITTED and caller is submitter")
+  void delete_whenSubmittedAndSubmitter_throwsConflict() {
+    StatusEventEntity submittedEvent = new StatusEventEntity();
+    submittedEvent.setStatus(TransitionPolicyService.STATE_SUBMITTED);
+
+    given(blockRepository.findByIdAndReportingUnitIdAndDeletedFalse(BLOCK_ID, RU_ID))
+        .willReturn(Optional.of(draftBlock(3L)));
+    given(statusEventRepository.findFirstByBlockIdOrderByCreatedAtDescIdDesc(BLOCK_ID))
+        .willReturn(Optional.of(submittedEvent));
+    given(
+            transitionPolicyService.canEdit(
+                TransitionPolicyService.STATE_SUBMITTED,
+                Role.SUBMITTER,
+                IdentityProvider.BUSINESS_BCEID))
+        .willReturn(TransitionEvaluationResult.stateNotEditable("Role cannot edit in SUBMITTED"));
+
+    assertThatThrownBy(
+            () ->
+                service.delete(
+                    requestWithIfMatch(3L), submitterJwt(), RU_ID, BLOCK_ID, ATTACHMENT_ID))
+        .isInstanceOf(ResponseStatusException.class)
+        .satisfies(
+            ex -> {
+              ResponseStatusException rse = (ResponseStatusException) ex;
+              assertThat(rse.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+              assertThat(rse.getReason())
+                  .isEqualTo("Attachments cannot be removed while the block is in this state");
+              assertThat(rse.getBody().getProperties()).containsEntry("code", "EDIT_NOT_ALLOWED");
+            });
+
+    verify(attachmentRepository, never()).save(any());
+  }
+
+  @Test
+  @DisplayName("delete succeeds when block is SUBMITTED and caller is Area staff")
+  void delete_whenSubmittedAndArea_softDeletes() {
+    StatusEventEntity submittedEvent = new StatusEventEntity();
+    submittedEvent.setStatus(TransitionPolicyService.STATE_SUBMITTED);
+    BlockAttachmentEntity attachment = persistedAttachment();
+
+    given(blockRepository.findByIdAndReportingUnitIdAndDeletedFalse(BLOCK_ID, RU_ID))
+        .willReturn(Optional.of(draftBlock(4L)));
+    given(statusEventRepository.findFirstByBlockIdOrderByCreatedAtDescIdDesc(BLOCK_ID))
+        .willReturn(Optional.of(submittedEvent));
+    given(
+            transitionPolicyService.canEdit(
+                TransitionPolicyService.STATE_SUBMITTED, Role.AREA, IdentityProvider.IDIR))
+        .willReturn(TransitionEvaluationResult.editAllowed());
+    given(attachmentRepository.findByIdAndDeletedFalse(ATTACHMENT_ID))
+        .willReturn(Optional.of(attachment));
+    given(
+            blockRequirementRepository.findByBlockIdAndLinkedAttachmentIdAndDeletedFalse(
+                BLOCK_ID, ATTACHMENT_ID))
+        .willReturn(List.of());
+
+    service.delete(requestWithIfMatch(4L), areaJwt(), RU_ID, BLOCK_ID, ATTACHMENT_ID);
+
+    assertThat(attachment.isDeleted()).isTrue();
+    verify(attachmentRepository).save(attachment);
+  }
+
+  @Test
+  @DisplayName("delete throws 404 when attachment belongs to another block")
+  void delete_whenOtherBlock_throwsNotFound() {
+    BlockAttachmentEntity attachment = persistedAttachment();
+    attachment.setBlockId(999L);
+
+    given(blockRepository.findByIdAndReportingUnitIdAndDeletedFalse(BLOCK_ID, RU_ID))
+        .willReturn(Optional.of(draftBlock(3L)));
+    given(statusEventRepository.findFirstByBlockIdOrderByCreatedAtDescIdDesc(BLOCK_ID))
+        .willReturn(Optional.empty());
+    given(
+            transitionPolicyService.canEdit(
+                TransitionPolicyService.STATE_DRAFT,
+                Role.SUBMITTER,
+                IdentityProvider.BUSINESS_BCEID))
+        .willReturn(TransitionEvaluationResult.editAllowed());
+    given(attachmentRepository.findByIdAndDeletedFalse(ATTACHMENT_ID))
+        .willReturn(Optional.of(attachment));
+
+    assertThatThrownBy(
+            () ->
+                service.delete(
+                    requestWithIfMatch(3L), submitterJwt(), RU_ID, BLOCK_ID, ATTACHMENT_ID))
+        .isInstanceOf(AttachmentNotFoundException.class);
+  }
+
+  @Test
+  @DisplayName("delete throws 412 when If-Match header is stale")
+  void delete_whenStaleIfMatch_throwsPreconditionFailed() {
+    given(blockRepository.findByIdAndReportingUnitIdAndDeletedFalse(BLOCK_ID, RU_ID))
+        .willReturn(Optional.of(draftBlock(5L)));
+    given(statusEventRepository.findFirstByBlockIdOrderByCreatedAtDescIdDesc(BLOCK_ID))
+        .willReturn(Optional.empty());
+    given(
+            transitionPolicyService.canEdit(
+                TransitionPolicyService.STATE_DRAFT,
+                Role.SUBMITTER,
+                IdentityProvider.BUSINESS_BCEID))
+        .willReturn(TransitionEvaluationResult.editAllowed());
+
+    assertThatThrownBy(
+            () ->
+                service.delete(
+                    requestWithIfMatch(3L), submitterJwt(), RU_ID, BLOCK_ID, ATTACHMENT_ID))
+        .isInstanceOf(ConditionalRequestException.class);
+  }
+
+  @Test
+  @DisplayName("delete throws 403 EDIT_NOT_ALLOWED when caller has viewer role")
+  void delete_whenViewerRole_throwsForbidden() {
+    given(blockRepository.findByIdAndReportingUnitIdAndDeletedFalse(BLOCK_ID, RU_ID))
+        .willReturn(Optional.of(draftBlock(3L)));
+    given(statusEventRepository.findFirstByBlockIdOrderByCreatedAtDescIdDesc(BLOCK_ID))
+        .willReturn(Optional.empty());
+    given(
+            transitionPolicyService.canEdit(
+                TransitionPolicyService.STATE_DRAFT,
+                Role.VIEWER,
+                IdentityProvider.BUSINESS_BCEID))
+        .willReturn(TransitionEvaluationResult.forbidden("Viewer role is read-only"));
+
+    assertThatThrownBy(
+            () ->
+                service.delete(
+                    requestWithIfMatch(3L), viewerJwt(), RU_ID, BLOCK_ID, ATTACHMENT_ID))
+        .isInstanceOf(ResponseStatusException.class)
+        .satisfies(
+            ex -> {
+              ResponseStatusException rse = (ResponseStatusException) ex;
+              assertThat(rse.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+              assertThat(rse.getBody().getProperties()).containsEntry("code", "EDIT_NOT_ALLOWED");
+            });
+
+    verify(attachmentRepository, never()).save(any());
+  }
+
+  @Test
+  @DisplayName("delete clears linkedAttachmentId on associated requirement in same transaction")
+  void delete_whenLinkedToRequirement_clearsRequirementLink() {
+    BlockAttachmentEntity attachment = persistedAttachment();
+    BlockRequirementEntity req = new BlockRequirementEntity();
+    req.setId(900L);
+    req.setBlockId(BLOCK_ID);
+    req.setRequirementCode("RATIONALE_REQUIRED");
+    req.setLinkedAttachmentId(ATTACHMENT_ID);
+
+    given(blockRepository.findByIdAndReportingUnitIdAndDeletedFalse(BLOCK_ID, RU_ID))
+        .willReturn(Optional.of(draftBlock(3L)));
+    given(statusEventRepository.findFirstByBlockIdOrderByCreatedAtDescIdDesc(BLOCK_ID))
+        .willReturn(Optional.empty());
+    given(
+            transitionPolicyService.canEdit(
+                TransitionPolicyService.STATE_DRAFT,
+                Role.SUBMITTER,
+                IdentityProvider.BUSINESS_BCEID))
+        .willReturn(TransitionEvaluationResult.editAllowed());
+    given(attachmentRepository.findByIdAndDeletedFalse(ATTACHMENT_ID))
+        .willReturn(Optional.of(attachment));
+    given(
+            blockRequirementRepository.findByBlockIdAndLinkedAttachmentIdAndDeletedFalse(
+                BLOCK_ID, ATTACHMENT_ID))
+        .willReturn(List.of(req));
+
+    service.delete(requestWithIfMatch(3L), submitterJwt(), RU_ID, BLOCK_ID, ATTACHMENT_ID);
+
+    assertThat(req.getLinkedAttachmentId()).isNull();
+    verify(blockRequirementRepository).saveAll(List.of(req));
+    assertThat(attachment.isDeleted()).isTrue();
+    verify(attachmentRepository).save(attachment);
   }
 }

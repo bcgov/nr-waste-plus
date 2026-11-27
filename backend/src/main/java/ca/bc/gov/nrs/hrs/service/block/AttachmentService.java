@@ -2,6 +2,7 @@ package ca.bc.gov.nrs.hrs.service.block;
 
 import ca.bc.gov.nrs.hrs.configuration.ObjectStorageProperties;
 import ca.bc.gov.nrs.hrs.dto.base.IdentityProvider;
+import ca.bc.gov.nrs.hrs.dto.base.Role;
 import ca.bc.gov.nrs.hrs.dto.block.AttachmentDocumentType;
 import ca.bc.gov.nrs.hrs.dto.block.AttachmentDownloadResponse;
 import ca.bc.gov.nrs.hrs.dto.block.AttachmentFinalizeResponse;
@@ -9,8 +10,13 @@ import ca.bc.gov.nrs.hrs.dto.block.AttachmentIntentRequest;
 import ca.bc.gov.nrs.hrs.dto.block.AttachmentIntentResponse;
 import ca.bc.gov.nrs.hrs.dto.block.AttachmentScanStatus;
 import ca.bc.gov.nrs.hrs.dto.block.AttachmentStatus;
+import ca.bc.gov.nrs.hrs.dto.block.BlockAttachmentListItemDto;
+import ca.bc.gov.nrs.hrs.dto.block.BlockAttachmentListResponse;
 import ca.bc.gov.nrs.hrs.entity.block.BlockAttachmentEntity;
+import ca.bc.gov.nrs.hrs.entity.block.BlockEntity;
+import ca.bc.gov.nrs.hrs.entity.block.BlockRequirementEntity;
 import ca.bc.gov.nrs.hrs.entity.block.ReportingUnitEntity;
+import ca.bc.gov.nrs.hrs.entity.block.StatusEventEntity;
 import ca.bc.gov.nrs.hrs.exception.AttachmentConflictException;
 import ca.bc.gov.nrs.hrs.exception.AttachmentNotFoundException;
 import ca.bc.gov.nrs.hrs.exception.AttachmentSizeExceededException;
@@ -24,19 +30,29 @@ import ca.bc.gov.nrs.hrs.provider.objectstorage.ObjectStorageProvider;
 import ca.bc.gov.nrs.hrs.provider.objectstorage.StoredObjectSummary;
 import ca.bc.gov.nrs.hrs.repository.block.BlockAttachmentRepository;
 import ca.bc.gov.nrs.hrs.repository.block.BlockRepository;
+import ca.bc.gov.nrs.hrs.repository.block.BlockRequirementRepository;
 import ca.bc.gov.nrs.hrs.repository.block.ReportingUnitRepository;
+import ca.bc.gov.nrs.hrs.repository.block.StatusEventRepository;
+import ca.bc.gov.nrs.hrs.service.lifecycle.TransitionEvaluationResult;
+import ca.bc.gov.nrs.hrs.service.lifecycle.TransitionPolicyService;
+import ca.bc.gov.nrs.hrs.util.ConditionalRequestSupport;
 import ca.bc.gov.nrs.hrs.util.JwtPrincipalUtil;
 import io.micrometer.observation.annotation.Observed;
 import io.micrometer.tracing.annotation.NewSpan;
+import jakarta.servlet.http.HttpServletRequest;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
+import org.springframework.web.server.ResponseStatusException;
 
 /**
  * Manages the private object-storage attachment lifecycle: intent registration, presigned PUT
@@ -60,6 +76,9 @@ public class AttachmentService {
   private final ObjectStorageProvider objectStorage;
   private final ObjectStorageProperties objectStorageProperties;
   private final AttachmentScanService scanService;
+  private final StatusEventRepository statusEventRepository;
+  private final BlockRequirementRepository blockRequirementRepository;
+  private final TransitionPolicyService transitionPolicyService;
 
   /**
    * Registers an attempt to upload an attachment and returns a short-lived presigned PUT URL.
@@ -350,6 +369,203 @@ public class AttachmentService {
         attachment.getFileSizeBytes(),
         download.downloadUrl(),
         download.expiresAt());
+  }
+
+  /**
+   * Lists all non-deleted, non-uploading attachments for a submission block, ordered by upload
+   * timestamp ascending.
+   *
+   * @param jwt the JWT principal for the authenticated caller, if available
+   * @param reportingUnitId the owning reporting unit
+   * @param blockId the owning submission block
+   * @return the list of block attachments with server-computed validity
+   */
+  @NewSpan
+  @Transactional(readOnly = true)
+  public BlockAttachmentListResponse list(Jwt jwt, Long reportingUnitId, Long blockId) {
+    ReportingUnitEntity reportingUnit =
+        reportingUnitRepository
+            .findByIdAndDeletedFalse(reportingUnitId)
+            .orElseThrow(() -> new ReportingUnitNotFoundException(reportingUnitId));
+
+    validateClientAccess(jwt, reportingUnit);
+
+    blockRepository
+        .findByIdAndReportingUnitIdAndDeletedFalse(blockId, reportingUnitId)
+        .orElseThrow(() -> new BlockNotFoundException(blockId, reportingUnitId));
+
+    List<BlockAttachmentEntity> attachments =
+        attachmentRepository.findByBlockIdAndStatusNotAndDeletedFalseOrderByCreatedAtAsc(
+            blockId, AttachmentStatus.UPLOADING.name());
+
+    Map<Long, String> linkedRequirements =
+        blockRequirementRepository.findByBlockIdAndDeletedFalse(blockId).stream()
+            .filter(req -> req.getLinkedAttachmentId() != null)
+            .collect(
+                Collectors.toMap(
+                    BlockRequirementEntity::getLinkedAttachmentId,
+                    BlockRequirementEntity::getRequirementCode,
+                    (first, second) -> first));
+
+    List<BlockAttachmentListItemDto> items =
+        attachments.stream()
+            .map(
+                entity ->
+                    new BlockAttachmentListItemDto(
+                        entity.getId(),
+                        entity.getDocumentType(),
+                        entity.getFileName(),
+                        entity.getContentType(),
+                        entity.getFileSizeBytes(),
+                        entity.getStatus(),
+                        entity.getScanStatus(),
+                        isAttachmentValid(entity),
+                        linkedRequirements.get(entity.getId()),
+                        entity.getCreatedBy(),
+                        entity.getCreatedAt()))
+            .toList();
+
+    return new BlockAttachmentListResponse(items);
+  }
+
+  /**
+   * Returns the current optimistic-locking revision of the specified block, or {@code null} if
+   * not found.
+   *
+   * @param reportingUnitId the owning reporting unit
+   * @param blockId the submission block identifier
+   * @return the block revision, or {@code null}
+   */
+  @Transactional(readOnly = true)
+  public Long getBlockRevision(Long reportingUnitId, Long blockId) {
+    return blockRepository
+        .findByIdAndReportingUnitIdAndDeletedFalse(blockId, reportingUnitId)
+        .map(BlockEntity::getRevision)
+        .orElse(null);
+  }
+
+  /**
+   * Soft-deletes an attachment belonging to a block when the policy engine permits editing in the
+   * block's current state for the caller's role and the {@code If-Match} header matches the
+   * block's current revision.
+   *
+   * <p>Clears any requirement link referencing the deleted attachment within the same transaction.
+   * Never calls object storage directly; physical removal is handled asynchronously by the cleanup
+   * job.
+   *
+   * @param servletRequest HTTP request carrying the required {@code If-Match} header
+   * @param jwt the JWT principal for the authenticated caller
+   * @param reportingUnitId the owning reporting unit
+   * @param blockId the owning submission block
+   * @param attachmentId the attachment identifier to soft-delete
+   */
+  @NewSpan
+  @Transactional
+  public void delete(
+      HttpServletRequest servletRequest,
+      Jwt jwt,
+      Long reportingUnitId,
+      Long blockId,
+      Long attachmentId) {
+    ReportingUnitEntity reportingUnit =
+        reportingUnitRepository
+            .findByIdAndDeletedFalse(reportingUnitId)
+            .orElseThrow(() -> new ReportingUnitNotFoundException(reportingUnitId));
+
+    validateClientAccess(jwt, reportingUnit);
+
+    BlockEntity block =
+        blockRepository
+            .findByIdAndReportingUnitIdAndDeletedFalse(blockId, reportingUnitId)
+            .orElseThrow(() -> new BlockNotFoundException(blockId, reportingUnitId));
+
+    String currentState = resolveBlockState(blockId, block.isDraft());
+    Role role = resolveActorRole(jwt, reportingUnit.getClientNumber());
+    IdentityProvider provider = jwt != null ? JwtPrincipalUtil.getIdentityProvider(jwt) : null;
+    TransitionEvaluationResult editDecision =
+        transitionPolicyService.canEdit(currentState, role, provider);
+    if (!editDecision.allowed()) {
+      throwEditNotAllowed(editDecision, currentState);
+    }
+
+    ConditionalRequestSupport.requireMatch(servletRequest, block.getRevision());
+
+    BlockAttachmentEntity attachment =
+        attachmentRepository
+            .findByIdAndDeletedFalse(attachmentId)
+            .orElseThrow(() -> new AttachmentNotFoundException(attachmentId));
+
+    if (!attachment.getBlockId().equals(blockId)) {
+      throw new AttachmentNotFoundException(attachmentId, blockId);
+    }
+
+    clearLinkedRequirements(blockId, attachmentId);
+
+    attachment.setDeleted(true);
+    attachmentRepository.save(attachment);
+
+    log.info("Attachment soft-deleted: id={}, blockId={}", attachmentId, blockId);
+  }
+
+  /**
+   * Clears any requirement answers referencing the given attachment within the same transaction.
+   * Hook completed when requirement-to-attachment linking (#1253) is active.
+   */
+  private void clearLinkedRequirements(Long blockId, Long attachmentId) {
+    List<BlockRequirementEntity> linked =
+        blockRequirementRepository.findByBlockIdAndLinkedAttachmentIdAndDeletedFalse(
+            blockId, attachmentId);
+    if (linked.isEmpty()) {
+      return;
+    }
+    linked.forEach(req -> req.setLinkedAttachmentId(null));
+    blockRequirementRepository.saveAll(linked);
+  }
+
+  private String resolveBlockState(Long blockId, boolean isDraft) {
+    return statusEventRepository
+        .findFirstByBlockIdOrderByCreatedAtDescIdDesc(blockId)
+        .map(StatusEventEntity::getStatus)
+        .orElse(
+            isDraft
+                ? TransitionPolicyService.STATE_DRAFT
+                : TransitionPolicyService.STATE_SUBMITTED);
+  }
+
+  private Role resolveActorRole(Jwt jwt, String clientNumber) {
+    if (jwt == null) {
+      return Role.VIEWER;
+    }
+    if (JwtPrincipalUtil.hasConcreteRole(jwt, Role.ADMIN)) {
+      return Role.ADMIN;
+    }
+    if (JwtPrincipalUtil.hasConcreteRole(jwt, Role.AREA)) {
+      return Role.AREA;
+    }
+    if (JwtPrincipalUtil.hasConcreteRole(jwt, Role.DISTRICT)) {
+      return Role.DISTRICT;
+    }
+    if (clientNumber != null
+        && JwtPrincipalUtil.hasAbstractRole(jwt, Role.SUBMITTER, clientNumber)) {
+      return Role.SUBMITTER;
+    }
+    return Role.VIEWER;
+  }
+
+  private void throwEditNotAllowed(TransitionEvaluationResult decision, String currentState) {
+    HttpStatus status =
+        decision.denialReason() == TransitionEvaluationResult.DenialReason.ROLE_NOT_ALLOWED
+            ? HttpStatus.FORBIDDEN
+            : HttpStatus.CONFLICT;
+    String message =
+        status == HttpStatus.FORBIDDEN
+            ? decision.reason()
+            : "Attachments cannot be removed while the block is in this state";
+    ResponseStatusException ex = new ResponseStatusException(status, message);
+    ex.getBody().setProperty("code", "EDIT_NOT_ALLOWED");
+    ex.getBody().setProperty("state", currentState);
+    ex.getBody().setProperty("blockState", currentState);
+    throw ex;
   }
 
   /**

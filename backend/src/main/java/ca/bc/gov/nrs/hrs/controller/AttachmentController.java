@@ -4,14 +4,19 @@ import ca.bc.gov.nrs.hrs.dto.block.AttachmentDownloadResponse;
 import ca.bc.gov.nrs.hrs.dto.block.AttachmentFinalizeResponse;
 import ca.bc.gov.nrs.hrs.dto.block.AttachmentIntentRequest;
 import ca.bc.gov.nrs.hrs.dto.block.AttachmentIntentResponse;
+import ca.bc.gov.nrs.hrs.dto.block.BlockAttachmentListResponse;
 import ca.bc.gov.nrs.hrs.security.ResourceScopeGuard;
 import ca.bc.gov.nrs.hrs.service.block.AttachmentService;
+import ca.bc.gov.nrs.hrs.util.ConditionalRequestSupport;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -21,7 +26,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 /**
  * Endpoints for the attachment upload lifecycle
- * (attempt / presigned PUT / finalize / download).
+ * (list / attempt / presigned PUT / finalize / download / delete).
  */
 @RestController
 @RequestMapping("/api/reporting-units/{reportingUnitId}/{blockId}/attachments")
@@ -30,6 +35,31 @@ public class AttachmentController {
 
   private final AttachmentService attachmentService;
   private final ResourceScopeGuard resourceScopeGuard;
+
+  /**
+   * Lists all non-deleted, non-uploading attachments for a submission block ordered by upload
+   * timestamp ascending.
+   *
+   * @param jwt the JWT principal for the authenticated caller
+   * @param reportingUnitId the owning reporting unit
+   * @param blockId the owning submission block
+   * @return {@code 200 OK} with the attachment list and current block {@code ETag} header
+   */
+  @GetMapping
+  public ResponseEntity<BlockAttachmentListResponse> listAttachments(
+      @AuthenticationPrincipal Jwt jwt,
+      @PathVariable Long reportingUnitId,
+      @PathVariable Long blockId) {
+    resourceScopeGuard.verify(jwt, reportingUnitId);
+    BlockAttachmentListResponse response =
+        attachmentService.list(jwt, reportingUnitId, blockId);
+    Long revision = attachmentService.getBlockRevision(reportingUnitId, blockId);
+    var builder = ResponseEntity.ok();
+    if (revision != null) {
+      builder.header(HttpHeaders.ETAG, ConditionalRequestSupport.eTagOf(revision));
+    }
+    return builder.body(response);
+  }
 
   /**
    * Registers an upload attempt and returns a short-lived presigned PUT URL.
@@ -92,5 +122,28 @@ public class AttachmentController {
     resourceScopeGuard.verify(jwt, reportingUnitId);
     return ResponseEntity.ok(
         attachmentService.getDownloadUrl(jwt, reportingUnitId, blockId, attachmentId));
+  }
+
+  /**
+   * Soft-deletes an attachment belonging to a submission block when the block is editable for the
+   * caller's role and the supplied {@code If-Match} header matches the block's current revision.
+   *
+   * @param servletRequest HTTP request carrying the required {@code If-Match} header
+   * @param jwt the JWT principal for the authenticated caller
+   * @param reportingUnitId the owning reporting unit
+   * @param blockId the owning submission block
+   * @param attachmentId the attachment identifier to soft-delete
+   * @return {@code 204 No Content} when soft-deleted
+   */
+  @DeleteMapping("/{attachmentId}")
+  public ResponseEntity<Void> deleteAttachment(
+      HttpServletRequest servletRequest,
+      @AuthenticationPrincipal Jwt jwt,
+      @PathVariable Long reportingUnitId,
+      @PathVariable Long blockId,
+      @PathVariable Long attachmentId) {
+    resourceScopeGuard.verify(jwt, reportingUnitId);
+    attachmentService.delete(servletRequest, jwt, reportingUnitId, blockId, attachmentId);
+    return ResponseEntity.noContent().build();
   }
 }

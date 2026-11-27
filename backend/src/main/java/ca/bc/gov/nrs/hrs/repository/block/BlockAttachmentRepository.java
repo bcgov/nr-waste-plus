@@ -78,4 +78,15 @@ public interface BlockAttachmentRepository extends JpaRepository<BlockAttachment
    */
   List<BlockAttachmentEntity> findByBlockIdAndStatusAndScanStatusAndDeletedFalse(
       Long blockId, String status, String scanStatus);
+
+  /**
+   * Finds all non-deleted attachments for a block excluding a given upload status (such as {@code
+   * UPLOADING}), ordered by creation timestamp ascending.
+   *
+   * @param blockId the block identifier
+   * @param excludedStatus the upload status to exclude
+   * @return ordered list of matching attachments
+   */
+  List<BlockAttachmentEntity> findByBlockIdAndStatusNotAndDeletedFalseOrderByCreatedAtAsc(
+      Long blockId, String excludedStatus);
 }

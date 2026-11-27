@@ -25,7 +25,10 @@ import ca.bc.gov.nrs.hrs.provider.objectstorage.PresignedUpload;
 import ca.bc.gov.nrs.hrs.provider.objectstorage.StoredObjectSummary;
 import ca.bc.gov.nrs.hrs.repository.block.BlockAttachmentRepository;
 import ca.bc.gov.nrs.hrs.repository.block.BlockRepository;
+import ca.bc.gov.nrs.hrs.repository.block.BlockRequirementRepository;
 import ca.bc.gov.nrs.hrs.repository.block.ReportingUnitRepository;
+import ca.bc.gov.nrs.hrs.repository.block.StatusEventRepository;
+import ca.bc.gov.nrs.hrs.service.lifecycle.TransitionPolicyService;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Map;
@@ -66,6 +69,15 @@ class AttachmentSecurityTest {
   @Mock
   private AttachmentScanService scanService;
 
+  @Mock
+  private StatusEventRepository statusEventRepository;
+
+  @Mock
+  private BlockRequirementRepository blockRequirementRepository;
+
+  @Mock
+  private TransitionPolicyService transitionPolicyService;
+
   private InMemoryObjectStorageProvider storageProvider;
   private ObjectStorageProperties properties;
   private AttachmentService attachmentService;
@@ -87,7 +99,10 @@ class AttachmentSecurityTest {
             reportingUnitRepository,
             storageProvider,
             properties,
-            scanService);
+            scanService,
+            statusEventRepository,
+            blockRequirementRepository,
+            transitionPolicyService);
 
     ReportingUnitEntity ru = new ReportingUnitEntity();
     ru.setId(REPORTING_UNIT_ID);

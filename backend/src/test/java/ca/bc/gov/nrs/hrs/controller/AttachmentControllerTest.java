@@ -6,14 +6,19 @@ import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import ca.bc.gov.nrs.hrs.dto.block.AttachmentDownloadResponse;
 import ca.bc.gov.nrs.hrs.dto.block.AttachmentFinalizeResponse;
 import ca.bc.gov.nrs.hrs.dto.block.AttachmentIntentResponse;
+import ca.bc.gov.nrs.hrs.dto.block.BlockAttachmentListItemDto;
+import ca.bc.gov.nrs.hrs.dto.block.BlockAttachmentListResponse;
+import java.util.List;
 import ca.bc.gov.nrs.hrs.exception.AttachmentConflictException;
 import ca.bc.gov.nrs.hrs.exception.AttachmentNotFoundException;
 import ca.bc.gov.nrs.hrs.exception.ReportingUnitNotFoundException;
@@ -359,5 +364,79 @@ class AttachmentControllerTest {
         .andExpect(status().isOk());
 
     verify(resourceScopeGuard).verify(nullable(Jwt.class), eq(1L));
+  }
+
+  @Test
+  @DisplayName("GET /attachments returns 200 with attachment list and ETag header")
+  void listAttachments_returnsOkWithETag() throws Exception {
+    Instant uploadedAt = Instant.parse("2026-08-24T12:00:00Z");
+    when(attachmentService.list(nullable(Jwt.class), eq(1L), eq(2L)))
+        .thenReturn(
+            new BlockAttachmentListResponse(
+                List.of(
+                    new BlockAttachmentListItemDto(
+                        501L,
+                        "FINAL_MAP",
+                        "final-map.pdf",
+                        "application/pdf",
+                        482331L,
+                        "FINALIZED",
+                        "CLEAN",
+                        true,
+                        null,
+                        "idir\\jdoe",
+                        uploadedAt))));
+    when(attachmentService.getBlockRevision(1L, 2L)).thenReturn(3L);
+
+    mockMvc
+        .perform(get("/api/reporting-units/1/2/attachments"))
+        .andExpect(status().isOk())
+        .andExpect(header().string("ETag", "\"3\""))
+        .andExpect(jsonPath("$.attachments[0].attachmentId").value(501))
+        .andExpect(jsonPath("$.attachments[0].documentType").value("FINAL_MAP"))
+        .andExpect(jsonPath("$.attachments[0].valid").value(true))
+        .andExpect(jsonPath("$.attachments[0].uploadedBy").value("idir\\jdoe"));
+
+    verify(resourceScopeGuard).verify(nullable(Jwt.class), eq(1L));
+  }
+
+  @Test
+  @DisplayName("GET /attachments returns 404 when RU is out of scope")
+  void listAttachments_whenOutOfScope_returns404() throws Exception {
+    doThrow(new ReportingUnitNotFoundException(1L))
+        .when(resourceScopeGuard)
+        .verify(nullable(Jwt.class), eq(1L));
+
+    mockMvc
+        .perform(get("/api/reporting-units/1/2/attachments"))
+        .andExpect(status().isNotFound());
+  }
+
+  @Test
+  @DisplayName("DELETE /{attachmentId} returns 204 when attachment is deleted")
+  void deleteAttachment_returnsNoContent() throws Exception {
+    mockMvc
+        .perform(
+            delete("/api/reporting-units/1/2/attachments/501")
+                .header("If-Match", "\"3\""))
+        .andExpect(status().isNoContent());
+
+    verify(resourceScopeGuard).verify(nullable(Jwt.class), eq(1L));
+    verify(attachmentService)
+        .delete(any(), nullable(Jwt.class), eq(1L), eq(2L), eq(501L));
+  }
+
+  @Test
+  @DisplayName("DELETE /{attachmentId} returns 403 when viewer role is rejected")
+  void deleteAttachment_whenViewer_returns403() throws Exception {
+    doThrow(new ResponseStatusException(HttpStatus.FORBIDDEN, "Viewer role is read-only"))
+        .when(resourceScopeGuard)
+        .verify(nullable(Jwt.class), eq(1L));
+
+    mockMvc
+        .perform(
+            delete("/api/reporting-units/1/2/attachments/501")
+                .header("If-Match", "\"3\""))
+        .andExpect(status().isForbidden());
   }
 }

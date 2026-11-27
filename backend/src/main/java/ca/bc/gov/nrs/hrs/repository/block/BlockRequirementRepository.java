@@ -9,4 +9,7 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface BlockRequirementRepository extends JpaRepository<BlockRequirementEntity, Long> {
   List<BlockRequirementEntity> findByBlockIdAndDeletedFalse(Long blockId);
+
+  List<BlockRequirementEntity> findByBlockIdAndLinkedAttachmentIdAndDeletedFalse(
+      Long blockId, Long linkedAttachmentId);
 }
