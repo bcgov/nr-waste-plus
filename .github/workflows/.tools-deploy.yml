@@ -188,7 +188,7 @@ jobs:
       # other change under legacydb/ (such as its deployment template) reuses
       # the :latest image, retagged for this PR. The Dockerfile copies only
       # removeDatabase, so those two files are the whole image input.
-      - uses: bcgov/actions/builder@a25c5f02d20139f29c17c3ceaa41c314ffe92ec9 # v0.16.0
+      - uses: bcgov/actions/builder@01c3fa1c94c8ccea526ce718b40d8a93bb0a2279 # v0.16.0
         name: Build (legacydb)
         with:
           package: legacydb
@@ -238,6 +238,6 @@ jobs:
     runs-on: ubuntu-26.04
     timeout-minutes: 1
     steps:
-      - uses: bcgov/actions/workflow-results@a25c5f02d20139f29c17c3ceaa41c314ffe92ec9 # v0.16.0
+      - uses: bcgov/actions/workflow-results@01c3fa1c94c8ccea526ce718b40d8a93bb0a2279 # v0.16.0
         with:
           needs: ${{ toJson(needs) }}
