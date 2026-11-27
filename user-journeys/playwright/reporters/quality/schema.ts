@@ -35,7 +35,8 @@ export const UiuxEventSchema = z.object({
   event: z.enum(["check", "violation"]),
   type: z.string(),
   taxonomy: z.string(),
-  severity: z.enum(["info", "minor", "major"]).optional(),
+  // `critical` is kept for contrast/color violations by the Cypress mapping.
+  severity: z.enum(["info", "minor", "major", "critical"]).optional(),
   property: z.string(),
   expected: z.string().nullable(),
   actual: z.string(),
