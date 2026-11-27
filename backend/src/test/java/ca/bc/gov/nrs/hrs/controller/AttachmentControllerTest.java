@@ -18,24 +18,33 @@ import ca.bc.gov.nrs.hrs.dto.block.AttachmentFinalizeResponse;
 import ca.bc.gov.nrs.hrs.dto.block.AttachmentIntentResponse;
 import ca.bc.gov.nrs.hrs.dto.block.BlockAttachmentListItemDto;
 import ca.bc.gov.nrs.hrs.dto.block.BlockAttachmentListResponse;
-import java.util.List;
+import ca.bc.gov.nrs.hrs.entity.block.ReportingUnitEntity;
 import ca.bc.gov.nrs.hrs.exception.AttachmentConflictException;
 import ca.bc.gov.nrs.hrs.exception.AttachmentNotFoundException;
+import ca.bc.gov.nrs.hrs.exception.GlobalExceptionHandler;
 import ca.bc.gov.nrs.hrs.exception.ReportingUnitNotFoundException;
+import ca.bc.gov.nrs.hrs.extensions.WithMockJwtSecurityContextFactory;
+import ca.bc.gov.nrs.hrs.provider.legacy.LegacyApiProvider;
+import ca.bc.gov.nrs.hrs.repository.block.ReportingUnitRepository;
 import ca.bc.gov.nrs.hrs.security.ResourceScopeGuard;
 import ca.bc.gov.nrs.hrs.service.block.AttachmentService;
 import java.time.Instant;
+import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.json.JacksonJsonHttpMessageConverter;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.security.web.method.annotation.AuthenticationPrincipalArgumentResolver;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -438,5 +447,47 @@ class AttachmentControllerTest {
             delete("/api/reporting-units/1/2/attachments/501")
                 .header("If-Match", "\"3\""))
         .andExpect(status().isForbidden());
+  }
+
+  @Test
+  @DisplayName(
+      "DELETE /{attachmentId} with real ResourceScopeGuard returns 403 with EDIT_NOT_ALLOWED"
+          + " for in-scope viewer")
+  void deleteAttachment_withRealGuard_whenInScopeViewer_returns403WithEditNotAllowed()
+      throws Exception {
+    ReportingUnitRepository ruRepo = Mockito.mock(ReportingUnitRepository.class);
+    LegacyApiProvider legacyApi = Mockito.mock(LegacyApiProvider.class);
+    ReportingUnitEntity ru = new ReportingUnitEntity();
+    ru.setId(1L);
+    ru.setClientNumber("00012797");
+    when(ruRepo.findByIdAndDeletedFalse(1L)).thenReturn(Optional.of(ru));
+
+    ResourceScopeGuard realGuard = new ResourceScopeGuard(ruRepo, legacyApi, null);
+    AttachmentController controllerWithRealGuard =
+        new AttachmentController(attachmentService, realGuard);
+    MockMvc mvc =
+        MockMvcBuilders.standaloneSetup(controllerWithRealGuard)
+            .setControllerAdvice(new GlobalExceptionHandler())
+            .setCustomArgumentResolvers(new AuthenticationPrincipalArgumentResolver())
+            .build();
+
+    Jwt viewerJwt =
+        WithMockJwtSecurityContextFactory.createJwt(
+            "bceid-viewer",
+            List.of("WASTE_PLUS_VIEWER_00012797"),
+            "bceidbusiness",
+            "Viewer User",
+            "viewer@example.com");
+
+    SecurityContextHolder.getContext().setAuthentication(new JwtAuthenticationToken(viewerJwt));
+    try {
+      mvc.perform(
+              delete("/api/reporting-units/1/2/attachments/501")
+                  .header("If-Match", "\"3\""))
+          .andExpect(status().isForbidden())
+          .andExpect(jsonPath("$.code").value("EDIT_NOT_ALLOWED"));
+    } finally {
+      SecurityContextHolder.clearContext();
+    }
   }
 }

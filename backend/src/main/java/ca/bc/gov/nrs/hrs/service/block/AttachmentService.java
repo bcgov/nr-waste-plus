@@ -198,7 +198,7 @@ public class AttachmentService {
 
     BlockAttachmentEntity attachment =
         attachmentRepository
-            .findByIdAndDeletedFalse(attachmentId)
+            .findByIdAndDeletedFalseForUpdate(attachmentId)
             .orElseThrow(() -> new AttachmentNotFoundException(attachmentId));
 
     if (!attachment.getBlockId().equals(blockId)) {
@@ -476,7 +476,7 @@ public class AttachmentService {
 
     BlockEntity block =
         blockRepository
-            .findByIdAndReportingUnitIdAndDeletedFalse(blockId, reportingUnitId)
+            .findByIdAndReportingUnitIdAndDeletedFalseForUpdate(blockId, reportingUnitId)
             .orElseThrow(() -> new BlockNotFoundException(blockId, reportingUnitId));
 
     String currentState = resolveBlockState(blockId, block.isDraft());
@@ -492,7 +492,7 @@ public class AttachmentService {
 
     BlockAttachmentEntity attachment =
         attachmentRepository
-            .findByIdAndDeletedFalse(attachmentId)
+            .findByIdAndDeletedFalseForUpdate(attachmentId)
             .orElseThrow(() -> new AttachmentNotFoundException(attachmentId));
 
     if (!attachment.getBlockId().equals(blockId)) {

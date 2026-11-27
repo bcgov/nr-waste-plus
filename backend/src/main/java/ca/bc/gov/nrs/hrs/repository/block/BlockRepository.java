@@ -1,9 +1,11 @@
 package ca.bc.gov.nrs.hrs.repository.block;
 
 import ca.bc.gov.nrs.hrs.entity.block.BlockEntity;
+import jakarta.persistence.LockModeType;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -82,6 +84,21 @@ public interface BlockRepository extends JpaRepository<BlockEntity, Long> {
 
   /** Returns the non-deleted block with the given id that belongs to a reporting unit. */
   Optional<BlockEntity> findByIdAndReportingUnitIdAndDeletedFalse(Long id, Long reportingUnitId);
+
+  /**
+   * Returns the non-deleted block with the given id that belongs to a reporting unit, acquiring a
+   * pessimistic write lock ({@code SELECT ... FOR UPDATE}).
+   *
+   * @param id the block identifier
+   * @param reportingUnitId the owning reporting unit identifier
+   * @return optional containing the locked block entity if present
+   */
+  @Lock(LockModeType.PESSIMISTIC_WRITE)
+  @Query(
+      "SELECT b FROM BlockEntity b WHERE b.id = :id AND b.reportingUnitId = :reportingUnitId"
+          + " AND b.deleted = false")
+  Optional<BlockEntity> findByIdAndReportingUnitIdAndDeletedFalseForUpdate(
+      @Param("id") Long id, @Param("reportingUnitId") Long reportingUnitId);
 
   /** Returns all non-deleted blocks for a reporting unit ordered by id ascending. */
   List<BlockEntity> findAllByReportingUnitIdAndDeletedFalseOrderByIdAsc(Long reportingUnitId);

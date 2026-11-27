@@ -290,7 +290,7 @@ class AttachmentServiceTest {
   void rejectsFinalizeUnknownAttachment() {
     given(blockRepository.findByIdAndReportingUnitIdAndDeletedFalse(BLOCK_ID, RU_ID))
         .willReturn(Optional.of(block()));
-    given(attachmentRepository.findByIdAndDeletedFalse(ATTACHMENT_ID))
+    given(attachmentRepository.findByIdAndDeletedFalseForUpdate(ATTACHMENT_ID))
         .willReturn(Optional.empty());
 
     assertThatThrownBy(() -> service.finalizeAttachment(null, RU_ID, BLOCK_ID, ATTACHMENT_ID))
@@ -308,7 +308,7 @@ class AttachmentServiceTest {
     attachment.setBlockId(999L);
     given(blockRepository.findByIdAndReportingUnitIdAndDeletedFalse(BLOCK_ID, RU_ID))
         .willReturn(Optional.of(block()));
-    given(attachmentRepository.findByIdAndDeletedFalse(ATTACHMENT_ID))
+    given(attachmentRepository.findByIdAndDeletedFalseForUpdate(ATTACHMENT_ID))
         .willReturn(Optional.of(attachment));
 
     assertThatThrownBy(() -> service.finalizeAttachment(null, RU_ID, BLOCK_ID, ATTACHMENT_ID))
@@ -336,7 +336,7 @@ class AttachmentServiceTest {
   @Test
   @DisplayName("Rejects finalize when no object was uploaded")
   void rejectsFinalizeMissingObject() {
-    given(attachmentRepository.findByIdAndDeletedFalse(ATTACHMENT_ID))
+    given(attachmentRepository.findByIdAndDeletedFalseForUpdate(ATTACHMENT_ID))
         .willReturn(Optional.of(persistedAttachment()));
     given(blockRepository.findByIdAndReportingUnitIdAndDeletedFalse(BLOCK_ID, RU_ID))
         .willReturn(Optional.of(block()));
@@ -356,7 +356,7 @@ class AttachmentServiceTest {
   @Test
   @DisplayName("Rejects finalize on size mismatch")
   void rejectsFinalizeSizeMismatch() {
-    given(attachmentRepository.findByIdAndDeletedFalse(ATTACHMENT_ID))
+    given(attachmentRepository.findByIdAndDeletedFalseForUpdate(ATTACHMENT_ID))
         .willReturn(Optional.of(persistedAttachment()));
     given(blockRepository.findByIdAndReportingUnitIdAndDeletedFalse(BLOCK_ID, RU_ID))
         .willReturn(Optional.of(block()));
@@ -374,7 +374,7 @@ class AttachmentServiceTest {
   @Test
   @DisplayName("Rejects finalize when stored object exceeds maximum allowed size")
   void rejectsFinalizeWhenStoredSizeExceedsMaximum() {
-    given(attachmentRepository.findByIdAndDeletedFalse(ATTACHMENT_ID))
+    given(attachmentRepository.findByIdAndDeletedFalseForUpdate(ATTACHMENT_ID))
         .willReturn(Optional.of(persistedAttachment()));
     given(blockRepository.findByIdAndReportingUnitIdAndDeletedFalse(BLOCK_ID, RU_ID))
         .willReturn(Optional.of(block()));
@@ -394,7 +394,7 @@ class AttachmentServiceTest {
   void rejectsFinalizeChecksumMismatch() {
     BlockAttachmentEntity attachment = persistedAttachment();
     attachment.setChecksum("original-checksum");
-    given(attachmentRepository.findByIdAndDeletedFalse(ATTACHMENT_ID))
+    given(attachmentRepository.findByIdAndDeletedFalseForUpdate(ATTACHMENT_ID))
         .willReturn(Optional.of(attachment));
     given(blockRepository.findByIdAndReportingUnitIdAndDeletedFalse(BLOCK_ID, RU_ID))
         .willReturn(Optional.of(block()));
@@ -412,7 +412,7 @@ class AttachmentServiceTest {
   @Test
   @DisplayName("Finalizes attachment, promotes staging to permanent, and captures stored checksum")
   void finalizesAttachment() {
-    given(attachmentRepository.findByIdAndDeletedFalse(ATTACHMENT_ID))
+    given(attachmentRepository.findByIdAndDeletedFalseForUpdate(ATTACHMENT_ID))
         .willReturn(Optional.of(persistedAttachment()));
     given(blockRepository.findByIdAndReportingUnitIdAndDeletedFalse(BLOCK_ID, RU_ID))
         .willReturn(Optional.of(block()));
@@ -439,7 +439,7 @@ class AttachmentServiceTest {
   @Test
   @DisplayName("Rejects finalize when source object modified during copy (precondition failed)")
   void finalizeAttachment_whenSourceModifiedDuringCopy_throwsConflict() {
-    given(attachmentRepository.findByIdAndDeletedFalse(ATTACHMENT_ID))
+    given(attachmentRepository.findByIdAndDeletedFalseForUpdate(ATTACHMENT_ID))
         .willReturn(Optional.of(persistedAttachment()));
     given(blockRepository.findByIdAndReportingUnitIdAndDeletedFalse(BLOCK_ID, RU_ID))
         .willReturn(Optional.of(block()));
@@ -475,7 +475,7 @@ class AttachmentServiceTest {
     entity.setObjectKey("hrs/block/2/attachment/501/report_FINAL-MAP.pdf");
     entity.setChecksum("abc123");
 
-    given(attachmentRepository.findByIdAndDeletedFalse(ATTACHMENT_ID))
+    given(attachmentRepository.findByIdAndDeletedFalseForUpdate(ATTACHMENT_ID))
         .willReturn(Optional.of(entity));
     given(blockRepository.findByIdAndReportingUnitIdAndDeletedFalse(BLOCK_ID, RU_ID))
         .willReturn(Optional.of(block()));
@@ -503,8 +503,10 @@ class AttachmentServiceTest {
     reloadedFinalized.setObjectKey("hrs/block/2/attachment/501/report_FINAL-MAP.pdf");
     reloadedFinalized.setChecksum("abc123");
 
+    given(attachmentRepository.findByIdAndDeletedFalseForUpdate(ATTACHMENT_ID))
+        .willReturn(Optional.of(entity));
     given(attachmentRepository.findByIdAndDeletedFalse(ATTACHMENT_ID))
-        .willReturn(Optional.of(entity), Optional.of(reloadedFinalized));
+        .willReturn(Optional.of(reloadedFinalized));
     given(blockRepository.findByIdAndReportingUnitIdAndDeletedFalse(BLOCK_ID, RU_ID))
         .willReturn(Optional.of(block()));
     given(objectStorage.headObject("hrs/staging/block/2/attachment/501/report_FINAL-MAP.pdf"))
@@ -653,7 +655,7 @@ class AttachmentServiceTest {
 
     given(blockRepository.findByIdAndReportingUnitIdAndDeletedFalse(BLOCK_ID, RU_ID))
         .willReturn(Optional.of(block()));
-    given(attachmentRepository.findByIdAndDeletedFalse(ATTACHMENT_ID))
+    given(attachmentRepository.findByIdAndDeletedFalseForUpdate(ATTACHMENT_ID))
         .willReturn(Optional.of(persistedAttachment()));
     given(objectStorage.headObject(any()))
         .willReturn(new StoredObjectSummary(1024L, "abc123"));
@@ -1022,7 +1024,7 @@ class AttachmentServiceTest {
     BlockAttachmentEntity attachment = persistedAttachment();
     attachment.setStatus(AttachmentStatus.FINALIZED.name());
 
-    given(blockRepository.findByIdAndReportingUnitIdAndDeletedFalse(BLOCK_ID, RU_ID))
+    given(blockRepository.findByIdAndReportingUnitIdAndDeletedFalseForUpdate(BLOCK_ID, RU_ID))
         .willReturn(Optional.of(draftBlock(3L)));
     given(statusEventRepository.findFirstByBlockIdOrderByCreatedAtDescIdDesc(BLOCK_ID))
         .willReturn(Optional.empty());
@@ -1032,7 +1034,7 @@ class AttachmentServiceTest {
                 Role.SUBMITTER,
                 IdentityProvider.BUSINESS_BCEID))
         .willReturn(TransitionEvaluationResult.editAllowed());
-    given(attachmentRepository.findByIdAndDeletedFalse(ATTACHMENT_ID))
+    given(attachmentRepository.findByIdAndDeletedFalseForUpdate(ATTACHMENT_ID))
         .willReturn(Optional.of(attachment));
     given(
             blockRequirementRepository.findByBlockIdAndLinkedAttachmentIdAndDeletedFalse(
@@ -1052,7 +1054,7 @@ class AttachmentServiceTest {
     StatusEventEntity submittedEvent = new StatusEventEntity();
     submittedEvent.setStatus(TransitionPolicyService.STATE_SUBMITTED);
 
-    given(blockRepository.findByIdAndReportingUnitIdAndDeletedFalse(BLOCK_ID, RU_ID))
+    given(blockRepository.findByIdAndReportingUnitIdAndDeletedFalseForUpdate(BLOCK_ID, RU_ID))
         .willReturn(Optional.of(draftBlock(3L)));
     given(statusEventRepository.findFirstByBlockIdOrderByCreatedAtDescIdDesc(BLOCK_ID))
         .willReturn(Optional.of(submittedEvent));
@@ -1087,7 +1089,7 @@ class AttachmentServiceTest {
     submittedEvent.setStatus(TransitionPolicyService.STATE_SUBMITTED);
     BlockAttachmentEntity attachment = persistedAttachment();
 
-    given(blockRepository.findByIdAndReportingUnitIdAndDeletedFalse(BLOCK_ID, RU_ID))
+    given(blockRepository.findByIdAndReportingUnitIdAndDeletedFalseForUpdate(BLOCK_ID, RU_ID))
         .willReturn(Optional.of(draftBlock(4L)));
     given(statusEventRepository.findFirstByBlockIdOrderByCreatedAtDescIdDesc(BLOCK_ID))
         .willReturn(Optional.of(submittedEvent));
@@ -1095,7 +1097,7 @@ class AttachmentServiceTest {
             transitionPolicyService.canEdit(
                 TransitionPolicyService.STATE_SUBMITTED, Role.AREA, IdentityProvider.IDIR))
         .willReturn(TransitionEvaluationResult.editAllowed());
-    given(attachmentRepository.findByIdAndDeletedFalse(ATTACHMENT_ID))
+    given(attachmentRepository.findByIdAndDeletedFalseForUpdate(ATTACHMENT_ID))
         .willReturn(Optional.of(attachment));
     given(
             blockRequirementRepository.findByBlockIdAndLinkedAttachmentIdAndDeletedFalse(
@@ -1114,7 +1116,7 @@ class AttachmentServiceTest {
     BlockAttachmentEntity attachment = persistedAttachment();
     attachment.setBlockId(999L);
 
-    given(blockRepository.findByIdAndReportingUnitIdAndDeletedFalse(BLOCK_ID, RU_ID))
+    given(blockRepository.findByIdAndReportingUnitIdAndDeletedFalseForUpdate(BLOCK_ID, RU_ID))
         .willReturn(Optional.of(draftBlock(3L)));
     given(statusEventRepository.findFirstByBlockIdOrderByCreatedAtDescIdDesc(BLOCK_ID))
         .willReturn(Optional.empty());
@@ -1124,7 +1126,7 @@ class AttachmentServiceTest {
                 Role.SUBMITTER,
                 IdentityProvider.BUSINESS_BCEID))
         .willReturn(TransitionEvaluationResult.editAllowed());
-    given(attachmentRepository.findByIdAndDeletedFalse(ATTACHMENT_ID))
+    given(attachmentRepository.findByIdAndDeletedFalseForUpdate(ATTACHMENT_ID))
         .willReturn(Optional.of(attachment));
 
     assertThatThrownBy(
@@ -1137,7 +1139,7 @@ class AttachmentServiceTest {
   @Test
   @DisplayName("delete throws 412 when If-Match header is stale")
   void delete_whenStaleIfMatch_throwsPreconditionFailed() {
-    given(blockRepository.findByIdAndReportingUnitIdAndDeletedFalse(BLOCK_ID, RU_ID))
+    given(blockRepository.findByIdAndReportingUnitIdAndDeletedFalseForUpdate(BLOCK_ID, RU_ID))
         .willReturn(Optional.of(draftBlock(5L)));
     given(statusEventRepository.findFirstByBlockIdOrderByCreatedAtDescIdDesc(BLOCK_ID))
         .willReturn(Optional.empty());
@@ -1158,7 +1160,7 @@ class AttachmentServiceTest {
   @Test
   @DisplayName("delete throws 403 EDIT_NOT_ALLOWED when caller has viewer role")
   void delete_whenViewerRole_throwsForbidden() {
-    given(blockRepository.findByIdAndReportingUnitIdAndDeletedFalse(BLOCK_ID, RU_ID))
+    given(blockRepository.findByIdAndReportingUnitIdAndDeletedFalseForUpdate(BLOCK_ID, RU_ID))
         .willReturn(Optional.of(draftBlock(3L)));
     given(statusEventRepository.findFirstByBlockIdOrderByCreatedAtDescIdDesc(BLOCK_ID))
         .willReturn(Optional.empty());
@@ -1194,7 +1196,7 @@ class AttachmentServiceTest {
     req.setRequirementCode("RATIONALE_REQUIRED");
     req.setLinkedAttachmentId(ATTACHMENT_ID);
 
-    given(blockRepository.findByIdAndReportingUnitIdAndDeletedFalse(BLOCK_ID, RU_ID))
+    given(blockRepository.findByIdAndReportingUnitIdAndDeletedFalseForUpdate(BLOCK_ID, RU_ID))
         .willReturn(Optional.of(draftBlock(3L)));
     given(statusEventRepository.findFirstByBlockIdOrderByCreatedAtDescIdDesc(BLOCK_ID))
         .willReturn(Optional.empty());
@@ -1204,7 +1206,7 @@ class AttachmentServiceTest {
                 Role.SUBMITTER,
                 IdentityProvider.BUSINESS_BCEID))
         .willReturn(TransitionEvaluationResult.editAllowed());
-    given(attachmentRepository.findByIdAndDeletedFalse(ATTACHMENT_ID))
+    given(attachmentRepository.findByIdAndDeletedFalseForUpdate(ATTACHMENT_ID))
         .willReturn(Optional.of(attachment));
     given(
             blockRequirementRepository.findByBlockIdAndLinkedAttachmentIdAndDeletedFalse(

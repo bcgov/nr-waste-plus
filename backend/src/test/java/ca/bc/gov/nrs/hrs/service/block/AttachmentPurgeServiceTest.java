@@ -116,6 +116,49 @@ class AttachmentPurgeServiceTest {
   }
 
   @Test
+  @DisplayName("Purges soft-deleted finalized attachment and deletes permanent storage object")
+  void purgeSoftDeletedBatch_purgesDeletedFinalizedRowAndStorageObject() {
+    BlockAttachmentEntity softDeleted = new BlockAttachmentEntity();
+    softDeleted.setId(202L);
+    softDeleted.setBlockId(2L);
+    softDeleted.setObjectKey("hrs/block/2/attachment/202/final-map.pdf");
+    softDeleted.setStatus(AttachmentStatus.FINALIZED.name());
+    softDeleted.setScanStatus(AttachmentScanStatus.CLEAN.name());
+    softDeleted.setDeleted(true);
+
+    given(attachmentRepository.findByDeletedTrueOrderByUpdatedAtAsc(any(Pageable.class)))
+        .willReturn(List.of(softDeleted));
+
+    int purged = purgeService.purgeSoftDeletedBatch(100);
+
+    assertThat(purged).isEqualTo(1);
+    verify(objectStorage).deleteObject("hrs/block/2/attachment/202/final-map.pdf");
+    verify(attachmentRepository).delete(softDeleted);
+  }
+
+  @Test
+  @DisplayName("Retains soft-deleted row when storage object deletion fails so cleanup retries")
+  void purgeSoftDeletedBatch_whenStorageFails_retainsDbRecord() {
+    BlockAttachmentEntity softDeleted = new BlockAttachmentEntity();
+    softDeleted.setId(203L);
+    softDeleted.setBlockId(2L);
+    softDeleted.setObjectKey("hrs/block/2/attachment/203/final-map.pdf");
+    softDeleted.setStatus(AttachmentStatus.FINALIZED.name());
+    softDeleted.setDeleted(true);
+
+    given(attachmentRepository.findByDeletedTrueOrderByUpdatedAtAsc(any(Pageable.class)))
+        .willReturn(List.of(softDeleted));
+    doThrow(new RuntimeException("S3 timeout"))
+        .when(objectStorage)
+        .deleteObject("hrs/block/2/attachment/203/final-map.pdf");
+
+    int purged = purgeService.purgeSoftDeletedBatch(100);
+
+    assertThat(purged).isZero();
+    verify(attachmentRepository, never()).delete(softDeleted);
+  }
+
+  @Test
   @DisplayName("Purges all valid items in batch even if one item fails storage deletion")
   void purgeBatch_whenOneItemFails_continuesProcessingBatch() {
     BlockAttachmentEntity secondAttachment = new BlockAttachmentEntity();

@@ -136,8 +136,12 @@ class AttachmentSecurityTest {
               return entity;
             });
     given(attachmentRepository.save(any())).willAnswer(invocation -> invocation.getArgument(0));
-    given(attachmentRepository.findByIdAndDeletedFalse(ATTACHMENT_ID))
-        .willReturn(Optional.of(attachmentEntity));
+    org.mockito.Mockito.lenient()
+        .when(attachmentRepository.findByIdAndDeletedFalse(ATTACHMENT_ID))
+        .thenReturn(Optional.of(attachmentEntity));
+    org.mockito.Mockito.lenient()
+        .when(attachmentRepository.findByIdAndDeletedFalseForUpdate(ATTACHMENT_ID))
+        .thenReturn(Optional.of(attachmentEntity));
   }
 
   @Test

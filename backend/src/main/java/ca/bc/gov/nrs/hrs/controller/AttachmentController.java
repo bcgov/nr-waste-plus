@@ -23,6 +23,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 /**
  * Endpoints for the attachment upload lifecycle
@@ -142,7 +143,14 @@ public class AttachmentController {
       @PathVariable Long reportingUnitId,
       @PathVariable Long blockId,
       @PathVariable Long attachmentId) {
-    resourceScopeGuard.verify(jwt, reportingUnitId);
+    try {
+      resourceScopeGuard.verify(jwt, reportingUnitId);
+    } catch (ResponseStatusException ex) {
+      if (ex.getStatusCode() == HttpStatus.FORBIDDEN) {
+        ex.getBody().setProperty("code", "EDIT_NOT_ALLOWED");
+      }
+      throw ex;
+    }
     attachmentService.delete(servletRequest, jwt, reportingUnitId, blockId, attachmentId);
     return ResponseEntity.noContent().build();
   }
