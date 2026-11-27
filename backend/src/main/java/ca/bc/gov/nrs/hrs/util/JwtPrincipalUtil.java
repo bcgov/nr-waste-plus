@@ -4,6 +4,7 @@ import ca.bc.gov.nrs.hrs.dto.base.IdentityProvider;
 import ca.bc.gov.nrs.hrs.dto.base.Role;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -30,14 +31,16 @@ import org.springframework.security.oauth2.server.resource.authentication.JwtAut
  * endpoint. Methods that read such claims are marked {@link Deprecated}; when called against an
  * access token, they may return an empty string.
  *
- * <p><strong>Keycloak migration note (epic #1506):</strong> with the move to the BC Gov SSO Keycloak
+ * <p><strong>Keycloak migration note (epic #1506):</strong> with the move to the BC Gov SSO
  * standard realm, identity claims are read <em>Keycloak-first</em> with a Cognito-claims fallback:
  * {@code identity_provider} replaces {@code custom:idp_name}, {@code idir_username} / {@code
  * idir_user_guid} replace {@code custom:idp_username} / {@code custom:idp_user_id}. Every IDIR
  * alias ({@code idir}, {@code azureidir}, any case) normalizes to the audit string {@code IDIR}.
  * The GUID is case-folded to uppercase wherever it is used as the identity slot ({@code
- * getUserId}); usernames keep the exact case the identity provider issued. The Cognito fallback
- * branches are removed in the S3 sweep of the migration.
+ * getUserId}); usernames keep the exact case the identity provider issued. Role names are read
+ * Keycloak-first from {@code client_roles}, then {@code resource_access.<azp>.roles}, with {@code
+ * cognito:groups} retained as a transitional fallback. The Cognito fallback branches are removed in
+ * the S3 sweep of the migration.
  */
 @NoArgsConstructor(access = lombok.AccessLevel.PRIVATE)
 public class JwtPrincipalUtil {
@@ -63,6 +66,21 @@ public class JwtPrincipalUtil {
 
   /** Claim carrying the IDP user id in Cognito tokens. */
   private static final String CLAIM_CUSTOM_IDP_USER_ID = "custom:idp_user_id";
+
+  /** Claim carrying the CSS-era FAM client roles (primary source of roles). */
+  private static final String CLAIM_CLIENT_ROLES = "client_roles";
+
+  /** Claim carrying stock-Keycloak per-client role maps (fallback source of roles). */
+  private static final String CLAIM_RESOURCE_ACCESS = "resource_access";
+
+  /** Claim naming the authorized party that selects the {@code resource_access} client map. */
+  private static final String CLAIM_AZP = "azp";
+
+  /** Legacy Cognito claim carrying group memberships (transitional source of roles). */
+  private static final String CLAIM_COGNITO_GROUPS = "cognito:groups";
+
+  /** Prefix of FAM expiry-bookkeeping entries that never represent an application role. */
+  private static final String FAM_EXPIRY_PREFIX = "FAM:";
 
   /** Cognito BCSC broker prefix that normalizes to the {@code BCSC} audit string. */
   private static final String BCSC_BROKER_PREFIX = "ca.bc.gov.flnr.fam.";
@@ -322,17 +340,14 @@ public class JwtPrincipalUtil {
   }
 
   /**
-   * Retrieves a list of groups from the given JwtPrincipal. This method extracts the token
-   * attributes from the provided {@link JwtAuthenticationToken}, then looks for the key
-   * "cognito:groups" in the token attributes. If the value associated with this key is a {@link
-   * List}, the method filters the elements to only include non-null values of type {@link String}.
-   * The resulting list of strings is returned.
+   * Retrieves the role/group names from the given JwtPrincipal. Roles are resolved Keycloak-first
+   * from {@code client_roles}, then {@code resource_access.<azp>.roles}, with the legacy Cognito
+   * {@code cognito:groups} claim as a transitional fallback. FAM expiry-bookkeeping entries are
+   * ignored.
    *
-   * @param jwtPrincipal The {@link JwtAuthenticationToken} containing the token attributes. It must
-   *     have the "cognito:groups" key. If the key does not exist or the value is not a list of
-   *     strings, an empty list is returned.
-   * @return A list of group names, or an empty list if the key is missing or the value is not a
-   *     list of strings.
+   * @param jwtPrincipal The {@link JwtAuthenticationToken} carrying the token attributes. When no
+   *     role claim is present, an empty set is returned.
+   * @return the distinct role/group names, or an empty set when no role claim is present
    */
   public static Set<String> getGroups(JwtAuthenticationToken jwtPrincipal) {
     if (jwtPrincipal == null || jwtPrincipal.getTokenAttributes() == null) {
@@ -342,17 +357,14 @@ public class JwtPrincipalUtil {
   }
 
   /**
-   * Retrieves a list of groups from the given JwtPrincipal. This method extracts the token
-   * attributes from the provided {@link Jwt}, then looks for the key "cognito:groups" in the token
-   * attributes. If the value associated with this key is a {@link List}, the method filters the
-   * elements to only include non-null values of type {@link String}. The resulting list of strings
-   * is returned.
+   * Retrieves the role/group names from the given JwtPrincipal. Roles are resolved Keycloak-first
+   * from {@code client_roles}, then {@code resource_access.<azp>.roles}, with the legacy Cognito
+   * {@code cognito:groups} claim as a transitional fallback. FAM expiry-bookkeeping entries are
+   * ignored.
    *
-   * @param jwtPrincipal The {@link Jwt} containing the token attributes. It must have the
-   *     "cognito:groups" key. If the key does not exist or the value is not a list of strings, an
-   *     empty list is returned.
-   * @return A list of group names, or an empty list if the key is missing or the value is not a
-   *     list of strings.
+   * @param jwtPrincipal The {@link Jwt} carrying the claims. When no role claim is present, an
+   *     empty set is returned.
+   * @return the distinct role/group names, or an empty set when no role claim is present
    */
   public static Set<String> getGroups(Jwt jwtPrincipal) {
     if (jwtPrincipal == null || jwtPrincipal.getClaims() == null) {
@@ -364,9 +376,10 @@ public class JwtPrincipalUtil {
   /**
    * Produce a mapping of {@link Role} to the list of client IDs the principal has for that role.
    *
-   * <p>The method parses the value of {@code cognito:groups} and groups elements by role.
+   * <p>The role names come from {@code client_roles}, then {@code resource_access.<azp>.roles},
+   * with the legacy Cognito {@code cognito:groups} claim as a transitional fallback.
    *
-   * @param jwtPrincipal the JWT containing the groups claim
+   * @param jwtPrincipal the JWT containing the role claims
    * @return a map where the key is the role and the value is a list of client ids for that role
    */
   public static Map<Role, List<String>> getRoles(Jwt jwtPrincipal) {
@@ -376,9 +389,10 @@ public class JwtPrincipalUtil {
   /**
    * Produce a mapping of {@link Role} to the list of client IDs the principal has for that role.
    *
-   * <p>The method parses the value of {@code cognito:groups} and groups elements by role.
+   * <p>The role names come from {@code client_roles}, then {@code resource_access.<azp>.roles},
+   * with the legacy Cognito {@code cognito:groups} claim as a transitional fallback.
    *
-   * @param jwtPrincipal the authentication token containing the groups claim
+   * @param jwtPrincipal the authentication token containing the role claims
    * @return a map where the key is the role and the value is a list of client ids for that role
    */
   public static Map<Role, List<String>> getRoles(JwtAuthenticationToken jwtPrincipal) {
@@ -504,19 +518,16 @@ public class JwtPrincipalUtil {
     return IdentityProvider.fromClaim(getProvider(jwtPrincipal)).orElseThrow();
   }
 
+  /**
+   * Resolves the role names carried by a token using the same sources as the authority converter in
+   * {@code Oauth2SecurityCustomizer}: {@code client_roles}, then {@code
+   * resource_access.<azp>.roles}, then the legacy Cognito {@code cognito:groups} claim.
+   *
+   * @param tokenAttributes the JWT claims
+   * @return the distinct role names from the first non-empty source, or an empty set
+   */
   private static Set<String> getClaimGroups(Map<String, Object> tokenAttributes) {
-    Object groups = tokenAttributes.get("cognito:groups");
-
-    if (groups instanceof List) {
-      return ((List<?>) groups)
-          .stream()
-              .filter(Objects::nonNull)
-              .filter(String.class::isInstance)
-              .map(String.class::cast)
-              .collect(Collectors.toSet());
-    }
-
-    return Collections.emptySet();
+    return new HashSet<>(readClaimRoles(tokenAttributes));
   }
 
   private static Map<Role, List<String>> getClaimGroups(Set<String> groups) {
@@ -544,6 +555,40 @@ public class JwtPrincipalUtil {
                 Collectors.mapping(
                     java.util.AbstractMap.SimpleEntry::getValue,
                     Collectors.filtering(Objects::nonNull, Collectors.toList()))));
+  }
+
+  private static List<String> readClaimRoles(Map<String, Object> claims) {
+    List<String> clientRoles = readStringList(claims.get(CLAIM_CLIENT_ROLES));
+    if (!clientRoles.isEmpty()) {
+      return clientRoles;
+    }
+    List<String> resourceAccessRoles = readResourceAccessRoles(claims);
+    if (!resourceAccessRoles.isEmpty()) {
+      return resourceAccessRoles;
+    }
+    return readStringList(claims.get(CLAIM_COGNITO_GROUPS));
+  }
+
+  private static List<String> readResourceAccessRoles(Map<String, Object> claims) {
+    if (!(claims.get(CLAIM_RESOURCE_ACCESS) instanceof Map<?, ?> resourceAccess)) {
+      return List.of();
+    }
+    String azp = Objects.toString(claims.get(CLAIM_AZP), null);
+    if (!(resourceAccess.get(azp) instanceof Map<?, ?> client)) {
+      return List.of();
+    }
+    return readStringList(client.get("roles"));
+  }
+
+  private static List<String> readStringList(Object claim) {
+    if (!(claim instanceof List<?> entries)) {
+      return List.of();
+    }
+    return entries.stream()
+        .filter(String.class::isInstance)
+        .map(String.class::cast)
+        .filter(role -> !role.startsWith(FAM_EXPIRY_PREFIX))
+        .toList();
   }
 
   /**

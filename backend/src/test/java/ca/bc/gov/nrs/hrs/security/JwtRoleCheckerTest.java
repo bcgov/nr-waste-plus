@@ -3,7 +3,10 @@ package ca.bc.gov.nrs.hrs.security;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import ca.bc.gov.nrs.hrs.extensions.WithMockJwtSecurityContextFactory;
+import ca.bc.gov.nrs.hrs.util.KeycloakJwtFixtures;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -183,6 +186,69 @@ class JwtRoleCheckerTest {
 
       assertThat(checker.hasRole(auth, ca.bc.gov.nrs.hrs.dto.base.Role.ADMIN)).isFalse();
       assertThat(checker.hasAnyWriteRole(auth)).isFalse();
+    }
+
+    @Test
+    @DisplayName("CSS BCeID token with client_roles VIEWER_00001271 passes the route gate")
+    void cssBceidViewerWithClientRolesIsValid() {
+      Jwt token = cssJwt("bceidbusiness", List.of("WASTE_PLUS_VIEWER_00001271"));
+      JwtAuthenticationToken auth =
+          new JwtAuthenticationToken(
+              token, AuthorityUtils.createAuthorityList("WASTE_PLUS_VIEWER_00001271"));
+
+      assertThat(checker.isValidRouteGatePrincipal(auth)).isTrue();
+      assertThat(checker.isValidRouteGatePrincipal(token)).isTrue();
+    }
+
+    @Test
+    @DisplayName("CSS IDIR token with client_roles ADMIN passes the route gate")
+    void cssIdirAdminWithClientRolesIsValid() {
+      Jwt token = cssJwt("azureidir", List.of("WASTE_PLUS_ADMIN"));
+      JwtAuthenticationToken auth =
+          new JwtAuthenticationToken(token, AuthorityUtils.createAuthorityList("WASTE_PLUS_ADMIN"));
+
+      assertThat(checker.isValidRouteGatePrincipal(auth)).isTrue();
+      assertThat(checker.isValidRouteGatePrincipal(token)).isTrue();
+    }
+
+    @Test
+    @DisplayName("legacy cognito:groups token still passes the route gate")
+    void legacyCognitoGroupsTokenIsValid() {
+      Jwt token =
+          WithMockJwtSecurityContextFactory.createJwt(
+              "legacy_user",
+              List.of("WASTE_PLUS_VIEWER_00012345"),
+              "bceidbusiness",
+              "View, Legacy",
+              "legacy@bceid.ca");
+      JwtAuthenticationToken auth =
+          new JwtAuthenticationToken(
+              token, AuthorityUtils.createAuthorityList("WASTE_PLUS_VIEWER_00012345"));
+
+      assertThat(checker.isValidRouteGatePrincipal(auth)).isTrue();
+      assertThat(checker.isValidRouteGatePrincipal(token)).isTrue();
+    }
+
+    @Test
+    @DisplayName("CSS token with no roles fails the route gate")
+    void cssTokenWithoutRolesIsInvalid() {
+      Jwt bceid = cssJwt("bceidbusiness", List.of());
+      Jwt idir = cssJwt("azureidir", List.of());
+
+      assertThat(checker.isValidRouteGatePrincipal(new JwtAuthenticationToken(bceid, List.of())))
+          .isFalse();
+      assertThat(checker.isValidRouteGatePrincipal(bceid)).isFalse();
+      assertThat(checker.isValidRouteGatePrincipal(new JwtAuthenticationToken(idir, List.of())))
+          .isFalse();
+      assertThat(checker.isValidRouteGatePrincipal(idir)).isFalse();
+    }
+
+    private static Jwt cssJwt(String idp, List<String> clientRoles) {
+      Map<String, Object> claims = new LinkedHashMap<>();
+      claims.put("sub", "css-user");
+      claims.put("identity_provider", idp);
+      claims.put("client_roles", clientRoles);
+      return KeycloakJwtFixtures.jwt(claims);
     }
   }
 
