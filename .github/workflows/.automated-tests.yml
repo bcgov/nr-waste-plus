@@ -8,8 +8,14 @@ on:
         type: string
 
 jobs:
-  cypress-run:
+  playwright-run:
     name: "User flow test"
+    # One shared IDIR account: Entra rejects a TOTP code reused inside its
+    # window, so concurrent PR runs queue instead of racing (D-018).
+    concurrency:
+      group: idir-account
+      cancel-in-progress: false
+    continue-on-error: true
     permissions:
       pull-requests: write
     runs-on: ubuntu-26.04
@@ -23,33 +29,33 @@ jobs:
         with:
           node-version: 26
 
-      - name: Cache Cypress binary
+      - name: Cache Playwright browsers
         uses: actions/cache@v6
         with:
-          path: ~/.cache/Cypress
-          key: cypress-binary-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('cypress/package-lock.json') }}
+          path: ~/.cache/ms-playwright
+          key: ms-playwright-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('user-journeys/package-lock.json') }}
           restore-keys: |
-            cypress-binary-${{ runner.os }}-${{ runner.arch }}-
+            ms-playwright-${{ runner.os }}-${{ runner.arch }}-
 
-      - name: Install Cypress dependencies
-        working-directory: cypress
+      - name: Install user-journeys dependencies
+        working-directory: user-journeys
         run: npm ci --ignore-scripts --no-audit --no-fund
 
-      - name: Install Cypress binary
-        working-directory: cypress
-        run: npx cypress install
+      - name: Install Playwright Chromium
+        working-directory: user-journeys
+        run: npx playwright install --with-deps chromium
 
-      - name: Verify Cypress installation
-        working-directory: cypress
-        run: npx cypress version
-
-      - name: Lint Cypress tests
-        working-directory: cypress
+      - name: Lint user journeys
+        working-directory: user-journeys
         run: npm run lint
 
-      - name: Typecheck Cypress tests
-        working-directory: cypress
-        run: npx tsc --noEmit -p tsconfig.json
+      - name: Typecheck user journeys
+        working-directory: user-journeys
+        run: npm run pw:typecheck
+
+      - name: Reporter unit tests
+        working-directory: user-journeys
+        run: npm run test:reporters
 
       - name: Wait for frontend deployment
         env:
@@ -92,100 +98,62 @@ jobs:
             fi
           done
 
-      - name: Install frontend deps for SSO auth state
-        working-directory: frontend
-        run: |
-          npm ci --ignore-scripts --no-audit --no-fund
-          npx playwright install chromium
-
-      - name: Generate SSO auth states
-        working-directory: frontend
+      - name: Run Playwright user journeys
+        working-directory: user-journeys
         env:
-          E2E_BASE_URL: https://${{ inputs.url }}
+          CYPRESS_baseUrl: https://${{ inputs.url }}
+          CI: "true"
+          PW_MIN_LOAD_INTERVAL_MS: "1000"
           idir_username: ${{ secrets.IDIR_CSS_USERNAME }}
           idir_password: ${{ secrets.IDIR_CSS_PASSWORD }}
           idir_totp_secret: ${{ secrets.IDIR_CSS_TOTP_SECRET }}
           bceid_username: ${{ secrets.BCEID_UAT_USERNAME2 }}
           bceid_password: ${{ secrets.BCEID_UAT_PASSWORD2 }}
-        run: |
-          npx playwright test -c playwright.sso.config.ts sso-login.spec.ts --retries=2
-          npx playwright test -c playwright.sso.config.ts bceid-login.spec.ts --retries=2
+        run: npx bddgen && npx playwright test
 
-      - name: Run Cypress End-to-End
-        uses: cypress-io/github-action@v7.4.10
-        with:
-          working-directory: cypress
-          browser: chrome
-          install: false
+      - name: Scan artifacts for leaked secrets
+        if: always()
+        working-directory: user-journeys
         env:
-          CYPRESS_baseUrl: https://${{ inputs.url }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          CYPRESS_idir_password: ${{ secrets.IDIR_CSS_PASSWORD }}
-          CYPRESS_idir_username: ${{ secrets.IDIR_CSS_USERNAME }}
-          CYPRESS_idir_totp_secret: ${{ secrets.IDIR_CSS_TOTP_SECRET }}
-          CYPRESS_bceid_password: ${{ secrets.BCEID_UAT_PASSWORD2 }}
-          CYPRESS_bceid_username: ${{ secrets.BCEID_UAT_USERNAME2 }}
+          SCAN_IDIR_USERNAME: ${{ secrets.IDIR_CSS_USERNAME }}
+          SCAN_IDIR_PASSWORD: ${{ secrets.IDIR_CSS_PASSWORD }}
+          SCAN_IDIR_TOTP_SECRET: ${{ secrets.IDIR_CSS_TOTP_SECRET }}
+          SCAN_BCEID_USERNAME: ${{ secrets.BCEID_UAT_USERNAME2 }}
+          SCAN_BCEID_PASSWORD: ${{ secrets.BCEID_UAT_PASSWORD2 }}
+        run: |
+          set -euo pipefail
 
-      - name: Run Cypress script tests
-        working-directory: cypress
-        if: always()
-        run: npm run test:unit
+          dirs=(playwright-report test-results reports)
+          leaked=0
 
-      - name: Generate Markdown Report
-        working-directory: cypress
-        if: always()
-        run: npm run report:md
+          # Values stay in shell variables; only the variable name is echoed.
+          for name in SCAN_IDIR_USERNAME SCAN_IDIR_PASSWORD SCAN_IDIR_TOTP_SECRET SCAN_BCEID_USERNAME SCAN_BCEID_PASSWORD; do
+            value="${!name:-}"
+            [ -n "$value" ] || continue
+            if grep -rFq -- "$value" "${dirs[@]}" 2>/dev/null; then
+              echo "::error::A credential value (${name}) was found in the test artifacts."
+              leaked=1
+            fi
+          done
 
-      - name: Add summary to GitHub Action
-        working-directory: cypress
-        if: always()
-        run: cat summary.md >> "$GITHUB_STEP_SUMMARY"
+          if grep -rEq -- 'eyJ[A-Za-z0-9_-]{10,}\.' "${dirs[@]}" 2>/dev/null; then
+            echo "::error::A JWT-shaped token was found in the test artifacts."
+            leaked=1
+          fi
 
-      - name: Persist Cypress RunResult and flaky summary
+          if [ "$leaked" -ne 0 ]; then
+            exit 1
+          fi
+          echo "Artifact secret scan passed."
+
+      - name: Upload Playwright artifacts
         if: always()
         uses: actions/upload-artifact@v7
         with:
-          name: cypress-run-result
+          name: playwright-report
           path: |
-            cypress/reports/run-result.json
-            cypress/reports/flaky/flaky-summary.json
-          retention-days: 30
-
-      - name: Check for Cypress Screenshots and Videos
-        continue-on-error: true
-        if: always()
-        run: |
-          if [ -d "cypress/cypress/screenshots" ] && [ "$(ls -A cypress/cypress/screenshots)" ]; then
-            echo "Screenshots folder is not empty, uploading artifacts."
-            echo "screenshots=true" >> "$GITHUB_OUTPUT"
-
-          else
-            echo "Screenshots folder is empty or does not exist."
-            echo "screenshots=false" >> "$GITHUB_OUTPUT"
-          fi
-
-          if [ -d "cypress/cypress/videos" ] && [ "$(ls -A cypress/cypress/videos)" ]; then
-            echo "Videos folder is not empty, uploading artifacts."
-            echo "videos=true" >> "$GITHUB_OUTPUT"
-
-          else
-            echo "Videos folder is empty or does not exist."
-            echo "videos=false" >> "$GITHUB_OUTPUT"
-          fi
-        id: check_artifacts
-
-      - uses: actions/upload-artifact@v7
-        name: Upload Cypress Screenshots
-        if: always() && steps.check_artifacts.outputs.screenshots == 'true'
-        with:
-          name: cypress-screenshots
-          path: cypress/cypress/screenshots
+            user-journeys/playwright-report
+            user-journeys/reports/playwright/timeline.html
+            user-journeys/reports/playwright/junit.xml
           retention-days: 7
-
-      - uses: actions/upload-artifact@v7
-        name: Upload Cypress Videos
-        if: always() && steps.check_artifacts.outputs.videos == 'true'
-        with:
-          name: cypress-videos
-          path: cypress/cypress/videos
-          retention-days: 7
+          if-no-files-found: warn
