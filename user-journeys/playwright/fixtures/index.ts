@@ -1,9 +1,10 @@
-import { test as base, createBdd } from "playwright-bdd";
+import { createBdd } from "playwright-bdd";
 
 import {
   createA11yRecorder,
   type A11yRecorder,
 } from "./a11y.fixture.ts";
+import { test as base } from "./shared-context.fixture.ts";
 import {
   createLighthouseRecorder,
   type LighthouseRecorder,

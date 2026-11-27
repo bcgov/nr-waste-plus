@@ -38,7 +38,11 @@ export default tseslint.config(
   {
     // Fixtures are CJS under "type": "commonjs"; they load the ESM quality schema
     // with a dynamic import(), which Playwright's TS loader preserves.
-    files: ["playwright/fixtures/quality.ts", "playwright/fixtures/*.fixture.ts"],
+    files: [
+      "playwright/fixtures/quality.ts",
+      "playwright/fixtures/*.fixture.ts",
+      "playwright/fixtures/*.test.ts",
+    ],
     rules: {
       "@typescript-eslint/no-require-imports": "off",
     },

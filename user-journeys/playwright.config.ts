@@ -39,6 +39,8 @@ export default defineConfig({
   timeout: 30_000,
   expect: { timeout: 10_000 },
   fullyParallel: false,
+  // Keep workers at 1: the Silver route rate-limits per client IP (guide §0),
+  // so parallel workers would open fresh contexts back-to-back and fail.
   workers: 1,
   retries: process.env.CI ? 2 : 0,
   forbidOnly: !!process.env.CI,
