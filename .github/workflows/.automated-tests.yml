@@ -15,7 +15,6 @@ jobs:
     concurrency:
       group: idir-account
       cancel-in-progress: false
-    continue-on-error: true
     permissions:
       pull-requests: write
     runs-on: ubuntu-26.04
