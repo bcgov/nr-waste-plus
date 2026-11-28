@@ -15,6 +15,8 @@ export type LighthouseRecorderInput = Pick<
   | "severity"
   | "taxonomy"
   | "url"
+  | "finalUrl"
+  | "documentTitle"
   | "lighthouseOptions"
   | "lighthouseConfigSettings"
 >;

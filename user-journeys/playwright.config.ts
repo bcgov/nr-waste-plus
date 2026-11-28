@@ -4,10 +4,17 @@ import { baseURL, VIEWPORT } from "./playwright/env";
 
 const LOGOUTS_FEATURE = "../cypress/cypress/e2e/logouts.feature";
 const LOGOUTS_SPEC = /logouts\.feature\.spec\.js$/;
+const LIGHTHOUSE_FEATURES = [
+  "../cypress/cypress/e2e/lighthouse.feature",
+  "../cypress/cypress/e2e/ux-quality.feature",
+];
 
-// Parked features (reporting_unit_details, ux-quality, lighthouse) are excluded
-// here until each one passes locally twice.
+// reporting_unit_details passed twice against PR12 after the Legacy-data tag
+// fix (CI run 46169823928), so its scenarios now run in the default journey.
+// lighthouse + ux-quality are first-class scenarios in their own project.
 const DEFAULT_FEATURES = [
+  "../cypress/cypress/e2e/lighthouse.feature",
+  "../cypress/cypress/e2e/ux-quality.feature",
   "../cypress/cypress/e2e/screen-load.feature",
   "../cypress/cypress/e2e/sso-smoke.feature",
   "../cypress/cypress/e2e/unauthorized-access.feature",
@@ -44,7 +51,12 @@ function featureSources(): string[] {
  */
 const requestedFeatures = featureSources();
 const logoutsRequested = requestedFeatures.includes(LOGOUTS_FEATURE);
-const journeysFeatures = requestedFeatures.filter((feature) => feature !== LOGOUTS_FEATURE);
+const lighthouseRequested = LIGHTHOUSE_FEATURES.filter((feature) =>
+  requestedFeatures.includes(feature),
+);
+const journeysFeatures = requestedFeatures.filter(
+  (feature) => feature !== LOGOUTS_FEATURE && !LIGHTHOUSE_FEATURES.includes(feature),
+);
 const steps = ["playwright/fixtures/index.ts", "playwright/steps/**/*.ts"];
 
 // Each project owns its generated specs: bddgen would otherwise overwrite the
@@ -64,6 +76,18 @@ const logoutsTestDir = defineBddConfig({
   steps,
   outputDir: ".features-gen/logouts",
 });
+
+// The Lighthouse project owns its generated specs so it cannot overwrite the
+// journeys output. Both features are in DEFAULT_FEATURES after three green
+// consecutive runs; PW_FEATURES still narrows the project for focused runs.
+const lighthouseTestDir = lighthouseRequested.length
+  ? defineBddConfig({
+      features: lighthouseRequested,
+      featuresRoot: "..",
+      steps,
+      outputDir: ".features-gen/lighthouse",
+    })
+  : ".features-gen/lighthouse";
 
 const ciReporters: Array<["github"] | ["blob"]> = process.env.CI
   ? [["github"], ["blob"]]
@@ -127,5 +151,25 @@ export default defineConfig({
       testIgnore: logoutsRequested ? undefined : LOGOUTS_SPEC,
       use: { ...devices["Desktop Chrome"], viewport: VIEWPORT },
     },
+    ...(lighthouseRequested.length
+      ? [
+          {
+            name: "lighthouse",
+            testDir: lighthouseTestDir,
+            dependencies: ["setup"],
+            timeout: 180_000,
+            expect: { timeout: 30_000 },
+            workers: 1,
+            use: {
+              ...devices["Desktop Chrome"],
+              viewport: VIEWPORT,
+              launchOptions: { args: ["--remote-debugging-port=9333"] },
+              trace: "off" as const,
+              video: "off" as const,
+              screenshot: "only-on-failure" as const,
+            },
+          },
+        ]
+      : []),
   ],
 });

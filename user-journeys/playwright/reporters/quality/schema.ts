@@ -70,6 +70,9 @@ export const LighthouseEventSchema = z.object({
   severity: z.string(),
   taxonomy: z.string(),
   url: z.string(),
+  // Redacted page identity from the audited LHR: pathname/title only, never tokens.
+  finalUrl: z.string().optional(),
+  documentTitle: z.string().optional(),
   lighthouseOptions: LighthouseOptionsSchema,
   lighthouseConfigSettings: z.record(z.string(), z.unknown()),
 });
