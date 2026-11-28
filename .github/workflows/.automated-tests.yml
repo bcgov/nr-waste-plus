@@ -79,7 +79,7 @@ jobs:
           echo "Frontend did not become ready after ${max_attempts} attempts: ${FRONTEND_URL}"
           exit 1
 
-      - name: Verify Cypress credentials configured
+      - name: Verify test credentials configured
         env:
           IDIR_USERNAME: ${{ secrets.IDIR_CSS_USERNAME }}
           IDIR_PASSWORD: ${{ secrets.IDIR_CSS_PASSWORD }}
@@ -99,6 +99,9 @@ jobs:
 
       - name: Run Playwright user journeys
         working-directory: user-journeys
+        # Unsharded: the suite runs in ~2 min, so sharding would add CI
+        # complexity for no gain. Blob output stays on so merge/shard can be
+        # enabled later without changing reporters or artifact paths.
         env:
           CYPRESS_baseUrl: https://${{ inputs.url }}
           CI: "true"
