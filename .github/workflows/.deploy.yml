@@ -80,6 +80,16 @@ on:
         required: false
         type: string
         default: ""
+      rate-limit-tcp:
+        description: HAProxy TCP connection rate limit per client IP
+        required: false
+        type: string
+        default: "75"
+      rate-limit-http:
+        description: HAProxy HTTP request rate limit per client IP
+        required: false
+        type: string
+        default: "150"
 
 permissions: {}
 
@@ -152,6 +162,10 @@ jobs:
             -p COGNITO_CLIENT_ID=${{ secrets.COGNITO_CLIENT_ID }}
             -p COGNITO_ENVIRONMENT=${{ inputs.target || 'dev' }}
             -p COGNITO_USER_POOL=${{ secrets.COGNITO_USER_POOL }}
+            -p KEYCLOAK_CLIENT_ID=${{ secrets.KEYCLOAK_CLIENT_ID }}
+            -p KEYCLOAK_ISSUER_URI=${{ secrets.KEYCLOAK_ISSUER_URI }}
+            -p VITE_KEYCLOAK_CLIENT_ID=${{ secrets.VITE_KEYCLOAK_CLIENT_ID }}
+            -p VITE_KEYCLOAK_URL=${{ secrets.VITE_KEYCLOAK_URL }}
             -p VITE_NODE_ENV=openshift-${{ inputs.target }}
             -p URL_FRONTEND=${{ inputs.url }}
             -p LANDING_URL=${{ inputs.url }}
@@ -191,6 +205,8 @@ jobs:
             overwrite: true
             parameters: -p URL=${{ inputs.url }}
               -p CONFIG_MAP="${{ inputs.configmap-frontend }}"
+              -p RATE_LIMIT_TCP=${{ inputs.rate-limit-tcp }}
+              -p RATE_LIMIT_HTTP=${{ inputs.rate-limit-http }}
           - name: backend
             overwrite: true
             parameters: -p FRONTEND_URL=${{ inputs.url }}

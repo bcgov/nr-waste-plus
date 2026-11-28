@@ -7,7 +7,7 @@ import type { APIConfig } from '@/config/api/types';
 
 import { failureNotificationMiddleware } from '@/config/api/failureNotificationMiddleware';
 import { problemDetailsMiddleware } from '@/config/api/problemDetailsMiddleware';
-import { getUserAccessTokenFromCookie } from '@/context/auth/authUtils';
+import { getUserAccessToken } from '@/services/keycloak';
 import { env } from '@/env';
 import { ForestClientService } from '@/services/forestclient.service';
 import { ReportingUnitService } from '@/services/reportingunit.service';
@@ -32,11 +32,11 @@ export const BackendApiConfig: APIConfig = {
 };
 
 /**
- * Dynamically resolves the bearer token from the Cognito session cookie for each request.
+ * Dynamically resolves the bearer token from the OIDC session for each request.
  * Falls back to an empty string when no session is present (unauthenticated requests).
  */
 BackendApiConfig.TOKEN = async () => {
-  return getUserAccessTokenFromCookie() ?? '';
+  return (await getUserAccessToken()) ?? '';
 };
 
 /** Injects OpenTelemetry B3 trace headers into every outgoing backend request. */

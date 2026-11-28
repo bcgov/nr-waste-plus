@@ -10,6 +10,10 @@ import org.springframework.security.test.context.support.WithSecurityContext;
 
 /**
  * Test annotation that installs a mock JWT-backed Spring Security context.
+ *
+ * <p>Cognito-shaped attributes ({@code cognitoGroups}, {@code idp}, ...) keep their original
+ * behaviour. Keycloak-shaped attributes (epic #1506) add the standard-realm claim names to the mock
+ * token when set; existing tests that only use the Cognito attributes are unaffected.
  */
 @Target({ElementType.METHOD, ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
@@ -52,4 +56,39 @@ public @interface WithMockJwt {
    * @return the display name claim
    */
   String displayName() default "Test, Automated WLRS:EX";
+
+  /**
+   * Returns the Keycloak {@code identity_provider} claim (e.g. {@code azureidir}); empty to omit.
+   *
+   * @return the Keycloak identity provider claim
+   */
+  String identityProvider() default "";
+
+  /**
+   * Returns the Keycloak {@code idir_username} claim; empty to omit.
+   *
+   * @return the IDIR username claim
+   */
+  String idirUsername() default "";
+
+  /**
+   * Returns the Keycloak {@code idir_user_guid} claim; empty to omit.
+   *
+   * @return the IDIR user GUID claim
+   */
+  String idirUserGuid() default "";
+
+  /**
+   * Returns the Keycloak {@code client_roles} claim entries; empty to omit.
+   *
+   * @return the CSS-era FAM client roles
+   */
+  String[] clientRoles() default {};
+
+  /**
+   * Returns the Keycloak {@code azp} (authorized party) claim; empty to omit.
+   *
+   * @return the authorized party
+   */
+  String azp() default "";
 }

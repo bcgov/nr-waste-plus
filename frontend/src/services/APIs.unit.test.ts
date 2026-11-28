@@ -27,10 +27,10 @@ describe('BackendApiConfig.TOKEN', () => {
     vi.resetModules();
   });
 
-  it('returns access token from cookie helper', async () => {
-    const getUserAccessTokenFromCookie = vi.fn(() => 'access-token');
-    vi.doMock('@/context/auth/authUtils', () => ({
-      getUserAccessTokenFromCookie,
+  it('returns access token from the OIDC session', async () => {
+    const getUserAccessToken = vi.fn(async () => 'access-token');
+    vi.doMock('@/services/keycloak', () => ({
+      getUserAccessToken,
     }));
 
     const { BackendApiConfig } = await vi.importActual<typeof import('./APIs')>('./APIs');
@@ -38,13 +38,13 @@ describe('BackendApiConfig.TOKEN', () => {
 
     expect(tokenResolver).toBeTypeOf('function');
     await expect(tokenResolver?.()).resolves.toBe('access-token');
-    expect(getUserAccessTokenFromCookie).toHaveBeenCalledTimes(1);
+    expect(getUserAccessToken).toHaveBeenCalledTimes(1);
   });
 
-  it('returns empty string when access token cookie is unavailable', async () => {
-    const getUserAccessTokenFromCookie = vi.fn(() => undefined);
-    vi.doMock('@/context/auth/authUtils', () => ({
-      getUserAccessTokenFromCookie,
+  it('returns empty string when no OIDC session is present', async () => {
+    const getUserAccessToken = vi.fn(async () => undefined);
+    vi.doMock('@/services/keycloak', () => ({
+      getUserAccessToken,
     }));
 
     const { BackendApiConfig } = await vi.importActual<typeof import('./APIs')>('./APIs');
@@ -52,6 +52,6 @@ describe('BackendApiConfig.TOKEN', () => {
 
     expect(tokenResolver).toBeTypeOf('function');
     await expect(tokenResolver?.()).resolves.toBe('');
-    expect(getUserAccessTokenFromCookie).toHaveBeenCalledTimes(1);
+    expect(getUserAccessToken).toHaveBeenCalledTimes(1);
   });
 });

@@ -1,257 +1,205 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
-import {
-  getCookie,
-  getUserAccessTokenFromCookie,
-  getUserIdTokenFromCookie,
-  getUserTokenFromCookie,
-  parseToken,
-} from './authUtils';
+import { parseToken } from './authUtils';
+import { Role } from '@/types/auth.types';
 
-vi.mock(import('@/env'), async (importOriginal) => {
-  const actual = await importOriginal();
-  return {
-    ...actual,
-    env: {
-      ...actual.env,
-      VITE_USER_POOLS_WEB_CLIENT_ID: 'test-client-id',
-      NODE_ENV: 'test',
-    },
-  };
-});
+const idirClaims = {
+  identity_provider: 'azureidir',
+  idir_username: 'JRYAN',
+  display_name: 'Ryan, Jack Admin CIA:IN',
+  email: 'jack.ryan@gov.bc.ca',
+  client_roles: ['WASTE_PLUS_ADMIN'],
+};
 
-describe('authUtils', () => {
-  describe('getCookie', () => {
-    let originalCookie: string;
-    beforeEach(() => {
-      originalCookie = globalThis.document?.cookie;
-      Object.defineProperty(document, 'cookie', {
-        writable: true,
-        configurable: true,
-        value:
-          'foo=bar; CognitoIdentityServiceProvider.test-client-id.LastAuthUser=theuser; CognitoIdentityServiceProvider.test-client-id.theuser.idToken=idtoken; CognitoIdentityServiceProvider.test-client-id.theuser.accessToken=accesstoken',
-      });
-    });
-    afterEach(() => {
-      Object.defineProperty(document, 'cookie', {
-        writable: true,
-        configurable: true,
-        value: originalCookie,
-      });
-    });
-    it('returns the correct cookie value', () => {
-      expect(getCookie('foo')).toBe('bar');
-      expect(getCookie('CognitoIdentityServiceProvider.test-client-id.LastAuthUser')).toBe(
-        'theuser',
-      );
-    });
-    it('returns empty string if cookie not found', () => {
-      expect(getCookie('notfound')).toBe('');
-    });
-    it('handles malformed cookie when split equals nothing', () => {
-      Object.defineProperty(document, 'cookie', {
-        writable: true,
-        configurable: true,
-        value: 'broken',
-      });
-      expect(getCookie('broken')).toBe('');
-    });
+describe('parseToken', () => {
+  it('returns undefined when claims are absent', () => {
+    expect(parseToken(undefined)).toBeUndefined();
   });
 
-  describe('token getters', () => {
-    beforeEach(() => {
-      Object.defineProperty(document, 'cookie', {
-        writable: true,
-        configurable: true,
-        value:
-          'CognitoIdentityServiceProvider.test-client-id.LastAuthUser=theuser; CognitoIdentityServiceProvider.test-client-id.theuser.idToken=idtoken; CognitoIdentityServiceProvider.test-client-id.theuser.accessToken=accesstoken',
-      });
-    });
-    afterEach(() => {
-      vi.clearAllMocks();
-    });
-    it('returns the accessToken from cookies', () => {
-      expect(getUserAccessTokenFromCookie()).toBe('accesstoken');
-      expect(getUserTokenFromCookie()).toBe('accesstoken');
-    });
+  it('parses the Keycloak IDIR claim set', () => {
+    const user = parseToken(idirClaims);
 
-    it('returns the idToken from cookies', () => {
-      expect(getUserIdTokenFromCookie()).toBe('idtoken');
+    expect(user).toMatchObject({
+      userName: 'JRYAN',
+      displayName: 'Ryan, Jack Admin CIA:IN',
+      email: 'jack.ryan@gov.bc.ca',
+      idpProvider: 'IDIR',
+      firstName: 'Jack',
+      providerUsername: 'IDIR\\JRYAN',
     });
-
-    it('returns undefined if no userId', () => {
-      Object.defineProperty(document, 'cookie', {
-        writable: true,
-        configurable: true,
-        value: '',
-      });
-      expect(getUserAccessTokenFromCookie()).toBeUndefined();
-      expect(getUserIdTokenFromCookie()).toBeUndefined();
-      expect(getUserTokenFromCookie()).toBeUndefined();
-    });
-
-    it('returns undefined if userId cookie exists but token cookie missing', () => {
-      Object.defineProperty(document, 'cookie', {
-        writable: true,
-        configurable: true,
-        value: 'CognitoIdentityServiceProvider.test-client-id.LastAuthUser=anotheruser',
-      });
-      expect(getUserAccessTokenFromCookie()).toBe('');
-      expect(getUserIdTokenFromCookie()).toBe('');
-    });
+    expect(user?.roles).toEqual([
+      { role: Role.ADMIN, clients: [] },
+      { role: Role.IDIR, clients: [] },
+    ]);
+    expect(user?.privileges).toEqual({ ADMIN: null });
   });
 
-  describe('parseToken', () => {
-    it('returns undefined if no token', () => {
-      expect(parseToken(undefined)).toBeUndefined();
-    });
-    it('parses a valid JWT payload', () => {
-      const jwt = {
-        payload: {
-          'custom:idp_display_name': 'Doe, John',
-          'custom:idp_name': 'idir',
-          'custom:idp_username': 'jdoe',
-          'email': 'john@example.com',
-          'cognito:groups': ['WASTE_PLUS_VIEWER_1', 'WASTE_PLUS_ADMIN'],
-        },
-      };
-      const user = parseToken(jwt);
-      expect(user).toMatchObject({
-        userName: 'jdoe',
-        displayName: 'Doe, John',
-        email: 'john@example.com',
-        idpProvider: 'IDIR',
-        privileges: { VIEWER: ['1'], ADMIN: null },
-        firstName: 'John',
-        lastName: 'Doe',
-        providerUsername: 'IDIR\\jdoe',
-      });
-    });
-
-    it('handles no comma in displayName (reverses names)', () => {
-      const jwt = {
-        payload: {
-          'custom:idp_display_name': 'John Doe',
-          'custom:idp_name': 'idir',
-          'custom:idp_username': 'jdoe',
-          'email': 'john@example.com',
-          'cognito:groups': [],
-        },
-      };
-      const user = parseToken(jwt);
-      expect(user?.firstName).toBe('John');
-      expect(user?.lastName).toBe('Doe');
+  it.each(['azureidir', 'AzureIDIR', 'idir', 'IDIR'])(
+    'normalizes every IDIR alias (%s) to the IDIR provider label',
+    (alias) => {
+      const user = parseToken({ ...idirClaims, identity_provider: alias });
       expect(user?.idpProvider).toBe('IDIR');
+      expect(user?.providerUsername).toBe('IDIR\\JRYAN');
+    },
+  );
+
+  it('maps the bceidbusiness broker to the BCEIDBUSINESS provider label', () => {
+    const user = parseToken({
+      identity_provider: 'bceidbusiness',
+      idir_username: 'uattest',
+      display_name: 'Uat Test',
+      email: 'uattest@gov.bc.ca',
+      client_roles: ['WASTE_PLUS_SUBMITTER'],
     });
 
-    it('handles missing displayName components', () => {
-      const jwt = {
-        payload: {
-          'custom:idp_display_name': 'John',
-          'custom:idp_name': 'idir',
-          'custom:idp_username': 'jdoe',
-          'email': 'john@example.com',
-          'cognito:groups': [],
-        },
-      };
-      const user = parseToken(jwt);
-      expect(user).toBeDefined();
+    expect(user?.idpProvider).toBe('BCEIDBUSINESS');
+    expect(user?.roles).toEqual([
+      { role: Role.SUBMITTER, clients: [] },
+      { role: Role.BCeID, clients: [] },
+    ]);
+    expect(user?.providerUsername).toBe('BCEIDBUSINESS\\uattest');
+  });
+
+  it('drops FAM bookkeeping entries before parsing roles and privileges', () => {
+    const user = parseToken({
+      ...idirClaims,
+      client_roles: [
+        'WASTE_PLUS_ADMIN',
+        'FAM:EXPIRES:2026-09-30:WASTE_PLUS_ADMIN',
+        'FAM:EXPIRES:2027-01-01:WASTE_PLUS_VIEWER',
+      ],
     });
 
-    it('defaults when fields missing', () => {
-      const jwt = {
-        payload: {
-          'custom:idp_display_name': '',
-          'custom:idp_name': 'unknown',
-          'custom:idp_username': '',
-          'email': '',
-          'cognito:groups': [],
-        },
-      };
-      const user = parseToken(jwt);
-      expect(user?.idpProvider).toBeUndefined();
-      expect(user?.userName).toBe('');
-      expect(user?.email).toBe('');
-      expect(user?.providerUsername).toBe('undefined\\');
+    expect(user?.roles).toEqual([
+      { role: Role.ADMIN, clients: [] },
+      { role: Role.IDIR, clients: [] },
+    ]);
+    expect(user?.privileges).toEqual({ ADMIN: null });
+  });
+
+  it('splits scoped roles into client values', () => {
+    const user = parseToken({
+      ...idirClaims,
+      client_roles: ['WASTE_PLUS_VIEWER_00147603', 'WASTE_PLUS_VIEWER_00010005'],
     });
 
-    it('handles BCEID provider', () => {
-      const jwt = {
-        payload: {
-          'custom:idp_display_name': 'Smith, Jane',
-          'custom:idp_name': 'bceidbusiness',
-          'custom:idp_username': 'jsmith',
-          'email': 'jane@example.com',
-          'cognito:groups': [],
-        },
-      };
-      const user = parseToken(jwt);
-      expect(user?.idpProvider).toBe('BCEIDBUSINESS');
-      expect(user?.providerUsername).toBe('BCEIDBUSINESS\\jsmith');
+    expect(user?.roles).toEqual([
+      { role: Role.VIEWER, clients: ['00147603', '00010005'] },
+      { role: Role.IDIR, clients: [] },
+    ]);
+    expect(user?.privileges).toEqual({ VIEWER: ['00147603', '00010005'] });
+  });
+
+  it('normalizes FAM forest-client scopes to the numeric client number', () => {
+    const user = parseToken({
+      ...idirClaims,
+      client_roles: [
+        'WASTE_PLUS_SUBMITTER_FOREST_CLIENT-00001271',
+        'WASTE_PLUS_SUBMITTER_forest_client-00001272',
+        'WASTE_PLUS_VIEWER_FOREST_CLIENT_00001273',
+      ],
     });
 
-    it('parses privileges with numeric suffix and without prefix', () => {
-      const jwt = {
-        payload: {
-          'custom:idp_display_name': 'X, Y',
-          'custom:idp_name': 'idir',
-          'custom:idp_username': 'xy',
-          'email': 'xy@example.com',
-          'cognito:groups': ['VIEWER_10', 'WASTE_PLUS_ADMIN_5', 'WASTE_PLUS_SUBMITTER'],
-        },
-      };
-      const user = parseToken(jwt);
-      expect(user?.privileges.VIEWER).toEqual(['10']);
-      expect(user?.privileges.ADMIN).toEqual(['5']);
-      expect(user?.privileges.SUBMITTER).toBeNull();
+    expect(user?.roles).toEqual([
+      { role: Role.SUBMITTER, clients: ['00001271', '00001272'] },
+      { role: Role.VIEWER, clients: ['00001273'] },
+      { role: Role.IDIR, clients: [] },
+    ]);
+    expect(user?.privileges).toEqual({
+      SUBMITTER: ['00001271', '00001272'],
+      VIEWER: ['00001273'],
+    });
+  });
+
+  it('keeps legacy numeric client suffixes unchanged', () => {
+    const user = parseToken({
+      ...idirClaims,
+      client_roles: ['WASTE_PLUS_VIEWER_00001271'],
     });
 
-    it('handles groups without cognito:groups key', () => {
-      const jwt = {
-        payload: {
-          'custom:idp_display_name': 'A, B',
-          'custom:idp_name': 'idir',
-          'custom:idp_username': 'ab',
-          'email': 'ab@example.com',
-        },
-      };
-      const user = parseToken(jwt);
-      expect(user?.privileges).toEqual({});
+    expect(user?.roles).toEqual([
+      { role: Role.VIEWER, clients: ['00001271'] },
+      { role: Role.IDIR, clients: [] },
+    ]);
+    expect(user?.privileges).toEqual({ VIEWER: ['00001271'] });
+  });
+
+  it('keeps IDIR district-code suffixes unchanged', () => {
+    const user = parseToken({
+      ...idirClaims,
+      client_roles: ['WASTE_PLUS_DISTRICT_DKM'],
     });
 
-    it('handles extractRoles with mixed cases and unknown roles', () => {
-      const jwt = {
-        payload: {
-          'custom:idp_display_name': 'A, B',
-          'custom:idp_name': 'idir',
-          'custom:idp_username': 'ab',
-          'email': 'ab@example.com',
-          'cognito:groups': [
-            'WASTE_PLUS_VIEWER_123',
-            'viewer_456',
-            'unknown_role',
-            'WASTE_PLUS_ADMIN',
-            'SUBMITTER_ABC',
-          ],
-        },
-      };
-      const user = parseToken(jwt);
-      expect(user?.privileges.VIEWER).toEqual(['123', '456']);
-      expect(user?.roles).toBeDefined();
+    expect(user?.roles).toEqual([
+      { role: Role.DISTRICT, clients: ['DKM'] },
+      { role: Role.IDIR, clients: [] },
+    ]);
+    expect(user?.privileges).toEqual({});
+  });
+
+  it('ignores malformed or empty FAM client suffixes', () => {
+    const user = parseToken({
+      ...idirClaims,
+      client_roles: [
+        'WASTE_PLUS_SUBMITTER_FOREST_CLIENT-',
+        'WASTE_PLUS_VIEWER_FOREST_CLIENT-NOT_A_NUMBER',
+        'WASTE_PLUS_SUBMITTER_FOREST_CLIENT',
+        'WASTE_PLUS_VIEWER_FOREST_CLIENT-00001271-extra',
+        'WASTE_PLUS_VIEWER_',
+      ],
     });
 
-    it('handles empty parts in split', () => {
-      const jwt = {
-        payload: {
-          'custom:idp_display_name': 'T, E',
-          'custom:idp_name': 'idir',
-          'custom:idp_username': 'te',
-          'email': 'te@example.com',
-          'cognito:groups': ['WASTE_PLUS_VIEWER_', 'WASTE_PLUS__TEST'],
-        },
-      };
-      const user = parseToken(jwt);
-      expect(user).toBeDefined();
+    expect(user?.roles).toEqual([
+      { role: Role.SUBMITTER, clients: [] },
+      { role: Role.VIEWER, clients: [] },
+      { role: Role.IDIR, clients: [] },
+    ]);
+    expect(user?.privileges).toEqual({});
+  });
+
+  it('ignores entries that do not resolve to an application role', () => {
+    const user = parseToken({
+      ...idirClaims,
+      client_roles: ['SOME_OTHER_APP_ROLE', 'WASTE_PLUS_ADMIN'],
+    });
+
+    expect(user?.roles).toEqual([
+      { role: Role.ADMIN, clients: [] },
+      { role: Role.IDIR, clients: [] },
+    ]);
+  });
+
+  it('still assigns the provider pseudo-role when the token carries no role claim', () => {
+    const user = parseToken({
+      identity_provider: 'azureidir',
+      idir_username: 'JRYAN',
+      display_name: 'Ryan, Jack',
+    });
+
+    expect(user?.roles).toEqual([{ role: Role.IDIR, clients: [] }]);
+    expect(user?.privileges).toEqual({});
+  });
+
+  it('handles a display name without a comma (space-separated)', () => {
+    const user = parseToken({
+      ...idirClaims,
+      display_name: 'Jack Ryan',
+    });
+
+    expect(user?.firstName).toBe('Jack');
+    expect(user?.lastName).toBe('Ryan');
+  });
+
+  it('defaults missing string claims to empty values', () => {
+    const user = parseToken({
+      identity_provider: 'azureidir',
+    });
+
+    expect(user).toMatchObject({
+      userName: '',
+      displayName: '',
+      email: '',
+      idpProvider: 'IDIR',
     });
   });
 });

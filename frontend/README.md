@@ -56,8 +56,8 @@ describe the main boundaries.
 The Playwright end-to-end suite runs against a production build served by Vite
 preview, not the Vite development server. The default E2E command enables mock
 authentication; it is useful for local browser coverage but does not verify a
-real BCeID or IDIR login. The separate [`cypress/`](../cypress/README.md) module
-contains Gherkin user-journey scenarios.
+real BCeID or IDIR login. The separate [`user-journeys/`](../user-journeys/README.md)
+module contains Gherkin user-journey scenarios.
 
 ### Quick start: mock authentication
 

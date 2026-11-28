@@ -27,7 +27,7 @@ jobs:
           update_title: true
 
       - name: Create feature file
-        run: echo "${{ steps.feature.outputs.feature }}" > cypress/cypress/e2e/upt_${{ github.event.issue.number }}.feature
+        run: echo "${{ steps.feature.outputs.feature }}" > user-journeys/features/upt_${{ github.event.issue.number }}.feature
 
       - name: Commit & Push changes
         uses: Andro999b/push@c77535fe7a94645f7ceca83e48e6cc977620710e # v1.3

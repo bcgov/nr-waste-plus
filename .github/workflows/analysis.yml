@@ -75,7 +75,7 @@ jobs:
     runs-on: ubuntu-26.04
     strategy:
       matrix:
-        folder: [cypress, frontend]
+        folder: [frontend, user-journeys]
     steps:
       - uses: actions/checkout@v7
       - name: Setup Node.js
@@ -133,7 +133,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        folder: [cypress, frontend]
+        folder: [frontend, user-journeys]
     steps:
       - uses: actions/checkout@v7
       - name: Setup Node.js

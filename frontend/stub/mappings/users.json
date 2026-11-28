@@ -5,10 +5,8 @@
       "request": {
         "url": "/api/users/preferences",
         "method": "GET",
-        "cookies": {
-          "CognitoIdentityServiceProvider.{{systemValue key='VITE_USER_POOLS_WEB_CLIENT_ID'}}.LastAuthUser": {
-            "equalTo": "idirUser"
-          }
+        "headers": {
+          "Authorization": { "contains": "eyJmaWQiOiJtb2NrLWlkaXIiLC" }
         }
       },
       "response": {
@@ -21,10 +19,8 @@
       "request": {
         "url": "/api/users/preferences",
         "method": "GET",
-        "cookies": {
-          "CognitoIdentityServiceProvider.{{systemValue key='VITE_USER_POOLS_WEB_CLIENT_ID'}}.LastAuthUser": {
-            "equalTo": "bceidUser"
-          }
+        "headers": {
+          "Authorization": { "contains": "eyJmaWQiOiJtb2NrLWJjZWlkIi" }
         }
       },
       "response": {

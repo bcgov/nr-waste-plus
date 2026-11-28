@@ -1,0 +1,206 @@
+{
+  "generatedAt": "2026-11-26T12:00:00.000Z",
+  "totals": {
+    "total": 5,
+    "passed": 2,
+    "failed": 1,
+    "skipped": 1,
+    "flaky": 1,
+    "durationMs": 65432
+  },
+  "a11y": { "checks": 1, "violations": 2 },
+  "uiux": { "checks": 1, "violations": 1, "major": 1, "minor": 0, "info": 0 },
+  "lighthouse": { "checks": 3, "passed": 2, "failed": 1 },
+  "failures": [
+    {
+      "title": "search.feature > finds a record",
+      "status": "failed",
+      "durationMs": 3210,
+      "file": "cypress/cypress/e2e/search.feature",
+      "error": "locator.resolve: expected visible"
+    }
+  ],
+  "a11yEvents": [
+    {
+      "schemaVersion": 1,
+      "kind": "a11y",
+      "feature": "accessibility.feature",
+      "scenario": "audit the home page",
+      "attempt": 0,
+      "recordedAt": "2026-11-26T12:00:00.000Z",
+      "url": "https://example.gov.bc.ca/#/home",
+      "violationCount": 2,
+      "violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "nodes": 4,
+          "help": "Elements must have sufficient color contrast",
+          "helpUrl": "https://dequeuniversity.com/rules/axe/4.10/color-contrast"
+        },
+        {
+          "id": "image-alt",
+          "impact": "critical",
+          "nodes": 2,
+          "help": "Images must have alternate text",
+          "helpUrl": "https://dequeuniversity.com/rules/axe/4.10/image-alt"
+        }
+      ]
+    }
+  ],
+  "uiuxEvents": [
+    {
+      "schemaVersion": 1,
+      "kind": "uiux",
+      "feature": "theme-toggle.feature",
+      "scenario": "the theme can be toggled",
+      "attempt": 0,
+      "recordedAt": "2026-11-26T12:00:00.000Z",
+      "event": "check",
+      "type": "token",
+      "taxonomy": "color",
+      "severity": "minor",
+      "property": "background-color",
+      "expected": "rgb(255, 255, 255)",
+      "actual": "rgb(255, 255, 255)",
+      "element": "body",
+      "selector": "body"
+    },
+    {
+      "schemaVersion": 1,
+      "kind": "uiux",
+      "feature": "theme-toggle.feature",
+      "scenario": "the theme can be toggled",
+      "attempt": 0,
+      "recordedAt": "2026-11-26T12:00:00.000Z",
+      "event": "violation",
+      "type": "token",
+      "taxonomy": "spacing",
+      "severity": "major",
+      "property": "margin",
+      "expected": "1rem",
+      "actual": "2rem",
+      "element": "header",
+      "selector": "#root header"
+    }
+  ],
+  "lighthouseEvents": [
+    {
+      "schemaVersion": 1,
+      "kind": "lighthouse",
+      "feature": "lighthouse.feature",
+      "scenario": "audits the home page",
+      "attempt": 0,
+      "recordedAt": "2026-11-26T12:00:00.000Z",
+      "type": "category",
+      "id": "performance",
+      "name": "Performance",
+      "value": 0.92,
+      "threshold": 0.9,
+      "comparison": ">=",
+      "passed": true,
+      "severity": "major",
+      "taxonomy": "baseline",
+      "url": "https://example.gov.bc.ca/#/home?source=audit",
+      "lighthouseOptions": {
+        "formFactor": "mobile",
+        "screenEmulation": {
+          "mobile": true,
+          "width": 412,
+          "height": 823,
+          "deviceScaleFactor": 1.75,
+          "disabled": false
+        }
+      },
+      "lighthouseConfigSettings": {
+        "emulatedFormFactor": "mobile",
+        "throttlingMethod": "simulate",
+        "screenEmulation": {
+          "mobile": true,
+          "width": 412,
+          "height": 823,
+          "deviceScaleFactor": 1.75,
+          "disabled": false
+        }
+      }
+    },
+    {
+      "schemaVersion": 1,
+      "kind": "lighthouse",
+      "feature": "lighthouse.feature",
+      "scenario": "audits the home page",
+      "attempt": 0,
+      "recordedAt": "2026-11-26T12:00:00.000Z",
+      "type": "metric",
+      "id": "lcp",
+      "name": "LCP",
+      "value": 2100,
+      "threshold": 2500,
+      "comparison": "<=",
+      "passed": true,
+      "severity": "info",
+      "taxonomy": "web-vitals",
+      "url": "https://example.gov.bc.ca/#/home?source=audit",
+      "lighthouseOptions": {
+        "formFactor": "mobile",
+        "screenEmulation": {
+          "mobile": true,
+          "width": 412,
+          "height": 823,
+          "deviceScaleFactor": 1.75,
+          "disabled": false
+        }
+      },
+      "lighthouseConfigSettings": {
+        "emulatedFormFactor": "mobile",
+        "throttlingMethod": "simulate",
+        "screenEmulation": {
+          "mobile": true,
+          "width": 412,
+          "height": 823,
+          "deviceScaleFactor": 1.75,
+          "disabled": false
+        }
+      }
+    },
+    {
+      "schemaVersion": 1,
+      "kind": "lighthouse",
+      "feature": "lighthouse.feature",
+      "scenario": "audits the home page",
+      "attempt": 0,
+      "recordedAt": "2026-11-26T12:00:00.000Z",
+      "type": "metric",
+      "id": "cls",
+      "name": "CLS",
+      "value": 0.2,
+      "threshold": 0.1,
+      "comparison": "<=",
+      "passed": false,
+      "severity": "major",
+      "taxonomy": "web-vitals",
+      "url": "https://example.gov.bc.ca/#/home?source=audit",
+      "lighthouseOptions": {
+        "formFactor": "mobile",
+        "screenEmulation": {
+          "mobile": true,
+          "width": 412,
+          "height": 823,
+          "deviceScaleFactor": 1.75,
+          "disabled": false
+        }
+      },
+      "lighthouseConfigSettings": {
+        "emulatedFormFactor": "mobile",
+        "throttlingMethod": "simulate",
+        "screenEmulation": {
+          "mobile": true,
+          "width": 412,
+          "height": 823,
+          "deviceScaleFactor": 1.75,
+          "disabled": false
+        }
+      }
+    }
+  ]
+}

@@ -39,6 +39,12 @@ parameters:
   - name: MAX_REPLICAS
     description: Maximum replicas for the horizontal pod autoscaler
     value: "5"
+  - name: RATE_LIMIT_TCP
+    description: HAProxy TCP connection rate limit per client IP
+    value: "75"
+  - name: RATE_LIMIT_HTTP
+    description: HAProxy HTTP request rate limit per client IP
+    value: "150"
   - name: CPU_REQUEST
     # HPA targets CPU utilization vs requests; 10m makes 80% noise.
     value: 50m
@@ -122,6 +128,16 @@ objects:
                     secretKeyRef:
                       name: ${NAME}-${ZONE}
                       key: fam-domain
+                - name: KEYCLOAK_CLIENT_ID
+                  valueFrom:
+                    secretKeyRef:
+                      name: ${NAME}-${ZONE}
+                      key: keycloak-client-id
+                - name: KEYCLOAK_ISSUER_URI
+                  valueFrom:
+                    secretKeyRef:
+                      name: ${NAME}-${ZONE}
+                      key: keycloak-issuer-uri
                 - name: RANDOM_EXPRESSION
                   value: ${RANDOM_EXPRESSION}
               imagePullPolicy: Always
@@ -193,8 +209,8 @@ objects:
       name: ${NAME}-${ZONE}-${COMPONENT}
       annotations:
         haproxy.router.openshift.io/rate-limit-connections: "true"
-        haproxy.router.openshift.io/rate-limit-connections.rate-http: "150"
-        haproxy.router.openshift.io/rate-limit-connections.rate-tcp: "75"
+        haproxy.router.openshift.io/rate-limit-connections.rate-http: "${RATE_LIMIT_HTTP}"
+        haproxy.router.openshift.io/rate-limit-connections.rate-tcp: "${RATE_LIMIT_TCP}"
     spec:
       host: ${URL}
       port:

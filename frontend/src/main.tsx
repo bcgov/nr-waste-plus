@@ -1,7 +1,4 @@
 import { QueryClientProvider } from '@tanstack/react-query';
-import { Amplify } from 'aws-amplify';
-import { cognitoUserPoolsTokenProvider } from 'aws-amplify/auth/cognito';
-import { CookieStorage } from 'aws-amplify/utils';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 
@@ -13,7 +10,6 @@ const bootstrapApplication = async (): Promise<void> => {
 
   const [
     { default: App },
-    { default: amplifyconfig },
     { queryClient },
     { default: AnnouncerProvider },
     { AuthProvider },
@@ -24,7 +20,6 @@ const bootstrapApplication = async (): Promise<void> => {
     { migrateOldServiceWorker },
   ] = await Promise.all([
     import('@/App.tsx'),
-    import('@/config/fam/config'),
     import('@/config/react-query/config'),
     import('@/context/announcer/AnnouncerProvider'),
     import('@/context/auth/AuthProvider'),
@@ -35,8 +30,6 @@ const bootstrapApplication = async (): Promise<void> => {
     import('@/registerServiceWorker'),
   ]);
 
-  Amplify.configure(amplifyconfig);
-  cognitoUserPoolsTokenProvider.setKeyValueStorage(new CookieStorage());
   migrateOldServiceWorker();
 
   createRoot(document.getElementById('root')!).render(

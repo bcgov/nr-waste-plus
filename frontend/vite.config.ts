@@ -45,8 +45,8 @@ export default defineConfig(({ mode }) => {
             if (id.includes('node_modules/@carbon/')) {
               return 'carbon';
             }
-            if (id.includes('node_modules/aws-amplify/')) {
-              return 'aws';
+            if (id.includes('node_modules/oidc-client-ts/')) {
+              return 'oidc';
             }
             if (id.includes('node_modules/@tanstack/')) {
               return 'query';
@@ -75,12 +75,9 @@ export default defineConfig(({ mode }) => {
     optimizeDeps: {
       include: [
         '@tanstack/react-query',
-        'aws-amplify',
-        'aws-amplify/auth/cognito',
-        'aws-amplify/utils',
+        'oidc-client-ts',
         'react-dom/client',
         '@tanstack/react-query-devtools',
-        'aws-amplify/auth',
         'mathjs',
         '@monaco-editor/react',
       ],

@@ -28,9 +28,9 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          jwk-set-uri: https://cognito-idp.${COGNITO_REGION:region}.amazonaws.com/${COGNITO_USER_POOL:usrpool}/.well-known/jwks.json
-          issuer-uri: https://cognito-idp.${COGNITO_REGION:region}.amazonaws.com/${COGNITO_USER_POOL:usrpool}
-          client-id: ${COGNITO_CLIENT_ID:test-client-id}
+          issuer-uri: ${KEYCLOAK_ISSUER_URI:https://test.loginproxy.gov.bc.ca/auth/realms/standard}
+          jwk-set-uri: ${KEYCLOAK_ISSUER_URI:https://test.loginproxy.gov.bc.ca/auth/realms/standard}/protocol/openid-connect/certs
+          client-id: ${KEYCLOAK_CLIENT_ID:test-client-id}
   datasource:
     url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/${POSTGRES_DATABASE:nr-hrs}
     username: ${POSTGRES_USER:nr-hrs}
@@ -243,8 +243,6 @@ ca:
             AVG:
               max-blocks: 1
               block-type: DISTRICT_AVERAGE
-        cognito:
-          userinfo-uri: https://${COGNITO_DOMAIN:pool-domain}.auth.${COGNITO_REGION:region}.amazoncognito.com/oauth2/userInfo
         frontend:
           url: ${FRONTEND_URL:http://localhost:3000}
           cors:
