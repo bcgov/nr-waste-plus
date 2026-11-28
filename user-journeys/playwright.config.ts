@@ -20,6 +20,7 @@ const DEFAULT_FEATURES = [
   "../cypress/cypress/e2e/block_details.feature",
   "../cypress/cypress/e2e/login-button.feature",
   "../cypress/cypress/e2e/my-profile.feature",
+  "../cypress/cypress/e2e/reporting_unit_details.feature",
 ];
 
 function featureSources(): string[] {
