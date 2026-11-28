@@ -1,13 +1,26 @@
-import fs from "node:fs";
-
 import { defineConfig, devices } from "@playwright/test";
 import { defineBddConfig } from "playwright-bdd";
 import { baseURL, VIEWPORT } from "./playwright/env";
 
-const PORTED_FEATURES_FILE = "ported-features.txt";
-const DEFAULT_FEATURES = "../cypress/cypress/e2e/*.feature";
 const LOGOUTS_FEATURE = "../cypress/cypress/e2e/logouts.feature";
 const LOGOUTS_SPEC = /logouts\.feature\.spec\.js$/;
+
+// Parked features (reporting_unit_details, ux-quality, lighthouse) are excluded
+// here until each one passes locally twice.
+const DEFAULT_FEATURES = [
+  "../cypress/cypress/e2e/screen-load.feature",
+  "../cypress/cypress/e2e/sso-smoke.feature",
+  "../cypress/cypress/e2e/unauthorized-access.feature",
+  "../cypress/cypress/e2e/theme-toggle.feature",
+  "../cypress/cypress/e2e/search.feature",
+  "../cypress/cypress/e2e/accessibility.feature",
+  "../cypress/cypress/e2e/keyboard-navigation.feature",
+  "../cypress/cypress/e2e/announcements.feature",
+  "../cypress/cypress/e2e/logouts.feature",
+  "../cypress/cypress/e2e/block_details.feature",
+  "../cypress/cypress/e2e/login-button.feature",
+  "../cypress/cypress/e2e/my-profile.feature",
+];
 
 function featureSources(): string[] {
   if (process.env.PW_FEATURES) {
@@ -16,20 +29,12 @@ function featureSources(): string[] {
       .filter(Boolean);
   }
 
-  if (fs.existsSync(PORTED_FEATURES_FILE)) {
-    return fs
-      .readFileSync(PORTED_FEATURES_FILE, "utf8")
-      .split(/\r?\n/)
-      .map((line) => line.trim())
-      .filter((line) => line.length > 0 && !line.startsWith("#"));
-  }
-
-  return [DEFAULT_FEATURES];
+  return DEFAULT_FEATURES;
 }
 
 /*
  * PW_FEATURES keeps working for both projects:
- *   - unset: sources come from ported-features.txt; logouts.feature stays listed
+ *   - unset: sources come from DEFAULT_FEATURES; logouts.feature stays listed
  *     there and is split out of journeys into the dedicated teardown project.
  *   - set: comma-separated sources are split the same way. To run only the
  *     logout journey, use

@@ -25,9 +25,8 @@ import './index.scss';
  * add-block panel, and the blocks table wired to the block-list query (issue
  * #1369/#1254), the latter only when the `reporting-unit-block-details-enabled`
  * feature flag is enabled.
- * Shows a legacy-data tag when the unit is flagged legacy (falling back to a
- * missing grade code), and always renders an under-construction tag while the
- * page is in development.
+ * Shows a legacy-data tag when the unit is flagged legacy or has no grade code,
+ * and always renders an under-construction tag while the page is in development.
  *
  * @returns The Reporting Unit Details page layout.
  */
@@ -71,9 +70,9 @@ const ReportingUnitDetailsPage: FC = () => {
       <Column lg={16} md={8} sm={4} className="rudetail-column__banner">
         <TagWrapper
           position="right"
-          // API-driven once the backend ships `isLegacy`; grade fallback covers
-          // the rollout window (units without a grade are legacy-only today).
-          enabled={data.isLegacy ?? !data.grade?.code}
+          // PostgreSQL-backed units can report `isLegacy:false` with a null
+          // grade code, so an explicit false must not hide their legacy tag.
+          enabled={data.isLegacy === true || !data.grade?.code}
           tag={
             <LegacyDataTag
               url={`/waste101ReportUnitDetailsAction.do?dataBean.p_reporting_unit_id=${data.id}`}

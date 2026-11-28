@@ -368,12 +368,14 @@ describe('ReportingUnitDetailsPage', () => {
 
   describe('legacy-source marker', () => {
     it.each([
-      { isLegacy: false, grade: { code: '', description: '' }, showsLegacy: false },
+      { isLegacy: false, grade: { code: '', description: '' }, showsLegacy: true },
+      { isLegacy: false, grade: { code: null, description: null }, showsLegacy: true },
+      { isLegacy: false, grade: { code: 'IN', description: 'Interior' }, showsLegacy: false },
       { isLegacy: true, grade: { code: 'IN', description: 'Interior' }, showsLegacy: true },
       { isLegacy: undefined, grade: { code: '', description: '' }, showsLegacy: true },
       { isLegacy: undefined, grade: { code: 'IN', description: 'Interior' }, showsLegacy: false },
     ])(
-      'uses explicit isLegacy before the grade fallback: $isLegacy / $grade.code',
+      'shows the tag when flagged legacy or the grade code is missing: $isLegacy / $grade.code',
       async (testCase) => {
         renderPage({ ...defaultData, isLegacy: testCase.isLegacy, grade: testCase.grade });
 

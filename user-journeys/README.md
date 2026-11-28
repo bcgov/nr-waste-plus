@@ -29,9 +29,8 @@ npm run test:reporters          # quality reporter unit tests
 ```
 
 `PW_FEATURES` is a comma-separated list of feature paths relative to this
-package. When it is unset, the non-empty, non-`#` lines of
-`ported-features.txt` are used. If that file does not exist, the runner falls
-back to `../cypress/cypress/e2e/*.feature` (every frozen feature).
+package. When it is unset, the `DEFAULT_FEATURES` list in `playwright.config.ts`
+is used. Parked features are excluded there until they pass locally twice.
 
 ### Target environment
 
