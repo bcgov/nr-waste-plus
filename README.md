@@ -11,7 +11,7 @@ journey tests.
 | `frontend/` | React web application for reporting units, search, district volume data, species composition, and configuration workflows | [Frontend README](frontend/README.md) |
 | `backend/` | Frontend-facing API, application services, PostgreSQL persistence, and integrations | [Backend README](backend/README.md) |
 | `legacy/` | Oracle-backed legacy APIs and reference-data capabilities used through the backend integration boundary | [Legacy README](legacy/README.md) |
-| `cypress/` | Cypress and Gherkin scenarios for deployed application journeys | [Cypress README](cypress/README.md) |
+| `user-journeys/` | Playwright and Gherkin scenarios for deployed application journeys | [User journeys README](user-journeys/README.md) |
 | `database/` | PostgreSQL container image definition for the local Compose environment | — |
 <!-- markdownlint-enable MD013 -->
 
@@ -36,8 +36,8 @@ configuration is maintained alongside the application in this repository.
 - **Application developers:** read the [frontend](frontend/README.md),
   [backend](backend/README.md), or [legacy](legacy/README.md) guide for its
   prerequisites, commands, and test workflows.
-- **Test authors and QA:** start with the [Cypress guide](cypress/README.md) for
-  Gherkin scenarios, local run targets, accessibility steps, and contribution
+- **Test authors and QA:** start with the [user journeys guide](user-journeys/README.md)
+  for Gherkin scenarios, local run targets, accessibility checks, and contribution
   workflow.
 - **Architecture and conventions:** browse the
   [project wiki](https://github.com/bcgov/nr-waste-plus/wiki), especially the
@@ -72,7 +72,7 @@ commands and test setup. The PostgreSQL image is based on PostgreSQL 17.11.
 
 ## Repository checks
 
-The frontend and Cypress modules require Node.js `>=22.19.0`; the Java
+The frontend and user-journeys modules require Node.js `>=22.19.0`; the Java
 services target Java 21. Run each command from its module directory.
 
 Frontend checks (`frontend/`):
@@ -96,12 +96,13 @@ Legacy checks (`legacy/`):
 ./mvnw verify -P all-tests
 ```
 
-Scenario-suite checks (`cypress/`):
+User-journey checks (`user-journeys/`):
 
 ```bash
 npm ci
 npm run lint
-npm run test:unit
+npm run pw:typecheck
+npm run test:reporters
 ```
 
 Browser-test prerequisites and target URLs are described in their respective

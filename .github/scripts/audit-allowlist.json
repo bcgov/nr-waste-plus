@@ -15,10 +15,10 @@
     "package": "picomatch",
     "owner": "Team Alliance",
     "reviewBy": "2027-01-01",
-    "folders": ["cypress", "frontend"],
+    "folders": ["frontend"],
     "allowBuildOnly": true,
     "allowedParents": ["@parcel/watcher"],
     "trackingIssue": "https://github.com/bcgov/nr-waste-plus/issues/1550",
-    "notes": "CVE-2026-112366: picomatch vulnerable to ReDoS through single-branch repeated extglobs. Transitive devDependency in cypress, and transitive build-only optional dependency via @carbon/react -> sass -> @parcel/watcher in frontend. Static build output only; runtime container stage copies only /srv, so picomatch is not shipped or executed in production. No upstream fix available yet (<= 4.0.7 affected)."
+    "notes": "CVE-2026-112366: picomatch vulnerable to ReDoS through single-branch repeated extglobs. Transitive build-only optional dependency via @carbon/react -> sass -> @parcel/watcher in frontend. Static build output only; runtime container stage copies only /srv, so picomatch is not shipped or executed in production. No upstream fix available yet (<= 4.0.7 affected)."
   }
 ]

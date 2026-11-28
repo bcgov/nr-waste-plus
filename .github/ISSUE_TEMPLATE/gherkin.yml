@@ -1,5 +1,5 @@
 name: User provided automated test-case
-description: Propose a Gherkin scenario for the Cypress user-journey test suite.
+description: Propose a Gherkin scenario for the Playwright user-journey test suite.
 title: "[Test Case]: "
 labels: [gherkin]
 body:
@@ -17,9 +17,9 @@ body:
           - You can have multiple **Scenarios** in a single **Feature**.
           - Pay attention to the **indentation** and **keywords**, as misconfigured files will cause issues when executed.
           - Use fictional or anonymized data. Do not include real personal information or sensitive details. See the [B.C. guidance on personal information](https://www2.gov.bc.ca/gov/content/governments/services-for-government/information-management-technology/privacy/personal-information).
-          - See the [Cypress scenario guide](https://github.com/bcgov/nr-waste-plus/wiki/Writing-Cypress-Test-Scenarios) and [available step reference](https://github.com/bcgov/nr-waste-plus/wiki/Cypress-Step-Reference).
+          - See the [user-journey guide](https://github.com/bcgov/nr-waste-plus/blob/main/user-journeys/README.md) and the [available step definitions](https://github.com/bcgov/nr-waste-plus/tree/main/user-journeys/playwright/steps).
         - 🧩 **Additional instructions**:
-          - Use the second field for custom behavior or instructions that do not fit the scenario. Check the [Cypress step reference](https://github.com/bcgov/nr-waste-plus/wiki/Cypress-Step-Reference) before requesting a new step.
+          - Use the second field for custom behavior or instructions that do not fit the scenario. Check the [step definitions](https://github.com/bcgov/nr-waste-plus/tree/main/user-journeys/playwright/steps) before requesting a new step.
 
         ### Example
 

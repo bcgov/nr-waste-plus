@@ -2,32 +2,32 @@ import { defineConfig, devices } from "@playwright/test";
 import { defineBddConfig } from "playwright-bdd";
 import { baseURL, VIEWPORT } from "./playwright/env";
 
-const LOGOUTS_FEATURE = "../cypress/cypress/e2e/logouts.feature";
+const LOGOUTS_FEATURE = "features/logouts.feature";
 const LOGOUTS_SPEC = /logouts\.feature\.spec\.js$/;
 const LIGHTHOUSE_FEATURES = [
-  "../cypress/cypress/e2e/lighthouse.feature",
-  "../cypress/cypress/e2e/ux-quality.feature",
+  "features/lighthouse.feature",
+  "features/ux-quality.feature",
 ];
 
 // reporting_unit_details passed twice against PR12 after the Legacy-data tag
 // fix (CI run 46169823928), so its scenarios now run in the default journey.
 // lighthouse + ux-quality are first-class scenarios in their own project.
 const DEFAULT_FEATURES = [
-  "../cypress/cypress/e2e/lighthouse.feature",
-  "../cypress/cypress/e2e/ux-quality.feature",
-  "../cypress/cypress/e2e/screen-load.feature",
-  "../cypress/cypress/e2e/sso-smoke.feature",
-  "../cypress/cypress/e2e/unauthorized-access.feature",
-  "../cypress/cypress/e2e/theme-toggle.feature",
-  "../cypress/cypress/e2e/search.feature",
-  "../cypress/cypress/e2e/accessibility.feature",
-  "../cypress/cypress/e2e/keyboard-navigation.feature",
-  "../cypress/cypress/e2e/announcements.feature",
-  "../cypress/cypress/e2e/logouts.feature",
-  "../cypress/cypress/e2e/block_details.feature",
-  "../cypress/cypress/e2e/login-button.feature",
-  "../cypress/cypress/e2e/my-profile.feature",
-  "../cypress/cypress/e2e/reporting_unit_details.feature",
+  "features/lighthouse.feature",
+  "features/ux-quality.feature",
+  "features/screen-load.feature",
+  "features/sso-smoke.feature",
+  "features/unauthorized-access.feature",
+  "features/theme-toggle.feature",
+  "features/search.feature",
+  "features/accessibility.feature",
+  "features/keyboard-navigation.feature",
+  "features/announcements.feature",
+  "features/logouts.feature",
+  "features/block_details.feature",
+  "features/login-button.feature",
+  "features/my-profile.feature",
+  "features/reporting_unit_details.feature",
 ];
 
 function featureSources(): string[] {
@@ -46,7 +46,7 @@ function featureSources(): string[] {
  *     there and is split out of journeys into the dedicated teardown project.
  *   - set: comma-separated sources are split the same way. To run only the
  *     logout journey, use
- *     `PW_FEATURES=../cypress/cypress/e2e/logouts.feature npx bddgen && npx playwright test --project=logouts`
+ *     `PW_FEATURES=features/logouts.feature npx bddgen && npx playwright test --project=logouts`
  *     (omit --no-deps so `setup` still refreshes the BCeID session first).
  */
 const requestedFeatures = featureSources();
@@ -63,16 +63,17 @@ const steps = ["playwright/fixtures/index.ts", "playwright/steps/**/*.ts"];
 // other project's output (playwright-bdd multi-project contract).
 const testDir = defineBddConfig({
   features: journeysFeatures,
-  // Frozen features live outside this package; root at the worktree so the
-  // generated spec paths keep their cypress/cypress/e2e segment.
-  featuresRoot: "..",
+  // Root generated specs at this package so paths stay
+  // features/<name>.feature.spec.js in every project, regardless of which
+  // features PW_FEATURES selects.
+  featuresRoot: ".",
   steps,
   outputDir: ".features-gen/journeys",
 });
 
 const logoutsTestDir = defineBddConfig({
   features: [LOGOUTS_FEATURE],
-  featuresRoot: "..",
+  featuresRoot: ".",
   steps,
   outputDir: ".features-gen/logouts",
 });
@@ -83,7 +84,7 @@ const logoutsTestDir = defineBddConfig({
 const lighthouseTestDir = lighthouseRequested.length
   ? defineBddConfig({
       features: lighthouseRequested,
-      featuresRoot: "..",
+      featuresRoot: ".",
       steps,
       outputDir: ".features-gen/lighthouse",
     })

@@ -1,8 +1,8 @@
 import * as dotenv from "dotenv";
 
 dotenv.config();
-dotenv.config({ path: "../cypress/.env" });
 
+// The CYPRESS_* aliases stay: the deployed-test environment uses them.
 export const baseURL =
   process.env.CYPRESS_baseUrl ??
   process.env.E2E_BASE_URL ??

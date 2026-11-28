@@ -1,7 +1,7 @@
 {
   "name": "nr-waste-plus-user-journeys",
   "version": "1.0.0",
-  "description": "Playwright + BDD user journey tests for nr-waste-plus, migrated from the frozen cypress package.",
+  "description": "Playwright + BDD user journey tests for nr-waste-plus.",
   "private": true,
   "type": "commonjs",
   "engines": {
